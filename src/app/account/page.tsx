@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ChevronLeft,
   LayoutGrid,
@@ -10,9 +10,11 @@ import {
   Users,
   Wifi,
   CreditCard,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
+import { Button } from '@/components/ui/button';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
@@ -21,6 +23,22 @@ const managementLinks = [
 ];
 
 export default function AccountPage() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // In a real app, you would upload this file and update the image source.
+      // For now, we can just log it.
+      console.log('New promotional image selected:', file.name);
+      // You would typically update a state or send it to a server here.
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
@@ -63,14 +81,40 @@ export default function AccountPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <link.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
                     <span className="font-semibold">{link.title}</span>
                   </div>
-                  <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                  <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                 </a>
               ))}
             </CardContent>
           </Card>
+        </div>
+        
+        <div>
+          <div className="flex items-center justify-center gap-2 mt-6 mb-3">
+            <h3 className="text-lg font-semibold text-muted-foreground">
+              إعدادات الواجهة
+            </h3>
+          </div>
+           <Card className="bg-card">
+             <CardContent className="p-0">
+                <div className="group flex items-center justify-between p-4 cursor-pointer" onClick={handleImageUploadClick}>
+                   <div className="flex items-center gap-3">
+                     <ImageIcon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
+                     <span className="font-semibold">تغيير الصورة الترويجية</span>
+                   </div>
+                   <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                </div>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*"
+                />
+             </CardContent>
+           </Card>
         </div>
       </div>
     </div>

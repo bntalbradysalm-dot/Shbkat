@@ -112,11 +112,11 @@ export default function AccountPage() {
               <h2 className="text-sm font-bold">محمد راضي ربيع باشادي</h2>
               <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
-                  <Phone className="ml-2 h-4 w-4" />
+                  <Phone className="ml-2 h-3 w-3" />
                   <span>770326828</span>
                 </div>
                 <div className="flex items-center">
-                  <MapPin className="ml-2 h-4 w-4" />
+                  <MapPin className="ml-2 h-3 w-3" />
                   <span>حضرموت - شبام</span>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function AccountPage() {
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    <Sun className="h-6 w-6" />
+                    <Sun className="h-5 w-5" />
                     <span className="text-xs font-semibold">فاتح</span>
                   </div>
                   <div
@@ -148,7 +148,7 @@ export default function AccountPage() {
                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                      }`}
                   >
-                    <Moon className="h-6 w-6" />
+                    <Moon className="h-5 w-5" />
                     <span className="text-xs font-semibold">داكن</span>
                   </div>
                 </div>
@@ -159,47 +159,50 @@ export default function AccountPage() {
 
         <div>
           <div className="flex items-center justify-center gap-2 mb-3">
-            <LayoutGrid className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-muted-foreground">
+            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-xs font-semibold text-muted-foreground">
               لوحة التحكم
             </h3>
           </div>
 
           <Card className="bg-card">
             <CardContent className="p-0">
-              {managementLinks.map((link, index) => (
-                <a
-                  href={link.href}
-                  key={link.title}
-                  className={`group flex items-center justify-between p-4 cursor-pointer ${
-                    index < managementLinks.length - 1 ? 'border-b' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
-                    <span className="text-xs font-semibold">{link.title}</span>
-                  </div>
-                  <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                </a>
-              ))}
+              {managementLinks.map((link, index) => {
+                const Icon = link.icon;
+                return (
+                    <a
+                    href={link.href}
+                    key={link.title}
+                    className={`group flex items-center justify-between p-3 cursor-pointer ${
+                        index < managementLinks.length - 1 ? 'border-b' : ''
+                    }`}
+                    >
+                    <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <span className="text-xs font-semibold">{link.title}</span>
+                    </div>
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                    </a>
+                )
+              })}
             </CardContent>
           </Card>
         </div>
         
         <div>
           <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-            <h3 className="text-sm font-semibold text-muted-foreground">
+            <h3 className="text-xs font-semibold text-muted-foreground">
               إعدادات الواجهة والتطبيق
             </h3>
           </div>
            <Card className="bg-card">
              <CardContent className="p-0">
-                <div className="group flex items-center justify-between p-4 cursor-pointer border-b" onClick={handleImageUploadClick}>
+                <div className="group flex items-center justify-between p-3 cursor-pointer border-b" onClick={handleImageUploadClick}>
                    <div className="flex items-center gap-3">
-                     <ImageIcon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
+                     <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                      <span className="text-xs font-semibold">تغيير الصورة الترويجية</span>
                    </div>
-                   <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                   <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                 </div>
                 <input
                     type="file"
@@ -208,21 +211,24 @@ export default function AccountPage() {
                     className="hidden"
                     accept="image/*"
                 />
-                {appSettingsLinks.map((link, index) => (
+                {appSettingsLinks.map((link, index) => {
+                  const Icon = link.icon;
+                  return (
                     <a
                     href={link.href}
                     key={link.title}
-                    className={`group flex items-center justify-between p-4 cursor-pointer ${
+                    className={`group flex items-center justify-between p-3 cursor-pointer ${
                         index < appSettingsLinks.length - 1 ? 'border-b' : ''
                     }`}
                     >
                     <div className="flex items-center gap-3">
-                        <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
+                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         <span className="text-xs font-semibold">{link.title}</span>
                     </div>
-                    <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                     </a>
-                ))}
+                  )
+                })}
              </CardContent>
            </Card>
         </div>
@@ -232,9 +238,9 @@ export default function AccountPage() {
             <AlertDialogTrigger asChild>
               <Card className="bg-card cursor-pointer">
                   <CardContent className="p-0">
-                      <div className="group flex items-center justify-center p-4">
+                      <div className="group flex items-center justify-center p-3">
                         <div className="flex items-center gap-3 text-destructive">
-                            <LogOut className="h-6 w-6" />
+                            <LogOut className="h-5 w-5" />
                             <span className="text-xs font-semibold">تسجيل الخروج</span>
                         </div>
                       </div>

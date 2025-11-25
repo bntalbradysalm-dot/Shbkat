@@ -83,7 +83,7 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-card">
+    <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card className="overflow-hidden shadow-lg bg-primary text-primary-foreground">

@@ -119,9 +119,9 @@ export default function RenewPage() {
                       </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter className="flex-row-reverse justify-center gap-2 pt-4">
-                    <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation}>تأكيد</AlertDialogAction>
+                  <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
                     <AlertDialogCancel className="flex-1 mt-0">إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation}>تأكيد</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

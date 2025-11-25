@@ -20,6 +20,8 @@ import {
   Share2,
   HelpCircle,
   LogOut,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -43,6 +45,8 @@ const appSettingsLinks = [
 
 export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTheme, setActiveTheme] = React.useState('light');
+
 
   const handleImageUploadClick = () => {
     fileInputRef.current?.click();
@@ -80,6 +84,39 @@ export default function AccountPage() {
             </div>
           </CardContent>
         </Card>
+        
+        <div>
+            <h3 className="text-md font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
+            <Card className="bg-card">
+              <CardContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div
+                    onClick={() => setActiveTheme('light')}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+                      activeTheme === 'light'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Sun className="h-6 w-6" />
+                    <span className="text-sm font-semibold">فاتح</span>
+                  </div>
+                  <div
+                     onClick={() => setActiveTheme('dark')}
+                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+                       activeTheme === 'dark'
+                         ? 'bg-primary/10 text-primary'
+                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                     }`}
+                  >
+                    <Moon className="h-6 w-6" />
+                    <span className="text-sm font-semibold">داكن</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+        </div>
+
 
         <div>
           <div className="flex items-center justify-center gap-2 mb-3">

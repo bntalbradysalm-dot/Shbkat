@@ -30,9 +30,16 @@ export function BalanceCard() {
               {isBalanceVisible ? <EyeOff size={18} /> : <Eye size={18} />}
             </Button>
           </div>
-          <div className="mt-2 text-center" aria-live="polite">
+          <div className="mt-2 text-right" aria-live="polite">
             <h2 className="text-4xl font-bold tracking-tighter">
-              {isBalanceVisible ? `${balance.toLocaleString('en-US')} ريال` : '******'}
+              {isBalanceVisible ? (
+                <>
+                  {balance.toLocaleString('en-US')}
+                  <span className="text-base font-medium ml-1">ريال يمني</span>
+                </>
+              ) : (
+                '******'
+              )}
             </h2>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">

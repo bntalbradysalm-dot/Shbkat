@@ -32,7 +32,7 @@ const ServiceItem = ({
 }: Service & { index: number }) => (
   <Link
     href={href}
-    className="group flex flex-col items-center justify-start space-y-2 rounded-xl bg-red-500/10 p-3 text-center shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 animate-in fade-in-0 zoom-in-95"
+    className="group flex flex-col items-center justify-start space-y-2 rounded-xl bg-card p-3 text-center shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 animate-in fade-in-0 zoom-in-95"
     style={{
       animationDelay: `${100 + index * 75}ms`,
       animationFillMode: 'backwards',

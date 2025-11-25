@@ -38,8 +38,8 @@ const ServiceItem = ({
       animationFillMode: 'backwards',
     }}
   >
-    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/20">
-      <Icon className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
+    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary transition-colors group-hover:bg-primary/90">
+      <Icon className="h-8 w-8 text-primary-foreground transition-transform group-hover:scale-110" />
     </div>
     <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
   </Link>

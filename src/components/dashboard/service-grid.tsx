@@ -41,8 +41,9 @@ const ServiceItem = ({ name, icon: Icon, href, index }: Service & { index: numbe
 
 export function ServiceGrid() {
   return (
-    <div className="p-4 mt-4">
-        <div className="grid grid-cols-3 gap-3">
+    <div className="p-4 mt-4 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gray-200 rounded-full"></div>
+        <div className="grid grid-cols-3 gap-3 pt-4">
             {services.map((service, index) => <ServiceItem key={service.name} {...service} index={index} />)}
         </div>
     </div>

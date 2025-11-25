@@ -12,6 +12,7 @@ import { User, CreditCard } from 'lucide-react';
 export default function RenewPage() {
   const searchParams = useSearchParams();
   const title = searchParams.get('title');
+  const price = searchParams.get('price');
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -20,11 +21,19 @@ export default function RenewPage() {
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-center">{title}</CardTitle>
+            {price && (
+              <p className="text-center text-2xl font-bold text-primary">
+                {Number(price).toLocaleString('ar-EG')} ريال
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <form className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="subscriberName" className="flex items-center gap-2">
+                <Label
+                  htmlFor="subscriberName"
+                  className="flex items-center gap-2"
+                >
                   <User className="h-4 w-4" />
                   اسم المشترك
                 </Label>

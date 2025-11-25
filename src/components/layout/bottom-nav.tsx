@@ -22,7 +22,7 @@ export function BottomNav() {
             <Link 
               key={item.name} 
               href={item.href} 
-              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-colors w-1/4 focus:bg-accent/50 focus:outline-none ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
               aria-current={isActive ? 'page' : undefined}
             >
               {isActive && <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />}

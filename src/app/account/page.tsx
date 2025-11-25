@@ -25,7 +25,6 @@ const managementLinks = [
 
 export default function AccountPage() {
   const [theme, setTheme] = useState('light');
-  const [primaryColor, setPrimaryColor] = useState('hsl(173, 80%, 42%)');
 
   const handleThemeChange = (selectedTheme: string) => {
     setTheme(selectedTheme);
@@ -37,10 +36,9 @@ export default function AccountPage() {
   };
 
   React.useEffect(() => {
-    document.documentElement.style.setProperty('--primary', primaryColor);
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
-  }, [primaryColor]);
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-background">

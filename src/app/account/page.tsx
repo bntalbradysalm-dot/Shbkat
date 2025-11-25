@@ -25,12 +25,12 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden shadow-lg bg-card">
+        <Card className="overflow-hidden shadow-lg bg-primary text-primary-foreground">
           <CardContent className="p-4 flex items-center gap-4">
-            <User className="h-10 w-10 shrink-0 text-muted-foreground" />
+            <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
             <div className="flex-grow">
               <h2 className="text-lg font-bold">محمد راضي ربيع باشادي</h2>
-              <div className="text-sm text-muted-foreground mt-2 space-y-1">
+              <div className="text-sm text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-4 w-4" />
                   <span>770326828</span>

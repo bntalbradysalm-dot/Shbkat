@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   ChevronLeft,
   LayoutGrid,
@@ -47,6 +47,26 @@ export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = React.useState('light');
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setActiveTheme(savedTheme);
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const handleThemeChange = (theme: 'light' | 'dark') => {
+    setActiveTheme(theme);
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
 
   const handleImageUploadClick = () => {
     fileInputRef.current?.click();
@@ -91,7 +111,7 @@ export default function AccountPage() {
               <CardContent className="p-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div
-                    onClick={() => setActiveTheme('light')}
+                    onClick={() => handleThemeChange('light')}
                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
                       activeTheme === 'light'
                         ? 'bg-primary/10 text-primary'
@@ -102,7 +122,7 @@ export default function AccountPage() {
                     <span className="text-sm font-semibold">فاتح</span>
                   </div>
                   <div
-                     onClick={() => setActiveTheme('dark')}
+                     onClick={() => handleThemeChange('dark')}
                      className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
                        activeTheme === 'dark'
                          ? 'bg-primary/10 text-primary'

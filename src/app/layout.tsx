@@ -1,20 +1,47 @@
-import type {Metadata} from 'next';
+'use client';
+import { useEffect, useState } from 'react';
 import './globals.css';
 import { BottomNav } from '@/components/layout/bottom-nav';
-
-export const metadata: Metadata = {
-  title: 'Shabakat Wallet',
-  description: 'Your Digital Wallet',
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    const handleStorageChange = () => {
+      const newTheme = localStorage.getItem('theme') || 'light';
+      setTheme(newTheme);
+       if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+
+  }, []);
+
   return (
     <html lang="ar" dir="rtl">
       <head>
+        <title>Shabakat Wallet</title>
+        <meta name="description" content="Your Digital Wallet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />

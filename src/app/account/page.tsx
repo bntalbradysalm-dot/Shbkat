@@ -1,137 +1,168 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ArrowLeft,
   ChevronLeft,
-  Paintbrush,
+  LayoutGrid,
+  Moon,
   Palette,
   Phone,
   Sun,
-  Moon,
-  MapPin,
   User,
+  MapPin,
+  Users,
+  Wifi,
+  CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 
 const colors = [
-  { name: 'Default', value: 'hsl(174 100% 32.5%)' },
-  { name: 'Blue', value: 'hsl(221.2 83.2% 53.3%)' },
-  { name: 'Rose', value: 'hsl(346.8 77.2% 49.8%)' },
-  { name: 'Green', value: 'hsl(142.1 76.2% 36.3%)' },
-  { name: 'Orange', value: 'hsl(24.6 95% 53.1%)' },
+  { name: 'Teal', value: 'hsl(173, 80%, 42%)' },
+  { name: 'Rose', value: 'hsl(346, 77%, 50%)' },
+  { name: 'Yellow', value: 'hsl(45, 93%, 47%)' },
+  { name: 'Orange', value: 'hsl(25, 95%, 53%)' },
+  { name: 'Purple', value: 'hsl(262, 83%, 60%)' },
+  { name: 'Green', value: 'hsl(142, 76%, 36%)' },
+  { name: 'Red', value: 'hsl(0, 72%, 51%)' },
+  { name: 'Blue', value: 'hsl(221, 83%, 53%)' },
+  { name: 'Slate', value: 'hsl(215, 28%, 47%)' },
+  { name: 'Lime', value: 'hsl(84, 81%, 48%)' },
+  { name: 'Indigo', value: 'hsl(244, 65%, 61%)' },
 ];
 
-export default function AccountPage() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState(colors[0].value);
+const managementLinks = [
+    { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
+    { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
+    { title: 'إدارة الكروت', icon: CreditCard, href: '/cards-management' },
+];
 
-  const handleThemeChange = (dark: boolean) => {
-    setIsDarkMode(dark);
-    document.documentElement.classList.toggle('dark', dark);
+
+export default function AccountPage() {
+  const [theme, setTheme] = useState('light');
+  const [primaryColor, setPrimaryColor] = useState('hsl(173, 80%, 42%)');
+
+  const handleThemeChange = (selectedTheme: string) => {
+    setTheme(selectedTheme);
+    if (selectedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
-  
+
   const handleColorChange = (color: string) => {
     setPrimaryColor(color);
     document.documentElement.style.setProperty('--primary', color);
   };
+  
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--primary', primaryColor);
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+  }, [primaryColor]);
+
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center justify-between p-4 sticky top-0 bg-card/80 backdrop-blur-sm z-10 border-b">
-        <Link href="/" passHref>
-          <Button variant="ghost" size="icon" aria-label="العودة">
-            <ArrowLeft className="h-6 w-6 text-muted-foreground" />
-          </Button>
-        </Link>
-        <h1 className="text-lg font-bold text-primary">حسابي</h1>
-        <div className="w-10"></div>
+      <header className="flex items-center justify-center p-4 sticky top-0 bg-card/80 backdrop-blur-sm z-10 border-b">
+        <h1 className="text-xl font-bold">حسابي</h1>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-center gap-4 p-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="صورة المستخدم" />
-              <AvatarFallback>
-                <User className="h-8 w-8" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid gap-1">
-              <CardTitle className="text-xl">اسم المستخدم</CardTitle>
-              <CardDescription>مرحباً بك مجدداً!</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3 text-sm">
-            <div className="flex items-center text-muted-foreground">
-              <Phone className="ml-3 h-4 w-4" />
-              <span>+967 777 777 777</span>
-            </div>
-            <div className="flex items-center text-muted-foreground">
-              <MapPin className="ml-3 h-4 w-4" />
-              <span>صنعاء، اليمن</span>
-            </div>
+        <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg">
+          <CardContent className="p-4 flex items-center gap-4">
+             <User className="h-10 w-10 shrink-0" />
+             <div className="flex-grow">
+                <h2 className="text-lg font-bold">محمد راضي ربيع باشادي</h2>
+                <div className="text-sm opacity-90 mt-2 space-y-1">
+                    <div className="flex items-center">
+                        <Phone className="ml-2 h-4 w-4" />
+                        <span>770326828</span>
+                    </div>
+                    <div className="flex items-center">
+                        <MapPin className="ml-2 h-4 w-4" />
+                        <span>حضرموت - شبام</span>
+                    </div>
+                </div>
+             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Paintbrush className="h-5 w-5" />
-              المظهر
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3">
-                  {isDarkMode ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" /> }
-                  <span className="font-medium">الوضع الداكن</span>
-              </div>
-              <Switch
-                checked={isDarkMode}
-                onCheckedChange={handleThemeChange}
-                aria-label="Toggle dark mode"
-              />
-            </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3 mb-3">
-                  <Palette className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">ألوان التطبيق</span>
-              </div>
-              <div className="flex items-center justify-around">
-                {colors.map((color) => (
-                  <Button
-                    key={color.name}
-                    variant="ghost"
-                    size="icon"
-                    className={`h-10 w-10 rounded-full border-2 ${primaryColor === color.value ? 'border-primary' : 'border-transparent'}`}
-                    onClick={() => handleColorChange(color.value)}
-                    aria-label={`Change color to ${color.name}`}
-                  >
-                    <div
-                      className="h-8 w-8 rounded-full"
-                      style={{ backgroundColor: color.value }}
-                    />
-                  </Button>
-                ))}
-              </div>
+          <CardContent className="p-4 space-y-2">
+            <h3 className="font-semibold text-center text-muted-foreground mb-3">الوضع المفضل</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant={theme === 'dark' ? 'outline' : 'ghost'}
+                onClick={() => handleThemeChange('dark')}
+                className={`flex flex-col h-20 gap-2 border-2 ${theme === 'dark' ? 'border-primary bg-primary/10' : 'bg-muted/50 border-transparent'}`}
+              >
+                <Moon />
+                <span>داكن</span>
+              </Button>
+              <Button
+                variant={theme === 'light' ? 'outline' : 'ghost'}
+                onClick={() => handleThemeChange('light')}
+                className={`flex flex-col h-20 gap-2 border-2 ${theme === 'light' ? 'border-primary bg-primary/10' : 'bg-muted/50 border-transparent'}`}
+              >
+                <Sun />
+                <span>فاتح</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
+        
+        <div>
+            <div className="flex items-center justify-center gap-2 mb-3">
+                <LayoutGrid className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-semibold text-muted-foreground">لوحة التحكم</h3>
+            </div>
+
+            <Card className="mb-4">
+                <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Palette className="h-5 w-5 text-muted-foreground" />
+                        <h4 className="font-semibold">اللون الأساسي للتطبيق</h4>
+                    </div>
+                    <div className="grid grid-cols-6 gap-3">
+                        {colors.map((color) => (
+                        <Button
+                            key={color.name}
+                            variant="ghost"
+                            size="icon"
+                            className={`h-10 w-10 rounded-full border-2 ${primaryColor === color.value ? 'border-primary' : 'border-transparent'}`}
+                            onClick={() => handleColorChange(color.value)}
+                            aria-label={`Change color to ${color.name}`}
+                        >
+                            <div
+                            className="h-8 w-8 rounded-full"
+                            style={{ backgroundColor: color.value }}
+                            />
+                        </Button>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardContent className="p-0">
+                    {managementLinks.map((link, index) => (
+                        <Link href={link.href} key={link.title} passHref>
+                           <div className={`group flex items-center justify-between p-4 cursor-pointer ${index < managementLinks.length - 1 ? 'border-b' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <link.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    <span className="font-semibold">{link.title}</span>
+                                </div>
+                                <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                           </div>
+                        </Link>
+                    ))}
+                </CardContent>
+            </Card>
+        </div>
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
   LayoutGrid,
@@ -26,6 +27,17 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
@@ -48,6 +60,7 @@ const appSettingsLinks = [
 export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = useState('light');
+  const router = useRouter();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -82,6 +95,10 @@ export default function AccountPage() {
       // This will trigger the useEffect in PromotionalImage component if it's rendered
       window.dispatchEvent(new Event('storage'));
     }
+  };
+
+  const handleLogout = () => {
+    router.push('/login');
   };
 
   return (
@@ -211,19 +228,34 @@ export default function AccountPage() {
         </div>
 
         <div className="pt-4">
-            <Card className="bg-card">
-                <CardContent className="p-0">
-                    <a
-                    href="/logout"
-                    className="group flex items-center justify-center p-4 cursor-pointer"
-                    >
-                    <div className="flex items-center gap-3 text-destructive">
-                        <LogOut className="h-6 w-6" />
-                        <span className="text-xs font-semibold">تسجيل الخروج</span>
-                    </div>
-                    </a>
-                </CardContent>
-            </Card>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Card className="bg-card cursor-pointer">
+                  <CardContent className="p-0">
+                      <div className="group flex items-center justify-center p-4">
+                        <div className="flex items-center gap-3 text-destructive">
+                            <LogOut className="h-6 w-6" />
+                            <span className="text-xs font-semibold">تسجيل الخروج</span>
+                        </div>
+                      </div>
+                  </CardContent>
+              </Card>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="rounded-lg">
+              <AlertDialogHeader>
+                <AlertDialogTitle>هل أنت متأكد من تسجيل الخروج؟</AlertDialogTitle>
+                <AlertDialogDescription>
+                  سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق. ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="bg-destructive hover:bg-destructive/90">
+                  تأكيد
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
       </div>

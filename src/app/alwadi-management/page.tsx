@@ -22,38 +22,43 @@ export default function AlwadiManagementPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newPrice, setNewPrice] = useState('');
 
+  // This state will hold the temporary values while editing
+  const [editingValues, setEditingValues] = useState<{ [key: number]: { title: string; price: string } }>({});
+
   const handleEdit = (option: typeof initialRenewalOptions[0]) => {
     setEditingId(option.id);
+    setEditingValues({
+      ...editingValues,
+      [option.id]: { title: option.title, price: String(option.price) },
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingValues({});
   };
 
   const handleSave = (id: number) => {
-    setEditingId(null);
-  };
-
-  const handleTitleChange = (id: number, newTitle: string) => {
-    setOptions(
+     setOptions(
       options.map((opt) =>
-        opt.id === id ? { ...opt, title: newTitle } : opt
+        opt.id === id
+          ? { ...opt, title: editingValues[id].title, price: Number(editingValues[id].price) || 0 }
+          : opt
       )
     );
+    setEditingId(null);
+  };
+  
+  const handleValueChange = (id: number, field: 'title' | 'price', value: string) => {
+    setEditingValues(prev => ({
+        ...prev,
+        [id]: {
+            ...prev[id],
+            [field]: value,
+        }
+    }));
   };
 
-  const handlePriceChange = (id: number, newPrice: string) => {
-    const priceAsNumber = Number(newPrice);
-    if (!isNaN(priceAsNumber)) {
-      setOptions(
-        options.map((opt) =>
-          opt.id === id ? { ...opt, price: priceAsNumber } : opt
-        )
-      );
-    } else if (newPrice === '') {
-        setOptions(
-            options.map((opt) =>
-              opt.id === id ? { ...opt, price: 0 } : opt
-            )
-        );
-    }
-  };
 
   const handleDelete = (id: number) => {
     setOptions(options.filter((opt) => opt.id !== id));
@@ -90,8 +95,8 @@ export default function AlwadiManagementPage() {
                       <Label htmlFor={`title-${option.id}`}>اسم الخيار</Label>
                       <Input
                         id={`title-${option.id}`}
-                        value={option.title}
-                        onChange={(e) => handleTitleChange(option.id, e.target.value)}
+                        value={editingValues[option.id]?.title ?? option.title}
+                        onChange={(e) => handleValueChange(option.id, 'title', e.target.value)}
                       />
                     </div>
                     <div>
@@ -99,11 +104,14 @@ export default function AlwadiManagementPage() {
                       <Input
                         id={`price-${option.id}`}
                         type="number"
-                        value={option.price}
-                        onChange={(e) => handlePriceChange(option.id, e.target.value)}
+                        value={editingValues[option.id]?.price ?? option.price}
+                        onChange={(e) => handleValueChange(option.id, 'price', e.target.value)}
                       />
                     </div>
                     <div className="flex justify-end gap-2">
+                       <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
+                        <X className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" onClick={() => handleSave(option.id)}>
                         <Save className="h-4 w-4" />
                       </Button>

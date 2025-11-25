@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 const renewalOptions = [
   { title: 'تجديد شهرين', duration: '2 months', price: 3000 },
-  { title: 'تجديد 4 شهور', duration: '4 months', price: 60000 },
+  { title: 'تجديد 4 شهور', duration: '4 months', price: 6000 },
   { title: 'تجديد 6 شهور', duration: '6 months', price: 9000 },
   { title: 'تجديد سنة', duration: '1 year', price: 15000 },
 ];

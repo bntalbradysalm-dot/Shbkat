@@ -16,9 +16,9 @@ const renewalOptions = [
 export default function AlwadiPage() {
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center justify-between p-4 sticky top-0 bg-primary text-primary-foreground z-10 shadow-md">
+      <header className="flex items-center justify-between p-4 sticky top-0 bg-card text-foreground z-10 shadow-md">
         <Link href="/" passHref>
-          <Button variant="ghost" size="icon" aria-label="العودة" className="hover:bg-white/20 text-primary-foreground">
+          <Button variant="ghost" size="icon" aria-label="العودة">
             <ChevronLeft className="h-6 w-6" />
           </Button>
         </Link>
@@ -27,21 +27,19 @@ export default function AlwadiPage() {
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {renewalOptions.map((option, index) => (
-          <Card
+           <div
             key={option.title}
-            className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-primary animate-in fade-in-0 zoom-in-95"
+            className="group cursor-pointer transition-all duration-300 animate-in fade-in-0 zoom-in-95 p-4 flex items-center justify-between border-b"
             style={{ animationDelay: `${100 + index * 100}ms` }}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <CalendarClock className="h-6 w-6 text-primary" />
-                </div>
-                <span className="font-semibold text-foreground/90">{option.title}</span>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <CalendarClock className="h-6 w-6 text-primary" />
               </div>
-              <ChevronLeft className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-[-4px] group-hover:text-primary" />
-            </CardContent>
-          </Card>
+              <span className="font-semibold text-foreground/90">{option.title}</span>
+            </div>
+            <ChevronLeft className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-[-4px] group-hover:text-primary" />
+          </div>
         ))}
       </div>
     </div>

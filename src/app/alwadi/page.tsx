@@ -1,6 +1,6 @@
 'use client';
 
-import { CreditCard, Banknote } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import Link from 'next/link';
@@ -35,11 +35,10 @@ export default function AlwadiPage() {
                         <span className="font-bold text-sm text-foreground/90">
                         {option.title}
                         </span>
-                        <div className="flex items-baseline justify-center gap-1.5 mt-2 text-primary">
+                        <div className="flex items-baseline justify-center gap-1 mt-2 text-primary">
                           <span className="text-sm font-semibold">
                               {option.price.toLocaleString('en-US')} ريال
                           </span>
-                          <Banknote className="h-4 w-4" />
                         </div>
                     </div>
                 </div>

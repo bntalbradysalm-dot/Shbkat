@@ -34,7 +34,7 @@ export function BalanceCard() {
             <h2 className="text-4xl font-bold tracking-tighter">
               {isBalanceVisible ? (
                 <>
-                  {balance.toLocaleString('ar-EG')}
+                  {balance.toLocaleString('en-US')}
                   <span className="text-base font-medium ml-1">ريال يمني</span>
                 </>
               ) : (

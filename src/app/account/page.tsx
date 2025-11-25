@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ChevronLeft,
   LayoutGrid,
@@ -45,7 +45,7 @@ const appSettingsLinks = [
 
 export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTheme, setActiveTheme] = React.useState('light');
+  const [activeTheme, setActiveTheme] = useState('light');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -75,10 +75,10 @@ export default function AccountPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, you would upload this file and update the image source.
-      // For now, we can just log it.
-      console.log('New promotional image selected:', file.name);
-      // You would typically update a state or send it to a server here.
+      const newImageUrl = URL.createObjectURL(file);
+      localStorage.setItem('promoImageUrl', newImageUrl);
+      // This will trigger the useEffect in PromotionalImage component if it's rendered
+      window.dispatchEvent(new Event('storage'));
     }
   };
 

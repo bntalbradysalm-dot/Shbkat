@@ -12,7 +12,10 @@ export function PromotionalImage() {
     useEffect(() => {
         // In a real app, you might fetch the current promotional image URL
         // from a backend or state management solution.
-        if (promoImage) {
+        const storedImageUrl = localStorage.getItem('promoImageUrl');
+        if (storedImageUrl) {
+            setImageUrl(storedImageUrl);
+        } else if (promoImage) {
             setImageUrl(promoImage.imageUrl);
         }
     }, [promoImage]);

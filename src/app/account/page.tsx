@@ -90,8 +90,8 @@ export default function AccountPage() {
           <CardContent className="p-4 flex items-center gap-4">
             <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
             <div className="flex-grow">
-              <h2 className="text-lg font-bold">محمد راضي ربيع باشادي</h2>
-              <div className="text-sm text-primary-foreground/80 mt-2 space-y-1">
+              <h2 className="text-base font-bold">محمد راضي ربيع باشادي</h2>
+              <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-4 w-4" />
                   <span>770326828</span>
@@ -106,7 +106,7 @@ export default function AccountPage() {
         </Card>
         
         <div>
-            <h3 className="text-md font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
             <Card className="bg-card">
               <CardContent className="p-2">
                 <div className="grid grid-cols-2 gap-2">
@@ -141,7 +141,7 @@ export default function AccountPage() {
         <div>
           <div className="flex items-center justify-center gap-2 mb-3">
             <LayoutGrid className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-lg font-semibold text-muted-foreground">
+            <h3 className="text-base font-semibold text-muted-foreground">
               لوحة التحكم
             </h3>
           </div>
@@ -158,7 +158,7 @@ export default function AccountPage() {
                 >
                   <div className="flex items-center gap-3">
                     <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
-                    <span className="font-semibold">{link.title}</span>
+                    <span className="text-sm font-semibold">{link.title}</span>
                   </div>
                   <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                 </a>
@@ -169,7 +169,7 @@ export default function AccountPage() {
         
         <div>
           <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-            <h3 className="text-lg font-semibold text-muted-foreground">
+            <h3 className="text-base font-semibold text-muted-foreground">
               إعدادات الواجهة والتطبيق
             </h3>
           </div>
@@ -178,7 +178,7 @@ export default function AccountPage() {
                 <div className="group flex items-center justify-between p-4 cursor-pointer border-b" onClick={handleImageUploadClick}>
                    <div className="flex items-center gap-3">
                      <ImageIcon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
-                     <span className="font-semibold">تغيير الصورة الترويجية</span>
+                     <span className="text-sm font-semibold">تغيير الصورة الترويجية</span>
                    </div>
                    <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                 </div>
@@ -199,7 +199,7 @@ export default function AccountPage() {
                     >
                     <div className="flex items-center gap-3">
                         <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
-                        <span className="font-semibold">{link.title}</span>
+                        <span className="text-sm font-semibold">{link.title}</span>
                     </div>
                     <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                     </a>
@@ -217,7 +217,7 @@ export default function AccountPage() {
                     >
                     <div className="flex items-center gap-3 text-destructive">
                         <LogOut className="h-6 w-6" />
-                        <span className="font-semibold">تسجيل الخروج</span>
+                        <span className="text-sm font-semibold">تسجيل الخروج</span>
                     </div>
                     </a>
                 </CardContent>

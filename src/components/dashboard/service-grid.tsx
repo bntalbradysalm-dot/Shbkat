@@ -4,7 +4,7 @@ import {
   SatelliteDish,
   Send,
   Star,
-  LifeBuoy,
+  Headset,
   Wifi,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -21,7 +21,7 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'المفضلة', icon: Star, href: '/favorites' },
-  { name: 'الدعم الفني', icon: LifeBuoy, href: '/support' },
+  { name: 'الدعم الفني', icon: Headset, href: '/support' },
 ];
 
 const ServiceItem = ({

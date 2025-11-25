@@ -2,6 +2,7 @@
 
 import { CalendarClock, ChevronLeft } from 'lucide-react';
 import React from 'react';
+import { Header } from '@/components/layout/header';
 
 const renewalOptions = [
   { title: 'تجديد شهرين', duration: '2 months' },
@@ -13,6 +14,7 @@ const renewalOptions = [
 export default function AlwadiPage() {
   return (
     <div className="flex flex-col h-full bg-background">
+       <Header />
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-8">
         {renewalOptions.map((option, index) => (
            <div

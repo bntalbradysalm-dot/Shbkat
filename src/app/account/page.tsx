@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   ChevronLeft,
   LayoutGrid,
@@ -13,7 +11,8 @@ import {
   Wifi,
   CreditCard,
 } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Header } from '@/components/layout/header';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
@@ -24,13 +23,14 @@ const managementLinks = [
 export default function AccountPage() {
   return (
     <div className="flex flex-col h-full bg-background pt-4">
+       <Header />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg">
+        <Card className="overflow-hidden shadow-lg">
           <CardContent className="p-4 flex items-center gap-4">
-            <User className="h-10 w-10 shrink-0" />
+            <User className="h-10 w-10 shrink-0 text-muted-foreground" />
             <div className="flex-grow">
               <h2 className="text-lg font-bold">محمد راضي ربيع باشادي</h2>
-              <div className="text-sm opacity-90 mt-2 space-y-1">
+              <div className="text-sm text-muted-foreground mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-4 w-4" />
                   <span>770326828</span>

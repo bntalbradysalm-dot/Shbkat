@@ -92,7 +92,6 @@ export default function AccountPage() {
     if (file) {
       const newImageUrl = URL.createObjectURL(file);
       localStorage.setItem('promoImageUrl', newImageUrl);
-      // This will trigger the useEffect in PromotionalImage component if it's rendered
       window.dispatchEvent(new Event('storage'));
     }
   };

@@ -6,7 +6,6 @@ import {
   Star,
   Headset,
   Wifi,
-  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,7 +22,6 @@ const services: Service[] = [
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'المفضلة', icon: Star, href: '/favorites' },
   { name: 'الدعم الفني', icon: Headset, href: '/support' },
-  { name: 'المستخدمين', icon: Users, href: '/users'},
 ];
 
 const ServiceItem = ({

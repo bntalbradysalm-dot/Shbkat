@@ -1,8 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  Globe,
   ArrowUpRight,
-  Server,
+  SatelliteDish,
   Send,
   Star,
   LifeBuoy,
@@ -17,9 +16,9 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'الشبكات', icon: Signal, href: '/services' },
+  { name: 'الشبكات', icon: SatelliteDish, href: '/services' },
   { name: 'غذي حسابك', icon: ArrowUpRight, href: '/top-up' },
-  { name: 'منظومة الوادي', icon: Server, href: '/alwadi' },
+  { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'المفضلة', icon: Star, href: '/favorites' },
   { name: 'الدعم الفني', icon: LifeBuoy, href: '/support' },
@@ -39,8 +38,8 @@ const ServiceItem = ({
       animationFillMode: 'backwards',
     }}
   >
-    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary transition-colors group-hover:bg-primary/90">
-      <Icon className="h-8 w-8 text-primary-foreground transition-transform group-hover:scale-110" />
+    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white transition-colors group-hover:bg-primary/90">
+      <Icon className="h-8 w-8 text-primary transition-transform group-hover:scale-110 group-hover:text-primary-foreground" />
     </div>
     <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
   </Link>

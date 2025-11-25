@@ -71,7 +71,7 @@ export default function AccountPage() {
         <h1 className="text-xl font-bold">حسابي</h1>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg">
           <CardContent className="p-4 flex items-center gap-4">
              <User className="h-10 w-10 shrink-0" />
@@ -163,7 +163,7 @@ export default function AccountPage() {
                 </CardContent>
             </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

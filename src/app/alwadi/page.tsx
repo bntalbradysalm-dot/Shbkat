@@ -25,7 +25,7 @@ export default function AlwadiPage() {
         <h1 className="text-lg font-bold text-primary">منظومة الوادي</h1>
         <div className="w-10"></div>
       </header>
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {renewalOptions.map((option, index) => (
           <Card
             key={option.title}
@@ -43,7 +43,7 @@ export default function AlwadiPage() {
             </CardContent>
           </Card>
         ))}
-      </main>
+      </div>
     </div>
   );
 }

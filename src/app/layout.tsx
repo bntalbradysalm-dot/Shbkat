@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import { BottomNav } from '@/components/layout/bottom-nav';
 
 export const metadata: Metadata = {
   title: 'Shabakat Wallet',
@@ -20,7 +21,12 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background">
         <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
-          {children}
+          <div className="flex-1 flex flex-col relative">
+            <main className="flex-1 overflow-y-auto pb-20">
+              {children}
+            </main>
+            <BottomNav />
+          </div>
         </div>
       </body>
     </html>

@@ -26,15 +26,15 @@ const services: Service[] = [
 
 
 const ServiceItem = ({ name, icon: Icon, href, index }: Service & { index: number }) => (
-  <Link 
-    href={href} 
-    className="flex flex-col items-center justify-start space-y-2 rounded-lg p-2 text-center transition-all duration-200 hover:bg-primary/5 focus:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 animate-in fade-in-0 zoom-in-95"
+  <Link
+    href={href}
+    className="group flex flex-col items-center justify-start space-y-2 rounded-xl bg-card p-3 text-center shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 animate-in fade-in-0 zoom-in-95"
     style={{ animationDelay: `${500 + index * 75}ms`, animationFillMode: 'backwards' }}
   >
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
-      <Icon className="h-8 w-8 text-primary" />
+    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+      <Icon className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
     </div>
-    <span className="text-xs font-medium text-foreground h-8">{name}</span>
+    <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
   </Link>
 );
 
@@ -42,7 +42,7 @@ const ServiceItem = ({ name, icon: Icon, href, index }: Service & { index: numbe
 export function ServiceGrid() {
   return (
     <div className="p-4 mt-4">
-        <div className="grid grid-cols-3 gap-x-2 gap-y-4">
+        <div className="grid grid-cols-3 gap-3">
             {services.map((service, index) => <ServiceItem key={service.name} {...service} index={index} />)}
         </div>
     </div>

@@ -23,17 +23,7 @@ const managementLinks = [
 
 export default function AccountPage() {
   return (
-    <div className="flex flex-col h-full bg-background">
-       <header className="flex items-center justify-between p-4 sticky top-0 bg-card text-foreground z-10 shadow-md">
-        <Link href="/" passHref>
-          <Button variant="ghost" size="icon" aria-label="العودة">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-        </Link>
-        <h1 className="text-xl font-bold">حسابي</h1>
-        <div className="w-10"></div>
-      </header>
-
+    <div className="flex flex-col h-full bg-background pt-4">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg">
           <CardContent className="p-4 flex items-center gap-4">

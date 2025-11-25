@@ -1,9 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, CalendarClock } from 'lucide-react';
-import Link from 'next/link';
+import { CalendarClock, ChevronLeft } from 'lucide-react';
 import React from 'react';
 
 const renewalOptions = [
@@ -16,16 +13,7 @@ const renewalOptions = [
 export default function AlwadiPage() {
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center justify-between p-4 sticky top-0 bg-card text-foreground z-10 shadow-md">
-        <Link href="/" passHref>
-          <Button variant="ghost" size="icon" aria-label="العودة">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-        </Link>
-        <h1 className="text-lg font-bold">منظومة الوادي</h1>
-        <div className="w-10"></div>
-      </header>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-8">
         {renewalOptions.map((option, index) => (
            <div
             key={option.title}

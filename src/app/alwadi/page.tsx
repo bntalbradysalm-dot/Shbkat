@@ -38,7 +38,7 @@ export default function AlwadiPage() {
                     <div className="flex items-center gap-1.5 mt-1 text-primary">
                       <Coins className="h-4 w-4" />
                       <span className="text-sm font-semibold">
-                          {option.price.toLocaleString()} ريال
+                          {option.price.toLocaleString('en-US')} ريال
                       </span>
                     </div>
                 </div>

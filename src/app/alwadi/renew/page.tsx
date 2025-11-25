@@ -23,7 +23,7 @@ export default function RenewPage() {
             <CardTitle className="text-center">{title}</CardTitle>
             {price && (
               <p className="text-center text-2xl font-bold text-primary">
-                {Number(price).toLocaleString()} ريال
+                {Number(price).toLocaleString('en-US')} ريال
               </p>
             )}
           </CardHeader>

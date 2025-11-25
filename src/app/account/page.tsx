@@ -10,16 +10,35 @@ import {
   Users,
   Wifi,
   CreditCard,
-  Image as ImageIcon,
+  ImageIcon,
+  BarChart3,
+  Wallet,
+  Megaphone,
+  Send,
+  Settings,
+  Lock,
+  Share2,
+  HelpCircle,
+  LogOut,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Button } from '@/components/ui/button';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة الكروت', icon: CreditCard, href: '/cards-management' },
+  { title: 'تقرير مبيعات الكروت', icon: BarChart3, href: '/sales-report' },
+  { title: 'إدارة الدفع', icon: Wallet, href: '/payment-management' },
+  { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
+  { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
+];
+
+const appSettingsLinks = [
+    { title: 'إعدادات التطبيق', icon: Settings, href: '/app-settings' },
+    { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
+    { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
+    { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
 ];
 
 export default function AccountPage() {
@@ -94,12 +113,12 @@ export default function AccountPage() {
         <div>
           <div className="flex items-center justify-center gap-2 mt-6 mb-3">
             <h3 className="text-lg font-semibold text-muted-foreground">
-              إعدادات الواجهة
+              إعدادات الواجهة والتطبيق
             </h3>
           </div>
            <Card className="bg-card">
              <CardContent className="p-0">
-                <div className="group flex items-center justify-between p-4 cursor-pointer" onClick={handleImageUploadClick}>
+                <div className="group flex items-center justify-between p-4 cursor-pointer border-b" onClick={handleImageUploadClick}>
                    <div className="flex items-center gap-3">
                      <ImageIcon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
                      <span className="font-semibold">تغيير الصورة الترويجية</span>
@@ -113,9 +132,41 @@ export default function AccountPage() {
                     className="hidden"
                     accept="image/*"
                 />
+                {appSettingsLinks.map((link, index) => (
+                    <a
+                    href={link.href}
+                    key={link.title}
+                    className={`group flex items-center justify-between p-4 cursor-pointer ${
+                        index < appSettingsLinks.length - 1 ? 'border-b' : ''
+                    }`}
+                    >
+                    <div className="flex items-center gap-3">
+                        <link.icon className="h-6 w-6 text-black group-hover:text-primary transition-colors" />
+                        <span className="font-semibold">{link.title}</span>
+                    </div>
+                    <ChevronLeft className="h-6 w-6 text-black group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                    </a>
+                ))}
              </CardContent>
            </Card>
         </div>
+
+        <div className="pt-4">
+            <Card className="bg-card">
+                <CardContent className="p-0">
+                    <a
+                    href="/logout"
+                    className="group flex items-center justify-center p-4 cursor-pointer"
+                    >
+                    <div className="flex items-center gap-3 text-destructive">
+                        <LogOut className="h-6 w-6" />
+                        <span className="font-semibold">تسجيل الخروج</span>
+                    </div>
+                    </a>
+                </CardContent>
+            </Card>
+        </div>
+
       </div>
     </div>
   );

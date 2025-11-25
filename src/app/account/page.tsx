@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft,
   ChevronLeft,
   LayoutGrid,
   Moon,
@@ -17,7 +16,6 @@ import {
   Wifi,
   CreditCard,
 } from 'lucide-react';
-import Link from 'next/link';
 
 const colors = [
   { name: 'Teal', value: 'hsl(173, 80%, 42%)' },
@@ -150,15 +148,13 @@ export default function AccountPage() {
             <Card>
                 <CardContent className="p-0">
                     {managementLinks.map((link, index) => (
-                        <Link href={link.href} key={link.title} passHref>
-                           <div className={`group flex items-center justify-between p-4 cursor-pointer ${index < managementLinks.length - 1 ? 'border-b' : ''}`}>
-                                <div className="flex items-center gap-3">
-                                    <link.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    <span className="font-semibold">{link.title}</span>
-                                </div>
-                                <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                           </div>
-                        </Link>
+                       <a href={link.href} key={link.title} className={`group flex items-center justify-between p-4 cursor-pointer ${index < managementLinks.length - 1 ? 'border-b' : ''}`}>
+                            <div className="flex items-center gap-3">
+                                <link.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <span className="font-semibold">{link.title}</span>
+                            </div>
+                            <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                       </a>
                     ))}
                 </CardContent>
             </Card>

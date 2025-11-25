@@ -19,7 +19,7 @@ export default function AlwadiPage() {
       <header className="flex items-center justify-between p-4 sticky top-0 bg-card/80 backdrop-blur-sm z-10 border-b">
         <Link href="/" passHref>
           <Button variant="ghost" size="icon" aria-label="العودة">
-            <ArrowLeft className="h-6 w-6 text-muted-foreground" />
+            <ArrowLeft className="h-6 w-6" />
           </Button>
         </Link>
         <h1 className="text-lg font-bold text-primary">منظومة الوادي</h1>

@@ -25,9 +25,6 @@ export function Header() {
     };
     
     updateGreeting();
-    // You can also set an interval to update the greeting periodically if needed
-    // const intervalId = setInterval(updateGreeting, 60000);
-    // return () => clearInterval(intervalId);
   }, []);
 
   return (
@@ -40,8 +37,8 @@ export function Header() {
         <p className="text-sm text-muted-foreground">{userName}</p>
       </div>
       <Link href="/account">
-        <Button variant="ghost" size="icon" aria-label="Account" className="h-10 w-10 rounded-full">
-            <User className="h-8 w-8 text-muted-foreground" />
+        <Button variant="ghost" size="icon" aria-label="Account" className="h-10 w-10">
+            <User className="h-7 w-7 text-muted-foreground" />
         </Button>
       </Link>
     </header>

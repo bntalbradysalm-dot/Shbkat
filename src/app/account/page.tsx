@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   ChevronLeft,
   LayoutGrid,
-  Moon,
   Phone,
-  Sun,
   User,
   MapPin,
   Users,
@@ -24,22 +22,6 @@ const managementLinks = [
 ];
 
 export default function AccountPage() {
-  const [theme, setTheme] = useState('light');
-
-  const handleThemeChange = (selectedTheme: string) => {
-    setTheme(selectedTheme);
-    if (selectedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
-  React.useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setTheme(isDark ? 'dark' : 'light');
-  }, []);
-
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center justify-between p-4 sticky top-0 bg-primary text-primary-foreground z-10 shadow-md">
@@ -68,40 +50,6 @@ export default function AccountPage() {
                   <span>حضرموت - شبام</span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-2">
-            <h3 className="font-semibold text-center text-muted-foreground mb-3">
-              الوضع المفضل
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant={theme === 'dark' ? 'outline' : 'ghost'}
-                onClick={() => handleThemeChange('dark')}
-                className={`flex flex-col h-20 gap-2 border-2 ${
-                  theme === 'dark'
-                    ? 'border-primary bg-primary/10'
-                    : 'bg-muted/50 border-transparent'
-                }`}
-              >
-                <Moon />
-                <span>داكن</span>
-              </Button>
-              <Button
-                variant={theme === 'light' ? 'outline' : 'ghost'}
-                onClick={() => handleThemeChange('light')}
-                className={`flex flex-col h-20 gap-2 border-2 ${
-                  theme === 'light'
-                    ? 'border-primary bg-primary/10'
-                    : 'bg-muted/50 border-transparent'
-                }`}
-              >
-                <Sun />
-                <span>فاتح</span>
-              </Button>
             </div>
           </CardContent>
         </Card>

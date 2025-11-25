@@ -22,9 +22,10 @@ export function BottomNav() {
             <Link 
               key={item.name} 
               href={item.href} 
-              className={`flex flex-col items-center justify-center space-y-1 p-2 rounded-md ${isActive ? 'text-primary' : 'text-muted-foreground'} transition-colors hover:text-primary w-1/4 focus:bg-accent/50 focus:outline-none`}
+              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-colors w-1/4 focus:bg-accent/50 focus:outline-none ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
               aria-current={isActive ? 'page' : undefined}
             >
+              {isActive && <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />}
               <item.icon className="h-6 w-6" />
               <span className="text-xs font-medium">{item.name}</span>
             </Link>

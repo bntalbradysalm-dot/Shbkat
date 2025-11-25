@@ -106,15 +106,15 @@ export default function RenewPage() {
                       <div className="space-y-4 pt-4 text-base text-foreground">
                         <div className="flex justify-between items-center">
                           <span className="font-bold">{subscriberName}</span>
-                          <span>:اسم المشترك</span>
+                          <span>اسم المشترك:</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="font-bold">{cardNumber}</span>
-                          <span>:رقم الكرت</span>
+                          <span>رقم الكرت:</span>
                         </div>
                          <div className="flex justify-between items-center">
                            <span className="font-bold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
-                           <span>:المبلغ</span>
+                           <span>المبلغ:</span>
                         </div>
                       </div>
                     </AlertDialogDescription>

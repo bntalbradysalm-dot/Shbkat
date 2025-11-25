@@ -63,6 +63,7 @@ export default function AccountPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // This effect runs only on the client
     const savedTheme = localStorage.getItem('theme') || 'light';
     setActiveTheme(savedTheme);
     if (savedTheme === 'dark') {
@@ -92,7 +93,8 @@ export default function AccountPage() {
     if (file) {
       const newImageUrl = URL.createObjectURL(file);
       localStorage.setItem('promoImageUrl', newImageUrl);
-      window.dispatchEvent(new Event('storage'));
+      // Dispatch a storage event to notify other components (like PromotionalImage)
+      window.dispatchEvent(new Event('storage')); 
     }
   };
 
@@ -128,9 +130,9 @@ export default function AccountPage() {
             <Card className="bg-card">
               <CardContent className="p-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <div
+                  <button
                     onClick={() => handleThemeChange('light')}
-                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
                       activeTheme === 'light'
                         ? 'bg-primary/10 text-primary'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'
@@ -138,10 +140,10 @@ export default function AccountPage() {
                   >
                     <Sun className="h-5 w-5" />
                     <span className="text-xs font-semibold">فاتح</span>
-                  </div>
-                  <div
+                  </button>
+                  <button
                      onClick={() => handleThemeChange('dark')}
-                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
                        activeTheme === 'dark'
                          ? 'bg-primary/10 text-primary'
                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
@@ -149,7 +151,7 @@ export default function AccountPage() {
                   >
                     <Moon className="h-5 w-5" />
                     <span className="text-xs font-semibold">داكن</span>
-                  </div>
+                  </button>
                 </div>
               </CardContent>
             </Card>
@@ -196,13 +198,13 @@ export default function AccountPage() {
           </div>
            <Card className="bg-card">
              <CardContent className="p-0">
-                <div className="group flex items-center justify-between p-3 cursor-pointer border-b" onClick={handleImageUploadClick}>
+                <button className="group flex items-center justify-between p-3 cursor-pointer border-b w-full" onClick={handleImageUploadClick}>
                    <div className="flex items-center gap-3">
                      <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                      <span className="text-xs font-semibold">تغيير الصورة الترويجية</span>
                    </div>
                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                </div>
+                </button>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -237,12 +239,12 @@ export default function AccountPage() {
             <AlertDialogTrigger asChild>
               <Card className="bg-card cursor-pointer">
                   <CardContent className="p-0">
-                      <div className="group flex items-center justify-center p-3">
+                      <button className="group flex items-center justify-center p-3 w-full">
                         <div className="flex items-center gap-3 text-destructive">
                             <LogOut className="h-5 w-5" />
                             <span className="text-xs font-semibold">تسجيل الخروج</span>
                         </div>
-                      </div>
+                      </button>
                   </CardContent>
               </Card>
             </AlertDialogTrigger>

@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowUpRight,
+  Wallet,
   SatelliteDish,
   Send,
   Star,
@@ -17,7 +17,7 @@ type Service = {
 
 const services: Service[] = [
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'غذي حسابك', icon: ArrowUpRight, href: '/top-up' },
+  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'المفضلة', icon: Star, href: '/favorites' },

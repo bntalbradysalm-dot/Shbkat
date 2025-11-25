@@ -18,52 +18,42 @@ const initialRenewalOptions = [
 export default function AlwadiManagementPage() {
   const [options, setOptions] = useState(initialRenewalOptions);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [currentTitle, setCurrentTitle] = useState('');
-  const [currentPrice, setCurrentPrice] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPrice, setNewPrice] = useState('');
 
   const handleEdit = (option: typeof initialRenewalOptions[0]) => {
     setEditingId(option.id);
-    setCurrentTitle(option.title);
-    setCurrentPrice(option.price.toString());
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setCurrentTitle('');
-    setCurrentPrice('');
   };
 
   const handleSave = (id: number) => {
-    setOptions(
-      options.map((opt) =>
-        opt.id === id ? { ...opt, title: currentTitle, price: Number(currentPrice) } : opt
-      )
-    );
-    handleCancel();
+    setEditingId(null);
   };
-  
+
   const handleTitleChange = (id: number, newTitle: string) => {
     setOptions(
-        options.map((opt) =>
-            opt.id === id ? { ...opt, title: newTitle } : opt
-        )
+      options.map((opt) =>
+        opt.id === id ? { ...opt, title: newTitle } : opt
+      )
     );
   };
 
   const handlePriceChange = (id: number, newPrice: string) => {
-      const priceAsNumber = Number(newPrice);
-      if (!isNaN(priceAsNumber)) {
-          setOptions(
-              options.map((opt) =>
-                  opt.id === id ? { ...opt, price: priceAsNumber } : opt
-              )
-          );
-      }
+    const priceAsNumber = Number(newPrice);
+    if (!isNaN(priceAsNumber)) {
+      setOptions(
+        options.map((opt) =>
+          opt.id === id ? { ...opt, price: priceAsNumber } : opt
+        )
+      );
+    } else if (newPrice === '') {
+        setOptions(
+            options.map((opt) =>
+              opt.id === id ? { ...opt, price: 0 } : opt
+            )
+        );
+    }
   };
-
 
   const handleDelete = (id: number) => {
     setOptions(options.filter((opt) => opt.id !== id));
@@ -114,7 +104,7 @@ export default function AlwadiManagementPage() {
                       />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button size="icon" onClick={() => setEditingId(null)}>
+                      <Button size="icon" onClick={() => handleSave(option.id)}>
                         <Save className="h-4 w-4" />
                       </Button>
                     </div>

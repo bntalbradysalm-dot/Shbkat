@@ -1,14 +1,11 @@
 "use client";
 
-import { Bell, CircleUser } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 import Link from 'next/link';
 
 export function Header() {
-  const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
   const [greeting, setGreeting] = React.useState('');
   const [userName, setUserName] = React.useState('اسم المستخدم'); // Placeholder name
 
@@ -44,7 +41,7 @@ export function Header() {
       </div>
       <Link href="/account">
         <Button variant="ghost" size="icon" aria-label="Account" className="h-9 w-9 rounded-full">
-            <CircleUser className="h-6 w-6 text-muted-foreground" />
+            <User className="h-6 w-6 text-muted-foreground" />
         </Button>
       </Link>
     </header>

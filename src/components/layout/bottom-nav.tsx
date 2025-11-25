@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Users, AreaChart, CircleUser } from 'lucide-react';
+import { Home, Users, AreaChart, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -8,7 +8,7 @@ const navItems = [
   { name: 'الرئيسية', icon: Home, href: '/' },
   { name: 'المستخدمين', icon: Users, href: '/users' },
   { name: 'التقارير', icon: AreaChart, href: '/reports' },
-  { name: 'حسابي', icon: CircleUser, href: '/account' },
+  { name: 'حسابي', icon: User, href: '/account' },
 ];
 
 export function BottomNav() {

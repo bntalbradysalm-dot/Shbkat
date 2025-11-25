@@ -3,6 +3,7 @@
 import { CalendarClock, ChevronLeft } from 'lucide-react';
 import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
+import Link from 'next/link';
 
 const renewalOptions = [
   { title: 'تجديد شهرين', duration: '2 months' },
@@ -17,7 +18,8 @@ export default function AlwadiPage() {
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {renewalOptions.map((option, index) => (
-          <div
+          <Link
+            href={`/alwadi/renew?title=${encodeURIComponent(option.title)}`}
             key={option.title}
             className="group cursor-pointer transition-all duration-300 animate-in fade-in-0 zoom-in-95 p-4 flex items-center justify-between border-b"
             style={{ animationDelay: `${100 + index * 100}ms` }}
@@ -31,7 +33,7 @@ export default function AlwadiPage() {
               </span>
             </div>
             <ChevronLeft className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-[-4px] group-hover:text-primary" />
-          </div>
+          </Link>
         ))}
       </div>
     </div>

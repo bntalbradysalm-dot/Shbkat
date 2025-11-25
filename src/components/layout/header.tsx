@@ -21,10 +21,10 @@ const Header = () => {
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
   return (
-    <header className="flex items-center justify-between p-4 bg-transparent">
+    <header className="flex items-center justify-between p-4 bg-primary text-primary-foreground">
       <div className="flex items-center gap-3">
         {userAvatar && (
-          <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+          <Avatar className="h-12 w-12 border-2 border-primary-foreground/50 shadow-sm">
             <Image
               src={userAvatar.imageUrl}
               alt={userAvatar.description}
@@ -36,15 +36,15 @@ const Header = () => {
           </Avatar>
         )}
         <div>
-          <p className="text-sm text-foreground/80">{greeting}</p>
-          <h1 className="font-bold text-lg text-foreground">اسم المستخدم</h1>
+          <p className="text-sm text-primary-foreground/80">{greeting}</p>
+          <h1 className="font-bold text-lg text-primary-foreground">اسم المستخدم</h1>
         </div>
       </div>
       <div className="relative">
-        <Bell className="h-6 w-6 text-foreground" />
+        <Bell className="h-6 w-6 text-primary-foreground" />
         <span className="absolute -top-1 -right-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
         </span>
       </div>
     </header>

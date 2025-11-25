@@ -5,7 +5,7 @@ import {
   Send,
   Star,
   LifeBuoy,
-  Signal,
+  Wifi,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,7 +16,7 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'الشبكات', icon: SatelliteDish, href: '/services' },
+  { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'غذي حسابك', icon: ArrowUpRight, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },

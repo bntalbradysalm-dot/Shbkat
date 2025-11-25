@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,22 +23,32 @@ export function Header() {
         setGreeting('صباحك جميل');
       }
     };
-    
+
     updateGreeting();
   }, []);
 
   return (
-    <header className="flex items-center justify-between p-4 sticky top-0 bg-card/80 backdrop-blur-sm z-10 border-b">
-      <Button variant="ghost" size="icon" aria-label="Notifications" className="h-9 w-9 rounded-full">
-        <Bell className="h-5 w-5 text-muted-foreground" />
+    <header className="flex items-center justify-between p-4 sticky top-0 bg-primary text-primary-foreground z-10 shadow-md">
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Notifications"
+        className="h-9 w-9 rounded-full hover:bg-white/20"
+      >
+        <Bell className="h-5 w-5" />
       </Button>
       <div className="flex flex-col items-center">
-        <h1 className="text-lg font-bold text-primary font-headline">{greeting}</h1>
-        <p className="text-sm text-muted-foreground">{userName}</p>
+        <h1 className="text-lg font-bold font-headline">{greeting}</h1>
+        <p className="text-sm opacity-90">{userName}</p>
       </div>
       <Link href="/account">
-        <Button variant="ghost" size="icon" aria-label="Account" className="h-10 w-10">
-            <User className="h-7 w-7 text-muted-foreground" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Account"
+          className="h-10 w-10 hover:bg-white/20"
+        >
+          <User className="h-7 w-7" />
         </Button>
       </Link>
     </header>

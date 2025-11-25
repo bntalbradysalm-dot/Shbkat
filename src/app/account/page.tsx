@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   LayoutGrid,
   Moon,
-  Palette,
   Phone,
   Sun,
   User,
@@ -17,20 +16,6 @@ import {
   CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
-
-const colors = [
-  { name: 'Teal', value: 'hsl(173, 80%, 42%)' },
-  { name: 'Rose', value: 'hsl(346, 77%, 50%)' },
-  { name: 'Yellow', value: 'hsl(45, 93%, 47%)' },
-  { name: 'Orange', value: 'hsl(25, 95%, 53%)' },
-  { name: 'Purple', value: 'hsl(262, 83%, 60%)' },
-  { name: 'Green', value: 'hsl(142, 76%, 36%)' },
-  { name: 'Red', value: 'hsl(0, 72%, 51%)' },
-  { name: 'Blue', value: 'hsl(221, 83%, 53%)' },
-  { name: 'Slate', value: 'hsl(215, 28%, 47%)' },
-  { name: 'Lime', value: 'hsl(84, 81%, 48%)' },
-  { name: 'Indigo', value: 'hsl(244, 65%, 61%)' },
-];
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
@@ -49,11 +34,6 @@ export default function AccountPage() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  };
-
-  const handleColorChange = (color: string) => {
-    setPrimaryColor(color);
-    document.documentElement.style.setProperty('--primary', color);
   };
 
   React.useEffect(() => {
@@ -135,36 +115,6 @@ export default function AccountPage() {
               لوحة التحكم
             </h3>
           </div>
-
-          <Card className="mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Palette className="h-5 w-5 text-muted-foreground" />
-                <h4 className="font-semibold">اللون الأساسي للتطبيق</h4>
-              </div>
-              <div className="grid grid-cols-6 gap-3">
-                {colors.map((color) => (
-                  <Button
-                    key={color.name}
-                    variant="ghost"
-                    size="icon"
-                    className={`h-10 w-10 rounded-full border-2 ${
-                      primaryColor === color.value
-                        ? 'border-primary'
-                        : 'border-transparent'
-                    }`}
-                    onClick={() => handleColorChange(color.value)}
-                    aria-label={`Change color to ${color.name}`}
-                  >
-                    <div
-                      className="h-8 w-8 rounded-full"
-                      style={{ backgroundColor: color.value }}
-                    />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardContent className="p-0">

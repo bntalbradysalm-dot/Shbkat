@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Home, Users, AreaChart, User } from 'lucide-react';
 import Link from 'next/link';
@@ -19,17 +19,23 @@ export function BottomNav() {
         {navItems.map(item => {
           const isActive = pathname === item.href;
           return (
-            <Link 
-              key={item.name} 
-              href={item.href} 
-              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
+                isActive
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-primary'
+              }`}
               aria-current={isActive ? 'page' : undefined}
             >
-              {isActive && <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />}
+              {isActive && (
+                <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />
+              )}
               <item.icon className="h-6 w-6" />
               <span className="text-xs font-medium">{item.name}</span>
             </Link>
-          )
+          );
         })}
       </div>
     </nav>

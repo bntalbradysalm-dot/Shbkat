@@ -35,9 +35,9 @@ export function Header() {
         aria-label="Notifications"
         className="h-9 w-9 rounded-full hover:bg-white/20 text-primary-foreground"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-5 w-5 text-primary-foreground" />
       </Button>
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center text-primary-foreground">
         <h1 className="text-lg font-bold font-headline">{greeting}</h1>
         <p className="text-sm opacity-90">{userName}</p>
       </div>
@@ -48,7 +48,7 @@ export function Header() {
           aria-label="Account"
           className="h-10 w-10 hover:bg-white/20 text-primary-foreground"
         >
-          <User className="h-7 w-7" />
+          <User className="h-7 w-7 text-primary-foreground" />
         </Button>
       </Link>
     </header>

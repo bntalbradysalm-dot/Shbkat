@@ -1,6 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  Smartphone, Wifi, Phone, Droplets, Zap, Send, Globe, Star, Users, History
+  Globe,
+  ArrowUpRight,
+  Server,
+  Send,
+  Star,
+  LifeBuoy
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -10,26 +15,15 @@ type Service = {
   href: string;
 }
 
-const quickActions: Service[] = [
-  { name: 'تحويل مشترك', icon: Send, href: '/transfer' },
+const services: Service[] = [
+  { name: 'الشبكات', icon: Globe, href: '/services' },
+  { name: 'غذي حسابك', icon: ArrowUpRight, href: '/top-up' },
+  { name: 'منظومة الوادي', icon: Server, href: '/alwadi' },
+  { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'المفضلة', icon: Star, href: '/favorites' },
-  { name: 'سجل العمليات', icon: History, href: '/history' },
-  { name: 'خدمة العملاء', icon: Users, href: '/support' },
+  { name: 'الدعم الفني', icon: LifeBuoy, href: '/support' },
 ];
 
-const networkServices: Service[] = [
-  { name: 'يمن موبايل', icon: Smartphone, href: '/services/yemen-mobile' },
-  { name: 'YOU', icon: Smartphone, href: '/services/you' },
-  { name: 'سبأفون', icon: Smartphone, href: '/services/sabafon' },
-  { name: 'واي', icon: Smartphone, href: '/services/y' },
-];
-
-const billServices: Service[] = [
-    { name: 'انترنت ADSL', icon: Wifi, href: '/bills/adsl' },
-    { name: 'الهاتف الثابت', icon: Phone, href: '/bills/landline' },
-    { name: 'الماء', icon: Droplets, href: '/bills/water' },
-    { name: 'الكهرباء', icon: Zap, href: '/bills/electricity' },
-];
 
 const ServiceItem = ({ name, icon: Icon, href, index }: Service & { index: number }) => (
   <Link 
@@ -44,21 +38,13 @@ const ServiceItem = ({ name, icon: Icon, href, index }: Service & { index: numbe
   </Link>
 );
 
-const ServiceSection = ({ title, services }: { title: string, services: Service[] }) => (
-  <div>
-    <h3 className="mb-4 text-lg font-semibold text-right text-foreground/90">{title}</h3>
-    <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-      {services.map((service, index) => <ServiceItem key={service.name} {...service} index={index} />)}
-    </div>
-  </div>
-);
 
 export function ServiceGrid() {
   return (
-    <div className="flex flex-col gap-8 p-4 mt-4">
-      <ServiceSection title="وصول سريع" services={quickActions} />
-      <ServiceSection title="خدمات الشبكات" services={networkServices} />
-      <ServiceSection title="سداد الفواتير" services={billServices} />
+    <div className="p-4 mt-4">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-4">
+            {services.map((service, index) => <ServiceItem key={service.name} {...service} index={index} />)}
+        </div>
     </div>
   );
 }

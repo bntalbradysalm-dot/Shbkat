@@ -3,10 +3,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Bell } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Header = () => {
   const [greeting, setGreeting] = useState('');
+  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
+  const [avatarUrl, setAvatarUrl] = useState(userAvatar?.imageUrl || '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -18,23 +21,43 @@ const Header = () => {
     }
   }, []);
 
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const newAvatarUrl = URL.createObjectURL(file);
+      setAvatarUrl(newAvatarUrl);
+      // In a real app, you would upload the file to a server here.
+    }
+  };
 
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        {userAvatar && (
-          <Avatar className="h-12 w-12 border-2 border-primary-foreground/50 shadow-sm">
-            <Image
-              src={userAvatar.imageUrl}
-              alt={userAvatar.description}
-              data-ai-hint={userAvatar.imageHint}
-              width={48}
-              height={48}
-              className="object-cover"
-            />
-          </Avatar>
-        )}
+        <div className="cursor-pointer" onClick={handleAvatarClick}>
+          {avatarUrl && userAvatar && (
+            <Avatar className="h-12 w-12 border-2 border-primary-foreground/50 shadow-sm">
+              <Image
+                src={avatarUrl}
+                alt={userAvatar.description}
+                data-ai-hint={userAvatar.imageHint}
+                width={48}
+                height={48}
+                className="object-cover"
+              />
+            </Avatar>
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+          />
+        </div>
         <div>
           <p className="text-sm text-foreground/80">{greeting}</p>
           <h1 className="font-bold text-lg">اسم المستخدم</h1>

@@ -41,7 +41,7 @@ export function Header() {
       </div>
       <Link href="/account">
         <Button variant="ghost" size="icon" aria-label="Account" className="h-9 w-9 rounded-full">
-            <User className="h-6 w-6 text-muted-foreground" />
+            <User className="h-7 w-7 text-muted-foreground" />
         </Button>
       </Link>
     </header>

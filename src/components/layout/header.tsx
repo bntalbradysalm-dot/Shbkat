@@ -33,7 +33,7 @@ export function Header() {
         variant="ghost"
         size="icon"
         aria-label="Notifications"
-        className="h-9 w-9 rounded-full hover:bg-white/20"
+        className="h-9 w-9 rounded-full hover:bg-white/20 text-primary-foreground"
       >
         <Bell className="h-5 w-5" />
       </Button>
@@ -46,7 +46,7 @@ export function Header() {
           variant="ghost"
           size="icon"
           aria-label="Account"
-          className="h-10 w-10 hover:bg-white/20"
+          className="h-10 w-10 hover:bg-white/20 text-primary-foreground"
         >
           <User className="h-7 w-7" />
         </Button>

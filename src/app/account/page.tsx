@@ -66,7 +66,7 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center justify-between p-4 sticky top-0 bg-primary text-primary-foreground z-10 shadow-md">
         <Link href="/" passHref>
-          <Button variant="ghost" size="icon" aria-label="العودة" className="hover:bg-white/20">
+          <Button variant="ghost" size="icon" aria-label="العودة" className="hover:bg-white/20 text-primary-foreground">
             <ChevronLeft className="h-6 w-6" />
           </Button>
         </Link>

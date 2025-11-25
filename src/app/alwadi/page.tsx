@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, ChevronLeft, Coins } from 'lucide-react';
+import { CreditCard, ChevronLeft, Coins } from 'lucide-react';
 import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ export default function AlwadiPage() {
             <div className="p-4 flex items-center justify-between border-b rounded-xl hover:bg-muted/50">
                 <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary/10 rounded-lg">
-                    <CalendarClock className="h-6 w-6 text-primary" />
+                    <CreditCard className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex flex-col">
                     <span className="font-bold text-lg text-foreground/90">

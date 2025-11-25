@@ -6,8 +6,10 @@ export default function Home() {
   return (
     <>
       <Header />
-      <BalanceCard />
-      <ServiceGrid />
+      <div className="p-4 space-y-4">
+        <BalanceCard />
+        <ServiceGrid />
+      </div>
     </>
   );
 }

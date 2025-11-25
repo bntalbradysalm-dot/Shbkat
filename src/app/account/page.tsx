@@ -12,7 +12,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Header } from '@/components/layout/header';
+import { SimpleHeader } from '@/components/layout/simple-header';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
@@ -22,10 +22,10 @@ const managementLinks = [
 
 export default function AccountPage() {
   return (
-    <div className="flex flex-col h-full bg-background pt-4">
-       <Header />
+    <div className="flex flex-col h-full bg-background">
+      <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden shadow-lg">
+        <Card className="overflow-hidden shadow-lg bg-card">
           <CardContent className="p-4 flex items-center gap-4">
             <User className="h-10 w-10 shrink-0 text-muted-foreground" />
             <div className="flex-grow">
@@ -52,7 +52,7 @@ export default function AccountPage() {
             </h3>
           </div>
 
-          <Card>
+          <Card className="bg-card">
             <CardContent className="p-0">
               {managementLinks.map((link, index) => (
                 <a

@@ -14,7 +14,7 @@ export function BalanceCard() {
   };
 
   return (
-    <div className="px-4 animate-in fade-in-0 zoom-in-95 duration-500">
+    <div className="animate-in fade-in-0 zoom-in-95 duration-500">
       <Card className="w-full overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-lg">
         <CardContent className="p-6">
           <div className="flex items-center justify-between text-sm text-primary-foreground/80">

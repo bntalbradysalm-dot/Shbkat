@@ -44,6 +44,26 @@ export default function AlwadiManagementPage() {
     );
     handleCancel();
   };
+  
+  const handleTitleChange = (id: number, newTitle: string) => {
+    setOptions(
+        options.map((opt) =>
+            opt.id === id ? { ...opt, title: newTitle } : opt
+        )
+    );
+  };
+
+  const handlePriceChange = (id: number, newPrice: string) => {
+      const priceAsNumber = Number(newPrice);
+      if (!isNaN(priceAsNumber)) {
+          setOptions(
+              options.map((opt) =>
+                  opt.id === id ? { ...opt, price: priceAsNumber } : opt
+              )
+          );
+      }
+  };
+
 
   const handleDelete = (id: number) => {
     setOptions(options.filter((opt) => opt.id !== id));
@@ -80,8 +100,8 @@ export default function AlwadiManagementPage() {
                       <Label htmlFor={`title-${option.id}`}>اسم الخيار</Label>
                       <Input
                         id={`title-${option.id}`}
-                        value={currentTitle}
-                        onChange={(e) => setCurrentTitle(e.target.value)}
+                        value={option.title}
+                        onChange={(e) => handleTitleChange(option.id, e.target.value)}
                       />
                     </div>
                     <div>
@@ -89,15 +109,12 @@ export default function AlwadiManagementPage() {
                       <Input
                         id={`price-${option.id}`}
                         type="number"
-                        value={currentPrice}
-                        onChange={(e) => setCurrentPrice(e.target.value)}
+                        value={option.price}
+                        onChange={(e) => handlePriceChange(option.id, e.target.value)}
                       />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={handleCancel}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" onClick={() => handleSave(option.id)}>
+                      <Button size="icon" onClick={() => setEditingId(null)}>
                         <Save className="h-4 w-4" />
                       </Button>
                     </div>

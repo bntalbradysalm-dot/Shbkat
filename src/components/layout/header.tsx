@@ -1,7 +1,6 @@
 'use client';
 import { Bell, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Card } from '../ui/card';
 
 const Header = () => {
   const [greeting, setGreeting] = useState('');
@@ -19,9 +18,7 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        <Card className="h-12 w-12 flex items-center justify-center bg-primary/10">
-          <User className="h-6 w-6 text-primary" />
-        </Card>
+        <User className="h-10 w-10 text-primary" />
         <div>
           <p className="text-sm text-foreground/80">{greeting}</p>
           <h1 className="font-bold text-lg">اسم المستخدم</h1>

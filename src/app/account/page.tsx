@@ -38,7 +38,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -58,12 +59,25 @@ const appSettingsLinks = [
     { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
 ];
 
+// Define a type for the user profile data from Firestore
+type UserProfile = {
+  location?: string;
+  phoneNumber?: string;
+};
+
 export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = useState('light');
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -125,11 +139,11 @@ export default function AccountPage() {
               <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-3 w-3" />
-                  <span>{user.phoneNumber || 'لا يوجد رقم هاتف'}</span>
+                  <span>{userProfile?.phoneNumber || '...'}</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="ml-2 h-3 w-3" />
-                  <span>{user.email}</span>
+                  <span>{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
                 </div>
               </div>
             </div>
@@ -280,3 +294,5 @@ export default function AccountPage() {
     </div>
   );
 }
+
+    

@@ -148,13 +148,6 @@ export default function AccountPage() {
                 </div>
               </div>
             </div>
-             <div className="text-left">
-                <p className="text-xs text-primary-foreground/80">الرصيد</p>
-                <p className="font-bold text-lg">
-                  {(userProfile?.balance ?? 0).toLocaleString('en-US')}
-                  <span className="text-xs"> ريال</span>
-                </p>
-            </div>
           </CardContent>
         </Card>
         

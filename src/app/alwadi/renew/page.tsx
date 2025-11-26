@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard } from 'lucide-react';
+import { User, CreditCard, CheckCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +42,7 @@ export default function RenewPage() {
   const [cardNumber, setCardNumber] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -98,11 +99,8 @@ export default function RenewPage() {
       };
       // Not using non-blocking here as we want to ensure it's logged before confirming
       await addDocumentNonBlocking(transactionsRef, transactionData);
-
-      toast({
-        title: "تم التجديد بنجاح",
-        description: `تم خصم ${renewalPrice.toLocaleString()} ريال من رصيدك.`,
-      });
+      
+      setShowSuccessOverlay(true);
 
       // Navigate away after success
       setTimeout(() => router.push('/'), 2000);
@@ -119,6 +117,18 @@ export default function RenewPage() {
       setShowDialog(false);
     }
   };
+  
+  if (showSuccessOverlay) {
+    return (
+      <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0">
+        <div className="flex flex-col items-center justify-center gap-4 text-center">
+          <CheckCircle className="h-24 w-24 text-green-500 animate-in zoom-in-75" />
+          <h2 className="text-2xl font-bold">تم التجديد بنجاح</h2>
+          <p className="text-muted-foreground">سيتم توجيهك للصفحة الرئيسية...</p>
+        </div>
+      </div>
+    );
+  }
 
 
   return (

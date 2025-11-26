@@ -49,6 +49,17 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const nameParts = fullName.trim().split(/\s+/);
+    if (nameParts.length < 4) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال الاسم الرباعي الكامل.",
+      });
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -81,7 +92,6 @@ export default function SignupPage() {
 
         // Create user document in Firestore
         const userRef = doc(firestore, 'users', user.uid);
-        const nameParts = fullName.split(' ');
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ');
 

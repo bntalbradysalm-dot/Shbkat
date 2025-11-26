@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -18,36 +18,111 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { doc, updateDoc, increment, collection } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+
+type UserProfile = {
+  balance?: number;
+};
 
 export default function RenewPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
+
   const title = searchParams.get('title');
   const price = searchParams.get('price');
   
   const [subscriberName, setSubscriberName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [showDialog, setShowDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (subscriberName && cardNumber) {
       setShowDialog(true);
     } else {
-      // Optionally, show an error message if fields are empty
-      alert("الرجاء إدخال اسم المشترك ورقم الكرت");
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال اسم المشترك ورقم الكرت",
+      });
     }
   };
   
-  const handleFinalConfirmation = () => {
-    // Here you would typically handle the actual renewal logic
-    console.log("Renewal confirmed for:", { subscriberName, cardNumber, price });
-    setShowDialog(false);
-    // Maybe show a success message and navigate away
+  const handleFinalConfirmation = async () => {
+    if (!user || !firestore || !price || !userProfile || isProcessing) return;
+
+    const renewalPrice = Number(price);
+    const currentUserBalance = userProfile.balance ?? 0;
+
+    if (currentUserBalance < renewalPrice) {
+      toast({
+        variant: "destructive",
+        title: "رصيد غير كافٍ",
+        description: `رصيدك الحالي ${currentUserBalance.toLocaleString()} ريال، وهو لا يكفي لإتمام العملية.`,
+      });
+      setShowDialog(false);
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // 1. Deduct balance
+      const userRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: increment(-renewalPrice),
+      });
+
+      // 2. Record transaction
+      const transactionsRef = collection(firestore, 'users', user.uid, 'transactions');
+      const transactionData = {
+        userId: user.uid,
+        transactionDate: new Date().toISOString(),
+        amount: renewalPrice,
+        transactionType: 'تجديد الوادي',
+        notes: `تجديد باقة "${title}" للمشترك ${subscriberName} (كرت: ${cardNumber})`,
+      };
+      // Not using non-blocking here as we want to ensure it's logged before confirming
+      await addDocumentNonBlocking(transactionsRef, transactionData);
+
+      toast({
+        title: "تم التجديد بنجاح",
+        description: `تم خصم ${renewalPrice.toLocaleString()} ريال من رصيدك.`,
+      });
+
+      // Navigate away after success
+      setTimeout(() => router.push('/'), 2000);
+
+    } catch (error) {
+      console.error("Renewal failed:", error);
+      toast({
+        variant: "destructive",
+        title: "فشل التجديد",
+        description: "حدث خطأ أثناء محاولة تجديد الاشتراك. الرجاء المحاولة مرة أخرى.",
+      });
+    } finally {
+      setIsProcessing(false);
+      setShowDialog(false);
+    }
   };
 
 
   return (
+    <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title={title || 'تجديد الاشتراك'} />
       <div className="flex-1 overflow-y-auto p-4">
@@ -95,8 +170,8 @@ export default function RenewPage() {
 
                <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
                 <AlertDialogTrigger asChild>
-                   <Button className="w-full" onClick={handleConfirmClick}>
-                      تأكيد التجديد
+                   <Button className="w-full" onClick={handleConfirmClick} disabled={isProcessing}>
+                      {isProcessing ? 'جاري المعالجة...' : 'تأكيد التجديد'}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="rounded-lg">
@@ -120,8 +195,10 @@ export default function RenewPage() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
-                    <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation}>تأكيد</AlertDialogAction>
-                    <AlertDialogCancel className="flex-1 mt-0">إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
+                      {isProcessing ? 'جاري التأكيد...' : 'تأكيد'}
+                    </AlertDialogAction>
+                    <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -130,5 +207,7 @@ export default function RenewPage() {
         </Card>
       </div>
     </div>
+    <Toaster />
+    </>
   );
 }

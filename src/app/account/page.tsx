@@ -63,6 +63,7 @@ const appSettingsLinks = [
 type UserProfile = {
   location?: string;
   phoneNumber?: string;
+  balance?: number;
 };
 
 export default function AccountPage() {
@@ -146,6 +147,13 @@ export default function AccountPage() {
                   <span>{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
                 </div>
               </div>
+            </div>
+             <div className="text-left">
+                <p className="text-xs text-primary-foreground/80">الرصيد</p>
+                <p className="font-bold text-lg">
+                  {(userProfile?.balance ?? 0).toLocaleString('en-US')}
+                  <span className="text-xs"> ريال</span>
+                </p>
             </div>
           </CardContent>
         </Card>
@@ -294,5 +302,3 @@ export default function AccountPage() {
     </div>
   );
 }
-
-    

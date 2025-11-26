@@ -4,10 +4,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, Eye, EyeOff, Send } from "lucide-react";
 import React from 'react';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
+type UserProfile = {
+  balance?: number;
+};
 
 export function BalanceCard() {
   const [isBalanceVisible, setIsBalanceVisible] = React.useState(true);
-  const balance = 150000;
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, "users", user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  const balance = userProfile?.balance ?? 0;
 
   const toggleVisibility = () => {
     setIsBalanceVisible(!isBalanceVisible);

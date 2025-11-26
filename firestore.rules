@@ -105,7 +105,7 @@ service cloud.firestore {
       allow list: if isSignedIn();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
       allow update: if isExistingOwner(userId) && isUserIdImmutable();
-      allow delete: if isExistingOwner(userId);
+      allow delete: if isSignedIn();
 
       /**
        * @description Manages a user's private transaction history. Access is restricted

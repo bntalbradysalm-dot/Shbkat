@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Eye, EyeOff, Send } from "lucide-react";
+import { Eye, EyeOff, Send, Wallet } from "lucide-react";
 import React from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -59,7 +59,7 @@ export function BalanceCard() {
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
             <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg">
-              <ArrowUpRight className="ml-2 h-4 w-4" />
+              <Wallet className="ml-2 h-4 w-4" />
               تغذية الحساب
             </Button>
             <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg">

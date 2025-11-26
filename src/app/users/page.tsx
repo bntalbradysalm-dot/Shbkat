@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { collection, doc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, updateDoc, increment } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,19 +25,33 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
   User as UserIcon,
   Search,
   Trash2,
   Edit,
   MessageSquare,
   Link as LinkIcon,
+  PlusCircle
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { Label } from '@/components/ui/label';
 
 // Define the User type based on your backend.json schema
 type User = {
   id: string;
-  displayName?: string;
+  displayName: string;
   phoneNumber?: string;
   balance?: number;
 };
@@ -46,6 +60,10 @@ export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'users') : null),
@@ -58,6 +76,52 @@ export default function UsersPage() {
     if (!firestore) return;
     const userDocRef = doc(firestore, 'users', userId);
     deleteDocumentNonBlocking(userDocRef);
+    toast({
+      title: "نجاح",
+      description: "تم حذف المستخدم بنجاح.",
+    });
+  };
+
+  const handleTopUp = async () => {
+    if (!selectedUser || !topUpAmount || !firestore) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال مبلغ صالح.",
+      });
+      return;
+    }
+    const amount = parseFloat(topUpAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال مبلغ صالح.",
+      });
+      return;
+    }
+  
+    const userDocRef = doc(firestore, 'users', selectedUser.id);
+  
+    try {
+      await updateDoc(userDocRef, {
+        balance: increment(amount)
+      });
+      toast({
+        title: "نجاح",
+        description: `تمت إضافة ${amount.toLocaleString('en-US')} ريال إلى رصيد ${selectedUser.displayName}.`,
+      });
+      setIsTopUpDialogOpen(false);
+      setTopUpAmount('');
+      setSelectedUser(null);
+    } catch (e) {
+      console.error("Error updating balance: ", e);
+      toast({
+        variant: "destructive",
+        title: "خطأ في التغذية",
+        description: "لم يتم تحديث الرصيد. الرجاء المحاولة مرة أخرى.",
+      });
+    }
   };
 
 
@@ -132,10 +196,54 @@ export default function UsersPage() {
                         إيداع وإبلاغ
                     </Button>
                 </div>
-                <Button variant="outline">
-                    <LinkIcon className="ml-2 h-4 w-4" />
-                    تغذية
-                </Button>
+                 <Dialog open={isTopUpDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setIsTopUpDialogOpen(false);
+                        setSelectedUser(null);
+                        setTopUpAmount('');
+                    }
+                 }}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" onClick={() => {
+                            setSelectedUser(user);
+                            setIsTopUpDialogOpen(true);
+                        }}>
+                            <LinkIcon className="ml-2 h-4 w-4" />
+                            تغذية
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                        <DialogTitle>تغذية حساب</DialogTitle>
+                        <DialogDescription>
+                            أدخل المبلغ الذي تريد إضافته إلى رصيد {selectedUser?.displayName}.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="amount" className="text-right col-span-1">
+                                المبلغ
+                                </Label>
+                                <Input
+                                id="amount"
+                                type="number"
+                                value={topUpAmount}
+                                onChange={(e) => setTopUpAmount(e.target.value)}
+                                className="col-span-3"
+                                placeholder="ادخل المبلغ بالريال اليمني"
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit" onClick={handleTopUp}>تأكيد التغذية</Button>
+                            <DialogClose asChild>
+                                <Button type="button" variant="secondary">
+                                إلغاء
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
@@ -145,29 +253,32 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="إدارة المستخدمين" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-                type="text"
-                placeholder="البحث بالاسم أو رقم الهاتف..."
-                className="w-full pr-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <>
+      <div className="flex flex-col h-full bg-background">
+        <SimpleHeader title="إدارة المستخدمين" />
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                  type="text"
+                  placeholder="البحث بالاسم أو رقم الهاتف..."
+                  className="w-full pr-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+              />
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger>
+                  <SelectValue placeholder="الكل" />
+              </SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+              </SelectContent>
+          </Select>
+          {renderContent()}
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger>
-                <SelectValue placeholder="الكل" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-            </SelectContent>
-        </Select>
-        {renderContent()}
       </div>
-    </div>
+      <Toaster />
+    </>
   );
 }

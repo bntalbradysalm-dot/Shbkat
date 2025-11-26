@@ -1,6 +1,7 @@
 'use client';
 
 import './globals.css';
+import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { ThemeProvider } from '@/components/theme-provider';
 
@@ -9,6 +10,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const showBottomNav = pathname !== '/login' && pathname !== '/signup';
+
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -22,10 +26,10 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
             <div className="flex-1 flex flex-col relative">
-              <main className="flex-1 overflow-y-auto pb-20">
+              <main className={`flex-1 overflow-y-auto ${showBottomNav ? 'pb-20' : ''}`}>
                 {children}
               </main>
-              <BottomNav />
+              {showBottomNav && <BottomNav />}
             </div>
           </div>
         </ThemeProvider>

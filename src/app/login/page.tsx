@@ -80,9 +80,8 @@ export default function LoginPage() {
               <Input
                 id="phone"
                 type="tel"
-                dir="ltr"
-                className="text-center bg-muted focus-visible:ring-primary border-border"
-                placeholder="777xxxxxx"
+                className="bg-muted focus-visible:ring-primary border-border"
+                placeholder="7xxxxxxxx"
                 value={phoneNumber}
                 onChange={e => setPhoneNumber(e.target.value)}
               />
@@ -95,8 +94,7 @@ export default function LoginPage() {
                   id="password"
                   type={isPasswordVisible ? 'text' : 'password'}
                   placeholder="ادخل كلمة المرور"
-                  dir="ltr"
-                  className="text-center bg-muted focus-visible:ring-primary border-border pr-10"
+                  className="bg-muted focus-visible:ring-primary border-border text-right"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />

@@ -156,9 +156,8 @@ export default function SignupPage() {
               <Input
                 id="phone"
                 type="tel"
-                dir="ltr"
-                className="text-center bg-muted focus-visible:ring-primary border-border"
-                placeholder="777xxxxxx"
+                className="bg-muted focus-visible:ring-primary border-border"
+                placeholder="7xxxxxxxx"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 maxLength={9}
@@ -173,8 +172,7 @@ export default function SignupPage() {
                 id="password"
                 type="password"
                 placeholder="ادخل كلمة المرور"
-                className="bg-muted focus-visible:ring-primary border-border text-center"
-                dir="ltr"
+                className="bg-muted focus-visible:ring-primary border-border text-right"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -187,8 +185,7 @@ export default function SignupPage() {
                 id="confirmPassword"
                 type="password"
                 placeholder="أعد إدخال كلمة المرور"
-                className="bg-muted focus-visible:ring-primary border-border text-center"
-                dir="ltr"
+                className="bg-muted focus-visible:ring-primary border-border text-right"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required

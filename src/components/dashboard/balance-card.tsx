@@ -50,7 +50,7 @@ export function BalanceCard() {
               {isBalanceVisible ? (
                 <>
                   {balance.toLocaleString('en-US')}
-                  <span className="text-base font-medium ml-1">ريال يمني</span>
+                  <span className="text-base font-medium mr-2">ريال يمني</span>
                 </>
               ) : (
                 '******'

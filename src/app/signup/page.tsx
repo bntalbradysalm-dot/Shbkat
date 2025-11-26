@@ -1,0 +1,204 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { SimpleHeader } from '@/components/layout/simple-header';
+import { useAuth } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+
+const locations = [
+  'سيئون',
+  'شبام',
+  'الغرفة',
+  'تريم',
+  'ساة',
+  'القطن',
+  'الحوطة',
+  'وادي بن علي',
+  'العقاد',
+  'وادي عمد',
+  'وادي العين',
+  'بور تاربة',
+  'الخشعة',
+];
+
+export default function SignupPage() {
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [location, setLocation] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "كلمتا المرور غير متطابقتين.",
+      });
+      return;
+    }
+    if (!fullName || !phoneNumber || !location) {
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "الرجاء تعبئة جميع الحقول.",
+          });
+        return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Using phone number to create an email for Firebase Auth
+      const email = `${phoneNumber}@shabakat.com`;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update user profile with full name
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: fullName,
+        });
+      }
+
+      toast({
+        title: "نجاح",
+        description: "تم إنشاء حسابك بنجاح! جاري توجيهك...",
+      });
+
+      // Redirect to home page after a short delay
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+
+    } catch (error: any) {
+      let errorMessage = "حدث خطأ غير متوقع أثناء إنشاء الحساب.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'رقم الهاتف هذا مستخدم بالفعل.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'كلمة المرور ضعيفة جدًا. يجب أن تتكون من 6 أحرف على الأقل.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'رقم الهاتف غير صالح.';
+      }
+      toast({
+        variant: "destructive",
+        title: "خطأ في إنشاء الحساب",
+        description: errorMessage,
+      });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex flex-col h-screen bg-background text-foreground">
+        <SimpleHeader title="سجل الآن" />
+        <div className="flex-1 flex flex-col justify-center text-center px-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-primary">انشاء حساب جديد</h1>
+            <p className="text-md text-muted-foreground mt-2">
+              ادخل معلوماتك لإنشاء حساب جديد
+            </p>
+          </div>
+
+          <form onSubmit={handleSignup} className="space-y-4 text-right">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">الاسم الرباعي الكامل</Label>
+              <Input
+                id="fullName"
+                type="text"
+                className="bg-muted focus-visible:ring-primary border-border"
+                placeholder="ادخل اسمك الكامل"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">رقم الهاتف</Label>
+              <Input
+                id="phone"
+                type="tel"
+                dir="ltr"
+                className="text-center bg-muted focus-visible:ring-primary border-border"
+                placeholder="777xxxxxx"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                maxLength={9}
+                minLength={9}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">كلمة المرور</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="ادخل كلمة المرور"
+                className="bg-muted focus-visible:ring-primary border-border text-center"
+                dir="ltr"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">تاكيد كلمة المرور</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="أعد إدخال كلمة المرور"
+                className="bg-muted focus-visible:ring-primary border-border text-center"
+                dir="ltr"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">موقعك</Label>
+              <Select onValueChange={setLocation} value={location} dir="rtl">
+                <SelectTrigger className="w-full bg-muted focus:ring-primary border-border">
+                  <SelectValue placeholder="اختر موقعك" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button type="submit" className="w-full text-lg font-bold h-12 mt-6" disabled={isLoading}>
+              {isLoading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
+            </Button>
+          </form>
+        </div>
+      </div>
+      <Toaster />
+    </>
+  );
+}

@@ -156,7 +156,7 @@ export default function SignupPage() {
               <Input
                 id="phone"
                 type="tel"
-                className="bg-muted focus-visible:ring-primary border-border"
+                className="bg-muted focus-visible:ring-primary border-border text-right"
                 placeholder="7xxxxxxxx"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}

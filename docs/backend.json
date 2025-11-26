@@ -132,6 +132,30 @@
         "name",
         "favoriteType"
       ]
+    },
+    "AlwadiRenewalOption": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AlwadiRenewalOption",
+      "type": "object",
+      "description": "Represents a renewal option for the Al-Wadi service.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the renewal option."
+        },
+        "title": {
+          "type": "string",
+          "description": "The display title for the renewal option (e.g., 'تجديد شهرين')."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the renewal option in Yemeni Rial."
+        }
+      },
+      "required": [
+        "title",
+        "price"
+      ]
     }
   },
   "auth": {
@@ -194,6 +218,22 @@
             {
               "name": "favoriteId",
               "description": "The unique identifier of the favorite."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/alwadiOptions/{optionId}",
+        "definition": {
+          "entityName": "AlwadiRenewalOption",
+          "schema": {
+            "$ref": "#/backend/entities/AlwadiRenewalOption"
+          },
+          "description": "Stores the renewal options for the Al-Wadi service, manageable by an admin.",
+          "params": [
+            {
+              "name": "optionId",
+              "description": "The unique identifier of the Al-Wadi renewal option."
             }
           ]
         }

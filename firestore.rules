@@ -37,6 +37,11 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+    
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
 
     /**
      * Checks if the currently signed-in user's UID matches the provided userId.
@@ -88,6 +93,23 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     // Collection Rules
     // -------------------------------------------------------------------------
+    
+     /**
+     * @description Manages Al-Wadi renewal options. Anyone can read, but only
+     * admins can write (create, update, delete).
+     * @path /alwadiOptions/{optionId}
+     * @allow Any signed-in user can read the list of renewal options. (list, get)
+     * @allow An admin user can create a new renewal option. (create)
+     * @allow An admin user can update an existing renewal option. (update)
+     * @allow An admin user can delete a renewal option. (delete)
+     * @deny A non-admin user tries to create, update, or delete an option.
+     * @principle Separates read access (for all) from write access (for admins).
+     */
+    match /alwadiOptions/{optionId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
 
     /**
      * @description Manages user profile documents. Only the owner can read, update,
@@ -101,11 +123,11 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and prevents user enumeration.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if isSignedIn();
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
-      allow delete: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
 
       /**
        * @description Manages a user's private transaction history. Access is restricted

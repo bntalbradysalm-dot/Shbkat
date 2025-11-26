@@ -20,7 +20,6 @@ import {
   Edit,
   MessageSquare,
   Link as LinkIcon,
-  ChevronRight,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 
@@ -68,15 +67,15 @@ export default function UsersPage() {
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-primary/10">
+                          <UserIcon className="h-6 w-6 text-primary" />
+                      </div>
                       <div className="text-right">
                           <p className="font-bold text-base">{user.displayName || 'مستخدم غير معروف'}</p>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-sm mt-1">
                               <span>{user.phoneNumber}</span>
                               <MessageSquare className="h-4 w-4 text-green-500" />
                           </div>
-                      </div>
-                      <div className="p-2 rounded-full bg-primary/10">
-                          <UserIcon className="h-6 w-6 text-primary" />
                       </div>
                   </div>
                   <div className="text-green-600 font-bold text-left">

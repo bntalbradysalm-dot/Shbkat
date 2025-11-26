@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,15 +54,10 @@ export default function UsersPage() {
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
   
-  const handleDelete = async (userId: string) => {
+  const handleDelete = (userId: string) => {
     if (!firestore) return;
     const userDocRef = doc(firestore, 'users', userId);
-    try {
-      await deleteDoc(userDocRef);
-    } catch (error) {
-      console.error("Error deleting user: ", error);
-      // Optionally show a toast message for the error
-    }
+    deleteDocumentNonBlocking(userDocRef);
   };
 
 
@@ -77,7 +72,7 @@ export default function UsersPage() {
       return <p className="text-center">جاري تحميل المستخدمين...</p>;
     }
     if (error) {
-      console.error(error);
+      // The FirebaseErrorListener will catch and display the error overlay
       return <p className="text-center text-destructive">حدث خطأ أثناء جلب المستخدمين.</p>;
     }
     if (!filteredUsers || filteredUsers.length === 0) {

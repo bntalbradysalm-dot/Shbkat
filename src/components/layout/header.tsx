@@ -2,9 +2,11 @@
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const Header = () => {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -23,7 +25,11 @@ const Header = () => {
         <UserIcon className="h-10 w-10 text-primary" />
         <div>
           <p className="text-sm text-foreground/80">{greeting}</p>
-          <h1 className="font-bold text-lg">{user?.displayName || user?.email || 'مستخدم جديد'}</h1>
+          {isUserLoading ? (
+            <Skeleton className="h-6 w-32 mt-1" />
+          ) : (
+             <h1 className="font-bold text-lg">{user?.displayName || user?.email || 'مستخدم جديد'}</h1>
+          )}
         </div>
       </div>
       <div className="relative">

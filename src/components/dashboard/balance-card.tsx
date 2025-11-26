@@ -6,6 +6,7 @@ import { Eye, EyeOff, Send, Wallet } from "lucide-react";
 import React from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
 
 type UserProfile = {
   balance?: number;
@@ -13,16 +14,17 @@ type UserProfile = {
 
 export function BalanceCard() {
   const [isBalanceVisible, setIsBalanceVisible] = React.useState(true);
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, "users", user.uid) : null),
     [firestore, user]
   );
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const balance = userProfile?.balance ?? 0;
+  const isLoading = isUserLoading || isProfileLoading;
 
   const toggleVisibility = () => {
     setIsBalanceVisible(!isBalanceVisible);
@@ -46,16 +48,20 @@ export function BalanceCard() {
             </Button>
           </div>
           <div className="mt-2 text-right" aria-live="polite">
-            <h2 className="text-4xl font-bold tracking-tighter">
-              {isBalanceVisible ? (
-                <>
-                  {balance.toLocaleString('en-US')}
-                  <span className="text-base font-medium mr-2">ريال يمني</span>
-                </>
-              ) : (
-                '******'
-              )}
-            </h2>
+            {isLoading ? (
+              <Skeleton className="h-10 w-48 bg-white/30" />
+            ) : (
+               <h2 className="text-4xl font-bold tracking-tighter">
+                {isBalanceVisible ? (
+                  <>
+                    {balance.toLocaleString('en-US')}
+                    <span className="text-base font-medium mr-2">ريال يمني</span>
+                  </>
+                ) : (
+                  '******'
+                )}
+              </h2>
+            )}
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
             <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg">

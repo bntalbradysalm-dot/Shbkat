@@ -83,7 +83,7 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       // Using phone number to create an email for Firebase Auth
-      const email = `${phoneNumber}@shabakat.com`;
+      const email = `${phoneNumber.trim()}@shabakat.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -99,14 +99,14 @@ export default function SignupPage() {
         const lastName = nameParts.slice(1).join(' ');
 
         // Determine user role
-        const role = phoneNumber.trim() === '770326828' ? 'admin' : 'user';
+        const role = user.email === '770326828@shabakat.com' ? 'admin' : 'user';
 
         await setDoc(userRef, {
           id: user.uid,
           displayName: fullName.trim(),
           firstName: firstName,
           lastName: lastName,
-          phoneNumber: phoneNumber,
+          phoneNumber: phoneNumber.trim(),
           email: user.email,
           location: location,
           registrationDate: new Date().toISOString(),

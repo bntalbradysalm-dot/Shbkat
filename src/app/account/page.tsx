@@ -59,11 +59,18 @@ const appSettingsLinks = [
     { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
 ];
 
-// Define a type for the user profile data from Firestore
+const userAppSettingsLinks = [
+    { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
+    { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
+    { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
+];
+
+
 type UserProfile = {
   location?: string;
   phoneNumber?: string;
   balance?: number;
+  role?: 'admin' | 'user';
 };
 
 export default function AccountPage() {
@@ -79,6 +86,8 @@ export default function AccountPage() {
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  
+  const userRole = userProfile?.role || 'user';
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -183,82 +192,117 @@ export default function AccountPage() {
             </Card>
         </div>
 
+        {userRole === 'admin' && (
+          <>
+            <div>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-xs font-semibold text-muted-foreground">
+                  لوحة التحكم
+                </h3>
+              </div>
 
-        <div>
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-xs font-semibold text-muted-foreground">
-              لوحة التحكم
-            </h3>
-          </div>
+              <Card className="bg-card">
+                <CardContent className="p-0">
+                  {managementLinks.map((link, index) => {
+                    const Icon = link.icon;
+                    return (
+                        <a
+                        href={link.href}
+                        key={link.title}
+                        className={`group flex items-center justify-between p-3 cursor-pointer ${
+                            index < managementLinks.length - 1 ? 'border-b' : ''
+                        }`}
+                        >
+                        <div className="flex items-center gap-3">
+                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="text-xs font-semibold">{link.title}</span>
+                        </div>
+                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                        </a>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+            </div>
+          
+            <div>
+              <div className="flex items-center justify-center gap-2 mt-6 mb-3">
+                <h3 className="text-xs font-semibold text-muted-foreground">
+                  إعدادات الواجهة والتطبيق
+                </h3>
+              </div>
+               <Card className="bg-card">
+                 <CardContent className="p-0">
+                    <button className="group flex items-center justify-between p-3 cursor-pointer border-b w-full" onClick={handleImageUploadClick}>
+                       <div className="flex items-center gap-3">
+                         <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                         <span className="text-xs font-semibold">تغيير الصورة الترويجية</span>
+                       </div>
+                       <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/*"
+                    />
+                    {appSettingsLinks.map((link, index) => {
+                      const Icon = link.icon;
+                      return (
+                        <a
+                        href={link.href}
+                        key={link.title}
+                        className={`group flex items-center justify-between p-3 cursor-pointer ${
+                            index < appSettingsLinks.length - 1 ? 'border-b' : ''
+                        }`}
+                        >
+                        <div className="flex items-center gap-3">
+                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="text-xs font-semibold">{link.title}</span>
+                        </div>
+                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                        </a>
+                      )
+                    })}
+                 </CardContent>
+               </Card>
+            </div>
+          </>
+        )}
 
-          <Card className="bg-card">
-            <CardContent className="p-0">
-              {managementLinks.map((link, index) => {
-                const Icon = link.icon;
-                return (
-                    <a
-                    href={link.href}
-                    key={link.title}
-                    className={`group flex items-center justify-between p-3 cursor-pointer ${
-                        index < managementLinks.length - 1 ? 'border-b' : ''
-                    }`}
-                    >
-                    <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="text-xs font-semibold">{link.title}</span>
-                    </div>
-                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                    </a>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-            <h3 className="text-xs font-semibold text-muted-foreground">
-              إعدادات الواجهة والتطبيق
-            </h3>
-          </div>
-           <Card className="bg-card">
-             <CardContent className="p-0">
-                <button className="group flex items-center justify-between p-3 cursor-pointer border-b w-full" onClick={handleImageUploadClick}>
-                   <div className="flex items-center gap-3">
-                     <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                     <span className="text-xs font-semibold">تغيير الصورة الترويجية</span>
-                   </div>
-                   <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                </button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                />
-                {appSettingsLinks.map((link, index) => {
-                  const Icon = link.icon;
-                  return (
-                    <a
-                    href={link.href}
-                    key={link.title}
-                    className={`group flex items-center justify-between p-3 cursor-pointer ${
-                        index < appSettingsLinks.length - 1 ? 'border-b' : ''
-                    }`}
-                    >
-                    <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="text-xs font-semibold">{link.title}</span>
-                    </div>
-                    <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                    </a>
-                  )
-                })}
-             </CardContent>
-           </Card>
-        </div>
+        {userRole === 'user' && (
+            <div>
+                <div className="flex items-center justify-center gap-2 mt-6 mb-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground">
+                    الإعدادات
+                    </h3>
+                </div>
+                <Card className="bg-card">
+                    <CardContent className="p-0">
+                    {userAppSettingsLinks.map((link, index) => {
+                      const Icon = link.icon;
+                      return (
+                        <a
+                        href={link.href}
+                        key={link.title}
+                        className={`group flex items-center justify-between p-3 cursor-pointer ${
+                            index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
+                        }`}
+                        >
+                        <div className="flex items-center gap-3">
+                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="text-xs font-semibold">{link.title}</span>
+                        </div>
+                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                        </a>
+                      )
+                    })}
+                    </CardContent>
+                </Card>
+            </div>
+        )}
 
         <div className="pt-4">
           <AlertDialog>

@@ -98,6 +98,9 @@ export default function SignupPage() {
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ');
 
+        // Determine user role
+        const role = phoneNumber.trim() === '770326828' ? 'admin' : 'user';
+
         await setDoc(userRef, {
           id: user.uid,
           displayName: fullName.trim(),
@@ -108,6 +111,7 @@ export default function SignupPage() {
           location: location,
           registrationDate: new Date().toISOString(),
           balance: 0,
+          role: role, // Add role to the user document
         });
       }
 

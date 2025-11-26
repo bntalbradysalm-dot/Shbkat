@@ -1,8 +1,10 @@
 'use client';
-import { Bell, User } from 'lucide-react';
+import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useUser } from '@/firebase';
 
 const Header = () => {
+  const { user } = useUser();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -18,10 +20,10 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        <User className="h-10 w-10 text-primary" />
+        <UserIcon className="h-10 w-10 text-primary" />
         <div>
           <p className="text-sm text-foreground/80">{greeting}</p>
-          <h1 className="font-bold text-lg">اسم المستخدم</h1>
+          <h1 className="font-bold text-lg">{user?.displayName || user?.email || 'مستخدم جديد'}</h1>
         </div>
       </div>
       <div className="relative">

@@ -70,5 +70,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Tajawal', sans-serif;
   }
 }

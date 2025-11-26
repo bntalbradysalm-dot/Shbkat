@@ -38,9 +38,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuth, useUser } from '@/firebase';
 
 const managementLinks = [
-  { title: 'إدارة المستخدمين', icon: Users, href: '/users-management' },
+  { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة الكروت', icon: CreditCard, href: '/cards-management' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
@@ -61,9 +62,10 @@ export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = useState('light');
   const router = useRouter();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // This effect runs only on the client
     const savedTheme = localStorage.getItem('theme') || 'light';
     setActiveTheme(savedTheme);
     if (savedTheme === 'dark') {
@@ -72,6 +74,12 @@ export default function AccountPage() {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+  
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   const handleThemeChange = (theme: 'light' | 'dark') => {
     setActiveTheme(theme);
@@ -93,14 +101,17 @@ export default function AccountPage() {
     if (file) {
       const newImageUrl = URL.createObjectURL(file);
       localStorage.setItem('promoImageUrl', newImageUrl);
-      // Dispatch a storage event to notify other components (like PromotionalImage)
       window.dispatchEvent(new Event('storage')); 
     }
   };
 
   const handleLogout = () => {
-    router.push('/login');
+    auth.signOut();
   };
+
+  if (isUserLoading || !user) {
+    return <div className="flex justify-center items-center h-screen">جاري التحميل...</div>;
+  }
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -110,15 +121,15 @@ export default function AccountPage() {
           <CardContent className="p-4 flex items-center gap-4">
             <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
             <div className="flex-grow">
-              <h2 className="text-sm font-bold">محمد راضي ربيع باشادي</h2>
+              <h2 className="text-sm font-bold">{user.displayName || 'مستخدم جديد'}</h2>
               <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-3 w-3" />
-                  <span>770326828</span>
+                  <span>{user.phoneNumber || 'لا يوجد رقم هاتف'}</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="ml-2 h-3 w-3" />
-                  <span>حضرموت - شبام</span>
+                  <span>{user.email}</span>
                 </div>
               </div>
             </div>

@@ -106,6 +106,7 @@ export default function SignupPage() {
           email: user.email,
           location: location,
           registrationDate: new Date().toISOString(),
+          balance: 0,
         });
       }
 

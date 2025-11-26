@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { collection } from 'firebase/firestore';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   User as UserIcon,
   Search,
@@ -42,6 +53,18 @@ export default function UsersPage() {
   );
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
+  
+  const handleDelete = async (userId: string) => {
+    if (!firestore) return;
+    const userDocRef = doc(firestore, 'users', userId);
+    try {
+      await deleteDoc(userDocRef);
+    } catch (error) {
+      console.error("Error deleting user: ", error);
+      // Optionally show a toast message for the error
+    }
+  };
+
 
   const filteredUsers = users?.filter(user => {
     const nameMatch = user.displayName?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,7 +94,7 @@ export default function UsersPage() {
                           <UserIcon className="h-6 w-6 text-primary" />
                       </div>
                       <div className="text-right">
-                          <p className="font-bold text-base">{user.displayName || 'مستخدم غير معروف'}</p>
+                          <p className="font-bold text-base">{user.displayName || 'مستخدم جديد'}</p>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-sm mt-1">
                               <span>{user.phoneNumber}</span>
                               <MessageSquare className="h-4 w-4 text-green-500" />
@@ -84,9 +107,28 @@ export default function UsersPage() {
               </div>
               <div className="mt-4 flex items-center justify-between gap-2">
                 <div className="flex gap-2">
-                    <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            هل تريد بالتأكيد حذف المستخدم "{user.displayName}"؟ لا يمكن التراجع عن هذا الإجراء.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
+                            حذف
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
                     <Button variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
                     </Button>

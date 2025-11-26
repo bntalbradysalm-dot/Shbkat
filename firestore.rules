@@ -102,7 +102,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
       allow update: if isExistingOwner(userId) && isUserIdImmutable();
       allow delete: if isExistingOwner(userId);

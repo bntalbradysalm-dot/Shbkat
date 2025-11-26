@@ -90,7 +90,7 @@ export default function SignupPage() {
       // Update user profile with full name
       if (user) {
         await updateProfile(user, {
-          displayName: fullName,
+          displayName: fullName.trim(),
         });
 
         // Create user document in Firestore
@@ -100,6 +100,7 @@ export default function SignupPage() {
 
         await setDoc(userRef, {
           id: user.uid,
+          displayName: fullName.trim(),
           firstName: firstName,
           lastName: lastName,
           phoneNumber: phoneNumber,

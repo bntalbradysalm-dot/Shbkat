@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { collection } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -11,6 +11,7 @@ import { User as UserIcon, Phone, Mail } from 'lucide-react';
 // Define the User type based on your backend.json schema
 type User = {
   id: string;
+  displayName?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -44,14 +45,14 @@ export default function UsersPage() {
           <Card key={user.id}>
             <CardContent className="p-4 flex items-center gap-4">
               <Avatar>
-                <AvatarImage src={`https://i.pravatar.cc/150?u=${user.id}`} alt={`${user.firstName} ${user.lastName}`} />
+                <AvatarImage src={`https://i.pravatar.cc/150?u=${user.id}`} alt={user.displayName} />
                 <AvatarFallback>
                   <UserIcon />
                 </AvatarFallback>
               </Avatar>
               <div className="flex-grow">
                 <p className="font-bold">
-                  {user.firstName || ''} {user.lastName || 'مستخدم غير معروف'}
+                  {user.displayName || 'مستخدم غير معروف'}
                 </p>
                 {user.email && (
                     <div className="text-xs text-muted-foreground mt-1 flex items-center">

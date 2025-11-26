@@ -39,7 +39,8 @@ export default function LoginPage() {
     }
     // ملاحظة: ما زلنا نستخدم البريد الإلكتروني لتسجيل الدخول في الخلفية
     // هذا يتطلب أن يكون رقم الهاتف هو البريد الإلكتروني المسجل للمستخدم
-    initiateEmailSignIn(auth, `${phoneNumber}@shabakat.com`, password);
+    const email = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@shabakat.com`;
+    initiateEmailSignIn(auth, email, password);
   };
 
   if (isUserLoading || (!isUserLoading && user)) {

@@ -18,6 +18,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Eye, EyeOff } from 'lucide-react';
 
 const locations = [
   'سيئون',
@@ -42,6 +43,8 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [location, setLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -178,28 +181,46 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="ادخل كلمة المرور"
-                className="bg-muted focus-visible:ring-primary border-border text-right"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  placeholder="ادخل كلمة المرور"
+                  className="bg-muted focus-visible:ring-primary border-border text-right"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                 <button
+                  type="button"
+                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">تاكيد كلمة المرور</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="أعد إدخال كلمة المرور"
-                className="bg-muted focus-visible:ring-primary border-border text-right"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={isConfirmPasswordVisible ? 'text' : 'password'}
+                  placeholder="أعد إدخال كلمة المرور"
+                  className="bg-muted focus-visible:ring-primary border-border text-right"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {isConfirmPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">

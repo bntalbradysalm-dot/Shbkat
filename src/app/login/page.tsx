@@ -12,7 +12,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const router = useRouter();
@@ -29,15 +29,17 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!phoneNumber || !password) {
       toast({
         variant: "destructive",
         title: "خطأ في تسجيل الدخول",
-        description: "الرجاء إدخال البريد الإلكتروني وكلمة المرور.",
+        description: "الرجاء إدخال رقم الهاتف وكلمة المرور.",
       });
       return;
     }
-    initiateEmailSignIn(auth, email, password);
+    // ملاحظة: ما زلنا نستخدم البريد الإلكتروني لتسجيل الدخول في الخلفية
+    // هذا يتطلب أن يكون رقم الهاتف هو البريد الإلكتروني المسجل للمستخدم
+    initiateEmailSignIn(auth, `${phoneNumber}@shabakat.com`, password);
   };
 
   if (isUserLoading || (!isUserLoading && user)) {
@@ -46,24 +48,24 @@ export default function LoginPage() {
 
   return (
     <>
-    <div className="flex flex-col justify-between h-screen bg-primary p-6 text-primary-foreground">
+    <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
       <div className="flex-1 flex flex-col justify-center text-center">
         <div className="mb-10">
-          <h1 className="text-4xl font-bold">شبكتي</h1>
-          <p className="text-lg text-primary-foreground/80">محفظتك الرقمية لكل احتياجاتك</p>
+          <h1 className="text-4xl font-bold text-primary">شبكتي</h1>
+          <p className="text-lg text-muted-foreground">محفظتك الرقمية لكل احتياجاتك</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6 text-right">
           <div className="space-y-2">
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="phone">رقم الهاتف</Label>
             <Input 
-              id="email" 
-              type="email" 
+              id="phone" 
+              type="tel" 
               dir="ltr" 
-              className="text-center bg-background/20 text-white placeholder:text-white/60 border-0 focus-visible:ring-white" 
-              placeholder="example@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              className="text-center bg-muted focus-visible:ring-primary border-border" 
+              placeholder="777xxxxxx"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </div>
 
@@ -75,14 +77,14 @@ export default function LoginPage() {
                 type={isPasswordVisible ? 'text' : 'password'}
                 placeholder="ادخل كلمة المرور"
                 dir="ltr"
-                className="text-center bg-background/20 text-white placeholder:text-white/60 border-0 focus-visible:ring-white pr-10"
+                className="text-center bg-muted focus-visible:ring-primary border-border pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               >
                 {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -90,27 +92,27 @@ export default function LoginPage() {
           </div>
 
           <div className="text-left">
-            <a href="#" className="text-sm font-medium text-white hover:underline">
+            <a href="#" className="text-sm font-medium text-primary hover:underline">
               نسيت كلمة المرور؟
             </a>
           </div>
 
-          <Button type="submit" className="w-full text-lg font-bold h-12 bg-white text-primary hover:bg-white/90">
+          <Button type="submit" className="w-full text-lg font-bold h-12">
             دخول
           </Button>
         </form>
 
         <div className="mt-8 text-center">
-          <p className="text-white/80">
+          <p className="text-muted-foreground">
             ليس لديك حساب؟{' '}
-            <a href="/signup" className="font-bold text-white hover:underline">
+            <a href="/signup" className="font-bold text-primary hover:underline">
               سجل الآن
             </a>
           </p>
         </div>
       </div>
 
-      <footer className="text-center text-xs text-primary-foreground/80 pb-4">
+      <footer className="text-center text-xs text-muted-foreground pb-4">
         <p>تم التطوير بواسطة محمد راضي باشادي</p>
       </footer>
     </div>

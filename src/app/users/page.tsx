@@ -15,14 +15,14 @@ import {
 } from '@/components/ui/select';
 import {
   User as UserIcon,
-  Phone,
   Search,
   Trash2,
   Edit,
   MessageSquare,
-  Link,
+  Link as LinkIcon,
   ChevronRight,
 } from 'lucide-react';
+import { SimpleHeader } from '@/components/layout/simple-header';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -67,9 +67,6 @@ export default function UsersPage() {
           <Card key={user.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
-                  <div className="text-green-600 font-bold">
-                      {(user.balance ?? 0).toLocaleString('en-US')} ريال يمني
-                  </div>
                   <div className="flex items-center gap-3">
                       <div className="text-right">
                           <p className="font-bold text-base">{user.displayName || 'مستخدم غير معروف'}</p>
@@ -81,6 +78,9 @@ export default function UsersPage() {
                       <div className="p-2 rounded-full bg-primary/10">
                           <UserIcon className="h-6 w-6 text-primary" />
                       </div>
+                  </div>
+                  <div className="text-green-600 font-bold text-left">
+                      {(user.balance ?? 0).toLocaleString('en-US')} ريال يمني
                   </div>
               </div>
               <div className="mt-4 flex items-center justify-between gap-2">
@@ -97,7 +97,7 @@ export default function UsersPage() {
                     </Button>
                 </div>
                 <Button variant="outline">
-                    <Link className="ml-2 h-4 w-4" />
+                    <LinkIcon className="ml-2 h-4 w-4" />
                     تغذية
                 </Button>
               </div>
@@ -110,12 +110,7 @@ export default function UsersPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="flex items-center p-4 bg-transparent text-foreground relative">
-        <h1 className="font-bold text-lg text-center flex-1">إدارة المستخدمين</h1>
-        <button className="absolute right-4 p-2">
-            <ChevronRight className="h-6 w-6 transform scale-x-[-1]" />
-        </button>
-      </header>
+      <SimpleHeader title="إدارة المستخدمين" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

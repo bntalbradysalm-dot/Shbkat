@@ -37,9 +37,9 @@ export default function LoginPage() {
       });
       return;
     }
-    // ملاحظة: ما زلنا نستخدم البريد الإلكتروني لتسجيل الدخول في الخلفية
-    // هذا يتطلب أن يكون رقم الهاتف هو البريد الإلكتروني المسجل للمستخدم
-    const email = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@shabakat.com`;
+    // The user inputs a phone number, but Firebase Auth uses an email.
+    // We construct the email by appending a domain, which must match the one used at signup.
+    const email = `${phoneNumber}@shabakat.com`;
     initiateEmailSignIn(auth, email, password);
   };
 

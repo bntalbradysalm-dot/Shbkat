@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -43,6 +44,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -69,11 +71,28 @@ export default function SignupPage() {
       // Using phone number to create an email for Firebase Auth
       const email = `${phoneNumber}@shabakat.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
+      const user = userCredential.user;
+
       // Update user profile with full name
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
+      if (user) {
+        await updateProfile(user, {
           displayName: fullName,
+        });
+
+        // Create user document in Firestore
+        const userRef = doc(firestore, 'users', user.uid);
+        const nameParts = fullName.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ');
+
+        await setDoc(userRef, {
+          id: user.uid,
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          email: user.email,
+          location: location,
+          registrationDate: new Date().toISOString(),
         });
       }
 

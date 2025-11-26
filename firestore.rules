@@ -1,0 +1,147 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-
+ * related data, including profiles, transactions, and favorites, is private. A user
+ * can only access and manage their own data; they have no visibility into the data
+ * of other users.
+ *
+ * Data Structure: The data is organized hierarchically. All user-specific information,
+ * such as transactions and favorites, is stored in subcollections directly under that
+ * user's document at `/users/{userId}`. This structure is fundamental to the
+ * security model, as it allows rules to leverage the document path for authorization.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users are strictly isolated from one another. A user can only
+ *   ever interact with documents within their own data tree (i.e., `/users/{their_own_uid}/...`).
+ * - No User Enumeration: Listing the top-level `/users` collection is explicitly
+ *   disallowed to prevent any user from discovering the existence of other users.
+ * - Ownership by Path: Authorization is determined by matching the `userId` in the
+ *   path with the authenticated user's UID (`request.auth.uid`). This is efficient
+ *   and avoids costly database reads (`get()` calls) within the rules.
+ * - Prototyping Flexibility: While authorization is strict, data validation is
+ *   minimal. The rules only validate fields critical for establishing ownership and
+ *   maintaining relational integrity (e.g., ensuring a new transaction's `userId` field
+ *   matches the user creating it). All other data fields can be changed freely to
+ *   support rapid development.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently signed-in user's UID matches the provided userId.
+     * This is the primary function for enforcing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the incoming document's ID field matches the
+     * user's UID from the path, ensuring data integrity.
+     */
+    function incomingDataMatchesUserId(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * On create, validates that the incoming document's 'userId' field matches
+     * the user's UID from the path, ensuring relational integrity for subcollections.
+     */
+    function incomingSubcollectionDataMatchesUser(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures the 'id' field of a user document cannot be changed.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On update, ensures the 'userId' foreign key field cannot be changed.
+     */
+    function isUserForeignKeyImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. Only the owner can read, update,
+     * or delete their own profile. A user can create their own profile. Listing
+     * all users is forbidden.
+     * @path /users/{userId}
+     * @allow A signed-in user (uid: 'user123') reads their own document at `/users/user123`. (get)
+     * @allow A new user (uid: 'user456') creates their profile document at `/users/user456`. (create)
+     * @deny An authenticated user (uid: 'user123') tries to read another user's profile at `/users/userABC`. (get)
+     * @deny Any user attempts to list all documents in the `/users` collection. (list)
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages a user's private transaction history. Access is restricted
+       * to the user who owns the parent user document.
+       * @path /users/{userId}/transactions/{transactionId}
+       * @allow A signed-in user (uid: 'user123') lists their own transactions at `/users/user123/transactions`. (list)
+       * @allow A signed-in user (uid: 'user123') creates a new transaction under their own path. (create)
+       * @deny An authenticated user (uid: 'user123') tries to read a transaction at `/users/userABC/transactions/tx_1`. (get)
+       * @deny An authenticated user (uid: 'user123') tries to create a transaction under another user's path. (create)
+       * @principle Enforces inherited ownership from parent document path for all operations.
+       */
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
+        allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages a user's private list of favorites. Access is restricted
+       * to the user who owns the parent user document.
+       * @path /users/{userId}/favorites/{favoriteId}
+       * @allow A signed-in user (uid: 'user123') lists their own favorites at `/users/user123/favorites`. (list)
+       * @allow A signed-in user (uid: 'user123') creates a new favorite under their own path. (create)
+       * @deny An authenticated user (uid: 'user123') tries to read a favorite at `/users/userABC/favorites/fav_1`. (get)
+       * @deny An authenticated user (uid: 'user123') tries to create a favorite under another user's path. (create)
+       * @principle Enforces inherited ownership from parent document path for all operations.
+       */
+      match /favorites/{favoriteId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
+        allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}

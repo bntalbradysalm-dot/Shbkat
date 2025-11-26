@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Shabakat Wallet application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user.",
+          "format": "uuid"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The user's phone number.",
+          "format": "string"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time the user registered.",
+          "format": "date-time"
+        },
+        "alWadiAccountId": {
+          "type": "string",
+          "description": "Identifier for the user's Al-Wadi account."
+        }
+      },
+      "required": [
+        "id",
+        "phoneNumber",
+        "firstName",
+        "lastName",
+        "registrationDate",
+        "alWadiAccountId"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a transaction made by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction.",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the user who initiated the transaction. (Relationship: User 1:N Transaction)"
+        },
+        "transactionDate": {
+          "type": "string",
+          "description": "The date and time the transaction occurred.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "transactionType": {
+          "type": "string",
+          "description": "The type of transaction (e.g., deposit, withdrawal, transfer)."
+        },
+        "recipientPhoneNumber": {
+          "type": "string",
+          "description": "The phone number of the recipient (if applicable)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or details about the transaction."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "transactionDate",
+        "amount",
+        "transactionType"
+      ]
+    },
+    "Favorite": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Favorite",
+      "type": "object",
+      "description": "Represents a user's favorite transaction or contact.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the favorite.",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the user who created the favorite. (Relationship: User 1:N Favorite)"
+        },
+        "targetPhoneNumber": {
+          "type": "string",
+          "description": "The phone number of the target of the favorite."
+        },
+        "name": {
+          "type": "string",
+          "description": "A user-defined name for the favorite."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description of the favorite"
+        },
+        "favoriteType": {
+          "type": "string",
+          "description": "Type of favorite. (e.g., Contact, Transaction)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "targetPhoneNumber",
+        "name",
+        "favoriteType"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores transaction records for a specific user. Path-based ownership ensures only the authenticated user can access their transaction history.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier of the transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/favorites/{favoriteId}",
+        "definition": {
+          "entityName": "Favorite",
+          "schema": {
+            "$ref": "#/backend/entities/Favorite"
+          },
+          "description": "Stores user's favorite transactions or contacts. Path-based ownership ensures only the authenticated user can manage their favorites.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "favoriteId",
+              "description": "The unique identifier of the favorite."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
+  }
+}

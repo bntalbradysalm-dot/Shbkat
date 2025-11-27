@@ -19,8 +19,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, increment } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc, updateDoc, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -90,33 +90,28 @@ export default function RenewPage() {
     }
 
     try {
-      // 1. Deduct balance from user immediately
       if(userDocRef) {
         await updateDoc(userDocRef, {
             balance: increment(-numericPrice)
         });
       }
 
-      // 2. Create a renewal request for admin to approve/reject
-      const renewalRequestsRef = collection(firestore, 'renewalRequests');
-      await addDoc(renewalRequestsRef, {
+      const transactionsRef = collection(firestore, 'users', user.uid, 'transactions');
+      const transactionData = {
         userId: user.uid,
-        userName: user.displayName || 'مستخدم غير معروف',
-        userPhoneNumber: userProfile.phoneNumber || 'غير متوفر',
-        packageTitle: title,
-        packagePrice: numericPrice,
-        subscriberName: subscriberName,
-        cardNumber: cardNumber,
-        status: 'pending',
-        requestTimestamp: new Date().toISOString(),
-      });
+        transactionDate: new Date().toISOString(),
+        amount: numericPrice,
+        transactionType: "تجديد كرت",
+        notes: `${title} - للمشترك: ${subscriberName} (كرت: ${cardNumber})`,
+      };
       
-      // 3. Show success overlay to the user
+      // Use non-blocking write for immediate UI feedback
+      addDocumentNonBlocking(transactionsRef, transactionData);
+      
       setShowSuccessOverlay(true);
 
     } catch (error) {
       console.error("Renewal request failed:", error);
-      // If something fails, try to refund the user
       if(userDocRef) {
         await updateDoc(userDocRef, {
             balance: increment(numericPrice)

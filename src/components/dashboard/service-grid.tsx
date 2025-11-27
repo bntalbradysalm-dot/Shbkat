@@ -50,7 +50,7 @@ const ServiceItem = ({
 
 export function ServiceGrid() {
   return (
-    <div className="mt-4 relative bg-card rounded-t-3xl pt-2 pb-4">
+    <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
       <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem key={service.name} {...service} index={index} />

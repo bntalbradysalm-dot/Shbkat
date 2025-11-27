@@ -148,6 +148,20 @@ service cloud.firestore {
       allow read, update: if isAdmin();
       allow delete: if isAdmin();
     }
+    
+    /**
+     * @description Manages available payment methods. Any authenticated user can read
+     * them, but only admins can create, update, or delete them.
+     * @path /paymentMethods/{methodId}
+     * @allow Any signed-in user can read the list of payment methods. (list, get)
+     * @allow An admin user can create, update, or delete payment methods. (create, update, delete)
+     * @deny A non-admin user tries to modify payment methods.
+     * @principle Centralized payment configuration, admin-controlled.
+     */
+    match /paymentMethods/{methodId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
 
 
     /**

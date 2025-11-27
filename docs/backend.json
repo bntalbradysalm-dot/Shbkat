@@ -244,6 +244,31 @@
         "userId", "userName", "userPhoneNumber", "packageTitle", "packagePrice", 
         "subscriberName", "cardNumber", "status", "requestTimestamp"
       ]
+    },
+     "PaymentMethod": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentMethod",
+      "type": "object",
+      "description": "Represents a payment method available in the app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment method."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the payment service (e.g., 'بنك الكريمي')."
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "The account number for the payment method."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the payment method's logo."
+        }
+      },
+      "required": ["name", "accountNumber"]
     }
   },
   "auth": {
@@ -354,6 +379,22 @@
             {
               "name": "requestId",
               "description": "The unique identifier for the renewal request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/paymentMethods/{methodId}",
+        "definition": {
+          "entityName": "PaymentMethod",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentMethod"
+          },
+          "description": "Stores the available payment methods, manageable by an admin.",
+          "params": [
+            {
+              "name": "methodId",
+              "description": "The unique identifier for the payment method."
             }
           ]
         }

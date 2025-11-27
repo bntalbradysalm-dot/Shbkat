@@ -27,6 +27,7 @@ import { Toaster } from '@/components/ui/toaster';
 type UserProfile = {
   balance?: number;
   phoneNumber?: string;
+  displayName?: string;
 };
 
 export default function RenewPage() {
@@ -73,11 +74,11 @@ export default function RenewPage() {
   };
   
   const handleFinalConfirmation = async () => {
-    if (!user || !firestore || !price || !userProfile || !title || isProcessing) return;
-
+    if (!user || !firestore || !price || !userProfile || !title || isProcessing || !userProfile.displayName || !userProfile.phoneNumber) return;
+  
     setIsProcessing(true);
     const numericPrice = Number(price);
-
+  
     if ((userProfile.balance ?? 0) < numericPrice) {
       toast({
         variant: "destructive",
@@ -88,33 +89,40 @@ export default function RenewPage() {
       setShowDialog(false);
       return;
     }
-
+  
     try {
-      if(userDocRef) {
+      // 1. Deduct balance immediately
+      if (userDocRef) {
         await updateDoc(userDocRef, {
-            balance: increment(-numericPrice)
+          balance: increment(-numericPrice),
         });
       }
-
-      const transactionsRef = collection(firestore, 'users', user.uid, 'transactions');
-      const transactionData = {
+  
+      // 2. Create a renewal request for the admin
+      const renewalRequestsRef = collection(firestore, 'renewalRequests');
+      const renewalRequestData = {
         userId: user.uid,
-        transactionDate: new Date().toISOString(),
-        amount: numericPrice,
-        transactionType: "تجديد كرت",
-        notes: `${title} - للمشترك: ${subscriberName} (كرت: ${cardNumber})`,
+        userName: userProfile.displayName,
+        userPhoneNumber: userProfile.phoneNumber,
+        packageTitle: title,
+        packagePrice: numericPrice,
+        subscriberName: subscriberName,
+        cardNumber: cardNumber,
+        status: 'pending',
+        requestTimestamp: new Date().toISOString(),
       };
-      
-      // Use non-blocking write for immediate UI feedback
-      addDocumentNonBlocking(transactionsRef, transactionData);
-      
+      // We can use non-blocking here as well, as admin can check the list
+      addDocumentNonBlocking(renewalRequestsRef, renewalRequestData);
+  
+      // 3. Show success overlay to the user
       setShowSuccessOverlay(true);
-
+  
     } catch (error) {
-      console.error("Renewal request failed:", error);
-      if(userDocRef) {
+      console.error("Renewal process failed:", error);
+      // If anything fails, refund the user's balance
+      if (userDocRef) {
         await updateDoc(userDocRef, {
-            balance: increment(numericPrice)
+          balance: increment(numericPrice),
         });
       }
       toast({

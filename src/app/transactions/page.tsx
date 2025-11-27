@@ -39,6 +39,18 @@ const getTransactionIcon = (type: string) => {
     }
 };
 
+// Simple hashing function to convert a string to a positive number string
+const generateNumericId = (id: string): string => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        const char = id.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    // Take absolute value and slice to get a 6-digit number
+    return Math.abs(hash).toString().slice(0, 6).padStart(6, '0');
+};
+
 
 export default function TransactionsPage() {
   const { user } = useUser();
@@ -135,7 +147,7 @@ export default function TransactionsPage() {
                 <DialogHeader>
                 <DialogTitle>تفاصيل العملية</DialogTitle>
                 <DialogDescription>
-                    تفاصيل العملية رقم: {selectedTx.id.slice(-6).toUpperCase()}
+                    تفاصيل العملية رقم: {generateNumericId(selectedTx.id)}
                 </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4 text-sm">

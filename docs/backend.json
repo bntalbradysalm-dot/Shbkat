@@ -269,6 +269,23 @@
         }
       },
       "required": ["name", "accountNumber"]
+    },
+    "Advertisement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Advertisement",
+      "type": "object",
+      "description": "Represents the promotional banner content.",
+      "properties": {
+        "imageUrl": {
+          "type": "string",
+          "description": "The URL for the promotional image."
+        },
+        "linkUrl": {
+          "type": "string",
+          "description": "The URL to navigate to when the image is clicked."
+        }
+      },
+      "required": ["imageUrl"]
     }
   },
   "auth": {
@@ -395,6 +412,22 @@
             {
               "name": "methodId",
               "description": "The unique identifier for the payment method."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/advertisements/{adId}",
+        "definition": {
+          "entityName": "Advertisement",
+          "schema": {
+            "$ref": "#/backend/entities/Advertisement"
+          },
+          "description": "Stores the promotional ad content. Writable by admins, readable by all.",
+          "params": [
+            {
+              "name": "adId",
+              "description": "The unique identifier for the advertisement."
             }
           ]
         }

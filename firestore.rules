@@ -119,6 +119,20 @@ service cloud.firestore {
     }
     
     /**
+     * @description Manages the promotional advertisement. Anyone can read, but
+     * only admins can write (create, update, delete).
+     * @path /advertisements/{adId}
+     * @allow Any signed-in user can read the ad. (list, get)
+     * @allow An admin user can create, update, or delete the ad. (write)
+     * @deny A non-admin user tries to create, update, or delete an ad.
+     * @principle Centralized ad management, admin-controlled.
+     */
+    match /advertisements/{adId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    /**
      * @description Manages global notifications. Anyone can read, but only
      * admins can write (create). Updates and deletes are disallowed for all.
      * @path /notifications/{notificationId}

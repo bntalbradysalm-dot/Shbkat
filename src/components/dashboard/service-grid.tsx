@@ -10,6 +10,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import Link from 'next/link';
+import { PromotionalImage } from './promotional-image';
 
 type Service = {
   name: string;
@@ -56,6 +57,7 @@ export function ServiceGrid() {
           <ServiceItem key={service.name} {...service} index={index} />
         ))}
       </div>
+      <PromotionalImage />
     </div>
   );
 }

@@ -33,13 +33,13 @@ export default function AlwadiPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="mb-6 overflow-hidden rounded-xl shadow-lg">
+        <div className="mb-6 overflow-hidden rounded-xl shadow-lg bg-black flex items-center justify-center">
           <Image
             src="https://i.postimg.cc/HkKqQBMV/15.jpg"
             alt="Alwadi Promotion"
             width={600}
             height={300}
-            className="w-full h-auto object-cover max-h-40"
+            className="w-full h-auto object-contain max-h-40"
           />
         </div>
 

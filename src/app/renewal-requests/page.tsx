@@ -108,7 +108,7 @@ export default function RenewalRequestsPage() {
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
                 transactionType: selectedRequest.packageTitle, // Use the actual package title
-                notes: `تجديد للمشترك ${selectedRequest.subscriberName}`,
+                notes: `تجديد للمشترك: ${selectedRequest.subscriberName} | رقم الكرت: ${selectedRequest.cardNumber}`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
         } else { // 'reject'

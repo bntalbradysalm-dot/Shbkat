@@ -66,13 +66,13 @@ export default function AlwadiPage() {
                 >
                     <div className="p-4 flex flex-col items-center justify-center text-center aspect-square border bg-card rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1">
                         <div className="p-3 bg-primary/10 rounded-lg mb-3">
-                            <CreditCard className="h-6 w-6 text-primary" />
+                            <CreditCard className="h-6 w-6 text-primary dark:text-primary-foreground" />
                         </div>
                         <div className="flex flex-col">
                             <span className="font-bold text-sm text-foreground/90">
                             {option.title}
                             </span>
-                            <div className="flex items-baseline justify-center gap-1 mt-2 text-primary">
+                            <div className="flex items-baseline justify-center gap-1 mt-2 text-primary dark:text-primary-foreground">
                             <span className="text-sm font-semibold">
                                 {option.price.toLocaleString('en-US')} ريال
                             </span>

@@ -161,7 +161,7 @@ export default function RenewPage() {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-semibold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
+                            <span className="font-semibold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
                         </div>
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">الرصيد المتبقي:</span>
@@ -193,7 +193,7 @@ export default function RenewPage() {
           <CardHeader>
             <CardTitle className="text-center">{title}</CardTitle>
             {price && (
-              <p className="text-center text-2xl font-bold text-primary">
+              <p className="text-center text-2xl font-bold text-primary dark:text-primary-foreground">
                 {Number(price).toLocaleString('en-US')} ريال
               </p>
             )}
@@ -253,7 +253,7 @@ export default function RenewPage() {
                         </div>
                          <div className="flex justify-between items-center">
                            <span>المبلغ:</span>
-                           <span className="font-bold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
+                           <span className="font-bold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
                         </div>
                       </div>
                     </AlertDialogDescription>

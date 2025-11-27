@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import {
@@ -204,7 +203,7 @@ export default function RenewalRequestsPage() {
               <CardContent className="p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-full">
-                      <User className="h-6 w-6 text-primary" />
+                      <User className="h-6 w-6 text-primary dark:text-primary-foreground" />
                   </div>
                   <div>
                       <p className="font-bold">{request.userName}</p>
@@ -298,7 +297,7 @@ export default function RenewalRequestsPage() {
                     <InfoRow icon={Calendar} label="تاريخ الطلب" value={format(parseISO(selectedRequest.requestTimestamp), 'Pp', { locale: ar })} />
                     <div className="flex justify-between items-center pt-2 border-t mt-3">
                         <span className="text-muted-foreground font-semibold">المبلغ:</span>
-                        <span className="font-bold text-lg text-primary">{selectedRequest.packagePrice.toLocaleString('en-US')} ريال</span>
+                        <span className="font-bold text-lg text-primary dark:text-primary-foreground">{selectedRequest.packagePrice.toLocaleString('en-US')} ريال</span>
                     </div>
                 </div>
                 <DialogFooter className="grid grid-cols-2 gap-2">

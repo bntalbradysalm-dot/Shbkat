@@ -148,7 +148,7 @@ export default function TopUpPage() {
                                             <Copy className="ml-2 h-4 w-4" />
                                             نسخ
                                         </Button>
-                                        <p className="text-xl font-mono tracking-wider">{selectedMethod.accountNumber}</p>
+                                        <p className="text-xl font-mono tracking-wider text-primary dark:text-primary-foreground">{selectedMethod.accountNumber}</p>
                                     </div>
                                 </CardContent>
                             </Card>

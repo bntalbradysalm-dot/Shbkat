@@ -141,7 +141,7 @@ export default function PaymentManagementPage() {
                            <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain bg-muted" />
                           <div>
                             <p className="font-semibold">{method.name}</p>
-                            <p className="text-sm text-primary">{method.accountNumber}</p>
+                            <p className="text-sm text-primary dark:text-primary-foreground">{method.accountNumber}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">

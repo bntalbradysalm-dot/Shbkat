@@ -73,7 +73,7 @@ export default function NotificationsPage() {
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                <CardTitle className="text-base font-bold flex items-center gap-2">
-                 <BellRing className="h-5 w-5 text-primary" />
+                 <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground" />
                  {notification.title}
                </CardTitle>
                <p className="text-xs text-muted-foreground">

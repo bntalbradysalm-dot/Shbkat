@@ -150,7 +150,7 @@ export default function UsersPage() {
               <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                       <div className="p-2 rounded-full bg-primary/10">
-                          <UserIcon className="h-6 w-6 text-primary" />
+                          <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
                       </div>
                       <div className="text-right">
                           <p className="font-bold text-base">{user.displayName || 'مستخدم جديد'}</p>
@@ -159,7 +159,7 @@ export default function UsersPage() {
                           </div>
                       </div>
                   </div>
-                  <div className="text-primary font-bold text-left">
+                  <div className="text-primary dark:text-primary-foreground font-bold text-left">
                       {(user.balance ?? 0).toLocaleString('en-US')} ريال يمني
                   </div>
               </div>

@@ -148,7 +148,7 @@ export default function AlwadiManagementPage() {
                     <div className="flex items-center justify-between">
                         <div>
                         <p className="font-semibold">{option.title}</p>
-                        <p className="text-sm text-primary">{option.price.toLocaleString('en-US')} ريال</p>
+                        <p className="text-sm text-primary dark:text-primary-foreground">{option.price.toLocaleString('en-US')} ريال</p>
                         </div>
                         <div className="flex gap-2">
                         <Button variant="outline" size="icon" onClick={() => handleEdit(option)}>

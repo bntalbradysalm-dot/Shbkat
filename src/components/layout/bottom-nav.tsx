@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const allNavItems = [
   { name: 'الرئيسية', icon: Home, href: '/', roles: ['admin', 'user'] },
@@ -21,72 +24,98 @@ type RenewalRequest = {
   status: 'pending' | 'approved' | 'rejected';
 }
 
-export function BottomNav() {
+function NavItems() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
-  const userRole = userProfile?.role || 'user';
+  const [navItems, setNavItems] = useState(allNavItems.filter(item => item.roles.includes('user')));
 
   const pendingRequestsQuery = useMemoFirebase(
     () =>
-      firestore && userRole === 'admin'
+      firestore && userProfile?.role === 'admin'
         ? query(
             collection(firestore, 'renewalRequests'),
             where('status', '==', 'pending')
           )
         : null,
-    [firestore, userRole]
+    [firestore, userProfile?.role]
   );
 
   const { data: pendingRequests } = useCollection<RenewalRequest>(pendingRequestsQuery);
 
   const hasPendingRequests = pendingRequests && pendingRequests.length > 0;
+  
+  useEffect(() => {
+    const userRole = userProfile?.role || 'user';
+    setNavItems(allNavItems.filter(item => item.roles.includes(userRole)));
+  }, [userProfile]);
 
-  const navItems = allNavItems.filter(item => item.roles.includes(userRole));
+  const isLoading = isUserLoading || isProfileLoading;
 
+  if (isLoading) {
+    return (
+       <>
+        {allNavItems.filter(i => i.roles.includes('user')).map(item => (
+            <div key={item.name} className="flex flex-col items-center justify-center space-y-1 p-2 rounded-md w-1/4">
+                <Skeleton className="h-6 w-6 rounded-md" />
+                <Skeleton className="h-4 w-12 rounded-md" />
+            </div>
+        ))}
+       </>
+    )
+  }
+
+  return (
+     <>
+      {navItems.map(item => {
+        const isActive = pathname === item.href;
+        const showIndicator = item.href === '/renewal-requests' && hasPendingRequests;
+
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
+              isActive
+                ? 'text-primary dark:text-primary-foreground'
+                : 'text-muted-foreground hover:text-primary dark:hover:text-primary-foreground'
+            }`}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {isActive && (
+              <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />
+            )}
+
+            <div className="relative">
+              <item.icon className="h-6 w-6" />
+              {showIndicator && (
+                <span className="absolute top-0 right-0 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                </span>
+              )}
+            </div>
+            
+            <span className="text-xs font-medium">{item.name}</span>
+          </Link>
+        );
+      })}
+    </>
+  )
+}
+
+export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-md border-t bg-card/80 backdrop-blur-sm">
       <div className="mx-auto flex h-16 items-center justify-around px-2">
-        {navItems.map(item => {
-          const isActive = pathname === item.href;
-          const showIndicator = item.href === '/renewal-requests' && hasPendingRequests;
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
-                isActive
-                  ? 'text-primary dark:text-primary-foreground'
-                  : 'text-muted-foreground hover:text-primary dark:hover:text-primary-foreground'
-              }`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {isActive && (
-                <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />
-              )}
-
-              <div className="relative">
-                <item.icon className="h-6 w-6" />
-                {showIndicator && (
-                  <span className="absolute top-0 right-0 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
-                  </span>
-                )}
-              </div>
-              
-              <span className="text-xs font-medium">{item.name}</span>
-            </Link>
-          );
-        })}
+        <NavItems />
       </div>
     </nav>
   );

@@ -156,7 +156,6 @@ export default function UsersPage() {
                           <p className="font-bold text-base">{user.displayName || 'مستخدم جديد'}</p>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-sm mt-1">
                               <span>{user.phoneNumber}</span>
-                              <MessageSquare className="h-4 w-4 text-primary" />
                           </div>
                       </div>
                   </div>
@@ -235,12 +234,12 @@ export default function UsersPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" onClick={handleTopUp}>تأكيد التغذية</Button>
                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">
                                 إلغاء
                                 </Button>
                             </DialogClose>
+                            <Button type="submit" onClick={handleTopUp}>تأكيد التغذية</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

@@ -42,7 +42,7 @@ const ServiceItem = ({
     }}
   >
     <div className="flex h-16 w-16 items-center justify-center rounded-2xl transition-colors group-hover:bg-primary/10">
-      <Icon className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
+      <Icon className="h-8 w-8 text-primary dark:text-primary-foreground transition-transform group-hover:scale-110" />
     </div>
     <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
   </Link>

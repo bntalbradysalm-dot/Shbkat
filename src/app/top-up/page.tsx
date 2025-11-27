@@ -66,7 +66,7 @@ export default function TopUpPage() {
             return (
                 <div className="grid grid-cols-2 gap-4">
                     {[...Array(4)].map((_, i) => (
-                         <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-xl bg-card p-4 h-[120px] border">
+                         <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-xl bg-card p-4 aspect-square border">
                             <Skeleton className="h-12 w-12 rounded-lg"/>
                             <Skeleton className="h-4 w-24"/>
                         </div>
@@ -93,7 +93,7 @@ export default function TopUpPage() {
                         key={method.id}
                         onClick={() => setSelectedMethod(method)}
                         className={cn(
-                            "flex flex-col items-center justify-center space-y-2 rounded-xl p-4 h-[120px] cursor-pointer transition-all border-2",
+                            "flex flex-col items-center justify-center space-y-2 rounded-xl p-4 aspect-square cursor-pointer transition-all border-2",
                             selectedMethod?.id === method.id 
                                 ? 'border-primary shadow-lg' 
                                 : 'border-border hover:border-primary/50'

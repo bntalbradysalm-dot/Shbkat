@@ -31,18 +31,6 @@ export function PromotionalImage() {
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
 
-    if (isLoading) {
-        return (
-             <div className="px-4 pt-4">
-                <Skeleton className="w-full aspect-[2/1] rounded-2xl" />
-            </div>
-        )
-    }
-    
-    if (!ads || ads.length === 0) {
-        return null;
-    }
-
     const promoImage = (ad: Advertisement) => (
         <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
             <div className="relative aspect-[2/1] w-full">
@@ -55,6 +43,18 @@ export function PromotionalImage() {
             </div>
         </Card>
     );
+    
+    if (isLoading) {
+        return (
+             <div className="px-4 pt-4">
+                <Skeleton className="w-full aspect-[2/1] rounded-2xl" />
+            </div>
+        )
+    }
+    
+    if (!ads || ads.length === 0) {
+        return null;
+    }
 
     return (
         <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-4">

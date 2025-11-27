@@ -74,16 +74,6 @@ type UserProfile = {
   role?: 'admin' | 'user';
 };
 
-const getShortName = (fullName: string | null | undefined): string => {
-  if (!fullName) return 'مستخدم جديد';
-  const nameParts = fullName.trim().split(/\s+/);
-  if (nameParts.length > 1) {
-    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-  }
-  return fullName;
-};
-
-
 export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = useState('light');
@@ -156,7 +146,7 @@ export default function AccountPage() {
           <CardContent className="p-4 flex items-center gap-4">
             <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
             <div className="flex-grow">
-              <h2 className="text-sm font-bold">{getShortName(userProfile?.displayName)}</h2>
+              <h2 className="text-sm font-bold">{userProfile?.displayName || 'مستخدم جديد'}</h2>
               <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
                 <div className="flex items-center">
                   <Phone className="ml-2 h-3 w-3" />

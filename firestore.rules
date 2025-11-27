@@ -146,7 +146,7 @@ service cloud.firestore {
     match /renewalRequests/{requestId} {
       allow create: if isSignedIn() && isRequestOwner();
       allow read, update: if isAdmin();
-      allow delete: if false; // Requests are not deleted, only status is changed
+      allow delete: if isAdmin();
     }
 
 

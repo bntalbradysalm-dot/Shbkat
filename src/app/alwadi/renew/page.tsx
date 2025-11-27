@@ -31,7 +31,7 @@ type UserProfile = {
 };
 
 export default function RenewPage() {
-  const searchParams = useSearchParams();
+  const searchParams = React.use(useSearchParams());
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();

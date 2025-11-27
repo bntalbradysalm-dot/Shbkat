@@ -1,14 +1,192 @@
 'use client';
 
+import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Banknote } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
+
+type PaymentMethod = {
+  id: string;
+  name: string;
+  accountNumber: string;
+  logoUrl?: string;
+};
+
+const getLogoSrc = (url?: string) => {
+    if (url && (url.startsWith('http') || url.startsWith('/'))) {
+      return url;
+    }
+    return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
+};
 
 export default function PaymentManagementPage() {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const methodsCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'paymentMethods') : null),
+    [firestore]
+  );
+  const { data: methods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  
+  const initialNewMethodState = { name: '', accountNumber: '', logoUrl: '' };
+  const [newMethod, setNewMethod] = useState(initialNewMethodState);
+
+  const [editingValues, setEditingValues] = useState<{ [key: string]: { name: string; accountNumber: string; logoUrl: string } }>({});
+
+  const handleEdit = (method: PaymentMethod) => {
+    setEditingId(method.id);
+    setEditingValues({
+      ...editingValues,
+      [method.id]: { name: method.name, accountNumber: method.accountNumber, logoUrl: method.logoUrl || '' },
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+  };
+  
+  const handleSave = (id: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'paymentMethods', id);
+    const editedData = {
+        name: editingValues[id].name,
+        accountNumber: editingValues[id].accountNumber,
+        logoUrl: editingValues[id].logoUrl,
+    };
+    updateDocumentNonBlocking(docRef, editedData);
+    setEditingId(null);
+    toast({ title: "تم الحفظ", description: "تم تحديث طريقة الدفع بنجاح." });
+  };
+  
+  const handleValueChange = (id: string, field: 'name' | 'accountNumber' | 'logoUrl', value: string) => {
+    setEditingValues(prev => ({
+        ...prev,
+        [id]: {
+            ...prev[id],
+            [field]: value,
+        }
+    }));
+  };
+
+  const handleDelete = (id: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'paymentMethods', id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "تم الحذف", description: "تم حذف طريقة الدفع بنجاح.", variant: "destructive" });
+  };
+  
+  const handleAddNew = () => {
+    if (newMethod.name && newMethod.accountNumber && firestore && methodsCollection) {
+      addDocumentNonBlocking(methodsCollection, newMethod);
+      setNewMethod(initialNewMethodState);
+      setIsAdding(false);
+      toast({ title: "تمت الإضافة", description: "تمت إضافة طريقة دفع جديدة بنجاح." });
+    } else {
+        toast({ title: "خطأ", description: "الرجاء تعبئة اسم البنك ورقم الحساب.", variant: "destructive" });
+    }
+  };
+
   return (
+    <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="إدارة طرق الدفع" />
-       <div className="flex-1 flex items-center justify-center">
-        <p className="text-muted-foreground">سيتم إعادة بناء هذه الصفحة.</p>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-center'>طرق الدفع المتاحة</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+                </div>
+            ) : (
+                methods?.map((method) => (
+                <Card key={method.id} className="p-4">
+                    {editingId === method.id ? (
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor={`name-${method.id}`}>اسم البنك</Label>
+                            <Input id={`name-${method.id}`} value={editingValues[method.id]?.name} onChange={(e) => handleValueChange(method.id, 'name', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor={`account-${method.id}`}>رقم الحساب</Label>
+                            <Input id={`account-${method.id}`} value={editingValues[method.id]?.accountNumber} onChange={(e) => handleValueChange(method.id, 'accountNumber', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor={`logo-${method.id}`}>رابط الشعار</Label>
+                            <Input id={`logo-${method.id}`} value={editingValues[method.id]?.logoUrl} onChange={(e) => handleValueChange(method.id, 'logoUrl', e.target.value)} />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="ghost" onClick={handleCancelEdit}><X className="h-4 w-4" /></Button>
+                            <Button size="icon" onClick={() => handleSave(method.id)}><Save className="h-4 w-4" /></Button>
+                        </div>
+                    </div>
+                    ) : (
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain bg-muted" />
+                          <div>
+                            <p className="font-semibold">{method.name}</p>
+                            <p className="text-sm text-primary">{method.accountNumber}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="icon" onClick={() => handleEdit(method)}><Edit className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon" onClick={() => handleDelete(method.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                    </div>
+                    )}
+                </Card>
+                ))
+            )}
+             {isAdding && (
+              <Card className="p-4 bg-muted/50">
+                 <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="new-name" className='flex items-center gap-2'><Banknote className='w-4 h-4' /> اسم البنك</Label>
+                      <Input id="new-name" value={newMethod.name} onChange={(e) => setNewMethod(p=>({...p, name: e.target.value}))} placeholder="مثال: بنك الكريمي" />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-account" className='flex items-center gap-2'><Banknote className='w-4 h-4' /> رقم الحساب</Label>
+                      <Input id="new-account" type="text" value={newMethod.accountNumber} onChange={(e) => setNewMethod(p=>({...p, accountNumber: e.target.value}))} placeholder="مثال: 123456789" />
+                    </div>
+                     <div>
+                      <Label htmlFor="new-logo" className='flex items-center gap-2'><ImageIcon className='w-4 h-4' /> رابط شعار البنك (اختياري)</Label>
+                      <Input id="new-logo" type="text" value={newMethod.logoUrl} onChange={(e) => setNewMethod(p=>({...p, logoUrl: e.target.value}))} placeholder="https://example.com/logo.png" />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}><X className="h-4 w-4" /></Button>
+                      <Button onClick={handleAddNew}>إضافة</Button>
+                    </div>
+                  </div>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+        
+        {!isAdding && (
+            <Button className="w-full" onClick={() => setIsAdding(true)}>
+            <PlusCircle className="ml-2 h-4 w-4" />
+            إضافة طريقة دفع
+            </Button>
+        )}
       </div>
     </div>
+    <Toaster />
+    </>
   );
 }

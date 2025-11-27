@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, updateDoc, increment, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, query, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -68,6 +68,9 @@ export default function RenewalRequestsPage() {
   const { toast } = useToast();
   const [selectedRequest, setSelectedRequest] = useState<RenewalRequest | null>(null);
   const [actionToConfirm, setActionToConfirm] = useState<'approve' | 'reject' | null>(null);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
   const requestsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'renewalRequests'), orderBy('requestTimestamp', 'desc')) : null),
@@ -93,20 +96,21 @@ export default function RenewalRequestsPage() {
     if (!selectedRequest || !actionToConfirm || !firestore) return;
 
     const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
-    const userDocRef = doc(firestore, 'users', selectedRequest.userId);
     
     try {
         if (actionToConfirm === 'approve') {
-             const transactionData = {
+             // Balance already deducted, just create transaction record
+              const transactionData = {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
-                transactionType: 'تجديد كرت',
-                notes: `تجديد باقة: ${selectedRequest.packageTitle} للمشترك ${selectedRequest.subscriberName}`,
+                transactionType: selectedRequest.packageTitle,
+                notes: `تجديد: ${selectedRequest.packageTitle} للمشترك ${selectedRequest.subscriberName}`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
-        } else {
-            // Action is 'reject'. Refund the user.
+        } else { // 'reject'
+            // Refund the user
+            const userDocRef = doc(firestore, 'users', selectedRequest.userId);
             await updateDoc(userDocRef, {
                 balance: increment(selectedRequest.packagePrice)
             });
@@ -130,8 +134,32 @@ export default function RenewalRequestsPage() {
     } finally {
         setActionToConfirm(null);
         setSelectedRequest(null);
+        setIsDialogOpen(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!selectedRequest || !firestore) return;
+    try {
+      const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
+      await deleteDoc(requestDocRef);
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الطلب من الأرشيف بنجاح."
+      });
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "حدث خطأ أثناء حذف الطلب.",
+      });
+      console.error("Error deleting request:", error);
+    } finally {
+      setIsDeleteAlertOpen(false);
+      setSelectedRequest(null);
+      setIsDialogOpen(false);
+    }
+  }
 
   const RequestList = ({ list, emptyMessage }: { list: RenewalRequest[], emptyMessage: string }) => {
     if (!list || list.length === 0) {
@@ -140,27 +168,34 @@ export default function RenewalRequestsPage() {
     return (
         <div className="space-y-3">
           {list.map((request) => (
-            <DialogTrigger asChild key={request.id} onClick={() => setSelectedRequest(request)}>
-                <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <CardContent className="p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-full">
-                        <User className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <p className="font-bold">{request.userName}</p>
-                        <p className="text-sm text-muted-foreground">{request.packageTitle}</p>
-                    </div>
-                    </div>
-                    <div className="text-left flex flex-col items-end gap-1">
-                        <StatusBadge status={request.status} />
-                        <span className="text-xs text-muted-foreground">
-                            {format(parseISO(request.requestTimestamp), 'P', { locale: ar })}
-                        </span>
-                    </div>
-                </CardContent>
-                </Card>
-            </DialogTrigger>
+            <div
+              key={request.id}
+              onClick={() => {
+                setSelectedRequest(request);
+                setIsDialogOpen(true);
+              }}
+              className="cursor-pointer"
+            >
+              <Card className="hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-full">
+                      <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                      <p className="font-bold">{request.userName}</p>
+                      <p className="text-sm text-muted-foreground">{request.packageTitle}</p>
+                  </div>
+                  </div>
+                  <div className="text-left flex flex-col items-end gap-1">
+                      <StatusBadge status={request.status} />
+                      <span className="text-xs text-muted-foreground">
+                          {format(parseISO(request.requestTimestamp), 'P', { locale: ar })}
+                      </span>
+                  </div>
+              </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
     );
@@ -175,7 +210,6 @@ export default function RenewalRequestsPage() {
       );
     }
     return (
-      <Dialog onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <Tabs defaultValue="pending" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="pending">
@@ -194,8 +228,33 @@ export default function RenewalRequestsPage() {
                 <RequestList list={archivedRequests} emptyMessage="لا توجد طلبات مؤرشفة."/>
             </TabsContent>
         </Tabs>
-        
-        {selectedRequest && (
+    );
+  };
+  
+  const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string }) => (
+    <div className="flex justify-between items-center">
+        <span className="text-muted-foreground flex items-center gap-2"><Icon className="h-4 w-4" /> {label}:</span>
+        <span className="font-semibold">{value}</span>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="flex flex-col h-full bg-background">
+        <SimpleHeader title="طلبات التجديد" />
+        <div className="flex-1 overflow-y-auto">
+          {renderContent()}
+        </div>
+      </div>
+      <Toaster />
+
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedRequest(null);
+        }
+        setIsDialogOpen(open);
+      }}>
+         {selectedRequest && (
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>تفاصيل طلب التجديد</DialogTitle>
@@ -220,33 +279,20 @@ export default function RenewalRequestsPage() {
                     </>
                     )}
                      {selectedRequest.status !== 'pending' && (
-                         <DialogClose asChild>
-                            <Button variant="outline" className="col-span-2">إغلاق</Button>
-                         </DialogClose>
+                         <>
+                            <Button variant="destructive" onClick={() => setIsDeleteAlertOpen(true)} className="col-span-1">
+                                <Trash2 className="ml-2 h-4 w-4"/>
+                                حذف
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="col-span-1">إغلاق</Button>
+                            </DialogClose>
+                         </>
                      )}
                 </DialogFooter>
             </DialogContent>
         )}
       </Dialog>
-    );
-  };
-  
-  const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string }) => (
-    <div className="flex justify-between items-center">
-        <span className="text-muted-foreground flex items-center gap-2"><Icon className="h-4 w-4" /> {label}:</span>
-        <span className="font-semibold">{value}</span>
-    </div>
-  );
-
-  return (
-    <>
-      <div className="flex flex-col h-full bg-background">
-        <SimpleHeader title="طلبات التجديد" />
-        <div className="flex-1 overflow-y-auto">
-          {renderContent()}
-        </div>
-      </div>
-      <Toaster />
 
       <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
         <AlertDialogContent>
@@ -261,6 +307,21 @@ export default function RenewalRequestsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction onClick={handleAction}>تأكيد</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رغبتك في حذف هذا الطلب من الأرشيف؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">حذف</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

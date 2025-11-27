@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User, CreditCard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -16,7 +16,23 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 type Transaction = {
   id: string;
@@ -59,10 +75,12 @@ export default function TransactionsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const transactionsQuery = useMemoFirebase(
     () =>
-      user
+      user && firestore
         ? query(
             collection(firestore, 'users', user.uid, 'transactions'),
             orderBy('transactionDate', 'desc')
@@ -72,6 +90,17 @@ export default function TransactionsPage() {
   );
 
   const { data: transactions, isLoading } = useCollection<Transaction>(transactionsQuery);
+
+  const handleDelete = () => {
+    if (!selectedTx || !user || !firestore) return;
+    const docRef = doc(firestore, 'users', user.uid, 'transactions', selectedTx.id);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+        title: "تم الحذف",
+        description: "تم حذف العملية بنجاح."
+    });
+    setIsDialogOpen(false);
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -111,40 +140,51 @@ export default function TransactionsPage() {
     }
 
     return (
-      <Dialog>
-        <div className="space-y-3">
-          {transactions.map((tx) => (
-            <DialogTrigger key={tx.id} asChild onClick={() => setSelectedTx(tx)}>
-                <Card className="overflow-hidden animate-in fade-in-0 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <CardContent className="p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-muted rounded-full">
-                            {getTransactionIcon(tx.transactionType)}
-                        </div>
-                        <div>
-                        <p className="font-semibold text-sm">{tx.transactionType}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
-                        </p>
-                        </div>
-                    </div>
-                    <div className="text-left">
-                        <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                        {tx.transactionType !== 'تغذية رصيد' && '-'}
-                        {tx.amount.toLocaleString('en-US')} ريال
-                        </p>
-                        {tx.notes && (
-                            <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
-                                {tx.notes}
-                            </p>
-                        )}
-                    </div>
-                    </CardContent>
-                </Card>
-            </DialogTrigger>
-          ))}
+      <div className="space-y-3">
+        {transactions.map((tx) => (
+          <DialogTrigger asChild key={tx.id} onClick={() => { setSelectedTx(tx); setIsDialogOpen(true); }}>
+              <Card className="overflow-hidden animate-in fade-in-0 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                      <div className="p-2 bg-muted rounded-full">
+                          {getTransactionIcon(tx.transactionType)}
+                      </div>
+                      <div>
+                      <p className="font-semibold text-sm">{tx.transactionType}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                          {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
+                      </p>
+                      </div>
+                  </div>
+                  <div className="text-left">
+                      <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
+                      {tx.transactionType !== 'تغذية رصيد' && '-'}
+                      {tx.amount.toLocaleString('en-US')} ريال
+                      </p>
+                      {tx.notes && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
+                              {tx.notes}
+                          </p>
+                      )}
+                  </div>
+                  </CardContent>
+              </Card>
+          </DialogTrigger>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="flex flex-col h-full bg-background">
+        <SimpleHeader title="سجل العمليات" />
+        <div className="flex-1 overflow-y-auto p-4">
+          {renderContent()}
         </div>
-        
+      </div>
+      <Toaster />
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {selectedTx && (
             <DialogContent>
                 <DialogHeader>
@@ -166,18 +206,18 @@ export default function TransactionsPage() {
                         </span>
                     </div>
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">التاريخ:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4"/> التاريخ:</span>
                         <span className="font-semibold text-right">
                            {format(parseISO(selectedTx.transactionDate), 'eeee, d MMMM yyyy', { locale: ar })}
                         </span>
                     </div>
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">الوقت:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/> الوقت:</span>
                         <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
                     </div>
                      {selectedTx.subscriberName && (
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground flex items-center gap-2"><User className="h-4 w-4"/> اسم المشترك:</span>
+                            <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المشترك:</span>
                             <span className="font-semibold">{selectedTx.subscriberName}</span>
                         </div>
                      )}
@@ -194,18 +234,36 @@ export default function TransactionsPage() {
                         </div>
                      )}
                 </div>
+                 <DialogFooter className="grid grid-cols-2 gap-2">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive">
+                                <Trash2 className="ml-2 h-4 w-4" />
+                                حذف
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    سيتم حذف هذه العملية نهائياً من سجلك. لا يمكن التراجع عن هذا الإجراء.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                    تأكيد الحذف
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <DialogClose asChild>
+                        <Button variant="outline">إغلاق</Button>
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         )}
       </Dialog>
-    );
-  };
-
-  return (
-    <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="سجل العمليات" />
-      <div className="flex-1 overflow-y-auto p-4">
-        {renderContent()}
-      </div>
-    </div>
+    </>
   );
 }

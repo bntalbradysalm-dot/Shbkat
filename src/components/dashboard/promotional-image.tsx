@@ -7,6 +7,12 @@ import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
 import React from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 type Advertisement = {
     id: string;
@@ -25,6 +31,10 @@ export function PromotionalImage() {
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
     
+    const plugin = React.useRef(
+      Autoplay({ delay: 4000, stopOnInteraction: true })
+    );
+
     if (isLoading) {
         return (
              <div className="px-4 pt-4">
@@ -33,10 +43,7 @@ export function PromotionalImage() {
         )
     }
     
-    // Display only the first ad if available
-    const firstAd = ads && ads.length > 0 ? ads[0] : null;
-
-    if (!firstAd) {
+    if (!ads || ads.length === 0) {
         return null;
     }
 
@@ -55,13 +62,26 @@ export function PromotionalImage() {
 
     return (
         <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-4">
-           {firstAd.linkUrl ? (
-              <Link href={firstAd.linkUrl} className="block">
-                  {promoImage(firstAd)}
-              </Link>
-          ) : (
-              promoImage(firstAd)
-          )}
+          <Carousel
+            plugins={[plugin.current]}
+            className="w-full"
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+          >
+            <CarouselContent>
+              {ads.map((ad) => (
+                <CarouselItem key={ad.id}>
+                  {ad.linkUrl ? (
+                    <Link href={ad.linkUrl} className="block">
+                        {promoImage(ad)}
+                    </Link>
+                  ) : (
+                      promoImage(ad)
+                  )}
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
     );
 }

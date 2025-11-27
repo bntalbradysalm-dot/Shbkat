@@ -34,10 +34,10 @@ const Header = () => {
   const [greeting, setGreeting] = useState('');
   const [hasUnread, setHasUnread] = useState(false);
 
-  // Get the last notification
+  // Get the last notification only if user is logged in
   const lastNotificationQuery = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(1)) : null,
-    [firestore]
+    () => (firestore && user) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(1)) : null,
+    [firestore, user]
   );
   const { data: lastNotification } = useCollection<Notification>(lastNotificationQuery);
 

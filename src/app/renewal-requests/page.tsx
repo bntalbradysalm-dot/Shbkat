@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, addDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -74,6 +75,20 @@ export default function RenewalRequestsPage() {
   );
   const { data: requests, isLoading } = useCollection<RenewalRequest>(requestsQuery);
 
+  const { pendingRequests, archivedRequests } = useMemo(() => {
+    const pending: RenewalRequest[] = [];
+    const archived: RenewalRequest[] = [];
+    requests?.forEach(req => {
+      if (req.status === 'pending') {
+        pending.push(req);
+      } else {
+        archived.push(req);
+      }
+    });
+    return { pendingRequests: pending, archivedRequests: archived };
+  }, [requests]);
+
+
   const handleAction = async () => {
     if (!selectedRequest || !actionToConfirm || !firestore) return;
 
@@ -82,13 +97,12 @@ export default function RenewalRequestsPage() {
     
     try {
         if (actionToConfirm === 'approve') {
-            // Balance was already deducted. Just record the transaction.
-            const transactionData = {
+             const transactionData = {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
-                transactionType: selectedRequest.packageTitle, // Use package title here
-                notes: `للمشترك ${selectedRequest.subscriberName} (كرت: ${selectedRequest.cardNumber})`,
+                transactionType: 'تجديد كرت',
+                notes: `تجديد باقة: ${selectedRequest.packageTitle} للمشترك ${selectedRequest.subscriberName}`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
         } else {
@@ -119,21 +133,13 @@ export default function RenewalRequestsPage() {
     }
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
-        </div>
-      );
-    }
-    if (!requests || requests.length === 0) {
-      return <p className="text-center text-muted-foreground mt-10">لا توجد طلبات تجديد حاليًا.</p>;
+  const RequestList = ({ list, emptyMessage }: { list: RenewalRequest[], emptyMessage: string }) => {
+    if (!list || list.length === 0) {
+      return <p className="text-center text-muted-foreground mt-10">{emptyMessage}</p>;
     }
     return (
-      <Dialog onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <div className="space-y-3">
-          {requests.map((request) => (
+          {list.map((request) => (
             <DialogTrigger asChild key={request.id} onClick={() => setSelectedRequest(request)}>
                 <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <CardContent className="p-4 flex justify-between items-center">
@@ -157,6 +163,38 @@ export default function RenewalRequestsPage() {
             </DialogTrigger>
           ))}
         </div>
+    );
+  }
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="p-4 space-y-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+        </div>
+      );
+    }
+    return (
+      <Dialog onOpenChange={(open) => !open && setSelectedRequest(null)}>
+        <Tabs defaultValue="pending" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="pending">
+                   <Inbox className="ml-2 h-4 w-4"/>
+                   الطلبات الحالية ({pendingRequests.length})
+                </TabsTrigger>
+                <TabsTrigger value="archived">
+                    <Archive className="ml-2 h-4 w-4"/>
+                    الأرشيف ({archivedRequests.length})
+                </TabsTrigger>
+            </TabsList>
+            <TabsContent value="pending" className="p-4">
+               <RequestList list={pendingRequests} emptyMessage="لا توجد طلبات تجديد حاليًا."/>
+            </TabsContent>
+            <TabsContent value="archived" className="p-4">
+                <RequestList list={archivedRequests} emptyMessage="لا توجد طلبات مؤرشفة."/>
+            </TabsContent>
+        </Tabs>
+        
         {selectedRequest && (
             <DialogContent>
                 <DialogHeader>
@@ -204,7 +242,9 @@ export default function RenewalRequestsPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="طلبات التجديد" />
-        <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
+        <div className="flex-1 overflow-y-auto">
+          {renderContent()}
+        </div>
       </div>
       <Toaster />
 

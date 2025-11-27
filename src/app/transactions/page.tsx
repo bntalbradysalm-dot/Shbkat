@@ -29,13 +29,14 @@ type Transaction = {
 const getTransactionIcon = (type: string) => {
     switch (type) {
         case 'تجديد الوادي':
+        case 'تجديد كرت':
             return <SatelliteDish className="h-6 w-6 text-blue-500" />;
         case 'تغذية رصيد':
             return <ArrowLeft className="h-6 w-6 text-green-500" />;
         case 'تحويل':
             return <ArrowRight className="h-6 w-6 text-red-500" />;
         default:
-            return <FileText className="h-6 w-6 text-gray-500" />;
+            return <SatelliteDish className="h-6 w-6 text-blue-500" />;
     }
 };
 
@@ -152,7 +153,7 @@ export default function TransactionsPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">النوع:</span>
+                        <span className="text-muted-foreground">الباقة:</span>
                         <span className="font-semibold">{selectedTx.transactionType}</span>
                     </div>
                     <div className="flex justify-between">

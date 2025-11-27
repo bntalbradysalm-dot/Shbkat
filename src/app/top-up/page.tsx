@@ -63,7 +63,7 @@ export default function TopUpPage() {
     const renderPaymentMethods = () => {
         if (isLoading) {
             return (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 px-4">
                     {[...Array(4)].map((_, i) => (
                          <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-xl bg-card p-4 aspect-square border">
                             <Skeleton className="h-12 w-12 rounded-lg"/>
@@ -76,7 +76,7 @@ export default function TopUpPage() {
 
         if (!methods || methods.length === 0) {
             return (
-                <div className="flex flex-col items-center justify-center text-center h-40">
+                <div className="flex flex-col items-center justify-center text-center h-40 px-4">
                     <p className="mt-4 text-lg font-semibold">لا توجد طرق دفع متاحة</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                         الرجاء إضافة طرق دفع من لوحة التحكم.
@@ -86,7 +86,7 @@ export default function TopUpPage() {
         }
 
         return (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 px-4">
                 {methods.map(method => (
                     <Card
                         key={method.id}
@@ -116,17 +116,19 @@ export default function TopUpPage() {
         <>
             <div className="flex flex-col h-full bg-background">
                 <SimpleHeader title="غذي حسابك" />
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    <div>
-                        <h2 className="text-lg font-bold">1. اختر طريقة الدفع</h2>
-                        <p className="text-sm text-muted-foreground">اختر الحساب الذي تود التحويل إليه.</p>
+                <div className="flex-1 overflow-y-auto space-y-6">
+                    <div className="pt-4">
+                        <div className="px-4">
+                            <h2 className="text-lg font-bold">1. اختر طريقة الدفع</h2>
+                            <p className="text-sm text-muted-foreground">اختر الحساب الذي تود التحويل إليه.</p>
+                        </div>
                         <div className="mt-4">
                             {renderPaymentMethods()}
                         </div>
                     </div>
 
                     {selectedMethod && (
-                        <div className="animate-in fade-in-0 duration-300">
+                        <div className="animate-in fade-in-0 duration-300 px-4">
                             <h2 className="text-lg font-bold">2. حوّل المبلغ إلى الحساب التالي</h2>
                             <Card className="mt-4">
                                 <CardContent className="p-4 text-center space-y-3">
@@ -141,7 +143,7 @@ export default function TopUpPage() {
                                         <p className="text-sm text-muted-foreground">حول إلى حساب</p>
                                         <p className="text-lg font-bold">{selectedMethod.name}</p>
                                     </div>
-                                    <div className="relative flex items-center justify-center bg-muted p-3 rounded-lg gap-2">
+                                    <div className="flex items-center justify-center bg-muted p-3 rounded-lg gap-2">
                                         <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>
                                             <Copy className="ml-2 h-4 w-4" />
                                             نسخ
@@ -154,7 +156,7 @@ export default function TopUpPage() {
                     )}
                     
                     {selectedMethod && (
-                       <div className="animate-in fade-in-0 duration-300 delay-150">
+                       <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
                            <h2 className="text-lg font-bold">3. أرسل الإيصال عبر واتساب</h2>
                            <p className="text-sm text-muted-foreground mt-1">بعد التحويل يرجى رفع صورة الايصال عبر واتساب لتاكيد الدفع واضافة المبلغ الى رصيدك</p>
                            <Card className="mt-4">

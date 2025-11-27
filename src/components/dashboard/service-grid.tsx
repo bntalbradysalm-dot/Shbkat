@@ -40,7 +40,7 @@ const ServiceItem = ({
       animationFillMode: 'backwards',
     }}
   >
-    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white transition-colors group-hover:bg-primary/90">
+    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-muted transition-colors group-hover:bg-primary/90">
       <Icon className="h-8 w-8 text-primary transition-transform group-hover:scale-110 group-hover:text-primary-foreground" />
     </div>
     <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>

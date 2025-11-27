@@ -229,7 +229,7 @@ export default function RenewPage() {
                <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
                 <AlertDialogTrigger asChild>
                    <Button className="w-full" onClick={handleConfirmClick} disabled={isProcessing}>
-                      {isProcessing ? 'جاري إرسال الطلب...' : 'إرسال طلب التجديد'}
+                      {isProcessing ? 'جاري التجديد...' : 'تجديد الكرت'}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="rounded-lg">

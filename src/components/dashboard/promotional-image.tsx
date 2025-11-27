@@ -7,6 +7,12 @@ import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
 import React from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 type Advertisement = {
     id: string;
@@ -33,17 +39,15 @@ export function PromotionalImage() {
         )
     }
     
-    // Display only the first ad if it exists
-    const firstAd = ads?.[0];
-    if (!firstAd) {
+    if (!ads || ads.length === 0) {
         return null;
     }
 
-    const promoImage = (
+    const promoImage = (ad: Advertisement) => (
         <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
             <div className="relative aspect-[2/1] w-full">
                 <Image
-                    src={firstAd.imageUrl}
+                    src={ad.imageUrl}
                     alt="Promotional Banner"
                     fill
                     className="object-cover"
@@ -54,13 +58,31 @@ export function PromotionalImage() {
 
     return (
         <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-4">
-          {firstAd.linkUrl ? (
-            <Link href={firstAd.linkUrl} className="block">
-                {promoImage}
-            </Link>
-          ) : (
-              promoImage
-          )}
+            <Carousel
+                plugins={[
+                    Autoplay({
+                        delay: 3000,
+                        stopOnInteraction: false,
+                    }),
+                ]}
+                opts={{
+                    loop: true,
+                }}
+            >
+                <CarouselContent>
+                    {ads.map((ad) => (
+                        <CarouselItem key={ad.id}>
+                            {ad.linkUrl ? (
+                                <Link href={ad.linkUrl} className="block">
+                                    {promoImage(ad)}
+                                </Link>
+                            ) : (
+                                promoImage(ad)
+                            )}
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
         </div>
     );
 }

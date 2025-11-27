@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle } from 'lucide-react';
+import { User, CreditCard, CheckCircle, Wallet, FileText } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +43,8 @@ export default function RenewPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [remainingBalance, setRemainingBalance] = useState(0);
+
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -87,6 +89,10 @@ export default function RenewPage() {
       await updateDoc(userRef, {
         balance: increment(-renewalPrice),
       });
+      
+      const newBalance = currentUserBalance - renewalPrice;
+      setRemainingBalance(newBalance);
+
 
       // 2. Record transaction
       const transactionsRef = collection(firestore, 'users', user.uid, 'transactions');
@@ -97,13 +103,10 @@ export default function RenewPage() {
         transactionType: 'تجديد الوادي',
         notes: `تجديد باقة "${title}" للمشترك ${subscriberName} (كرت: ${cardNumber})`,
       };
-      // Not using non-blocking here as we want to ensure it's logged before confirming
+      
       await addDocumentNonBlocking(transactionsRef, transactionData);
       
       setShowSuccessOverlay(true);
-
-      // Navigate away after success
-      setTimeout(() => router.push('/'), 2000);
 
     } catch (error) {
       console.error("Renewal failed:", error);
@@ -120,12 +123,40 @@ export default function RenewPage() {
   
   if (showSuccessOverlay) {
     return (
-      <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0">
-        <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <CheckCircle className="h-24 w-24 text-green-500 animate-in zoom-in-75" />
-          <h2 className="text-2xl font-bold">تم التجديد بنجاح</h2>
-          <p className="text-muted-foreground">سيتم توجيهك للصفحة الرئيسية...</p>
-        </div>
+      <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+        <Card className="w-full max-w-sm text-center shadow-2xl">
+            <CardContent className="p-6">
+                <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="bg-green-100 p-4 rounded-full">
+                        <CheckCircle className="h-16 w-16 text-green-600" />
+                    </div>
+                    <h2 className="text-xl font-bold">تم تجديد كرتك بنجاح</h2>
+                    
+                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg">
+                       <div className="flex justify-between">
+                            <span className="text-muted-foreground">الفئة:</span>
+                            <span className="font-semibold">{title}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">المبلغ المدفوع:</span>
+                            <span className="font-semibold text-destructive">{Number(price).toLocaleString('en-US')} ريال</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">الرصيد المتبقي:</span>
+                            <span className="font-semibold text-primary">{remainingBalance.toLocaleString('en-US')} ريال</span>
+                        </div>
+                    </div>
+
+                    <div className="w-full grid grid-cols-2 gap-3 pt-4">
+                        <Button variant="outline" onClick={() => router.push('/transactions')}>
+                           <FileText className="ml-2 h-4 w-4"/>
+                           العمليات
+                        </Button>
+                        <Button onClick={() => router.push('/')}>إغلاق</Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
       </div>
     );
   }

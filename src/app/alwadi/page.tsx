@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 type RenewalOption = {
   id: string;
@@ -32,6 +33,16 @@ export default function AlwadiPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto p-4">
+        <div className="mb-6 overflow-hidden rounded-xl shadow-lg">
+          <Image
+            src="https://i.postimg.cc/HkKqQBMV/15.jpg"
+            alt="Alwadi Promotion"
+            width={600}
+            height={300}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+
         {isLoading ? (
             <div className="grid grid-cols-2 gap-4">
                 {[...Array(4)].map((_, index) => (

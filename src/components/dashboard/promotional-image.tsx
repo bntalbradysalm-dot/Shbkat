@@ -46,7 +46,7 @@ export function PromotionalImage() {
     
     if (isLoading) {
         return (
-             <div className="pt-4">
+             <div className="px-4 pt-4">
                 <Skeleton className="w-full aspect-[2/1] rounded-2xl" />
             </div>
         )
@@ -57,8 +57,9 @@ export function PromotionalImage() {
     }
 
     return (
-        <div className="animate-in fade-in-0 zoom-in-95 duration-500 pt-4">
+        <div className="px-4 pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
             <Carousel
+                className="w-full"
                 plugins={[
                     Autoplay({
                         delay: 3000,
@@ -69,9 +70,9 @@ export function PromotionalImage() {
                     loop: true,
                 }}
             >
-                <CarouselContent>
+                <CarouselContent className="-ml-4">
                     {ads.map((ad) => (
-                        <CarouselItem key={ad.id}>
+                        <CarouselItem key={ad.id} className="pl-4">
                             {ad.linkUrl ? (
                                 <Link href={ad.linkUrl} className="block">
                                     {promoImage(ad)}

@@ -194,7 +194,7 @@ export default function AdsManagementPage() {
           </CardContent>
         </Card>
         
-        {!isAdding && (
+        {!isAdding && (!ads || ads.length === 0) && (
             <Button className="w-full" onClick={() => setIsAdding(true)}>
             <PlusCircle className="ml-2 h-4 w-4" />
             إضافة إعلان جديد

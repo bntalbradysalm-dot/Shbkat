@@ -109,6 +109,21 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
+    
+    /**
+     * @description Manages global notifications. Anyone can read, but only
+     * admins can write (create). Updates and deletes are disallowed for all.
+     * @path /notifications/{notificationId}
+     * @allow Any signed-in user can read the list of notifications. (list, get)
+     * @allow An admin user can create a new notification. (create)
+     * @deny Any user tries to update or delete a notification.
+     * @principle Centralized announcements, immutable after creation.
+     */
+    match /notifications/{notificationId} {
+        allow read: if isSignedIn();
+        allow create: if isAdmin();
+        allow update, delete: if false; // Notifications are immutable
+    }
 
 
     /**
@@ -140,8 +155,7 @@ service cloud.firestore {
        * @principle Enforces inherited ownership from parent document path for all operations.
        */
       match /transactions/{transactionId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow read: if isOwner(userId);
         allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
         allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
         allow delete: if isExistingOwner(userId);
@@ -158,8 +172,7 @@ service cloud.firestore {
        * @principle Enforces inherited ownership from parent document path for all operations.
        */
       match /favorites/{favoriteId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow read: if isOwner(userId);
         allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
         allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
         allow delete: if isExistingOwner(userId);

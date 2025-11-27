@@ -37,6 +37,11 @@
         "alWadiAccountId": {
           "type": "string",
           "description": "Identifier for the user's Al-Wadi account."
+        },
+        "lastNotificationRead": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last notification read by the user."
         }
       },
       "required": [
@@ -44,8 +49,7 @@
         "phoneNumber",
         "firstName",
         "lastName",
-        "registrationDate",
-        "alWadiAccountId"
+        "registrationDate"
       ]
     },
     "Transaction": {
@@ -156,6 +160,36 @@
         "title",
         "price"
       ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification sent to all users.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the notification."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the notification."
+        },
+        "body": {
+          "type": "string",
+          "description": "The main content/message of the notification."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time the notification was created."
+        }
+      },
+      "required": [
+        "title",
+        "body",
+        "timestamp"
+      ]
     }
   },
   "auth": {
@@ -234,6 +268,22 @@
             {
               "name": "optionId",
               "description": "The unique identifier of the Al-Wadi renewal option."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores global notifications sent to all users. Read by everyone, write by admins.",
+          "params": [
+            {
+              "name": "notificationId",
+              "description": "The unique identifier for the notification."
             }
           ]
         }

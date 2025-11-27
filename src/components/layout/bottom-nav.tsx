@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, AreaChart, User } from 'lucide-react';
+import { Home, Users, ListChecks, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -9,7 +9,7 @@ import { doc } from 'firebase/firestore';
 const allNavItems = [
   { name: 'الرئيسية', icon: Home, href: '/', roles: ['admin', 'user'] },
   { name: 'المستخدمين', icon: Users, href: '/users', roles: ['admin'] },
-  { name: 'التقارير', icon: AreaChart, href: '/reports', roles: ['admin'] },
+  { name: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests', roles: ['admin'] },
   { name: 'حسابي', icon: User, href: '/account', roles: ['admin', 'user'] },
 ];
 

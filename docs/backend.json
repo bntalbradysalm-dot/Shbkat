@@ -190,6 +190,60 @@
         "body",
         "timestamp"
       ]
+    },
+     "RenewalRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RenewalRequest",
+      "type": "object",
+      "description": "Represents a user's request to renew a service subscription.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the renewal request."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user making the request."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user making the request."
+        },
+        "userPhoneNumber": {
+          "type": "string",
+          "description": "The phone number of the user making the request."
+        },
+        "packageTitle": {
+          "type": "string",
+          "description": "The title of the renewal package."
+        },
+        "packagePrice": {
+          "type": "number",
+          "description": "The price of the renewal package."
+        },
+        "subscriberName": {
+          "type": "string",
+          "description": "The name of the subscriber for whom the renewal is requested."
+        },
+        "cardNumber": {
+          "type": "string",
+          "description": "The card number for the renewal."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "The status of the renewal request."
+        },
+        "requestTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the request was made."
+        }
+      },
+      "required": [
+        "userId", "userName", "userPhoneNumber", "packageTitle", "packagePrice", 
+        "subscriberName", "cardNumber", "status", "requestTimestamp"
+      ]
     }
   },
   "auth": {
@@ -284,6 +338,22 @@
             {
               "name": "notificationId",
               "description": "The unique identifier for the notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/renewalRequests/{requestId}",
+        "definition": {
+          "entityName": "RenewalRequest",
+          "schema": {
+            "$ref": "#/backend/entities/RenewalRequest"
+          },
+          "description": "Stores user subscription renewal requests. Users can create, admins can read and update status.",
+          "params": [
+            {
+              "name": "requestId",
+              "description": "The unique identifier for the renewal request."
             }
           ]
         }

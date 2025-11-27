@@ -74,6 +74,14 @@ service cloud.firestore {
     function incomingSubcollectionDataMatchesUser(userId) {
       return request.resource.data.userId == userId;
     }
+    
+    /**
+     * On create, validates that the incoming RenewalRequest's 'userId' field matches
+     * the authenticated user's UID.
+     */
+    function isRequestOwner() {
+        return request.resource.data.userId == request.auth.uid;
+    }
 
     /**
      * On update, ensures the 'id' field of a user document cannot be changed.
@@ -123,6 +131,22 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow create: if isAdmin();
         allow update, delete: if false; // Notifications are immutable
+    }
+    
+    /**
+     * @description Manages subscription renewal requests. Authenticated users can
+     * create their own requests. Admins can read all requests and update their status.
+     * @path /renewalRequests/{requestId}
+     * @allow A signed-in user creates a renewal request for themselves. (create)
+     * @allow An admin user reads all renewal requests. (list, get)
+     * @allow An admin user updates the status of a request. (update)
+     * @deny A non-admin user tries to read or modify requests that are not their own.
+     * @principle Users manage their own requests; admins manage the queue.
+     */
+    match /renewalRequests/{requestId} {
+      allow create: if isSignedIn() && isRequestOwner();
+      allow read, update: if isAdmin();
+      allow delete: if false; // Requests are not deleted, only status is changed
     }
 
 

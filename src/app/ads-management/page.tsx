@@ -31,9 +31,12 @@ export default function AdsManagementPage() {
   const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
   const [newAd, setNewAd] = useState({ imageUrl: '', linkUrl: '' });
   const [editingValues, setEditingValues] = useState<{ [key: string]: { imageUrl: string; linkUrl: string } }>({});
+  
+  // In this simplified version, we only allow one ad.
+  // We can add a new one only if there are none.
+  const canAdd = !ads || ads.length === 0;
 
   const handleEdit = (ad: Advertisement) => {
     setEditingId(ad.id);
@@ -77,12 +80,11 @@ export default function AdsManagementPage() {
   };
   
   const handleAddNew = () => {
-    if (newAd.imageUrl && firestore && adsCollection) {
+    if (newAd.imageUrl && firestore && adsCollection && canAdd) {
       addDocumentNonBlocking(adsCollection, newAd);
       setNewAd({ imageUrl: '', linkUrl: '' });
-      setIsAdding(false);
       toast({ title: "تمت الإضافة", description: "تمت إضافة إعلان جديد بنجاح." });
-    } else {
+    } else if (!newAd.imageUrl) {
         toast({ title: "خطأ", description: "الرجاء تعبئة رابط الصورة على الأقل.", variant: "destructive" });
     }
   };
@@ -94,13 +96,42 @@ export default function AdsManagementPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className='text-center'>الإعلانات الحالية</CardTitle>
+            <CardTitle className='text-center'>الإعلان الحالي</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
                 <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-lg" />)}
+                    <Skeleton className="h-40 w-full rounded-lg" />
                 </div>
+            ) : canAdd ? (
+              <Card className="p-4 bg-muted/50">
+                 <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="new-imageUrl" className="flex items-center gap-2 mb-1"><ImageIcon className="w-4 h-4"/> رابط الصورة</Label>
+                      <Input
+                        id="new-imageUrl"
+                        value={newAd.imageUrl}
+                        onChange={(e) => setNewAd(prev => ({...prev, imageUrl: e.target.value}))}
+                        placeholder="https://example.com/image.png"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-linkUrl" className="flex items-center gap-2 mb-1"><LinkIcon className="w-4 h-4"/> رابط الانتقال (اختياري)</Label>
+                      <Input
+                        id="new-linkUrl"
+                        value={newAd.linkUrl}
+                        onChange={(e) => setNewAd(prev => ({...prev, linkUrl: e.target.value}))}
+                        placeholder="/top-up"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button onClick={handleAddNew}>
+                        <PlusCircle className="ml-2 h-4 w-4" />
+                        إضافة إعلان
+                      </Button>
+                    </div>
+                  </div>
+              </Card>
             ) : (
                 ads?.map((ad) => (
                 <Card key={ad.id} className="p-4">
@@ -155,51 +186,8 @@ export default function AdsManagementPage() {
                 </Card>
                 ))
             )}
-             {ads && ads.length === 0 && !isLoading && (
-                <p className="text-center text-muted-foreground py-4">لا توجد إعلانات لعرضها.</p>
-             )}
-
-             {isAdding && (
-              <Card className="p-4 bg-muted/50">
-                 <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="new-imageUrl" className="flex items-center gap-2 mb-1"><ImageIcon className="w-4 h-4"/> رابط الصورة</Label>
-                      <Input
-                        id="new-imageUrl"
-                        value={newAd.imageUrl}
-                        onChange={(e) => setNewAd(prev => ({...prev, imageUrl: e.target.value}))}
-                        placeholder="https://example.com/image.png"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="new-linkUrl" className="flex items-center gap-2 mb-1"><LinkIcon className="w-4 h-4"/> رابط الانتقال (اختياري)</Label>
-                      <Input
-                        id="new-linkUrl"
-                        value={newAd.linkUrl}
-                        onChange={(e) => setNewAd(prev => ({...prev, linkUrl: e.target.value}))}
-                        placeholder="/top-up"
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button onClick={handleAddNew}>
-                        إضافة إعلان
-                      </Button>
-                    </div>
-                  </div>
-              </Card>
-            )}
           </CardContent>
         </Card>
-        
-        {!isAdding && (!ads || ads.length === 0) && (
-            <Button className="w-full" onClick={() => setIsAdding(true)}>
-            <PlusCircle className="ml-2 h-4 w-4" />
-            إضافة إعلان جديد
-            </Button>
-        )}
       </div>
     </div>
     <Toaster />

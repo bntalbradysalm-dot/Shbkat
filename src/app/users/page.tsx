@@ -61,8 +61,12 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingName, setEditingName] = useState('');
+  const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
@@ -120,6 +124,45 @@ export default function UsersPage() {
         variant: "destructive",
         title: "خطأ في التغذية",
         description: "لم يتم تحديث الرصيد. الرجاء المحاولة مرة أخرى.",
+      });
+    }
+  };
+
+  const handleEditClick = (user: User) => {
+    setEditingUser(user);
+    setEditingName(user.displayName);
+    setEditingPhoneNumber(user.phoneNumber || '');
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleSaveChanges = async () => {
+    if (!editingUser || !firestore) return;
+  
+    const userDocRef = doc(firestore, 'users', editingUser.id);
+    const nameParts = editingName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+  
+    try {
+      await updateDoc(userDocRef, {
+        displayName: editingName,
+        phoneNumber: editingPhoneNumber,
+        firstName: firstName,
+        lastName: lastName,
+        email: `${editingPhoneNumber}@shabakat.com`,
+      });
+      toast({
+        title: "نجاح",
+        description: "تم تحديث معلومات المستخدم بنجاح.",
+      });
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+    } catch (e) {
+      console.error("Error updating user: ", e);
+      toast({
+        variant: "destructive",
+        title: "خطأ في التحديث",
+        description: "لم يتم تحديث معلومات المستخدم. الرجاء المحاولة مرة أخرى.",
       });
     }
   };
@@ -187,9 +230,10 @@ export default function UsersPage() {
                       </AlertDialogContent>
                     </AlertDialog>
 
-                    <Button variant="outline" size="icon">
-                        <Edit className="h-4 w-4" />
+                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)}>
+                      <Edit className="h-4 w-4" />
                     </Button>
+
                     <Button variant="outline">
                         <MessageSquare className="ml-2 h-4 w-4" />
                         إيداع وإبلاغ
@@ -234,12 +278,12 @@ export default function UsersPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <DialogClose asChild>
+                            <Button type="submit" onClick={handleTopUp}>تأكيد التغذية</Button>
+                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">
                                 إلغاء
                                 </Button>
                             </DialogClose>
-                            <Button type="submit" onClick={handleTopUp}>تأكيد التغذية</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -278,6 +322,49 @@ export default function UsersPage() {
         </div>
       </div>
       <Toaster />
+
+      {editingUser && (
+        <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => {
+            if (!isOpen) {
+                setIsEditDialogOpen(false);
+                setEditingUser(null);
+            }
+        }}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>تعديل بيانات المستخدم</DialogTitle>
+                    <DialogDescription>
+                        قم بتعديل معلومات {editingUser.displayName}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-name">الاسم الكامل</Label>
+                        <Input
+                            id="edit-name"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-phone">رقم الهاتف</Label>
+                        <Input
+                            id="edit-phone"
+                            type="tel"
+                            value={editingPhoneNumber}
+                            onChange={(e) => setEditingPhoneNumber(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleSaveChanges}>حفظ التغييرات</Button>
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary">إلغاء</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

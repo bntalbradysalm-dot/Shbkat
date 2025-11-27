@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, updateDoc, increment, query, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, query, orderBy, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,7 @@ export default function RenewalRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<RenewalRequest | null>(null);
   const [actionToConfirm, setActionToConfirm] = useState<'approve' | 'reject' | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
 
@@ -104,7 +105,7 @@ export default function RenewalRequestsPage() {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
-                transactionType: selectedRequest.packageTitle,
+                transactionType: 'تجديد كرت',
                 notes: `تجديد: ${selectedRequest.packageTitle} للمشترك ${selectedRequest.subscriberName}`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
@@ -160,6 +161,34 @@ export default function RenewalRequestsPage() {
       setIsDialogOpen(false);
     }
   }
+
+  const handleDeleteAllArchived = async () => {
+    if (!firestore || !archivedRequests || archivedRequests.length === 0) return;
+    
+    const batch = writeBatch(firestore);
+    archivedRequests.forEach(request => {
+      const docRef = doc(firestore, 'renewalRequests', request.id);
+      batch.delete(docRef);
+    });
+
+    try {
+      await batch.commit();
+      toast({
+        title: 'نجاح',
+        description: 'تم حذف جميع الطلبات المؤرشفة بنجاح.'
+      });
+    } catch (error) {
+      console.error('Error deleting all archived requests:', error);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء حذف الطلبات المؤرشفة.'
+      });
+    } finally {
+      setIsDeleteAllAlertOpen(false);
+    }
+  };
+
 
   const RequestList = ({ list, emptyMessage }: { list: RenewalRequest[], emptyMessage: string }) => {
     if (!list || list.length === 0) {
@@ -224,7 +253,13 @@ export default function RenewalRequestsPage() {
             <TabsContent value="pending" className="p-4">
                <RequestList list={pendingRequests} emptyMessage="لا توجد طلبات تجديد حاليًا."/>
             </TabsContent>
-            <TabsContent value="archived" className="p-4">
+            <TabsContent value="archived" className="p-4 space-y-4">
+                {archivedRequests.length > 0 && (
+                    <Button variant="destructive" className="w-full" onClick={() => setIsDeleteAllAlertOpen(true)}>
+                        <Trash2 className="ml-2 h-4 w-4" />
+                        حذف كل الأرشيف
+                    </Button>
+                )}
                 <RequestList list={archivedRequests} emptyMessage="لا توجد طلبات مؤرشفة."/>
             </TabsContent>
         </Tabs>
@@ -322,6 +357,21 @@ export default function RenewalRequestsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف الجماعي</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رغبتك في حذف جميع الطلبات المؤرشفة؟ سيتم حذف {archivedRequests.length} طلبات نهائيًا ولا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllArchived} className="bg-destructive hover:bg-destructive/90">حذف الكل</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

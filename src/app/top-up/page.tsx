@@ -156,6 +156,7 @@ export default function TopUpPage() {
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150">
                            <h2 className="text-lg font-bold">3. أرسل الإيصال عبر واتساب</h2>
+                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل يرجى رفع صورة الايصال عبر واتساب لتاكيد الدفع واضافة المبلغ الى رصيدك</p>
                            <Card className="mt-4">
                                <CardContent className="p-4">
                                    <Button className="w-full" onClick={openWhatsApp}>

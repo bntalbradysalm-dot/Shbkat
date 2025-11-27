@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -163,39 +164,32 @@ export default function AccountPage() {
         
         <div>
             <h3 className="text-xs font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
-            <Card className="bg-card">
-              <CardContent className="p-2">
-                <div className="relative grid grid-cols-2 gap-2">
-                  <div
-                      className={`absolute top-0 h-full w-1/2 rounded-lg bg-primary/10 transition-transform duration-300 ease-in-out ${
-                          activeTheme === 'light' ? 'translate-x-0' : 'translate-x-full'
-                      }`}
-                  />
-                  <button
-                    onClick={() => handleThemeChange('light')}
-                    className={`relative z-10 flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
-                      activeTheme === 'light'
-                        ? 'text-primary'
-                        : 'text-muted-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    <Sun className="h-5 w-5" />
-                    <span className="text-xs font-semibold">فاتح</span>
-                  </button>
-                  <button
-                     onClick={() => handleThemeChange('dark')}
-                     className={`relative z-10 flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
-                       activeTheme === 'dark'
-                         ? 'text-primary'
-                         : 'text-muted-foreground hover:bg-muted/50'
-                     }`}
-                  >
-                    <Moon className="h-5 w-5" />
-                    <span className="text-xs font-semibold">داكن</span>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleThemeChange('light')}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  activeTheme === 'light'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:bg-muted/50'
+                )}
+              >
+                <Sun className="h-5 w-5" />
+                <span className="text-xs font-semibold">فاتح</span>
+              </button>
+              <button
+                onClick={() => handleThemeChange('dark')}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  activeTheme === 'dark'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:bg-muted/50'
+                )}
+              >
+                <Moon className="h-5 w-5" />
+                <span className="text-xs font-semibold">داكن</span>
+              </button>
+            </div>
         </div>
 
         {userRole === 'admin' && (
@@ -345,5 +339,3 @@ export default function AccountPage() {
     </div>
   );
 }
-
-    

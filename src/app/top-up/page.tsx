@@ -7,7 +7,7 @@ import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import { Copy, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -24,7 +24,8 @@ const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
     }
-    return 'https://placehold.co/100x100/e2e8f0/e2e8f0';
+    // Using a valid placeholder image URL
+    return 'https://images.unsplash.com/photo-1579621970795-87f541444740'; 
 };
 
 export default function TopUpPage() {
@@ -51,6 +52,13 @@ export default function TopUpPage() {
             title: "تم النسخ",
             description: "تم نسخ رقم الحساب بنجاح.",
         });
+    };
+    
+    const openWhatsApp = () => {
+        const phoneNumber = '967770326828';
+        const message = encodeURIComponent('أرغب في تأكيد عملية إيداع. هذا هو إيصال الدفع.');
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
+        window.open(whatsappUrl, '_blank');
     };
 
     const renderPaymentMethods = () => {
@@ -143,6 +151,20 @@ export default function TopUpPage() {
                                 </CardContent>
                             </Card>
                         </div>
+                    )}
+                    
+                    {selectedMethod && (
+                       <div className="animate-in fade-in-0 duration-300 delay-150">
+                           <h2 className="text-lg font-bold">3. أرسل الإيصال عبر واتساب</h2>
+                           <Card className="mt-4">
+                               <CardContent className="p-4">
+                                   <Button className="w-full" onClick={openWhatsApp}>
+                                       <Send className="ml-2 h-4 w-4" />
+                                       رفع الإيصال عبر واتساب
+                                   </Button>
+                               </CardContent>
+                           </Card>
+                       </div>
                     )}
                 </div>
             </div>

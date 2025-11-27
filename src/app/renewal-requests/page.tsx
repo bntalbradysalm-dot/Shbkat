@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, updateDoc, increment, query, orderBy, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc, updateDoc, increment, query, orderBy, addDoc, writeBatch } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type RenewalRequest = {
   id: string;
@@ -139,30 +141,20 @@ export default function RenewalRequestsPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedRequest || !firestore) return;
-    try {
-      const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
-      await deleteDoc(requestDocRef);
-      toast({
+    const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
+    deleteDocumentNonBlocking(requestDocRef);
+    toast({
         title: "تم الحذف",
         description: "تم حذف الطلب من الأرشيف بنجاح."
-      });
-    } catch (error) {
-       toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "حدث خطأ أثناء حذف الطلب.",
-      });
-      console.error("Error deleting request:", error);
-    } finally {
-      setIsDeleteAlertOpen(false);
-      setSelectedRequest(null);
-      setIsDialogOpen(false);
-    }
+    });
+    setIsDeleteAlertOpen(false);
+    setSelectedRequest(null);
+    setIsDialogOpen(false);
   }
 
-  const handleDeleteAllArchived = async () => {
+  const handleDeleteAllArchived = () => {
     if (!firestore || !archivedRequests || archivedRequests.length === 0) return;
     
     const batch = writeBatch(firestore);
@@ -171,22 +163,22 @@ export default function RenewalRequestsPage() {
       batch.delete(docRef);
     });
 
-    try {
-      await batch.commit();
-      toast({
-        title: 'نجاح',
-        description: 'تم حذف جميع الطلبات المؤرشفة بنجاح.'
+    batch.commit()
+      .then(() => {
+        toast({
+          title: 'نجاح',
+          description: 'تم حذف جميع الطلبات المؤرشفة بنجاح.'
+        });
+      })
+      .catch((serverError) => {
+        const contextualError = new FirestorePermissionError({
+          operation: 'delete',
+          path: '/renewalRequests'
+        });
+        errorEmitter.emit('permission-error', contextualError);
       });
-    } catch (error) {
-      console.error('Error deleting all archived requests:', error);
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء حذف الطلبات المؤرشفة.'
-      });
-    } finally {
-      setIsDeleteAllAlertOpen(false);
-    }
+
+    setIsDeleteAllAlertOpen(false);
   };
 
 
@@ -378,3 +370,5 @@ export default function RenewalRequestsPage() {
     </>
   );
 }
+
+    

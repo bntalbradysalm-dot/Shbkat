@@ -65,7 +65,7 @@ export function BalanceCard() {
             )}
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <Link href="/top-up" passHref asChild>
+            <Link href="/top-up" asChild>
                 <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg w-full">
                     <Wallet className="ml-2 h-4 w-4" />
                     تغذية الحساب

@@ -24,7 +24,6 @@ const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
     }
-    // Using a valid placeholder image URL
     return 'https://images.unsplash.com/photo-1579621970795-87f541444740'; 
 };
 
@@ -142,11 +141,12 @@ export default function TopUpPage() {
                                         <p className="text-sm text-muted-foreground">حول إلى حساب</p>
                                         <p className="text-lg font-bold">{selectedMethod.name}</p>
                                     </div>
-                                    <div className="flex items-center justify-center gap-2 bg-muted p-3 rounded-lg">
-                                        <Button size="icon" variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>
-                                            <Copy className="h-5 w-5" />
-                                        </Button>
+                                    <div className="flex items-center justify-between gap-2 bg-muted p-3 rounded-lg">
                                         <p className="text-xl font-mono tracking-wider flex-1 text-center">{selectedMethod.accountNumber}</p>
+                                        <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>
+                                            <Copy className="ml-2 h-4 w-4" />
+                                            نسخ
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

@@ -7,6 +7,7 @@ import React from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 type UserProfile = {
   balance?: number;
@@ -64,10 +65,14 @@ export function BalanceCard() {
             )}
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg">
-              <Wallet className="ml-2 h-4 w-4" />
-              تغذية الحساب
-            </Button>
+            <Link href="/top-up" passHref legacyBehavior>
+                <Button asChild variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg w-full">
+                    <a>
+                        <Wallet className="ml-2 h-4 w-4" />
+                        تغذية الحساب
+                    </a>
+                </Button>
+            </Link>
             <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg">
               <Send className="ml-2 h-4 w-4" />
               تحويل

@@ -39,7 +39,7 @@ export default function AlwadiPage() {
             alt="Alwadi Promotion"
             width={600}
             height={300}
-            className="w-full h-auto object-cover"
+            className="w-full h-auto object-cover max-h-48"
           />
         </div>
 

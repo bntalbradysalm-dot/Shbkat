@@ -45,6 +45,8 @@ export default function RenewPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
+
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -78,8 +80,9 @@ export default function RenewPage() {
   
     setIsProcessing(true);
     const numericPrice = Number(price);
+    const currentBalance = userProfile.balance ?? 0;
   
-    if ((userProfile.balance ?? 0) < numericPrice) {
+    if (currentBalance < numericPrice) {
       toast({
         variant: "destructive",
         title: "رصيد غير كاف",
@@ -91,6 +94,9 @@ export default function RenewPage() {
     }
   
     try {
+      const remainingBalance = currentBalance - numericPrice;
+      setFinalRemainingBalance(remainingBalance);
+
       // 1. Deduct balance immediately
       if (userDocRef) {
         await updateDoc(userDocRef, {
@@ -136,8 +142,6 @@ export default function RenewPage() {
     }
   };
   
-  const remainingBalance = (userProfile?.balance ?? 0) - Number(price);
-
   if (showSuccessOverlay) {
     return (
       <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
@@ -161,7 +165,7 @@ export default function RenewPage() {
                         </div>
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                            <span className="font-semibold">{remainingBalance.toLocaleString('en-US')} ريال</span>
+                            <span className="font-semibold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
                         </div>
                     </div>
 

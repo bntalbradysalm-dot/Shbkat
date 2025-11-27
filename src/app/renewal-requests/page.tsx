@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X, Circle } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -87,7 +87,7 @@ export default function RenewalRequestsPage() {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
-                transactionType: selectedRequest.packageTitle,
+                transactionType: selectedRequest.packageTitle, // Use package title here
                 notes: `للمشترك ${selectedRequest.subscriberName} (كرت: ${selectedRequest.cardNumber})`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);

@@ -58,7 +58,7 @@ export function BalanceCard() {
                     <span className="text-base font-medium mr-2">ريال يمني</span>
                   </>
                 ) : (
-                  '******'
+                  <span className="tracking-widest">******</span>
                 )}
               </h2>
             )}

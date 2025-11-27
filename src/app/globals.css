@@ -18,12 +18,11 @@
     --muted-foreground: 240 3.8% 46.1%;
     --accent: 0 0% 95%;
     --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 278 80% 50%;
+    --destructive: 278 96% 13%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 278 96% 13%;
-    --radius: 0.75rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -48,7 +47,7 @@
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 278 80% 50%;
+    --destructive: 278 96% 13%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;

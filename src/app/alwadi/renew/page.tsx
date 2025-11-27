@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { doc, updateDoc, increment, collection } from 'firebase/firestore';
+import { doc, updateDoc, increment, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -104,7 +104,17 @@ export default function RenewPage() {
         notes: `تجديد باقة "${title}" للمشترك ${subscriberName} (كرت: ${cardNumber})`,
       };
       
-      await addDocumentNonBlocking(transactionsRef, transactionData);
+      // Use addDoc which returns a promise, but we don't need to await it here
+      // as the UI will update optimistically. We will still catch errors.
+      addDoc(transactionsRef, transactionData).catch(error => {
+          console.error("Failed to save transaction:", error);
+          // Optionally inform user that transaction logging failed
+          toast({
+            variant: "destructive",
+            title: "فشل حفظ العملية",
+            description: "تم خصم المبلغ ولكن لم نتمكن من حفظ العملية في سجلك.",
+          });
+      });
       
       setShowSuccessOverlay(true);
 

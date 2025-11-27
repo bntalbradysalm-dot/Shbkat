@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, FileText } from 'lucide-react';
+import { User, CreditCard, CheckCircle, FileText, History } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,7 +110,7 @@ export default function RenewPage() {
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
                     <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك والرد عليك قريبًا.</p>
+                    <p className="text-sm text-muted-foreground">طلبك قيد التنفيذ وسيتم إشعارك عند اكتماله.</p>
                     
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
@@ -123,8 +123,12 @@ export default function RenewPage() {
                         </div>
                     </div>
 
-                    <div className="w-full grid grid-cols-1 gap-3 pt-4">
-                        <Button onClick={() => router.push('/')}>العودة للرئيسية</Button>
+                    <div className="w-full grid grid-cols-2 gap-3 pt-4">
+                        <Button variant="outline" onClick={() => router.push('/')}>إغلاق</Button>
+                        <Button onClick={() => router.push('/transactions')}>
+                           <History className="ml-2 h-4 w-4" />
+                           العمليات
+                        </Button>
                     </div>
                 </div>
             </CardContent>
@@ -132,6 +136,7 @@ export default function RenewPage() {
       </div>
     );
   }
+
 
   return (
     <>

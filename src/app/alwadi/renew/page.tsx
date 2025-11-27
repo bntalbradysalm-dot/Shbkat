@@ -99,7 +99,7 @@ export default function RenewPage() {
 
       // 2. Create a renewal request for admin to approve/reject
       const renewalRequestsRef = collection(firestore, 'renewalRequests');
-      const requestData = {
+      await addDoc(renewalRequestsRef, {
         userId: user.uid,
         userName: user.displayName || 'مستخدم غير معروف',
         userPhoneNumber: userProfile.phoneNumber || 'غير متوفر',
@@ -109,9 +109,7 @@ export default function RenewPage() {
         cardNumber: cardNumber,
         status: 'pending',
         requestTimestamp: new Date().toISOString(),
-      };
-
-      await addDoc(renewalRequestsRef, requestData);
+      });
       
       // 3. Show success overlay to the user
       setShowSuccessOverlay(true);

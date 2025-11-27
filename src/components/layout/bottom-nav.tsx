@@ -3,8 +3,8 @@
 import { Home, Users, ListChecks, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { collection, doc, query, where } from 'firebase/firestore';
 
 const allNavItems = [
   { name: 'الرئيسية', icon: Home, href: '/', roles: ['admin', 'user'] },
@@ -16,6 +16,10 @@ const allNavItems = [
 type UserProfile = {
   role?: 'admin' | 'user';
 };
+
+type RenewalRequest = {
+  status: 'pending' | 'approved' | 'rejected';
+}
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -30,6 +34,21 @@ export function BottomNav() {
 
   const userRole = userProfile?.role || 'user';
 
+  const pendingRequestsQuery = useMemoFirebase(
+    () =>
+      firestore && userRole === 'admin'
+        ? query(
+            collection(firestore, 'renewalRequests'),
+            where('status', '==', 'pending')
+          )
+        : null,
+    [firestore, userRole]
+  );
+
+  const { data: pendingRequests } = useCollection<RenewalRequest>(pendingRequestsQuery);
+
+  const hasPendingRequests = pendingRequests && pendingRequests.length > 0;
+
   const navItems = allNavItems.filter(item => item.roles.includes(userRole));
 
   return (
@@ -37,6 +56,8 @@ export function BottomNav() {
       <div className="mx-auto flex h-16 items-center justify-around px-2">
         {navItems.map(item => {
           const isActive = pathname === item.href;
+          const showIndicator = item.href === '/renewal-requests' && hasPendingRequests;
+
           return (
             <Link
               key={item.name}
@@ -51,7 +72,17 @@ export function BottomNav() {
               {isActive && (
                 <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />
               )}
-              <item.icon className="h-6 w-6" />
+
+              <div className="relative">
+                <item.icon className="h-6 w-6" />
+                {showIndicator && (
+                  <span className="absolute top-0 right-0 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                  </span>
+                )}
+              </div>
+              
               <span className="text-xs font-medium">{item.name}</span>
             </Link>
           );

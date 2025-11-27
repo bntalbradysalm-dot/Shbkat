@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 type Subscriber = {
   id: string; // Card number
@@ -352,4 +353,3 @@ export default function SubscribersManagementPage() {
     </>
   );
 }
-

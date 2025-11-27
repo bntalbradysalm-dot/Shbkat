@@ -237,7 +237,7 @@ export default function RenewPage() {
                     <AlertDialogTitle className="text-center">تأكيد معلومات الطلب</AlertDialogTitle>
                     <AlertDialogDescription asChild>
                       <div className="space-y-4 pt-4 text-base text-foreground">
-                        <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك الآن وإرسال طلب للموافقة.</p>
+                        <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك لإتمام العملية.</p>
                         <div className="flex justify-between items-center">
                           <span>اسم المشترك:</span>
                           <span className="font-bold">{subscriberName}</span>

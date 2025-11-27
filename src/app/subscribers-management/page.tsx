@@ -16,6 +16,7 @@ import {
   User,
   CreditCard,
   FileUp,
+  Loader2
 } from 'lucide-react';
 import {
   useCollection,
@@ -40,6 +41,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 
 type Subscriber = {
   id: string; // Card number
@@ -65,6 +67,10 @@ export default function SubscribersManagementPage() {
   const [newName, setNewName] = useState('');
   const [isBulkUploading, setIsBulkUploading] = useState(false);
   const [bulkData, setBulkData] = useState('');
+  const [bulkUploadProgress, setBulkUploadProgress] = useState(0);
+  const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+  const [bulkStatusMessage, setBulkStatusMessage] = useState('');
+
 
   const filteredSubscribers = useMemo(() => {
     if (!subscribers) return [];
@@ -126,48 +132,72 @@ export default function SubscribersManagementPage() {
 
   const handleBulkUpload = async () => {
     if (!bulkData || !firestore) {
-      toast({ title: "لا توجد بيانات", description: "الرجاء لصق البيانات أولاً.", variant: "destructive" });
-      return;
+        toast({ title: "لا توجد بيانات", description: "الرجاء لصق البيانات أولاً.", variant: "destructive" });
+        return;
     }
-
-    const lines = bulkData.trim().split('\n');
-    if (lines.length === 0) {
-      toast({ title: "بيانات فارغة", description: "مربع النص فارغ.", variant: "destructive" });
-      return;
-    }
-
-    const batch = writeBatch(firestore);
-    let processedCount = 0;
     
+    setIsProcessingBulk(true);
+    setBulkUploadProgress(0);
+    setBulkStatusMessage('جاري تحليل البيانات...');
+
+    const lines = bulkData.trim().split('\n').filter(line => line);
+    const validSubscribers: Subscriber[] = [];
+
     lines.forEach(line => {
-      const parts = line.split(/[,\t]/); // Split by comma or tab
-      if (parts.length >= 2) {
-        const cardNumber = parts[0].trim();
-        const name = parts.slice(1).join(' ').trim();
-        if (cardNumber && name) {
-          const docRef = doc(firestore, 'subscribers', cardNumber);
-          batch.set(docRef, { name: name });
-          processedCount++;
+        const parts = line.split(/[,\t]/);
+        if (parts.length >= 2) {
+            const cardNumber = parts[0].trim();
+            const name = parts.slice(1).join(' ').trim();
+            if (cardNumber && name) {
+                validSubscribers.push({ id: cardNumber, name });
+            }
         }
-      }
     });
 
-    if(processedCount === 0) {
-      toast({ title: "صيغة غير صحيحة", description: "لم يتم العثور على بيانات صالحة. تأكد من أن كل سطر يحتوي على `رقم الكرت,الاسم`.", variant: "destructive" });
-      return;
+    if (validSubscribers.length === 0) {
+        toast({ title: "صيغة غير صحيحة", description: "لم يتم العثور على بيانات صالحة. تأكد من أن كل سطر يحتوي على `رقم الكرت,الاسم`.", variant: "destructive" });
+        setIsProcessingBulk(false);
+        return;
     }
+
+    const batchSize = 500;
+    const totalBatches = Math.ceil(validSubscribers.length / batchSize);
+    setBulkStatusMessage(`تم العثور على ${validSubscribers.length} مشترك. سيتم رفعهم في ${totalBatches} دفعات.`);
 
     try {
-      await batch.commit();
-      toast({ title: "نجاح", description: `تمت معالجة وإضافة/تحديث ${processedCount} مشترك بنجاح.` });
-      setBulkData('');
-      setIsBulkUploading(false);
-    } catch (error) {
-      console.error("Bulk upload failed: ", error);
-      toast({ title: "فشل الرفع", description: "حدث خطأ أثناء رفع البيانات.", variant: "destructive" });
-    }
+        for (let i = 0; i < totalBatches; i++) {
+            const batch = writeBatch(firestore);
+            const start = i * batchSize;
+            const end = start + batchSize;
+            const subscribersBatch = validSubscribers.slice(start, end);
 
+            const currentBatchNumber = i + 1;
+            setBulkStatusMessage(`جاري رفع الدفعة ${currentBatchNumber} من ${totalBatches}...`);
+
+            subscribersBatch.forEach(sub => {
+                const docRef = doc(firestore, 'subscribers', sub.id);
+                batch.set(docRef, { name: sub.name });
+            });
+
+            await batch.commit();
+
+            const progress = (currentBatchNumber / totalBatches) * 100;
+            setBulkUploadProgress(progress);
+        }
+
+        toast({ title: "نجاح", description: `تمت معالجة وإضافة/تحديث ${validSubscribers.length} مشترك بنجاح.` });
+        setBulkData('');
+        setIsBulkUploading(false);
+    } catch (error) {
+        console.error("Bulk upload failed: ", error);
+        toast({ title: "فشل الرفع", description: "حدث خطأ أثناء رفع البيانات. الرجاء المحاولة مرة أخرى.", variant: "destructive" });
+    } finally {
+        setIsProcessingBulk(false);
+        setBulkUploadProgress(0);
+        setBulkStatusMessage('');
+    }
   };
+
 
   return (
     <>
@@ -324,12 +354,21 @@ export default function SubscribersManagementPage() {
                     onChange={e => setBulkData(e.target.value)}
                     rows={10}
                     placeholder={`71000001,محمد راضي باشادي\n71000002,علي عبدالله`}
+                    disabled={isProcessingBulk}
                 />
+                {isProcessingBulk && (
+                    <div className='space-y-2'>
+                        <Progress value={bulkUploadProgress} className="w-full" />
+                        <p className='text-xs text-center text-muted-foreground'>{bulkStatusMessage}</p>
+                    </div>
+                )}
                 <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => setIsBulkUploading(false)}>
+                  <Button variant="ghost" size="icon" onClick={() => setIsBulkUploading(false)} disabled={isProcessingBulk}>
                     <X className="h-4 w-4" />
                   </Button>
-                  <Button onClick={handleBulkUpload}>رفع البيانات</Button>
+                  <Button onClick={handleBulkUpload} disabled={isProcessingBulk}>
+                    {isProcessingBulk ? <Loader2 className="animate-spin" /> : 'رفع البيانات'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

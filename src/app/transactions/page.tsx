@@ -1,14 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, DollarSign, FileText, SatelliteDish } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, SatelliteDish } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 type Transaction = {
   id: string;
@@ -35,6 +43,7 @@ const getTransactionIcon = (type: string) => {
 export default function TransactionsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const transactionsQuery = useMemoFirebase(
     () =>
@@ -87,36 +96,80 @@ export default function TransactionsPage() {
     }
 
     return (
-      <div className="space-y-3">
-        {transactions.map((tx) => (
-          <Card key={tx.id} className="overflow-hidden animate-in fade-in-0">
-            <CardContent className="p-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-muted rounded-full">
-                    {getTransactionIcon(tx.transactionType)}
+      <Dialog>
+        <div className="space-y-3">
+          {transactions.map((tx) => (
+            <DialogTrigger key={tx.id} asChild onClick={() => setSelectedTx(tx)}>
+                <Card className="overflow-hidden animate-in fade-in-0 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-muted rounded-full">
+                            {getTransactionIcon(tx.transactionType)}
+                        </div>
+                        <div>
+                        <p className="font-semibold text-sm">{tx.transactionType}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
+                        </p>
+                        </div>
+                    </div>
+                    <div className="text-left">
+                        <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
+                        {tx.transactionType !== 'تغذية رصيد' && '-'}
+                        {tx.amount.toLocaleString('en-US')} ريال
+                        </p>
+                        {tx.notes && (
+                            <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
+                                {tx.notes}
+                            </p>
+                        )}
+                    </div>
+                    </CardContent>
+                </Card>
+            </DialogTrigger>
+          ))}
+        </div>
+        
+        {selectedTx && (
+            <DialogContent>
+                <DialogHeader>
+                <DialogTitle>تفاصيل العملية</DialogTitle>
+                <DialogDescription>
+                    تفاصيل العملية رقم: {selectedTx.id}
+                </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">النوع:</span>
+                        <span className="font-semibold">{selectedTx.transactionType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">المبلغ:</span>
+                        <span className={`font-bold ${selectedTx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
+                             {selectedTx.transactionType !== 'تغذية رصيد' && '-'}
+                             {selectedTx.amount.toLocaleString('en-US')} ريال
+                        </span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">التاريخ:</span>
+                        <span className="font-semibold text-right">
+                           {format(parseISO(selectedTx.transactionDate), 'eeee, d MMMM yyyy', { locale: ar })}
+                        </span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">الوقت:</span>
+                        <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
+                    </div>
+                     {selectedTx.notes && (
+                        <div className="flex flex-col text-right items-start space-y-2 pt-2">
+                            <span className="text-muted-foreground">الملاحظات:</span>
+                            <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
+                        </div>
+                     )}
                 </div>
-                <div>
-                  <p className="font-semibold text-sm">{tx.transactionType}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
-                  </p>
-                </div>
-              </div>
-              <div className="text-left">
-                <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                  {tx.transactionType !== 'تغذية رصيد' && '-'}
-                  {tx.amount.toLocaleString('en-US')} ريال
-                </p>
-                {tx.notes && (
-                    <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
-                        {tx.notes}
-                    </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </DialogContent>
+        )}
+      </Dialog>
     );
   };
 

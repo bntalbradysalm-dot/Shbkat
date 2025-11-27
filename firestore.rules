@@ -208,7 +208,7 @@ service cloud.firestore {
        */
       match /transactions/{transactionId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
+        allow create: if (isOwner(userId) && incomingSubcollectionDataMatchesUser(userId)) || isAdmin();
         allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
         allow delete: if isExistingOwner(userId);
       }

@@ -146,8 +146,8 @@ export default function RenewPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground">طلبك قيد التنفيذ وسيتم إشعارك عند اكتماله.</p>
+                    <h2 className="text-xl font-bold">تم التجديد بنجاح</h2>
+                    <p className="text-sm text-muted-foreground">تم خصم المبلغ من رصيدك وتجديد اشتراكك بنجاح.</p>
                     
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">

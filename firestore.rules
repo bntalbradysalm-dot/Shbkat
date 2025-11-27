@@ -160,7 +160,7 @@ service cloud.firestore {
      */
     match /paymentMethods/{methodId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow list, write: if isAdmin();
     }
 
 

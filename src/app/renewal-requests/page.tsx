@@ -95,13 +95,14 @@ export default function RenewalRequestsPage() {
   }, [requests]);
 
 
-  const handleAction = async () => {
-    if (!selectedRequest || !actionToConfirm || !firestore) return;
+  const handleAction = async (actionType?: 'approve' | 'reject') => {
+    const finalAction = actionType || actionToConfirm;
+    if (!selectedRequest || !finalAction || !firestore) return;
 
     const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
     
     try {
-        if (actionToConfirm === 'approve') {
+        if (finalAction === 'approve') {
              // Balance already deducted, just create transaction record
               const transactionData = {
                 userId: selectedRequest.userId,
@@ -122,11 +123,11 @@ export default function RenewalRequestsPage() {
         }
 
         // Update request status for both approve and reject
-        await updateDoc(requestDocRef, { status: actionToConfirm === 'approve' ? 'approved' : 'rejected' });
+        await updateDoc(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
 
         toast({
             title: "نجاح",
-            description: `تم ${actionToConfirm === 'approve' ? 'قبول الطلب بنجاح.' : 'رفض الطلب وإرجاع المبلغ للمستخدم.'}`,
+            description: `تم ${finalAction === 'approve' ? 'قبول الطلب بنجاح.' : 'رفض الطلب وإرجاع المبلغ للمستخدم.'}`,
         });
 
     } catch (error: any) {
@@ -304,7 +305,7 @@ export default function RenewalRequestsPage() {
                     {selectedRequest.status === 'pending' && (
                     <>
                         <Button variant="destructive" onClick={() => setActionToConfirm('reject')}><X className="ml-2"/> رفض</Button>
-                        <Button onClick={() => setActionToConfirm('approve')}><Check className="ml-2"/> قبول</Button>
+                        <Button onClick={() => handleAction('approve')}><Check className="ml-2"/> قبول</Button>
                     </>
                     )}
                      {selectedRequest.status !== 'pending' && (
@@ -335,7 +336,7 @@ export default function RenewalRequestsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAction}>تأكيد</AlertDialogAction>
+            <AlertDialogAction onClick={() => handleAction()}>تأكيد</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

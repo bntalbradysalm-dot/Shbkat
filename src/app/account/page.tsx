@@ -327,7 +327,7 @@ export default function AccountPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout} className="bg-destructive hover:bg-destructive/90">
+                <AlertDialogAction onClick={handleLogout}>
                   تأكيد
                 </AlertDialogAction>
               </AlertDialogFooter>

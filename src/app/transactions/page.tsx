@@ -28,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -142,34 +141,114 @@ export default function TransactionsPage() {
     return (
       <div className="space-y-3">
         {transactions.map((tx) => (
-          <DialogTrigger asChild key={tx.id} onClick={() => { setSelectedTx(tx); setIsDialogOpen(true); }}>
-              <Card className="overflow-hidden animate-in fade-in-0 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                      <div className="p-2 bg-muted rounded-full">
-                          {getTransactionIcon(tx.transactionType)}
-                      </div>
-                      <div>
-                      <p className="font-semibold text-sm">{tx.transactionType}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                          {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
-                      </p>
-                      </div>
-                  </div>
-                  <div className="text-left">
-                      <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                      {tx.transactionType !== 'تغذية رصيد' && '-'}
-                      {tx.amount.toLocaleString('en-US')} ريال
-                      </p>
-                      {tx.notes && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
-                              {tx.notes}
-                          </p>
-                      )}
-                  </div>
-                  </CardContent>
-              </Card>
-          </DialogTrigger>
+            <Dialog key={tx.id} onOpenChange={(isOpen) => { if (isOpen) setSelectedTx(tx); else setSelectedTx(null); }}>
+                <DialogTrigger asChild>
+                    <Card className="overflow-hidden animate-in fade-in-0 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-muted rounded-full">
+                                {getTransactionIcon(tx.transactionType)}
+                            </div>
+                            <div>
+                            <p className="font-semibold text-sm">{tx.transactionType}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {format(parseISO(tx.transactionDate), 'd MMMM yyyy, h:mm a', { locale: ar })}
+                            </p>
+                            </div>
+                        </div>
+                        <div className="text-left">
+                            <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
+                            {tx.transactionType !== 'تغذية رصيد' && '-'}
+                            {tx.amount.toLocaleString('en-US')} ريال
+                            </p>
+                            {tx.notes && (
+                                <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
+                                    {tx.notes}
+                                </p>
+                            )}
+                        </div>
+                        </CardContent>
+                    </Card>
+                </DialogTrigger>
+                {selectedTx && selectedTx.id === tx.id && (
+                    <DialogContent>
+                        <DialogHeader>
+                        <DialogTitle>تفاصيل العملية</DialogTitle>
+                        <DialogDescription>
+                            تفاصيل العملية رقم: {generateNumericId(selectedTx.id)}
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">الباقة:</span>
+                                <span className="font-semibold">{selectedTx.transactionType}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className={`font-bold ${selectedTx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
+                                    {selectedTx.transactionType !== 'تغذية رصيد' && '-'}
+                                    {selectedTx.amount.toLocaleString('en-US')} ريال
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4"/> التاريخ:</span>
+                                <span className="font-semibold text-right">
+                                {format(parseISO(selectedTx.transactionDate), 'eeee, d MMMM yyyy', { locale: ar })}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/> الوقت:</span>
+                                <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
+                            </div>
+                            {selectedTx.subscriberName && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المشترك:</span>
+                                    <span className="font-semibold">{selectedTx.subscriberName}</span>
+                                </div>
+                            )}
+                            {selectedTx.cardNumber && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
+                                    <span className="font-semibold">{selectedTx.cardNumber}</span>
+                                </div>
+                            )}
+                            {selectedTx.notes && (
+                                <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
+                                    <span className="text-muted-foreground">الملاحظات:</span>
+                                    <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
+                                </div>
+                            )}
+                        </div>
+                        <DialogFooter className="grid grid-cols-2 gap-2">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive">
+                                        <Trash2 className="ml-2 h-4 w-4" />
+                                        حذف
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            سيتم حذف هذه العملية نهائياً من سجلك. لا يمكن التراجع عن هذا الإجراء.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                            تأكيد الحذف
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <DialogClose asChild>
+                                <Button variant="outline">إغلاق</Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                )}
+            </Dialog>
         ))}
       </div>
     );
@@ -184,86 +263,6 @@ export default function TransactionsPage() {
         </div>
       </div>
       <Toaster />
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        {selectedTx && (
-            <DialogContent>
-                <DialogHeader>
-                <DialogTitle>تفاصيل العملية</DialogTitle>
-                <DialogDescription>
-                    تفاصيل العملية رقم: {generateNumericId(selectedTx.id)}
-                </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">الباقة:</span>
-                        <span className="font-semibold">{selectedTx.transactionType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">المبلغ:</span>
-                        <span className={`font-bold ${selectedTx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                             {selectedTx.transactionType !== 'تغذية رصيد' && '-'}
-                             {selectedTx.amount.toLocaleString('en-US')} ريال
-                        </span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4"/> التاريخ:</span>
-                        <span className="font-semibold text-right">
-                           {format(parseISO(selectedTx.transactionDate), 'eeee, d MMMM yyyy', { locale: ar })}
-                        </span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/> الوقت:</span>
-                        <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
-                    </div>
-                     {selectedTx.subscriberName && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المشترك:</span>
-                            <span className="font-semibold">{selectedTx.subscriberName}</span>
-                        </div>
-                     )}
-                     {selectedTx.cardNumber && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
-                            <span className="font-semibold">{selectedTx.cardNumber}</span>
-                        </div>
-                     )}
-                     {selectedTx.notes && (
-                        <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
-                            <span className="text-muted-foreground">الملاحظات:</span>
-                            <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
-                        </div>
-                     )}
-                </div>
-                 <DialogFooter className="grid grid-cols-2 gap-2">
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive">
-                                <Trash2 className="ml-2 h-4 w-4" />
-                                حذف
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    سيتم حذف هذه العملية نهائياً من سجلك. لا يمكن التراجع عن هذا الإجراء.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                                    تأكيد الحذف
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <DialogClose asChild>
-                        <Button variant="outline">إغلاق</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        )}
-      </Dialog>
     </>
   );
 }

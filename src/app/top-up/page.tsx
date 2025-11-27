@@ -35,12 +35,16 @@ export default function TopUpPage() {
   };
   
   const handleWhatsAppRedirect = () => {
-    // Replace with your WhatsApp number and a pre-filled message
     const whatsappNumber = "967770326828";
     const message = "أرغب في تأكيد عملية الدفع وإضافة المبلغ إلى رصيدي. هذه صورة الإيصال:";
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
+
+  const getLogoSrc = (url?: string) => {
+    if (url) return url;
+    return 'https://placehold.co/40x40/f8f8f9/333333?text=?';
+  }
 
   return (
     <>
@@ -50,47 +54,40 @@ export default function TopUpPage() {
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground text-center mb-4">1. اختر طريقة الدفع</h3>
             {isLoading ? (
-                <div className="grid grid-cols-2 gap-4">
-                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl"/>)}
+                <div className="space-y-4">
+                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl"/>)}
                 </div>
             ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                 {paymentMethods?.map((method) => (
-                    <Card key={method.id} className="p-4 flex flex-col items-center justify-center text-center rounded-xl shadow-sm">
-                        {method.logoUrl && (
-                            <div className="relative h-12 w-12 mb-2">
-                                <Image src={method.logoUrl} alt={method.name} layout="fill" objectFit="contain" />
+                    <Card key={method.id} className="p-4 shadow-sm">
+                        <div className='flex items-center justify-between'>
+                            <div className='flex items-center gap-4'>
+                                <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain" />
+                                <div>
+                                    <p className="font-bold text-sm">{method.name}</p>
+                                    <p className="text-xs text-muted-foreground">رقم الحساب</p>
+                                </div>
                             </div>
-                        )}
-                        <p className="font-bold text-xs">{method.name}</p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono font-bold text-primary tracking-wider">{method.accountNumber}</span>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy(method.accountNumber)}>
+                                    <Copy className="h-4 w-4 text-muted-foreground"/>
+                                </Button>
+                            </div>
+                        </div>
                     </Card>
                 ))}
                 </div>
             )}
           </div>
-
-          <div>
-             <h3 className="text-sm font-semibold text-muted-foreground text-center mb-4">2. حوّل المبلغ إلى الحساب التالي</h3>
-             <Card>
-                <CardContent className="p-6 text-center space-y-3">
-                     <p className="text-sm text-muted-foreground">حول إلى حساب</p>
-                     <h4 className="text-lg font-bold">تطبيق كرتي</h4>
-                     <div className="flex items-center justify-center gap-2 bg-muted p-3 rounded-lg">
-                        <span className="text-2xl font-mono font-bold text-primary tracking-widest">1055518</span>
-                        <Button variant="ghost" size="icon" onClick={() => handleCopy('1055518')}>
-                            <Copy className="h-5 w-5 text-muted-foreground"/>
-                        </Button>
-                     </div>
-                </CardContent>
-             </Card>
-          </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground text-center mb-4">3. قم بتأكيد الدفع</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground text-center mb-4">2. قم بتأكيد الدفع</h3>
             <p className="text-xs text-muted-foreground text-center mb-4">بعد التحويل، يرجى رفع صورة الإيصال عبر واتساب لتأكيد الدفع وإضافة المبلغ إلى رصيدك.</p>
             <Button className="w-full h-12" onClick={handleWhatsAppRedirect}>
                 <Upload className="ml-2 h-5 w-5"/>
-                رفع صورة الإيصال عبر واتساب
+                رفع الإيصال عبر واتساب
             </Button>
           </div>
         </div>

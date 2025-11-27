@@ -85,6 +85,11 @@ export default function PaymentManagementPage() {
     setNewMethod(prev => ({ ...prev, [field]: value }));
   };
 
+  const getLogoSrc = (url?: string) => {
+    if (url) return url;
+    return 'https://placehold.co/40x40/f8f8f9/333333?text=?';
+  }
+
   return (
     <>
       <div className="flex flex-col h-full bg-background">
@@ -118,7 +123,7 @@ export default function PaymentManagementPage() {
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           {method.logoUrl && <Image src={method.logoUrl} alt={method.name} width={40} height={40} className="rounded-full object-contain" />}
+                           <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain" />
                           <div>
                             <p className="font-semibold">{method.name}</p>
                             <p className="text-sm text-primary">{method.accountNumber}</p>

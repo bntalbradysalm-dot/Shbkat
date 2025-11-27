@@ -93,7 +93,7 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        <UserIcon className="h-10 w-10 text-primary" />
+        <UserIcon className="h-10 w-10 text-primary dark:text-primary-foreground" />
         <div>
           <p className="text-sm text-foreground/80">{greeting}</p>
           {isUserLoading ? (

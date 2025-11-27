@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,10 +15,11 @@ type Advertisement = {
 
 export function PromotionalImage() {
     const firestore = useFirestore();
+    const { user } = useUser();
     
     const adsCollection = useMemoFirebase(
-      () => (firestore ? collection(firestore, 'advertisements') : null),
-      [firestore]
+      () => (firestore && user ? collection(firestore, 'advertisements') : null),
+      [firestore, user]
     );
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);

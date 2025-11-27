@@ -165,13 +165,18 @@ export default function AccountPage() {
             <h3 className="text-xs font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
             <Card className="bg-card">
               <CardContent className="p-2">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="relative grid grid-cols-2 gap-2">
+                  <div
+                      className={`absolute top-0 h-full w-1/2 rounded-lg bg-primary/10 transition-transform duration-300 ease-in-out ${
+                          activeTheme === 'light' ? 'translate-x-0' : 'translate-x-full'
+                      }`}
+                  />
                   <button
                     onClick={() => handleThemeChange('light')}
-                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
+                    className={`relative z-10 flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
                       activeTheme === 'light'
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                   >
                     <Sun className="h-5 w-5" />
@@ -179,10 +184,10 @@ export default function AccountPage() {
                   </button>
                   <button
                      onClick={() => handleThemeChange('dark')}
-                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
+                     className={`relative z-10 flex flex-col items-center justify-center gap-2 p-3 rounded-lg cursor-pointer transition-colors w-full ${
                        activeTheme === 'dark'
-                         ? 'bg-primary/10 text-primary'
-                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                         ? 'text-primary'
+                         : 'text-muted-foreground hover:bg-muted/50'
                      }`}
                   >
                     <Moon className="h-5 w-5" />
@@ -340,3 +345,5 @@ export default function AccountPage() {
     </div>
   );
 }
+
+    

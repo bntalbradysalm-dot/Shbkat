@@ -52,9 +52,9 @@ type RenewalRequest = {
 
 const StatusBadge = ({ status }: { status: RenewalRequest['status'] }) => {
   const statusStyles = {
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    approved: 'bg-green-100 text-green-800 border-green-300',
-    rejected: 'bg-red-100 text-red-800 border-red-300',
+    pending: 'bg-yellow-400/20 text-yellow-600 border-yellow-400/30',
+    approved: 'bg-green-400/20 text-green-600 border-green-400/30',
+    rejected: 'bg-red-400/20 text-red-600 border-red-400/30',
   };
   const statusText = {
     pending: 'قيد الانتظار',

@@ -51,13 +51,13 @@ const getTransactionIcon = (type: string) => {
     switch (type) {
         case 'تجديد الوادي':
         case 'تجديد كرت':
-            return <SatelliteDish className="h-6 w-6 text-blue-500" />;
+            return <SatelliteDish className="h-6 w-6 text-primary" />;
         case 'تغذية رصيد':
             return <ArrowLeft className="h-6 w-6 text-green-500" />;
         case 'تحويل':
-            return <ArrowRight className="h-6 w-6 text-red-500" />;
+            return <ArrowRight className="h-6 w-6 text-destructive" />;
         default:
-            return <SatelliteDish className="h-6 w-6 text-blue-500" />;
+            return <SatelliteDish className="h-6 w-6 text-primary" />;
     }
 };
 

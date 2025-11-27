@@ -156,11 +156,11 @@ export default function UsersPage() {
                           <p className="font-bold text-base">{user.displayName || 'مستخدم جديد'}</p>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-sm mt-1">
                               <span>{user.phoneNumber}</span>
-                              <MessageSquare className="h-4 w-4 text-green-500" />
+                              <MessageSquare className="h-4 w-4 text-primary" />
                           </div>
                       </div>
                   </div>
-                  <div className="text-green-600 font-bold text-left">
+                  <div className="text-primary font-bold text-left">
                       {(user.balance ?? 0).toLocaleString('en-US')} ريال يمني
                   </div>
               </div>
@@ -191,7 +191,7 @@ export default function UsersPage() {
                     <Button variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" className="bg-green-100 text-green-700 border-green-200 hover:bg-green-200">
+                    <Button variant="outline">
                         <MessageSquare className="ml-2 h-4 w-4" />
                         إيداع وإبلاغ
                     </Button>

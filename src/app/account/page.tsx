@@ -24,6 +24,7 @@ import {
   Sun,
   Moon,
   SatelliteDish,
+  Users2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -44,6 +45,7 @@ import { cn } from '@/lib/utils';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
+  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة الكروت', icon: CreditCard, href: '/cards-management' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },

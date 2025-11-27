@@ -286,6 +286,26 @@
         }
       },
       "required": ["imageUrl"]
+    },
+    "Subscriber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subscriber",
+      "type": "object",
+      "description": "Represents an Al-Wadi subscriber with a card number.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The card number, used as the unique ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the subscriber."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
     }
   },
   "auth": {
@@ -428,6 +448,22 @@
             {
               "name": "adId",
               "description": "The unique identifier for the advertisement."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/subscribers/{subscriberId}",
+        "definition": {
+          "entityName": "Subscriber",
+          "schema": {
+            "$ref": "#/backend/entities/Subscriber"
+          },
+          "description": "Stores Al-Wadi subscribers, keyed by card number, for auto-filling names. Writable by admins, readable by all.",
+          "params": [
+            {
+              "name": "subscriberId",
+              "description": "The card number of the subscriber."
             }
           ]
         }

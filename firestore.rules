@@ -177,6 +177,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /**
+     * @description Manages the list of Al-Wadi subscribers, keyed by their card number.
+     * Used for auto-filling subscriber names during renewal.
+     * @path /subscribers/{subscriberId}
+     * @allow Any signed-in user can read a subscriber's data. (get)
+     * @allow Any signed-in user can list all subscribers. (list)
+     * @allow An admin user can create, update, or delete subscribers. (write)
+     * @deny Non-admin users cannot modify the subscriber list.
+     * @principle Publicly readable for app functionality, but writable only by admins.
+     */
+    match /subscribers/{subscriberId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+    }
+
 
     /**
      * @description Manages user profile documents. Only the owner can read, update,
@@ -232,3 +247,4 @@ service cloud.firestore {
     }
   }
 }
+

@@ -24,7 +24,7 @@ const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
     }
-    return 'https://images.unsplash.com/photo-1579621970795-87f541444740'; 
+    return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
 };
 
 export default function TopUpPage() {
@@ -142,11 +142,11 @@ export default function TopUpPage() {
                                         <p className="text-lg font-bold">{selectedMethod.name}</p>
                                     </div>
                                     <div className="flex items-center justify-between gap-2 bg-muted p-3 rounded-lg">
-                                        <p className="text-xl font-mono tracking-wider flex-1 text-center">{selectedMethod.accountNumber}</p>
                                         <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>
                                             <Copy className="ml-2 h-4 w-4" />
                                             نسخ
                                         </Button>
+                                        <p className="text-xl font-mono tracking-wider flex-1 text-center">{selectedMethod.accountNumber}</p>
                                     </div>
                                 </CardContent>
                             </Card>

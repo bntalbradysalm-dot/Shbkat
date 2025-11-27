@@ -5,6 +5,8 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 
 type Notification = {
   id: string;
@@ -18,6 +20,7 @@ type UserProfile = {
 const Header = () => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const [greeting, setGreeting] = useState('');
   const [hasUnread, setHasUnread] = useState(false);
 
@@ -59,7 +62,8 @@ const Header = () => {
     }
   }, [lastNotification, userProfile]);
 
-  const handleNotificationClick = () => {
+  const handleNotificationClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (userDocRef && lastNotification && lastNotification.length > 0) {
       // Optimistically update UI
       setHasUnread(false);
@@ -72,6 +76,7 @@ const Header = () => {
         setHasUnread(true);
       });
     }
+    router.push('/notifications');
   };
 
 
@@ -88,15 +93,15 @@ const Header = () => {
           )}
         </div>
       </div>
-      <Link href="/notifications" onClick={handleNotificationClick} className="relative">
+      <button onClick={handleNotificationClick} className="relative p-2">
         <Bell className="h-6 w-6" />
         {hasUnread && (
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="absolute top-1 right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
             </span>
         )}
-      </Link>
+      </button>
     </header>
   );
 };

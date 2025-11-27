@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, FileText, History } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -54,6 +54,14 @@ export default function RenewPage() {
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (subscriberName && cardNumber) {
+      if ((userProfile?.balance ?? 0) < Number(price)) {
+         toast({
+          variant: "destructive",
+          title: "رصيد غير كاف",
+          description: "رصيدك الحالي لا يكفي لإتمام هذه العملية.",
+        });
+        return;
+      }
       setShowDialog(true);
     } else {
       toast({
@@ -68,15 +76,35 @@ export default function RenewPage() {
     if (!user || !firestore || !price || !userProfile || !title || isProcessing) return;
 
     setIsProcessing(true);
+    const numericPrice = Number(price);
+
+    if ((userProfile.balance ?? 0) < numericPrice) {
+      toast({
+        variant: "destructive",
+        title: "رصيد غير كاف",
+        description: "رصيدك الحالي لا يكفي لإتمام هذه العملية.",
+      });
+      setIsProcessing(false);
+      setShowDialog(false);
+      return;
+    }
 
     try {
+      // 1. Deduct balance from user immediately
+      if(userDocRef) {
+        await updateDoc(userDocRef, {
+            balance: increment(-numericPrice)
+        });
+      }
+
+      // 2. Create a renewal request for admin to approve/reject
       const renewalRequestsRef = collection(firestore, 'renewalRequests');
       const requestData = {
         userId: user.uid,
         userName: user.displayName || 'مستخدم غير معروف',
         userPhoneNumber: userProfile.phoneNumber || 'غير متوفر',
         packageTitle: title,
-        packagePrice: Number(price),
+        packagePrice: numericPrice,
         subscriberName: subscriberName,
         cardNumber: cardNumber,
         status: 'pending',
@@ -85,14 +113,21 @@ export default function RenewPage() {
 
       await addDoc(renewalRequestsRef, requestData);
       
+      // 3. Show success overlay to the user
       setShowSuccessOverlay(true);
 
     } catch (error) {
       console.error("Renewal request failed:", error);
+      // If something fails, try to refund the user
+      if(userDocRef) {
+        await updateDoc(userDocRef, {
+            balance: increment(numericPrice)
+        });
+      }
       toast({
         variant: "destructive",
         title: "فشل إرسال الطلب",
-        description: "حدث خطأ أثناء محاولة إرسال طلب التجديد. الرجاء المحاولة مرة أخرى.",
+        description: "حدث خطأ أثناء محاولة إرسال طلب التجديد. تم استرجاع المبلغ.",
       });
     } finally {
       setIsProcessing(false);
@@ -100,6 +135,8 @@ export default function RenewPage() {
     }
   };
   
+  const remainingBalance = (userProfile?.balance ?? 0) - Number(price);
+
   if (showSuccessOverlay) {
     return (
       <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
@@ -120,6 +157,10 @@ export default function RenewPage() {
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">المبلغ:</span>
                             <span className="font-semibold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">الرصيد المتبقي:</span>
+                            <span className="font-semibold">{remainingBalance.toLocaleString('en-US')} ريال</span>
                         </div>
                     </div>
 
@@ -196,6 +237,7 @@ export default function RenewPage() {
                     <AlertDialogTitle className="text-center">تأكيد معلومات الطلب</AlertDialogTitle>
                     <AlertDialogDescription asChild>
                       <div className="space-y-4 pt-4 text-base text-foreground">
+                        <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك الآن وإرسال طلب للموافقة.</p>
                         <div className="flex justify-between items-center">
                           <span>اسم المشترك:</span>
                           <span className="font-bold">{subscriberName}</span>

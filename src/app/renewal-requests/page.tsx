@@ -82,12 +82,7 @@ export default function RenewalRequestsPage() {
     
     try {
         if (actionToConfirm === 'approve') {
-            // 1. Deduct balance
-            await updateDoc(userDocRef, {
-                balance: increment(-selectedRequest.packagePrice)
-            });
-
-            // 2. Record transaction for the user
+            // Balance was already deducted. Just record the transaction.
             const transactionData = {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
@@ -96,9 +91,14 @@ export default function RenewalRequestsPage() {
                 notes: `تجديد باقة "${selectedRequest.packageTitle}" للمشترك ${selectedRequest.subscriberName} (كرت: ${selectedRequest.cardNumber})`,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
+        } else {
+            // Action is 'reject'. Refund the user.
+            await updateDoc(userDocRef, {
+                balance: increment(selectedRequest.packagePrice)
+            });
         }
 
-        // 3. Update request status
+        // Update request status for both approve and reject
         await updateDoc(requestDocRef, { status: actionToConfirm === 'approve' ? 'approved' : 'rejected' });
 
         toast({
@@ -111,7 +111,7 @@ export default function RenewalRequestsPage() {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "حدث خطأ أثناء معالجة الطلب." + (error.message.includes("PERM") ? " قد لا يكون لديك رصيد كاف." : ""),
+            description: "حدث خطأ أثناء معالجة الطلب.",
         });
     } finally {
         setActionToConfirm(null);
@@ -214,8 +214,8 @@ export default function RenewalRequestsPage() {
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
             <AlertDialogDescription>
               {actionToConfirm === 'approve'
-                ? `سيتم خصم ${selectedRequest?.packagePrice.toLocaleString('en-US')} ريال من رصيد المستخدم والموافقة على الطلب.`
-                : 'سيتم رفض هذا الطلب. لا يمكن التراجع عن هذا الإجراء.'}
+                ? `سيتم تأكيد العملية وتسجيلها في سجل عمليات المستخدم.`
+                : 'سيتم رفض هذا الطلب وإرجاع المبلغ للعميل. لا يمكن التراجع عن هذا الإجراء.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

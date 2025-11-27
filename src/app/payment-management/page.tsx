@@ -71,8 +71,8 @@ export default function PaymentManagementPage() {
   };
 
   const handleAddNew = () => {
-    if (newMethod.name && newMethod.accountNumber && firestore) {
-      addDocumentNonBlocking(collection(firestore, 'paymentMethods'), newMethod);
+    if (newMethod.name && newMethod.accountNumber && firestore && methodsCollection) {
+      addDocumentNonBlocking(methodsCollection, newMethod);
       setNewMethod({ name: '', accountNumber: '', logoUrl: '' });
       setIsAdding(false);
       toast({ title: "تمت الإضافة", description: "تمت إضافة طريقة دفع جديدة بنجاح." });

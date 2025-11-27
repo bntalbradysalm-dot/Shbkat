@@ -52,7 +52,8 @@ export default function PaymentManagementPage() {
       toast({ title: "خطأ", description: "الرجاء تعبئة جميع الحقول.", variant: "destructive" });
       return;
     }
-    updateDocumentNonBlocking(doc(firestore, 'paymentMethods', id), { name, accountNumber, logoUrl });
+    const docRef = doc(firestore, 'paymentMethods', id);
+    updateDocumentNonBlocking(docRef, { name, accountNumber, logoUrl });
     setEditingId(null);
     toast({ title: "تم الحفظ", description: "تم تحديث طريقة الدفع بنجاح." });
   };
@@ -66,7 +67,8 @@ export default function PaymentManagementPage() {
 
   const handleDelete = (id: string) => {
     if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, 'paymentMethods', id));
+    const docRef = doc(firestore, 'paymentMethods', id);
+    deleteDocumentNonBlocking(docRef);
     toast({ title: "تم الحذف", description: "تم حذف طريقة الدفع بنجاح.", variant: "destructive" });
   };
 

@@ -31,7 +31,7 @@ type UserProfile = {
 };
 
 export default function RenewPage() {
-  const searchParams = React.use(useSearchParams());
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -94,8 +94,8 @@ export default function RenewPage() {
     }
   
     try {
-      const remainingBalance = currentBalance - numericPrice;
-      setFinalRemainingBalance(remainingBalance);
+      const newBalance = currentBalance - numericPrice;
+      setFinalRemainingBalance(newBalance);
 
       // 1. Deduct balance immediately
       if (userDocRef) {

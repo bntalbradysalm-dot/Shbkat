@@ -107,8 +107,10 @@ export default function RenewalRequestsPage() {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
-                transactionType: selectedRequest.packageTitle, // Use the actual package title
-                notes: `تجديد للمشترك: ${selectedRequest.subscriberName} | رقم الكرت: ${selectedRequest.cardNumber}`,
+                transactionType: selectedRequest.packageTitle,
+                notes: 'تم التجديد بنجاح',
+                subscriberName: selectedRequest.subscriberName,
+                cardNumber: selectedRequest.cardNumber,
               };
             await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
         } else { // 'reject'
@@ -124,7 +126,7 @@ export default function RenewalRequestsPage() {
 
         toast({
             title: "نجاح",
-            description: `تم ${actionToConfirm === 'approve' ? 'قبول' : 'رفض'} الطلب بنجاح.`,
+            description: `تم ${actionToConfirm === 'approve' ? 'قبول الطلب بنجاح.' : 'رفض الطلب وإرجاع المبلغ للمستخدم.'}`,
         });
 
     } catch (error: any) {

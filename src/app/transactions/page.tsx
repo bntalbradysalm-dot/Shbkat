@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, FileText, SatelliteDish } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User, CreditCard } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -24,6 +24,8 @@ type Transaction = {
   amount: number;
   transactionType: string;
   notes?: string;
+  subscriberName?: string;
+  cardNumber?: string;
 };
 
 const getTransactionIcon = (type: string) => {
@@ -173,8 +175,20 @@ export default function TransactionsPage() {
                         <span className="text-muted-foreground">الوقت:</span>
                         <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
                     </div>
+                     {selectedTx.subscriberName && (
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground flex items-center gap-2"><User className="h-4 w-4"/> اسم المشترك:</span>
+                            <span className="font-semibold">{selectedTx.subscriberName}</span>
+                        </div>
+                     )}
+                     {selectedTx.cardNumber && (
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
+                            <span className="font-semibold">{selectedTx.cardNumber}</span>
+                        </div>
+                     )}
                      {selectedTx.notes && (
-                        <div className="flex flex-col text-right items-start space-y-2 pt-2">
+                        <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
                             <span className="text-muted-foreground">الملاحظات:</span>
                             <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
                         </div>

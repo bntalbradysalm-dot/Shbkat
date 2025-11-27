@@ -7,12 +7,6 @@ import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
 import React from 'react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
 type Advertisement = {
     id: string;
@@ -30,10 +24,6 @@ export function PromotionalImage() {
     );
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
-    
-    const plugin = React.useRef(
-      Autoplay({ delay: 4000, stopOnInteraction: true })
-    );
 
     if (isLoading) {
         return (
@@ -43,15 +33,17 @@ export function PromotionalImage() {
         )
     }
     
-    if (!ads || ads.length === 0) {
+    // Display only the first ad if it exists
+    const firstAd = ads?.[0];
+    if (!firstAd) {
         return null;
     }
 
-    const promoImage = (ad: Advertisement) => (
+    const promoImage = (
         <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
             <div className="relative aspect-[2/1] w-full">
                 <Image
-                    src={ad.imageUrl}
+                    src={firstAd.imageUrl}
                     alt="Promotional Banner"
                     fill
                     className="object-cover"
@@ -62,26 +54,13 @@ export function PromotionalImage() {
 
     return (
         <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-4">
-          <Carousel
-            plugins={[plugin.current]}
-            className="w-full"
-            onMouseEnter={plugin.current.stop}
-            onMouseLeave={plugin.current.reset}
-          >
-            <CarouselContent>
-              {ads.map((ad) => (
-                <CarouselItem key={ad.id}>
-                  {ad.linkUrl ? (
-                    <Link href={ad.linkUrl} className="block">
-                        {promoImage(ad)}
-                    </Link>
-                  ) : (
-                      promoImage(ad)
-                  )}
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          {firstAd.linkUrl ? (
+            <Link href={firstAd.linkUrl} className="block">
+                {promoImage}
+            </Link>
+          ) : (
+              promoImage
+          )}
         </div>
     );
 }

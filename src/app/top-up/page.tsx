@@ -141,12 +141,12 @@ export default function TopUpPage() {
                                         <p className="text-sm text-muted-foreground">حول إلى حساب</p>
                                         <p className="text-lg font-bold">{selectedMethod.name}</p>
                                     </div>
-                                    <div className="flex items-center justify-between gap-2 bg-muted p-3 rounded-lg">
-                                        <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>
+                                    <div className="relative flex items-center justify-center bg-muted p-3 rounded-lg">
+                                        <p className="text-xl font-mono tracking-wider">{selectedMethod.accountNumber}</p>
+                                        <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)} className="absolute left-1">
                                             <Copy className="ml-2 h-4 w-4" />
                                             نسخ
                                         </Button>
-                                        <p className="text-xl font-mono tracking-wider flex-1 text-center">{selectedMethod.accountNumber}</p>
                                     </div>
                                 </CardContent>
                             </Card>

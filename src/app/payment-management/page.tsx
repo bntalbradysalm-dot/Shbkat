@@ -86,7 +86,7 @@ export default function PaymentManagementPage() {
   };
 
   const getLogoSrc = (url?: string) => {
-    if (url) return url;
+    if (url && url.trim() !== '') return url;
     return 'https://placehold.co/40x40/f8f8f9/333333?text=?';
   }
 

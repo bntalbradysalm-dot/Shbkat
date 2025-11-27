@@ -17,6 +17,16 @@ type UserProfile = {
   lastNotificationRead?: string;
 };
 
+const getShortName = (fullName: string | null | undefined): string => {
+  if (!fullName) return 'مستخدم جديد';
+  const nameParts = fullName.trim().split(/\s+/);
+  if (nameParts.length > 1) {
+    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+  }
+  return fullName;
+};
+
+
 const Header = () => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -89,7 +99,7 @@ const Header = () => {
           {isUserLoading ? (
             <Skeleton className="h-6 w-32 mt-1" />
           ) : (
-             <h1 className="font-bold text-lg">{user?.displayName || user?.email || 'مستخدم جديد'}</h1>
+             <h1 className="font-bold text-lg">{getShortName(user?.displayName)}</h1>
           )}
         </div>
       </div>

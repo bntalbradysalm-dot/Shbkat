@@ -6,6 +6,13 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebas
 import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
+import React from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 type Advertisement = {
     id: string;
@@ -24,22 +31,23 @@ export function PromotionalImage() {
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
     
-    // We are looking for a specific ad with id 'promo-banner'
-    const ad = ads?.find(a => a.id === 'promo-banner');
+    const plugin = React.useRef(
+      Autoplay({ delay: 3000, stopOnInteraction: true })
+    )
 
     if (isLoading) {
         return (
-             <div className="px-4 pt-2">
+             <div className="px-4 pt-4">
                 <Skeleton className="w-full aspect-[2/1] rounded-2xl" />
             </div>
         )
     }
 
-    if (!ad || !ad.imageUrl) {
+    if (!ads || ads.length === 0) {
         return null;
     }
 
-    const promoImage = (
+    const promoImage = (ad: Advertisement) => (
         <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
             <div className="relative aspect-[2/1] w-full">
                 <Image
@@ -53,14 +61,31 @@ export function PromotionalImage() {
     );
 
     return (
-        <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-2">
-            {ad.linkUrl ? (
-                <Link href={ad.linkUrl} className="block">
-                    {promoImage}
-                </Link>
-            ) : (
-                promoImage
-            )}
+        <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4 pt-4">
+          <Carousel
+            plugins={[plugin.current]}
+            className="w-full"
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+            opts={{
+              loop: true,
+              direction: 'rtl',
+            }}
+          >
+            <CarouselContent>
+              {ads.map((ad) => (
+                <CarouselItem key={ad.id}>
+                   {ad.linkUrl ? (
+                      <Link href={ad.linkUrl} className="block">
+                          {promoImage(ad)}
+                      </Link>
+                  ) : (
+                      promoImage(ad)
+                  )}
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
     );
 }

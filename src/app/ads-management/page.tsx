@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Save, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -24,144 +24,185 @@ export default function AdsManagementPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // We'll manage a single ad with a fixed ID "promo-banner" for simplicity
-  const adId = "promo-banner";
-
   const adsCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'advertisements') : null),
     [firestore]
   );
-  
-  // Fetch all ads, then find the one we care about.
   const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
 
-  const ad = ads?.find(a => a.id === adId);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newAd, setNewAd] = useState({ imageUrl: '', linkUrl: '' });
+  const [editingValues, setEditingValues] = useState<{ [key: string]: { imageUrl: string; linkUrl: string } }>({});
 
-  const [imageUrl, setImageUrl] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const handleEdit = (ad: Advertisement) => {
+    setEditingId(ad.id);
+    setEditingValues({
+      ...editingValues,
+      [ad.id]: { imageUrl: ad.imageUrl, linkUrl: ad.linkUrl || '' },
+    });
+  };
 
-  useEffect(() => {
-    if (ad) {
-      setImageUrl(ad.imageUrl || '');
-      setLinkUrl(ad.linkUrl || '');
-    }
-  }, [ad]);
+  const handleCancelEdit = () => {
+    setEditingId(null);
+  };
 
-  const handleSave = () => {
-    if (!imageUrl) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال رابط الصورة على الأقل.",
-      });
-      return;
-    }
-    
+  const handleSave = (id: string) => {
     if (!firestore) return;
-
-    setIsSaving(true);
-    
-    const adDocRef = doc(firestore, 'advertisements', adId);
-    const adData = {
-      imageUrl,
-      linkUrl,
+    const docRef = doc(firestore, 'advertisements', id);
+    const editedData = {
+        imageUrl: editingValues[id].imageUrl,
+        linkUrl: editingValues[id].linkUrl
     };
-
-    try {
-      // Use set with merge to create or update the document
-      setDocumentNonBlocking(adDocRef, adData, { merge: true });
-      
-      toast({
-        title: "تم الحفظ",
-        description: "تم تحديث الإعلان بنجاح.",
-      });
-    } catch (error) {
-       console.error("Error saving advertisement: ", error);
-       toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "حدث خطأ أثناء حفظ الإعلان.",
-      });
-    } finally {
-        setIsSaving(false);
-    }
+    updateDocumentNonBlocking(docRef, editedData);
+    setEditingId(null);
+    toast({ title: "تم الحفظ", description: "تم تحديث الإعلان بنجاح." });
   };
   
-  const renderContent = () => {
-    if (isLoading) {
-        return (
-            <CardContent>
-                <div className="space-y-6">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-32 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                </div>
-            </CardContent>
-        )
+  const handleValueChange = (id: string, field: 'imageUrl' | 'linkUrl', value: string) => {
+    setEditingValues(prev => ({
+        ...prev,
+        [id]: {
+            ...prev[id],
+            [field]: value,
+        }
+    }));
+  };
+
+  const handleDelete = (id: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'advertisements', id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "تم الحذف", description: "تم حذف الإعلان بنجاح.", variant: "destructive" });
+  };
+  
+  const handleAddNew = () => {
+    if (newAd.imageUrl && firestore && adsCollection) {
+      addDocumentNonBlocking(adsCollection, newAd);
+      setNewAd({ imageUrl: '', linkUrl: '' });
+      setIsAdding(false);
+      toast({ title: "تمت الإضافة", description: "تمت إضافة إعلان جديد بنجاح." });
+    } else {
+        toast({ title: "خطأ", description: "الرجاء تعبئة رابط الصورة على الأقل.", variant: "destructive" });
     }
-
-    return (
-        <CardContent className="space-y-6">
-            <div className="space-y-2">
-            <Label htmlFor="imageUrl" className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" />
-                رابط الصورة
-            </Label>
-            <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.png"
-                dir="ltr"
-            />
-            </div>
-            <div className="space-y-2">
-            <Label htmlFor="linkUrl" className="flex items-center gap-2">
-                <LinkIcon className="w-4 h-4" />
-                رابط الانتقال (اختياري)
-            </Label>
-            <Input
-                id="linkUrl"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="/top-up"
-                dir="ltr"
-            />
-            </div>
-
-            {imageUrl && (
-                <div className="space-y-2">
-                    <Label>معاينة الصورة</Label>
-                    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg border">
-                        <Image src={imageUrl} alt="معاينة الإعلان" fill className="object-cover" />
-                    </div>
-                </div>
-            )}
-
-            <Button onClick={handleSave} disabled={isSaving} className="w-full">
-                <Save className="ml-2 h-4 w-4" />
-                {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-            </Button>
-        </CardContent>
-    );
-  }
+  };
 
   return (
     <>
-      <div className="flex flex-col h-full bg-background">
-        <SimpleHeader title="إدارة الإعلانات" />
-        <div className="flex-1 overflow-y-auto p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">تعديل الإعلان الترويجي</CardTitle>
-            </CardHeader>
-            {renderContent()}
-          </Card>
-        </div>
+    <div className="flex flex-col h-full bg-background">
+      <SimpleHeader title="إدارة الإعلانات" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-center'>الإعلانات الحالية</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-lg" />)}
+                </div>
+            ) : (
+                ads?.map((ad) => (
+                <Card key={ad.id} className="p-4">
+                    {editingId === ad.id ? (
+                    <div className="space-y-4">
+                        <div>
+                        <Label htmlFor={`imageUrl-${ad.id}`} className="flex items-center gap-2 mb-1"><ImageIcon className="w-4 h-4"/> رابط الصورة</Label>
+                        <Input
+                            id={`imageUrl-${ad.id}`}
+                            value={editingValues[ad.id]?.imageUrl}
+                            onChange={(e) => handleValueChange(ad.id, 'imageUrl', e.target.value)}
+                        />
+                        </div>
+                        <div>
+                        <Label htmlFor={`linkUrl-${ad.id}`} className="flex items-center gap-2 mb-1"><LinkIcon className="w-4 h-4"/> رابط الانتقال (اختياري)</Label>
+                        <Input
+                            id={`linkUrl-${ad.id}`}
+                            value={editingValues[ad.id]?.linkUrl}
+                            onChange={(e) => handleValueChange(ad.id, 'linkUrl', e.target.value)}
+                        />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                        <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" onClick={() => handleSave(ad.id)}>
+                            <Save className="h-4 w-4" />
+                        </Button>
+                        </div>
+                    </div>
+                    ) : (
+                    <div className="flex flex-col gap-4">
+                        <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg border">
+                           <Image src={ad.imageUrl} alt="معاينة الإعلان" fill className="object-cover" />
+                        </div>
+                        <div className='flex justify-between items-center'>
+                             <div className='text-xs text-muted-foreground truncate'>
+                                <p>رابط الصورة: {ad.imageUrl}</p>
+                                <p>رابط الانتقال: {ad.linkUrl || 'لا يوجد'}</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="icon" onClick={() => handleEdit(ad)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="icon" onClick={() => handleDelete(ad.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                    )}
+                </Card>
+                ))
+            )}
+             {ads && ads.length === 0 && !isLoading && (
+                <p className="text-center text-muted-foreground py-4">لا توجد إعلانات لعرضها.</p>
+             )}
+
+             {isAdding && (
+              <Card className="p-4 bg-muted/50">
+                 <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="new-imageUrl" className="flex items-center gap-2 mb-1"><ImageIcon className="w-4 h-4"/> رابط الصورة</Label>
+                      <Input
+                        id="new-imageUrl"
+                        value={newAd.imageUrl}
+                        onChange={(e) => setNewAd(prev => ({...prev, imageUrl: e.target.value}))}
+                        placeholder="https://example.com/image.png"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-linkUrl" className="flex items-center gap-2 mb-1"><LinkIcon className="w-4 h-4"/> رابط الانتقال (اختياري)</Label>
+                      <Input
+                        id="new-linkUrl"
+                        value={newAd.linkUrl}
+                        onChange={(e) => setNewAd(prev => ({...prev, linkUrl: e.target.value}))}
+                        placeholder="/top-up"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button onClick={handleAddNew}>
+                        إضافة إعلان
+                      </Button>
+                    </div>
+                  </div>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+        
+        {!isAdding && (
+            <Button className="w-full" onClick={() => setIsAdding(true)}>
+            <PlusCircle className="ml-2 h-4 w-4" />
+            إضافة إعلان جديد
+            </Button>
+        )}
       </div>
-      <Toaster />
+    </div>
+    <Toaster />
     </>
   );
 }

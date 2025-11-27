@@ -143,7 +143,7 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden shadow-lg bg-primary text-primary-foreground">
+        <Card className="overflow-hidden rounded-2xl shadow-lg bg-primary text-primary-foreground">
           <CardContent className="p-4 flex items-center gap-4">
             <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
             <div className="flex-grow">
@@ -310,7 +310,7 @@ export default function AccountPage() {
               <Card className="bg-card cursor-pointer">
                   <CardContent className="p-0">
                       <button className="group flex items-center justify-center p-3 w-full">
-                        <div className="flex items-center gap-3 text-destructive">
+                        <div className="flex items-center gap-3 text-destructive dark:text-white">
                             <LogOut className="h-5 w-5" />
                             <span className="text-xs font-semibold">تسجيل الخروج</span>
                         </div>

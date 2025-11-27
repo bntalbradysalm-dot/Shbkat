@@ -135,7 +135,7 @@ export default function TransactionsPage() {
                 <DialogHeader>
                 <DialogTitle>تفاصيل العملية</DialogTitle>
                 <DialogDescription>
-                    تفاصيل العملية رقم: {selectedTx.id}
+                    تفاصيل العملية رقم: {selectedTx.id.slice(-6).toUpperCase()}
                 </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4 text-sm">

@@ -16,10 +16,6 @@ const allNavItems = [
   { name: 'حسابي', icon: User, href: '/account', roles: ['admin', 'user'] },
 ];
 
-type UserProfile = {
-  role?: 'admin' | 'user';
-};
-
 type RenewalRequest = {
   status: 'pending' | 'approved' | 'rejected';
 }
@@ -29,23 +25,19 @@ function NavItems() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
-    [firestore, user]
-  );
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const isUserAdmin = user?.email === '770326828@shabakat.com';
 
   const [navItems, setNavItems] = useState(allNavItems.filter(item => item.roles.includes('user')));
 
   const pendingRequestsQuery = useMemoFirebase(
     () =>
-      firestore && userProfile?.role === 'admin'
+      firestore && isUserAdmin
         ? query(
             collection(firestore, 'renewalRequests'),
             where('status', '==', 'pending')
           )
         : null,
-    [firestore, userProfile?.role]
+    [firestore, isUserAdmin]
   );
 
   const { data: pendingRequests } = useCollection<RenewalRequest>(pendingRequestsQuery);
@@ -53,13 +45,11 @@ function NavItems() {
   const hasPendingRequests = pendingRequests && pendingRequests.length > 0;
   
   useEffect(() => {
-    const userRole = userProfile?.role || 'user';
+    const userRole = isUserAdmin ? 'admin' : 'user';
     setNavItems(allNavItems.filter(item => item.roles.includes(userRole)));
-  }, [userProfile]);
+  }, [isUserAdmin]);
 
-  const isLoading = isUserLoading || isProfileLoading;
-
-  if (isLoading) {
+  if (isUserLoading) {
     return (
        <>
         {allNavItems.filter(i => i.roles.includes('user')).map(item => (

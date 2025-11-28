@@ -99,9 +99,6 @@ export default function SignupPage() {
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ');
 
-        // Determine user role
-        const role = user.email === '770326828@shabakat.com' ? 'admin' : 'user';
-
         await setDoc(userRef, {
           id: user.uid,
           displayName: fullName.trim(),
@@ -112,7 +109,6 @@ export default function SignupPage() {
           location: location,
           registrationDate: new Date().toISOString(),
           balance: 0,
-          role: role,
         });
       }
 

@@ -76,7 +76,6 @@ type UserProfile = {
   location?: string;
   phoneNumber?: string;
   balance?: number;
-  role?: 'admin' | 'user';
 };
 
 type AppSettings = {
@@ -119,7 +118,7 @@ export default function AccountPage() {
   );
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
   
-  const userRole = userProfile?.role || 'user';
+  const isUserAdmin = user?.email === '770326828@shabakat.com';
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -230,7 +229,7 @@ export default function AccountPage() {
             </div>
         </div>
 
-        {userRole === 'admin' && (
+        {isUserAdmin && (
           <>
             <div>
               <div className="flex items-center justify-center gap-2 mb-3">
@@ -322,7 +321,7 @@ export default function AccountPage() {
           </>
         )}
 
-        {userRole === 'user' && (
+        {!isUserAdmin && (
             <div>
                 <div className="flex items-center justify-center gap-2 mt-6 mb-3">
                     <h3 className="text-xs font-semibold text-muted-foreground">

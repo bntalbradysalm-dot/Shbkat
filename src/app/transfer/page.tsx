@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -147,51 +147,62 @@ export default function TransferPage() {
 
   const handleFinalConfirmation = async () => {
     if (!user || !senderProfile || !recipient || !firestore) return;
-
+  
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
     
-    try {
-        const batch = writeBatch(firestore);
+    const batch = writeBatch(firestore);
 
-        const fromUserRef = doc(firestore, 'users', user.uid);
-        const toUserRef = doc(firestore, 'users', recipient.id);
+    const fromUserRef = doc(firestore, 'users', user.uid);
+    const toUserRef = doc(firestore, 'users', recipient.id);
 
-        // 1. Deduct from sender, add to receiver
-        batch.update(fromUserRef, { balance: increment(-numericAmount) });
-        batch.update(toUserRef, { balance: increment(numericAmount) });
+    // 1. Deduct from sender, add to receiver
+    batch.update(fromUserRef, { balance: increment(-numericAmount) });
+    batch.update(toUserRef, { balance: increment(numericAmount) });
 
-        const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
-        // 2. Create transaction record for sender
-        const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-        batch.set(fromTransactionRef, {
-            userId: user.uid,
-            transactionDate: now,
-            amount: numericAmount,
-            transactionType: `تحويل إلى ${recipient.displayName}`,
-            notes: `إلى رقم: ${recipient.phoneNumber}`
-        });
+    // 2. Create transaction record for sender
+    const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+    const fromTransactionData = {
+        userId: user.uid,
+        transactionDate: now,
+        amount: numericAmount,
+        transactionType: `تحويل إلى ${recipient.displayName}`,
+        notes: `إلى رقم: ${recipient.phoneNumber}`
+    };
+    batch.set(fromTransactionRef, fromTransactionData);
 
-        // 3. Create transaction record for receiver
-        const toTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
-        batch.set(toTransactionRef, {
-            userId: recipient.id,
-            transactionDate: now,
-            amount: numericAmount,
-            transactionType: `استلام من ${senderProfile.displayName}`,
-            notes: `من رقم: ${senderProfile.phoneNumber}`
-        });
-        
-        await batch.commit();
+    // 3. Create transaction record for receiver
+    const toTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
+    const toTransactionData = {
+        userId: recipient.id,
+        transactionDate: now,
+        amount: numericAmount,
+        transactionType: `استلام من ${senderProfile.displayName}`,
+        notes: `من رقم: ${senderProfile.phoneNumber}`
+    };
+    batch.set(toTransactionRef, toTransactionData);
+    
+    batch.commit().then(() => {
         setShowSuccess(true);
-    } catch (error) {
-        console.error("Failed to create transfer request:", error);
-        toast({ variant: 'destructive', title: 'فشل التحويل', description: 'حدث خطأ أثناء عملية التحويل.' });
-    }
-
-    setIsProcessing(false);
-    setIsConfirming(false);
+    }).catch(serverError => {
+        // Here we create and emit the contextual error
+        const permissionError = new FirestorePermissionError({
+            path: `/users/${user.uid} and /users/${recipient.id}`, // Batched writes affect multiple paths
+            operation: 'write',
+            requestResourceData: { 
+                senderUpdate: { balance: `DECREMENT(${numericAmount})` },
+                receiverUpdate: { balance: `INCREMENT(${numericAmount})` },
+                senderTransaction: fromTransactionData,
+                receiverTransaction: toTransactionData
+            }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
+      setIsProcessing(false);
+      setIsConfirming(false);
+    });
   };
   
   if (showSuccess) {

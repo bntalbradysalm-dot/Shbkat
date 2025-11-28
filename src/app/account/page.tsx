@@ -148,33 +148,16 @@ export default function AccountPage() {
     }
   };
   
-  const handleShare = async () => {
-    const shareUrl = appSettings?.appLink || window.location.origin;
-    const shareData = {
-      title: 'محفظة شبكات',
-      text: 'اكتشف محفظة شبكات، الحل الرقمي لجميع احتياجاتك!',
-      url: shareUrl,
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: 'تم نسخ الرابط',
-          description: 'تم نسخ رابط التطبيق إلى الحافظة. شاركه مع أصدقائك!',
-        });
-      }
-    } catch (error: any) {
-        if (error.name === 'AbortError' || error.name === 'NotAllowedError') {
-          return;
-        }
-        console.error('Error sharing:', error);
-        toast({
-            variant: 'destructive',
-            title: 'خطأ',
-            description: 'حدث خطأ أثناء محاولة المشاركة.',
-        });
+  const handleShare = () => {
+    const shareUrl = appSettings?.appLink;
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'رابط التطبيق غير محدد في الإعدادات.',
+      });
     }
   };
 
@@ -308,6 +291,14 @@ export default function AccountPage() {
                         </div>
                       );
 
+                      if (isShareButton) {
+                        return (
+                          <button key={link.id} onClick={handleShare} className="w-full text-right">
+                           {element}
+                          </button>
+                        )
+                      }
+                      
                       if (finalHref) {
                         return (
                           <a
@@ -359,6 +350,14 @@ export default function AccountPage() {
                          </div>
                        );
  
+                       if (isShareButton) {
+                        return (
+                          <button key={link.id} onClick={handleShare} className="w-full text-right">
+                           {element}
+                          </button>
+                        )
+                      }
+
                        if (finalHref) {
                          return (
                            <a

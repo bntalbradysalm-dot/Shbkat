@@ -144,7 +144,8 @@ service cloud.firestore {
     match /notifications/{notificationId} {
         allow read: if isSignedIn();
         allow create: if isAdmin();
-        allow update, delete: if false; // Notifications are immutable
+        allow delete: if isAdmin();
+        allow update: if false; // Notifications are immutable
     }
     
     /**

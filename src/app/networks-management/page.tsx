@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, Save, X, Wifi, MapPin, Phone, Search } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Wifi, MapPin, Phone, Search, Settings } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -129,7 +129,7 @@ export default function NetworksManagementPage() {
           <CardContent className="space-y-4">
             {isLoading ? (
                 <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
                 </div>
             ) : filteredNetworks.length === 0 && !isAdding ? (
                <p className="text-center text-muted-foreground py-8">لا توجد شبكات مضافة. ابدأ بإضافة شبكة جديدة.</p>
@@ -150,43 +150,52 @@ export default function NetworksManagementPage() {
                         </div>
                     </div>
                     ) : (
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className='p-2 bg-primary/10 rounded-full'>
-                           <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">{network.name}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3"/>{network.location}</p>
-                            {network.phoneNumber && <p className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3"/>{network.phoneNumber}</p>}
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Button variant="outline" size="icon" onClick={() => handleEdit(network)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon">
-                                  <Trash2 className="h-4 w-4" />
+                    <div>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className='p-2 bg-primary/10 rounded-full'>
+                               <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                              </div>
+                              <div>
+                                <p className="font-semibold">{network.name}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3"/>{network.location}</p>
+                                {network.phoneNumber && <p className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3"/>{network.phoneNumber}</p>}
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <Button variant="outline" size="icon" onClick={() => handleEdit(network)}>
+                                  <Edit className="h-4 w-4" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    هل أنت متأكد من رغبتك في حذف شبكة "{network.name}"؟ سيتم حذف جميع الفئات والكروت المتعلقة بها.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(network.id)}>
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="icon">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        هل أنت متأكد من رغبتك في حذف شبكة "{network.name}"؟ سيتم حذف جميع الفئات والكروت المتعلقة بها.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(network.id)}>
+                                        حذف
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                           <Link href={`/networks-management/${network.id}`}>
+                                <Button variant="secondary" className="w-full">
+                                    <Settings className="ml-2 h-4 w-4" />
+                                    إدارة الفئات والكروت
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                     )}

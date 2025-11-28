@@ -259,6 +259,10 @@
           "type": "string",
           "description": "The name of the payment service (e.g., 'بنك الكريمي')."
         },
+        "accountHolderName": {
+          "type": "string",
+          "description": "The name of the account holder."
+        },
         "accountNumber": {
           "type": "string",
           "description": "The account number for the payment method."
@@ -268,7 +272,7 @@
           "description": "URL of the payment method's logo."
         }
       },
-      "required": ["name", "accountNumber"]
+      "required": ["name", "accountNumber", "accountHolderName"]
     },
     "Advertisement": {
       "$schema": "http://json-schema.org/draft-07/schema#",

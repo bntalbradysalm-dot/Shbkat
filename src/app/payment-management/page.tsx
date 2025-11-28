@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Banknote } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Banknote, User } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import Image from 'next/image';
 type PaymentMethod = {
   id: string;
   name: string;
+  accountHolderName: string;
   accountNumber: string;
   logoUrl?: string;
 };
@@ -41,16 +42,16 @@ export default function PaymentManagementPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   
-  const initialNewMethodState = { name: '', accountNumber: '', logoUrl: '' };
+  const initialNewMethodState = { name: '', accountHolderName: '', accountNumber: '', logoUrl: '' };
   const [newMethod, setNewMethod] = useState(initialNewMethodState);
 
-  const [editingValues, setEditingValues] = useState<{ [key: string]: { name: string; accountNumber: string; logoUrl: string } }>({});
+  const [editingValues, setEditingValues] = useState<{ [key: string]: { name: string; accountHolderName: string; accountNumber: string; logoUrl: string } }>({});
 
   const handleEdit = (method: PaymentMethod) => {
     setEditingId(method.id);
     setEditingValues({
       ...editingValues,
-      [method.id]: { name: method.name, accountNumber: method.accountNumber, logoUrl: method.logoUrl || '' },
+      [method.id]: { name: method.name, accountHolderName: method.accountHolderName, accountNumber: method.accountNumber, logoUrl: method.logoUrl || '' },
     });
   };
 
@@ -63,6 +64,7 @@ export default function PaymentManagementPage() {
     const docRef = doc(firestore, 'paymentMethods', id);
     const editedData = {
         name: editingValues[id].name,
+        accountHolderName: editingValues[id].accountHolderName,
         accountNumber: editingValues[id].accountNumber,
         logoUrl: editingValues[id].logoUrl,
     };
@@ -71,7 +73,7 @@ export default function PaymentManagementPage() {
     toast({ title: "تم الحفظ", description: "تم تحديث طريقة الدفع بنجاح." });
   };
   
-  const handleValueChange = (id: string, field: 'name' | 'accountNumber' | 'logoUrl', value: string) => {
+  const handleValueChange = (id: string, field: 'name' | 'accountHolderName' | 'accountNumber' | 'logoUrl', value: string) => {
     setEditingValues(prev => ({
         ...prev,
         [id]: {
@@ -89,13 +91,13 @@ export default function PaymentManagementPage() {
   };
   
   const handleAddNew = () => {
-    if (newMethod.name && newMethod.accountNumber && firestore && methodsCollection) {
+    if (newMethod.name && newMethod.accountNumber && newMethod.accountHolderName && firestore && methodsCollection) {
       addDocumentNonBlocking(methodsCollection, newMethod);
       setNewMethod(initialNewMethodState);
       setIsAdding(false);
       toast({ title: "تمت الإضافة", description: "تمت إضافة طريقة دفع جديدة بنجاح." });
     } else {
-        toast({ title: "خطأ", description: "الرجاء تعبئة اسم البنك ورقم الحساب.", variant: "destructive" });
+        toast({ title: "خطأ", description: "الرجاء تعبئة جميع الحقول المطلوبة.", variant: "destructive" });
     }
   };
 
@@ -123,6 +125,10 @@ export default function PaymentManagementPage() {
                             <Input id={`name-${method.id}`} value={editingValues[method.id]?.name} onChange={(e) => handleValueChange(method.id, 'name', e.target.value)} />
                         </div>
                         <div>
+                            <Label htmlFor={`holder-${method.id}`}>اسم صاحب الحساب</Label>
+                            <Input id={`holder-${method.id}`} value={editingValues[method.id]?.accountHolderName} onChange={(e) => handleValueChange(method.id, 'accountHolderName', e.target.value)} />
+                        </div>
+                        <div>
                             <Label htmlFor={`account-${method.id}`}>رقم الحساب</Label>
                             <Input id={`account-${method.id}`} value={editingValues[method.id]?.accountNumber} onChange={(e) => handleValueChange(method.id, 'accountNumber', e.target.value)} />
                         </div>
@@ -141,6 +147,7 @@ export default function PaymentManagementPage() {
                            <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain bg-muted" />
                           <div>
                             <p className="font-semibold">{method.name}</p>
+                            <p className="text-sm text-muted-foreground">{method.accountHolderName}</p>
                             <p className="text-sm text-primary dark:text-primary-foreground">{method.accountNumber}</p>
                           </div>
                         </div>
@@ -159,6 +166,10 @@ export default function PaymentManagementPage() {
                     <div>
                       <Label htmlFor="new-name" className='flex items-center gap-2'><Banknote className='w-4 h-4' /> اسم البنك</Label>
                       <Input id="new-name" value={newMethod.name} onChange={(e) => setNewMethod(p=>({...p, name: e.target.value}))} placeholder="مثال: بنك الكريمي" />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-holder-name" className='flex items-center gap-2'><User className='w-4 h-4' /> اسم صاحب الحساب</Label>
+                      <Input id="new-holder-name" value={newMethod.accountHolderName} onChange={(e) => setNewMethod(p=>({...p, accountHolderName: e.target.value}))} placeholder="مثال: محمد راضي باشادي" />
                     </div>
                     <div>
                       <Label htmlFor="new-account" className='flex items-center gap-2'><Banknote className='w-4 h-4' /> رقم الحساب</Label>

@@ -7,7 +7,7 @@ import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send } from 'lucide-react';
+import { Copy, Send, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 type PaymentMethod = {
   id: string;
   name: string;
+  accountHolderName: string;
   accountNumber: string;
   logoUrl?: string;
 };
@@ -142,6 +143,10 @@ export default function TopUpPage() {
                                     <div>
                                         <p className="text-sm text-muted-foreground">حول إلى حساب</p>
                                         <p className="text-lg font-bold">{selectedMethod.name}</p>
+                                        <div className="flex items-center justify-center text-muted-foreground text-sm gap-1">
+                                            <User className="h-4 w-4" />
+                                            <span>{selectedMethod.accountHolderName}</span>
+                                        </div>
                                     </div>
                                     <div className="flex items-center justify-center bg-muted p-3 rounded-lg gap-2">
                                         <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>

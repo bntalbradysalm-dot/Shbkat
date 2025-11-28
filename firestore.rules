@@ -171,6 +171,21 @@ service cloud.firestore {
       allow read, update: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    /**
+     * @description Manages user requests to transfer funds. Users can create, 
+     * admins can read and update status.
+     * @path /transferRequests/{requestId}
+     * @allow A signed-in user creates a transfer request for themselves. (create)
+     * @allow An admin user reads all transfer requests. (list, get)
+     * @allow An admin user updates the status of a request. (update)
+     * @deny A non-admin user tries to read or modify requests that are not their own.
+     * @principle Users manage their own requests; admins manage the queue.
+     */
+    match /transferRequests/{requestId} {
+      allow create: if isSignedIn() && isTransferRequestOwner();
+      allow read, update, delete: if isAdmin();
+    }
     
     /**
      * @description Manages available payment methods. Any authenticated user can read
@@ -228,10 +243,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isSignedIn();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      // Allow user to update their own document, or an admin to update any document.
-      // For fund transfers, allow a signed-in user to increment another user's balance, but nothing else.
-      allow update: if (isOwner(userId) || isAdmin()) ||
-                      (isSignedIn() && request.resource.data.keys().hasOnly(['balance']) && request.resource.data.balance > resource.data.balance);
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
       /**

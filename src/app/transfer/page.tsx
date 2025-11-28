@@ -18,8 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
-import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -146,55 +146,39 @@ export default function TransferPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !senderProfile || !recipient || !firestore) return;
+    if (!user || !senderProfile || !recipient || !firestore || !senderProfile.displayName) return;
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
 
-    const fromUserRef = doc(firestore, 'users', user.uid);
-    const toUserRef = doc(firestore, 'users', recipient.id);
+    try {
+        const transferRequestsRef = collection(firestore, 'transferRequests');
+        const requestData = {
+            fromUserId: user.uid,
+            fromUserName: senderProfile.displayName,
+            fromUserPhone: senderProfile.phoneNumber,
+            toUserId: recipient.id,
+            toUserName: recipient.displayName,
+            toUserPhone: recipient.phoneNumber,
+            amount: numericAmount,
+            status: 'pending',
+            requestTimestamp: new Date().toISOString(),
+        };
 
-    const batch = writeBatch(firestore);
+        await addDocumentNonBlocking(transferRequestsRef, requestData);
 
-    // 1. Deduct from sender's balance
-    batch.update(fromUserRef, { balance: increment(-numericAmount) });
-
-    // 2. Add to receiver's balance
-    batch.update(toUserRef, { balance: increment(numericAmount) });
-
-    // 3. Create transaction record for the sender
-    const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-    const fromTransactionData = {
-        userId: user.uid,
-        transactionDate: new Date().toISOString(),
-        amount: numericAmount,
-        transactionType: `تحويل إلى ${recipient.displayName}`,
-        notes: `إلى رقم: ${recipient.phoneNumber}`
-    };
-    batch.set(fromTransactionRef, fromTransactionData);
-
-    // Commit the batch and handle potential errors
-    batch.commit().then(() => {
         setShowSuccess(true);
-        setIsProcessing(false);
-        setIsConfirming(false);
-    }).catch(serverError => {
-        // Here we create and emit the contextual error
-        const permissionError = new FirestorePermissionError({
-            path: `/users/${user.uid} and /users/${recipient.id}`, // Batched writes affect multiple paths
-            operation: 'write',
-            requestResourceData: { 
-                senderUpdate: { balance: `DECREMENT(${numericAmount})` },
-                receiverUpdate: { balance: `INCREMENT(${numericAmount})` },
-                senderTransaction: fromTransactionData,
-            }
+    } catch (error) {
+        console.error("Failed to create transfer request:", error);
+        toast({
+            variant: "destructive",
+            title: "فشل إرسال الطلب",
+            description: "حدث خطأ أثناء محاولة إرسال طلب التحويل.",
         });
-        errorEmitter.emit('permission-error', permissionError);
-
-        // Also update local state
+    } finally {
         setIsProcessing(false);
         setIsConfirming(false);
-    });
+    }
   };
   
   if (showSuccess) {
@@ -206,8 +190,8 @@ export default function TransferPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح. تم إنشاء سجل في عملياتك.</p>
+                    <h2 className="text-xl font-bold">تم إرسال الطلب بنجاح</h2>
+                     <p className="text-sm text-muted-foreground">تم إرسال طلب التحويل للإدارة. سيتم تنفيذه في أقرب وقت.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
@@ -288,7 +272,7 @@ export default function TransferPage() {
 
             <Button onClick={handleConfirmClick} className="w-full h-12 text-lg font-bold" disabled={!recipient || !amount || isProcessing}>
                 <Send className="ml-2 h-5 w-5"/>
-                تحويل
+                إرسال طلب التحويل
             </Button>
           </CardContent>
         </Card>
@@ -299,10 +283,10 @@ export default function TransferPage() {
     <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle className="text-center">تأكيد التحويل</AlertDialogTitle>
+                <AlertDialogTitle className="text-center">تأكيد طلب التحويل</AlertDialogTitle>
                 <AlertDialogDescription asChild>
                     <div className="space-y-4 pt-4 text-base text-foreground text-center">
-                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في تحويل مبلغ</p>
+                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في إرسال طلب لتحويل مبلغ</p>
                          <p className="text-2xl font-bold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
                          <p className="text-sm text-center text-muted-foreground">إلى</p>
                          <p className="font-bold">{recipient?.displayName}</p>
@@ -312,7 +296,7 @@ export default function TransferPage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
                 <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
-                    {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
+                    {isProcessing ? 'جاري الإرسال...' : 'تأكيد'}
                 </AlertDialogAction>
                 <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
             </AlertDialogFooter>

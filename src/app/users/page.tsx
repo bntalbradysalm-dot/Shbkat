@@ -265,28 +265,28 @@ export default function UsersPage() {
       <div className="space-y-3">
         {filteredUsers.map((user) => (
           <Card key={user.id} className="overflow-hidden">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-primary/10">
-                          <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                      <div className="p-1.5 rounded-full bg-primary/10">
+                          <UserIcon className="h-5 w-5 text-primary dark:text-primary-foreground" />
                       </div>
                       <div className="text-right">
-                          <p className="font-bold text-base">{user.displayName || 'مستخدم جديد'}</p>
-                          <div className="flex items-center justify-end gap-2 text-muted-foreground text-sm mt-1">
+                          <p className="font-bold text-sm">{user.displayName || 'مستخدم جديد'}</p>
+                          <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs mt-1">
                               <span>{user.phoneNumber}</span>
                           </div>
                       </div>
                   </div>
-                  <div className="text-primary dark:text-primary-foreground font-bold text-left">
-                      {(user.balance ?? 0).toLocaleString('en-US')} ريال يمني
+                  <div className="text-primary dark:text-primary-foreground font-bold text-left text-sm">
+                      {(user.balance ?? 0).toLocaleString('en-US')} ريال
                   </div>
               </div>
-              <div className="mt-4 flex items-center justify-between gap-2">
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <div className="flex gap-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
+                        <Button variant="destructive" size="icon" className="h-8 w-8">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
@@ -306,7 +306,7 @@ export default function UsersPage() {
                       </AlertDialogContent>
                     </AlertDialog>
 
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)}>
+                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
                       <Edit className="h-4 w-4" />
                     </Button>
 
@@ -318,12 +318,12 @@ export default function UsersPage() {
                       }
                     }}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" onClick={() => {
+                        <Button variant="outline" size="sm" onClick={() => {
                             setSelectedUser(user);
                             setIsDepositAndNotifyDialogOpen(true);
                         }}>
-                            <MessageSquare className="ml-2 h-4 w-4" />
-                            إيداع وإبلاغ
+                            <MessageSquare className="ml-1 h-4 w-4" />
+                            إبلاغ
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
@@ -355,11 +355,11 @@ export default function UsersPage() {
                     }
                  }}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" onClick={() => {
+                        <Button variant="default" size="sm" onClick={() => {
                             setSelectedUser(user);
                             setIsTopUpDialogOpen(true);
                         }}>
-                            <LinkIcon className="ml-2 h-4 w-4" />
+                            <PlusCircle className="ml-1 h-4 w-4" />
                             تغذية
                         </Button>
                     </DialogTrigger>

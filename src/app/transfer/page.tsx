@@ -238,6 +238,7 @@ export default function TransferPage() {
                   onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                   disabled={isProcessing}
                   maxLength={9}
+                  className="text-right"
                 />
                  {isSearching && <Loader2 className="animate-spin absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
               </div>

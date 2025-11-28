@@ -52,7 +52,6 @@ const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
-  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
@@ -166,6 +165,7 @@ export default function AccountPage() {
       localStorage.setItem('lastLoggedOutUser', user.displayName);
     }
     auth.signOut();
+    router.push('/login');
   };
 
   if (isUserLoading || !user || !userProfile) {

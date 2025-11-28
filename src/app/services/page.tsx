@@ -150,23 +150,23 @@ export default function ServicesPage() {
           return (
              <Link href={`/services/${network.id}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer hover:border-primary transition-colors animate-in fade-in-0"
+                  className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-primary/10 rounded-lg">
-                          <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                        <div className="p-3 bg-white/20 rounded-lg">
+                          <Wifi className="h-6 w-6 text-white" />
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
                             <MapPin className="h-3 w-3" />
                             {network.location}
                           </p>
                           {network.phoneNumber && (
-                             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                             <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
                               <Phone className="h-3 w-3" />
                               {network.phoneNumber}
                             </p>
@@ -175,10 +175,10 @@ export default function ServicesPage() {
                       </div>
                       <button 
                         onClick={(e) => handleFavoriteClick(e, network)}
-                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                        className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
                         aria-label={`إضافة ${network.name} إلى المفضلة`}
                       >
-                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-500 text-red-500')} />
+                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-400 text-red-400')} />
                       </button>
                     </div>
                   </CardContent>

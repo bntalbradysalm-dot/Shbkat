@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
   Dialog,
@@ -33,9 +32,7 @@ import {
   Trash2,
   Edit,
   MessageSquare,
-  Link as LinkIcon,
   PlusCircle,
-  MessageCircle,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +53,6 @@ type User = {
 export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -248,7 +244,7 @@ export default function UsersPage() {
   const filteredUsers = users?.filter(user => {
     const nameMatch = user.displayName?.toLowerCase().includes(searchTerm.toLowerCase());
     const phoneMatch = user.phoneNumber?.includes(searchTerm);
-    return (nameMatch || phoneMatch) && (filter === 'all' /* Add other filter logic here if needed */);
+    return nameMatch || phoneMatch;
   });
 
   const renderContent = () => {
@@ -277,8 +273,8 @@ export default function UsersPage() {
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs mt-1">
                               <span>{user.phoneNumber}</span>
                               {user.phoneNumber && (
-                                <button onClick={() => openWhatsAppWithMessage(user.phoneNumber!)} title="مراسلة عبر واتساب">
-                                    <Image src="https://i.ibb.co/61g3w2z/whatsapp-icon-logo-svgrepo-com.png" alt="WhatsApp" width={16} height={16} />
+                                <button onClick={() => openWhatsAppWithMessage(user.phoneNumber!)} title="مراسلة عبر واتساب" className="text-green-600 font-semibold hover:underline">
+                                    واتساب
                                 </button>
                               )}
                           </div>

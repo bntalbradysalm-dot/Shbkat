@@ -441,7 +441,6 @@
             "networkId": { "type": "string", "description": "The ID of the parent network." },
             "categoryId": { "type": "string", "description": "The ID of the card category this card belongs to." },
             "cardNumber": { "type": "string", "description": "The unique number or code for the card." },
-            "password": { "type": "string", "description": "The password for the card." },
             "status": {
                 "type": "string",
                 "enum": ["available", "sold", "expired"],

@@ -31,7 +31,6 @@ type CardCategory = {
 type NetworkCard = {
     id: string;
     cardNumber: string;
-    password?: string;
     status: 'available' | 'sold';
     categoryId: string;
 };
@@ -60,7 +59,7 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
   const [isAddCardOpen, setIsAddCardOpen] = React.useState(false);
   const [selectedCategoryIdForCard, setSelectedCategoryIdForCard] = React.useState<string>('');
   const [addCardMode, setAddCardMode] = React.useState<'single' | 'bulk'>('single');
-  const [singleCard, setSingleCard] = React.useState({ cardNumber: '', password: '' });
+  const [singleCard, setSingleCard] = React.useState({ cardNumber: '' });
   const [bulkCards, setBulkCards] = React.useState('');
   const [isProcessingCards, setIsProcessingCards] = React.useState(false);
 
@@ -136,11 +135,10 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
     } else {
         const lines = bulkCards.trim().split('\n');
         lines.forEach(line => {
-            const [cardNumber, password] = line.split(/[,\t]/).map(s => s.trim());
+            const cardNumber = line.trim();
             if (cardNumber) {
                 cardsToAdd.push({
                     cardNumber,
-                    password: password || undefined,
                     categoryId: selectedCategoryIdForCard,
                     status: 'available'
                 });
@@ -163,7 +161,7 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
         await batch.commit();
         toast({ title: 'نجاح', description: `تمت إضافة ${cardsToAdd.length} كرت بنجاح.`});
         setIsAddCardOpen(false);
-        setSingleCard({ cardNumber: '', password: '' });
+        setSingleCard({ cardNumber: ''});
         setBulkCards('');
     } catch (error) {
         console.error("Error adding cards:", error);
@@ -355,10 +353,6 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                         <Label htmlFor="cardNumber">رقم الكرت</Label>
                         <Input id="cardNumber" value={singleCard.cardNumber} onChange={e => setSingleCard(p => ({...p, cardNumber: e.target.value}))} />
                     </div>
-                     <div>
-                        <Label htmlFor="password">كلمة المرور (اختياري)</Label>
-                        <Input id="password" value={singleCard.password} onChange={e => setSingleCard(p => ({...p, password: e.target.value}))} />
-                    </div>
                 </TabsContent>
                 <TabsContent value="bulk" className="space-y-4 pt-4">
                     <Label htmlFor="bulkData">بيانات الكروت</Label>
@@ -367,10 +361,10 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                         rows={6}
                         value={bulkCards}
                         onChange={e => setBulkCards(e.target.value)}
-                        placeholder="كل كرت في سطر جديد، مثال:&#10;111222,pass1&#10;333444,pass2&#10;555666"
+                        placeholder="كل كرت في سطر جديد، مثال:&#10;111222&#10;333444&#10;555666"
                     />
                     <p className="text-xs text-muted-foreground">
-                        استخدم فاصلة (,) أو tab للفصل بين رقم الكرت وكلمة المرور. كلمة المرور اختيارية.
+                        أدخل رقم كرت واحد في كل سطر.
                     </p>
                 </TabsContent>
             </Tabs>

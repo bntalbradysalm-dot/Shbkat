@@ -52,8 +52,8 @@ import { Toaster } from '@/components/ui/toaster';
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
-  { title: 'طلبات التحويل', icon: Repeat, href: '/transfer-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
+  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },

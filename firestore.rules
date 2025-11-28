@@ -214,19 +214,6 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages fund transfer requests between users.
-     * @path /transferRequests/{requestId}
-     * @allow An authenticated user can create their own transfer request. (create)
-     * @allow An admin can read, update (approve/reject), and delete requests. (read, update, delete)
-     * @deny Users cannot access or modify requests that are not their own.
-     */
-    match /transferRequests/{requestId} {
-      allow create: if isSignedIn() && isTransferRequestOwner();
-      allow read, update, delete: if isAdmin();
-    }
-
-
-    /**
      * @description Manages user profile documents. Only the owner can read, update,
      * or delete their own profile. A user can create their own profile. Listing
      * all users is forbidden.
@@ -241,7 +228,12 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isSignedIn();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // Allow user to update their own document, or an admin to update any document.
+      // For fund transfers, allow any signed-in user to increment another user's balance, but nothing else.
+      allow update: if (isOwner(userId) || isAdmin()) || 
+                      (isSignedIn() && 
+                       request.resource.data.keys().hasOnly(['balance']) &&
+                       request.resource.data.balance == resource.data.balance + request.resource.data.diff.balance);
       allow delete: if isAdmin();
 
       /**

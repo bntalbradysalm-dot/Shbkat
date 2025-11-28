@@ -1,10 +1,10 @@
 'use server';
 
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApps } from 'firebase-admin/app';
 
-// In a managed environment like Firebase App Hosting, the Admin SDK is automatically
-// initialized with the correct project credentials and permissions.
+// In a managed environment like Firebase App Hosting, the Admin SDK should be 
+// automatically initialized. This check ensures it only happens once.
 if (!getApps().length) {
   initializeApp();
 }

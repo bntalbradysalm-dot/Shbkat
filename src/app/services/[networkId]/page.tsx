@@ -201,22 +201,22 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                     <CardContent className="p-4">
                        <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1 space-y-2">
-                                <h3 className="font-bold text-lg flex items-center gap-2">
-                                    <Tag className="w-5 h-5 text-primary dark:text-primary-foreground" />
-                                    <span>فئة {category.price.toLocaleString('en-US')}</span>
+                            <div className="flex-1 space-y-1">
+                                <h3 className="font-bold text-base flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-primary dark:text-primary-foreground" />
+                                    <span>{category.name}</span>
                                 </h3>
-                                <p className="font-bold text-xl text-primary dark:text-primary-foreground">
-                                    {category.price.toLocaleString('en-US')} ريال يمني
+                                <p className="font-bold text-lg text-primary dark:text-primary-foreground">
+                                    {category.price.toLocaleString('en-US')} ريال
                                 </p>
-                                <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                                <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
                                     {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {category.validity}</span>}
                                     {category.capacity && <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {category.capacity}</span>}
                                 </div>
                             </div>
                             <Button 
-                                size="lg" 
-                                className="h-auto py-3 px-6 text-base font-bold"
+                                size="default" 
+                                className="h-auto py-2 px-5 text-sm font-bold"
                                 onClick={() => {
                                     setSelectedCategory(category);
                                     setIsConfirming(true);

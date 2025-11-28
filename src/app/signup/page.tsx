@@ -111,7 +111,7 @@ export default function SignupPage() {
           location: location,
           registrationDate: new Date().toISOString(),
           balance: 0,
-          role: role, // Add role to the user document
+          role: role,
         });
       }
 

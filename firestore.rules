@@ -39,7 +39,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth.token.email == '770326828@shabakat.com';
     }
 
 
@@ -138,7 +138,8 @@ service cloud.firestore {
      * @path /notifications/{notificationId}
      * @allow Any signed-in user can read the list of notifications. (list, get)
      * @allow An admin user can create a new notification. (create)
-     * @deny Any user tries to update or delete a notification.
+     * @allow An admin user can delete a notification. (delete)
+     * @deny Any user tries to update a notification.
      * @principle Centralized announcements, immutable after creation.
      */
     match /notifications/{notificationId} {
@@ -248,4 +249,3 @@ service cloud.firestore {
     }
   }
 }
-

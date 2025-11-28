@@ -46,15 +46,15 @@ const BalanceDisplay = () => {
         <Card className="shadow-lg">
             <CardContent className="p-4 flex items-center justify-between">
                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-accent/20 rounded-lg">
-                         <Wallet className="h-6 w-6 text-accent-foreground" />
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                         <Wallet className="h-6 w-6 text-primary dark:text-primary-foreground" />
                     </div>
                     <span className="text-sm font-semibold text-muted-foreground">رصيدك الحالي</span>
                 </div>
                 {isLoading ? (
                     <Skeleton className="h-7 w-28" />
                 ) : (
-                    <div className="text-xl font-bold text-accent-foreground">
+                    <div className="text-xl font-bold text-primary dark:text-primary-foreground">
                         {(userProfile?.balance ?? 0).toLocaleString('en-US')}
                         <span className="text-sm mr-1">ريال يمني</span>
                     </div>
@@ -209,7 +209,7 @@ export default function TransferPage() {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-semibold text-accent-foreground">{Number(amount).toLocaleString('en-US')} ريال</span>
+                            <span className="font-semibold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</span>
                         </div>
                     </div>
                     <div className="w-full grid grid-cols-2 gap-3 pt-4">
@@ -219,7 +219,7 @@ export default function TransferPage() {
                             setRecipient(null);
                             setRecipientPhone('');
                             setAmount('');
-                        }} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                        }} variant="default">
                            تحويل جديد
                         </Button>
                     </div>
@@ -261,7 +261,7 @@ export default function TransferPage() {
             {recipient && (
                 <div className="p-3 bg-muted rounded-lg flex items-center gap-3 animate-in fade-in-0">
                     <User className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm font-semibold">المستلم: <span className="text-accent-foreground">{recipient.displayName}</span></p>
+                    <p className="text-sm font-semibold">المستلم: <span className="text-primary dark:text-primary-foreground">{recipient.displayName}</span></p>
                 </div>
             )}
 
@@ -296,7 +296,7 @@ export default function TransferPage() {
                 <AlertDialogDescription asChild>
                     <div className="space-y-4 pt-4 text-base text-foreground text-center">
                          <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في تحويل مبلغ</p>
-                         <p className="text-2xl font-bold text-accent-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
+                         <p className="text-2xl font-bold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
                          <p className="text-sm text-center text-muted-foreground">إلى</p>
                          <p className="font-bold">{recipient?.displayName}</p>
                          <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>
@@ -304,7 +304,7 @@ export default function TransferPage() {
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
-                <AlertDialogAction className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleFinalConfirmation} disabled={isProcessing}>
+                <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
                     {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
                 </AlertDialogAction>
                 <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>

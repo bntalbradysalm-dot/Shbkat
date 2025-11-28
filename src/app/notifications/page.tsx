@@ -34,18 +34,16 @@ export default function NotificationsPage() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 flex items-start gap-4">
-                <Skeleton className="h-8 w-8 rounded-full mt-1" />
+             <div key={i} className="p-4 rounded-lg border bg-card flex items-start gap-4">
+                <Skeleton className="h-6 w-6 rounded-full mt-1" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
                   <Skeleton className="h-3 w-full" />
+                   <Skeleton className="h-3 w-1/2 mt-2" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
           ))}
         </div>
       );
@@ -64,26 +62,22 @@ export default function NotificationsPage() {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {notifications.map((notification, index) => (
-          <Card 
+          <div 
             key={notification.id} 
-            className="animate-in fade-in-0"
+            className="p-4 rounded-lg border bg-card flex items-start gap-4 animate-in fade-in-0"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-               <CardTitle className="text-base font-bold flex items-center gap-2">
-                 <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground" />
-                 {notification.title}
-               </CardTitle>
-               <p className="text-xs text-muted-foreground">
-                {format(parseISO(notification.timestamp), 'd MMMM yyyy', { locale: ar })}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-foreground/80">{notification.body}</p>
-            </CardContent>
-          </Card>
+            <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground mt-1 shrink-0" />
+            <div className="flex-1">
+                <p className="font-bold text-sm">{notification.title}</p>
+                <p className="text-sm text-foreground/80 mt-1">{notification.body}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                    {format(parseISO(notification.timestamp), 'd MMMM yyyy, h:mm a', { locale: ar })}
+                </p>
+            </div>
+          </div>
         ))}
       </div>
     );

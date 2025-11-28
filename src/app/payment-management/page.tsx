@@ -122,19 +122,19 @@ export default function PaymentManagementPage() {
                     <div className="space-y-4">
                         <div>
                             <Label htmlFor={`name-${method.id}`}>اسم البنك</Label>
-                            <Input id={`name-${method.id}`} value={editingValues[method.id]?.name} onChange={(e) => handleValueChange(method.id, 'name', e.target.value)} />
+                            <Input id={`name-${method.id}`} value={editingValues[method.id]?.name ?? ''} onChange={(e) => handleValueChange(method.id, 'name', e.target.value)} />
                         </div>
                         <div>
                             <Label htmlFor={`holder-${method.id}`}>اسم صاحب الحساب</Label>
-                            <Input id={`holder-${method.id}`} value={editingValues[method.id]?.accountHolderName} onChange={(e) => handleValueChange(method.id, 'accountHolderName', e.target.value)} />
+                            <Input id={`holder-${method.id}`} value={editingValues[method.id]?.accountHolderName ?? ''} onChange={(e) => handleValueChange(method.id, 'accountHolderName', e.target.value)} />
                         </div>
                         <div>
                             <Label htmlFor={`account-${method.id}`}>رقم الحساب</Label>
-                            <Input id={`account-${method.id}`} value={editingValues[method.id]?.accountNumber} onChange={(e) => handleValueChange(method.id, 'accountNumber', e.target.value)} />
+                            <Input id={`account-${method.id}`} value={editingValues[method.id]?.accountNumber ?? ''} onChange={(e) => handleValueChange(method.id, 'accountNumber', e.target.value)} />
                         </div>
                         <div>
                             <Label htmlFor={`logo-${method.id}`}>رابط الشعار</Label>
-                            <Input id={`logo-${method.id}`} value={editingValues[method.id]?.logoUrl} onChange={(e) => handleValueChange(method.id, 'logoUrl', e.target.value)} />
+                            <Input id={`logo-${method.id}`} value={editingValues[method.id]?.logoUrl ?? ''} onChange={(e) => handleValueChange(method.id, 'logoUrl', e.target.value)} />
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button size="icon" variant="ghost" onClick={handleCancelEdit}><X className="h-4 w-4" /></Button>

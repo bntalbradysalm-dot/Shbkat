@@ -4,7 +4,7 @@ import { CreditCard } from 'lucide-react';
 import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
@@ -17,9 +17,11 @@ type RenewalOption = {
 
 export default function AlwadiPage() {
   const firestore = useFirestore();
+  const { user } = useUser(); // Get the user object
+
   const optionsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'alwadiOptions') : null),
-    [firestore]
+    () => (firestore && user ? collection(firestore, 'alwadiOptions') : null), // Only create collection ref if user exists
+    [firestore, user]
   );
   const { data: renewalOptions, isLoading } = useCollection<RenewalOption>(optionsCollection);
 

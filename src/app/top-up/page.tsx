@@ -142,11 +142,7 @@ export default function TopUpPage() {
                                     />
                                     <div>
                                         <p className="text-sm text-muted-foreground">حول إلى حساب</p>
-                                        <p className="text-lg font-bold">{selectedMethod.name}</p>
-                                        <div className="flex items-center justify-center text-muted-foreground text-sm gap-1">
-                                            <User className="h-4 w-4" />
-                                            <span>{selectedMethod.accountHolderName}</span>
-                                        </div>
+                                        <p className="text-lg font-bold">{selectedMethod.accountHolderName}</p>
                                     </div>
                                     <div className="flex items-center justify-center bg-muted p-3 rounded-lg gap-2">
                                         <Button variant="ghost" onClick={() => handleCopy(selectedMethod.accountNumber)}>

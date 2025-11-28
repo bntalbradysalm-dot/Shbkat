@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase';
+import { useEffect, useState } from 'react';
 
 export default function RootLayout({
   children,
@@ -12,7 +13,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const showBottomNav = pathname !== '/login' && pathname !== '/signup';
+  const [isNavVisible, setIsNavVisible] = useState(false);
+
+  useEffect(() => {
+    const pagesWithoutNav = ['/login', '/signup', '/forgot-password'];
+    setIsNavVisible(!pagesWithoutNav.includes(pathname));
+  }, [pathname]);
 
   return (
     <html lang="ar" dir="rtl">
@@ -28,10 +34,10 @@ export default function RootLayout({
           <ThemeProvider>
             <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
               <div className="flex-1 flex flex-col relative">
-                <main className={`flex-1 overflow-y-auto ${showBottomNav ? 'pb-20' : ''}`}>
+                <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-20' : ''}`}>
                   {children}
                 </main>
-                {showBottomNav && <BottomNav />}
+                {isNavVisible && <BottomNav />}
               </div>
             </div>
           </ThemeProvider>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { collection, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,24 +106,34 @@ export default function UsersPage() {
     }
   
     const userDocRef = doc(firestore, 'users', selectedUser.id);
+    const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
   
     try {
+      // 1. Update user balance
       await updateDoc(userDocRef, {
         balance: increment(amount)
       });
+      
+      // 2. Send notification to the user
+      await addDoc(userNotificationsRef, {
+        title: 'تمت تغذية حسابك',
+        body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك من قبل الإدارة.`,
+        timestamp: new Date().toISOString()
+      });
+
       toast({
         title: "نجاح",
-        description: `تمت إضافة ${amount.toLocaleString('en-US')} ريال إلى رصيد ${selectedUser.displayName}.`,
+        description: `تمت إضافة ${amount.toLocaleString('en-US')} ريال إلى رصيد ${selectedUser.displayName} وإرسال إشعار له.`,
       });
       setIsTopUpDialogOpen(false);
       setTopUpAmount('');
       setSelectedUser(null);
     } catch (e) {
-      console.error("Error updating balance: ", e);
+      console.error("Error updating balance and sending notification: ", e);
       toast({
         variant: "destructive",
         title: "خطأ في التغذية",
-        description: "لم يتم تحديث الرصيد. الرجاء المحاولة مرة أخرى.",
+        description: "لم يتم تحديث الرصيد أو إرسال الإشعار. الرجاء المحاولة مرة أخرى.",
       });
     }
   };

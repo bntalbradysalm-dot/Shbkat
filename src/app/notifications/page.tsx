@@ -1,9 +1,8 @@
 'use client';
 
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing, BellOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -18,15 +17,16 @@ type Notification = {
 
 export default function NotificationsPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
 
   const notificationsQuery = useMemoFirebase(
-    () => firestore
+    () => user && firestore
         ? query(
-            collection(firestore, 'notifications'),
+            collection(firestore, 'users', user.uid, 'notifications'),
             orderBy('timestamp', 'desc')
           )
         : null,
-    [firestore]
+    [firestore, user]
   );
 
   const { data: notifications, isLoading } = useCollection<Notification>(notificationsQuery);

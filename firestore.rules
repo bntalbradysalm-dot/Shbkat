@@ -144,8 +144,7 @@ service cloud.firestore {
      */
     match /notifications/{notificationId} {
         allow read: if isSignedIn();
-        allow create: if isAdmin();
-        allow delete: if isAdmin();
+        allow create, delete: if isAdmin();
         allow update: if false; // Notifications are immutable
     }
     
@@ -245,6 +244,20 @@ service cloud.firestore {
         allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
         allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
         allow delete: if isExistingOwner(userId);
+      }
+      
+      /**
+       * @description Manages personal notifications for a user.
+       * @path /users/{userId}/notifications/{notificationId}
+       * @allow The user can read their own notifications. (read)
+       * @allow Admins can create notifications for the user. (create)
+       * @deny Users cannot write or delete their notifications.
+       * @principle User-owned readable data, admin-writable.
+       */
+      match /notifications/{notificationId} {
+          allow read: if isOwner(userId);
+          allow create: if isAdmin();
+          allow update, delete: if false;
       }
     }
   }

@@ -31,7 +31,6 @@ const Header = () => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const [greeting, setGreeting] = useState('');
   const [hasUnread, setHasUnread] = useState(false);
 
   // Get the last notification only if user is logged in
@@ -47,16 +46,6 @@ const Header = () => {
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-
-  useEffect(() => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    if (currentHour < 12) {
-      setGreeting('صباحك جميل');
-    } else {
-      setGreeting('مساءك جميل');
-    }
-  }, []);
 
   useEffect(() => {
     if (lastNotification && lastNotification.length > 0 && userProfile) {
@@ -95,12 +84,21 @@ const Header = () => {
       <div className="flex items-center gap-3">
         <UserIcon className="h-10 w-10 text-primary dark:text-primary-foreground" />
         <div>
-          <p className="text-sm text-foreground/80">{greeting}</p>
-          {isUserLoading ? (
-            <Skeleton className="h-6 w-32 mt-1" />
-          ) : (
-             <h1 className="font-bold text-lg">{getShortName(user?.displayName)}</h1>
-          )}
+           {isUserLoading ? (
+             <Skeleton className="h-6 w-32 mt-1" />
+           ) : user ? (
+            <>
+              <p className="text-sm text-foreground/80">أهلاً</p>
+              <h1 className="font-bold text-lg">{getShortName(user.displayName)}</h1>
+            </>
+           ) : (
+            <>
+              <p className="text-sm text-foreground/80">أهلاً بك</p>
+              <Link href="/login">
+                <h1 className="font-bold text-lg text-primary hover:underline">تسجيل الدخول</h1>
+              </Link>
+            </>
+           )}
         </div>
       </div>
       <button onClick={handleNotificationClick} className="relative p-2">

@@ -1,11 +1,31 @@
 'use server';
 
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 
-// Initialize Firebase Admin SDK if not already initialized
+// Ensure you have the service account key JSON file in your project
+// and the GOOGLE_APPLICATION_CREDENTIALS environment variable is set.
+// For local development, you might need to manually specify the path.
 if (!getApps().length) {
-  initializeApp();
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    initializeApp();
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // For environments where the service account is a stringified JSON
+    initializeApp({
+        credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+    });
+  } else {
+    // This is a fallback for local dev if the env var isn't set.
+    // Ensure you have a service account file.
+    try {
+        const serviceAccount = require('../../../service-account.json');
+        initializeApp({
+            credential: cert(serviceAccount)
+        });
+    } catch (e) {
+        console.error("Could not initialize Firebase Admin SDK. Please set GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT environment variables, or provide a service-account.json file.");
+    }
+  }
 }
 
 const db = getFirestore();
@@ -20,7 +40,7 @@ interface TransferFundsParams {
   toUserPhone: string;
 }
 
-export async function transferFunds(params: TransferFundsParams) {
+export async function transferFunds(params: TransferFundsParams): Promise<{success: boolean, error?: string}> {
   const { fromUserId, toUserId, amount, fromUserName, toUserName, fromUserPhone, toUserPhone } = params;
 
   if (amount <= 0) {
@@ -82,5 +102,3 @@ export async function transferFunds(params: TransferFundsParams) {
     return { success: false, error: error.message || 'فشل التحويل. الرجاء المحاولة مرة أخرى.' };
   }
 }
-
-    

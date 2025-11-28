@@ -18,11 +18,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
+import { transferFunds } from './actions';
+
 
 type UserProfile = {
   id: string;
@@ -145,13 +147,12 @@ export default function TransferPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !senderProfile || !recipient || !firestore) return;
+    if (!user || !senderProfile || !recipient) return;
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
-    
-    const transferRequestsRef = collection(firestore, 'transferRequests');
-    const transferRequestData = {
+
+    const result = await transferFunds({
       fromUserId: user.uid,
       fromUserName: senderProfile.displayName || 'مستخدم',
       fromUserPhone: senderProfile.phoneNumber || 'غير معروف',
@@ -159,20 +160,16 @@ export default function TransferPage() {
       toUserName: recipient.displayName || 'مستخدم',
       toUserPhone: recipient.phoneNumber || 'غير معروف',
       amount: numericAmount,
-      status: 'pending',
-      requestTimestamp: new Date().toISOString(),
-    };
+    });
 
-    try {
-      await addDocumentNonBlocking(transferRequestsRef, transferRequestData);
+    if (result.success) {
       setShowSuccess(true);
-    } catch (error) {
-      console.error("Transfer request failed: ", error);
-      toast({ variant: 'destructive', title: 'فشل إرسال الطلب', description: 'حدث خطأ غير متوقع أثناء إرسال طلب التحويل.' });
-    } finally {
-      setIsProcessing(false);
-      setIsConfirming(false);
+    } else {
+      toast({ variant: 'destructive', title: 'فشل التحويل', description: result.error });
     }
+
+    setIsProcessing(false);
+    setIsConfirming(false);
   };
   
   if (showSuccess) {
@@ -184,8 +181,8 @@ export default function TransferPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم إرسال الطلب بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك وإتمام عملية التحويل.</p>
+                    <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
+                     <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح وسيظهر في سجل العمليات.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
@@ -289,7 +286,7 @@ export default function TransferPage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
                 <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
-                    {isProcessing ? 'جاري إرسال الطلب...' : 'تأكيد وإرسال الطلب'}
+                    {isProcessing ? 'جاري التحويل...' : 'تأكيد التحويل'}
                 </AlertDialogAction>
                 <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
             </AlertDialogFooter>

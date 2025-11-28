@@ -52,7 +52,6 @@ const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
-  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
@@ -89,7 +88,7 @@ const LoadingSpinner = () => (
     <div className="flex flex-col justify-center items-center h-screen bg-background">
       <div className="flex flex-col items-center gap-4">
         <Image
-          src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
+          src="https://i.ibb.co/b2w0KzF/Shabakat-Wallet-Logo-Designed-by-Muhammad-Radhi-Bashadi-2.png"
           alt="logo"
           width={120}
           height={120}
@@ -148,17 +147,17 @@ export default function AccountPage() {
     }
   };
   
-  const handleShare = () => {
-    const shareUrl = appSettings?.appLink;
-    if (shareUrl) {
-      window.open(shareUrl, '_blank', 'noopener,noreferrer');
-    } else {
+  const handleShare = async () => {
+    if (!appSettings?.appLink) {
       toast({
         variant: 'destructive',
         title: 'خطأ',
         description: 'رابط التطبيق غير محدد في الإعدادات.',
       });
+      return;
     }
+  
+    window.open(appSettings.appLink, '_blank', 'noopener,noreferrer');
   };
 
   const handleLogout = () => {

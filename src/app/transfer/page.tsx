@@ -18,12 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
-import { transferFunds } from './actions';
 
 
 type UserProfile = {
@@ -147,25 +146,30 @@ export default function TransferPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !senderProfile || !recipient) return;
+    if (!user || !senderProfile || !recipient || !firestore) return;
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
-
-    const result = await transferFunds({
-      fromUserId: user.uid,
-      fromUserName: senderProfile.displayName || 'مستخدم',
-      fromUserPhone: senderProfile.phoneNumber || 'غير معروف',
-      toUserId: recipient.id,
-      toUserName: recipient.displayName || 'مستخدم',
-      toUserPhone: recipient.phoneNumber || 'غير معروف',
-      amount: numericAmount,
-    });
-
-    if (result.success) {
-      setShowSuccess(true);
-    } else {
-      toast({ variant: 'destructive', title: 'فشل التحويل', description: result.error });
+    
+    const transferRequest = {
+        fromUserId: user.uid,
+        fromUserName: senderProfile.displayName || 'مستخدم',
+        fromUserPhone: senderProfile.phoneNumber || 'غير معروف',
+        toUserId: recipient.id,
+        toUserName: recipient.displayName || 'مستخدم',
+        toUserPhone: recipient.phoneNumber || 'غير معروف',
+        amount: numericAmount,
+        status: 'pending',
+        requestTimestamp: new Date().toISOString(),
+    };
+    
+    try {
+        const transferRequestsCollection = collection(firestore, 'transferRequests');
+        await addDocumentNonBlocking(transferRequestsCollection, transferRequest);
+        setShowSuccess(true);
+    } catch (error) {
+        console.error("Failed to create transfer request:", error);
+        toast({ variant: 'destructive', title: 'فشل إرسال الطلب', description: 'حدث خطأ أثناء إرسال طلب التحويل.' });
     }
 
     setIsProcessing(false);
@@ -181,8 +185,8 @@ export default function TransferPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح وسيظهر في سجل العمليات.</p>
+                    <h2 className="text-xl font-bold">تم إرسال الطلب بنجاح</h2>
+                     <p className="text-sm text-muted-foreground">سيقوم المشرف بمراجعة طلبك وتأكيد التحويل قريباً.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
@@ -262,7 +266,7 @@ export default function TransferPage() {
 
             <Button onClick={handleConfirmClick} className="w-full h-12 text-lg font-bold" disabled={!recipient || !amount || isProcessing}>
                 <Send className="ml-2 h-5 w-5"/>
-                تحويل
+                إرسال طلب التحويل
             </Button>
           </CardContent>
         </Card>
@@ -273,10 +277,10 @@ export default function TransferPage() {
     <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle className="text-center">تأكيد عملية التحويل</AlertDialogTitle>
+                <AlertDialogTitle className="text-center">تأكيد إرسال الطلب</AlertDialogTitle>
                 <AlertDialogDescription asChild>
                     <div className="space-y-4 pt-4 text-base text-foreground text-center">
-                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في تحويل مبلغ</p>
+                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في طلب تحويل مبلغ</p>
                          <p className="text-2xl font-bold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
                          <p className="text-sm text-center text-muted-foreground">إلى</p>
                          <p className="font-bold">{recipient?.displayName}</p>
@@ -286,7 +290,7 @@ export default function TransferPage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
                 <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
-                    {isProcessing ? 'جاري التحويل...' : 'تأكيد التحويل'}
+                    {isProcessing ? 'جاري الإرسال...' : 'تأكيد وإرسال'}
                 </AlertDialogAction>
                 <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
             </AlertDialogFooter>

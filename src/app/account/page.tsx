@@ -27,6 +27,7 @@ import {
   Users2,
   Loader2,
   ListChecks,
+  Repeat,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -51,6 +52,7 @@ import { Toaster } from '@/components/ui/toaster';
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
+  { title: 'طلبات التحويل', icon: Repeat, href: '/transfer-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },

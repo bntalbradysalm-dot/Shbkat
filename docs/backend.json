@@ -328,6 +328,60 @@
             }
         },
         "required": ["appLink", "supportPhoneNumber"]
+    },
+     "TransferRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TransferRequest",
+      "type": "object",
+      "description": "Represents a user's request to transfer funds to another user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transfer request."
+        },
+        "fromUserId": {
+          "type": "string",
+          "description": "The ID of the user initiating the transfer."
+        },
+        "fromUserName": {
+          "type": "string",
+          "description": "The name of the user initiating the transfer."
+        },
+        "fromUserPhone": {
+          "type": "string",
+          "description": "The phone number of the user initiating the transfer."
+        },
+        "toUserId": {
+          "type": "string",
+          "description": "The ID of the user receiving the transfer."
+        },
+        "toUserName": {
+          "type": "string",
+          "description": "The name of the user receiving the transfer."
+        },
+        "toUserPhone": {
+          "type": "string",
+          "description": "The phone number of the user receiving the transfer."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount to be transferred."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "The status of the transfer request."
+        },
+        "requestTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the request was made."
+        }
+      },
+      "required": [
+        "fromUserId", "fromUserName", "fromUserPhone", "toUserId", "toUserName", 
+        "toUserPhone", "amount", "status", "requestTimestamp"
+      ]
     }
   },
   "auth": {
@@ -522,6 +576,22 @@
             {
               "name": "settingsId",
               "description": "The unique identifier for the settings document (e.g., 'global')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/transferRequests/{requestId}",
+        "definition": {
+          "entityName": "TransferRequest",
+          "schema": {
+            "$ref": "#/backend/entities/TransferRequest"
+          },
+          "description": "Stores user requests to transfer funds. Users can create, admins can read and update status.",
+          "params": [
+            {
+              "name": "requestId",
+              "description": "The unique identifier for the transfer request."
             }
           ]
         }

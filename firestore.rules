@@ -82,6 +82,14 @@ service cloud.firestore {
     function isRequestOwner() {
         return request.resource.data.userId == request.auth.uid;
     }
+    
+     /**
+     * On create, validates that the incoming TransferRequest's 'fromUserId' field matches
+     * the authenticated user's UID.
+     */
+    function isTransferRequestOwner() {
+        return request.resource.data.fromUserId == request.auth.uid;
+    }
 
     /**
      * On update, ensures the 'id' field of a user document cannot be changed.
@@ -203,6 +211,18 @@ service cloud.firestore {
     match /appSettings/{settingsId} {
         allow read: if true;
         allow write: if isAdmin();
+    }
+
+    /**
+     * @description Manages fund transfer requests between users.
+     * @path /transferRequests/{requestId}
+     * @allow An authenticated user can create their own transfer request. (create)
+     * @allow An admin can read, update (approve/reject), and delete requests. (read, update, delete)
+     * @deny Users cannot access or modify requests that are not their own.
+     */
+    match /transferRequests/{requestId} {
+      allow create: if isSignedIn() && isTransferRequestOwner();
+      allow read, update, delete: if isAdmin();
     }
 
 

@@ -52,6 +52,7 @@ const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
+  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
@@ -85,17 +86,17 @@ type AppSettings = {
 };
 
 const LoadingSpinner = () => (
-    <div className="flex flex-col justify-center items-center h-screen bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <Image
-          src="https://i.ibb.co/b2w0KzF/Shabakat-Wallet-Logo-Designed-by-Muhammad-Radhi-Bashadi-2.png"
-          alt="logo"
-          width={120}
-          height={120}
-          className="object-contain"
-        />
-        <Loader2 className="h-8 w-8 animate-spin text-foreground" />
-      </div>
+  <div className="flex flex-col justify-center items-center h-screen bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <Image
+        src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
+        alt="logo"
+        width={160}
+        height={160}
+        className="object-contain"
+      />
+      <Loader2 className="h-6 w-6 animate-spin text-black dark:text-white" />
+    </div>
   </div>
 );
 
@@ -161,10 +162,13 @@ export default function AccountPage() {
   };
 
   const handleLogout = () => {
+    if (user && user.displayName) {
+      localStorage.setItem('lastLoggedOutUser', user.displayName);
+    }
     auth.signOut();
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || !userProfile) {
     return <LoadingSpinner />;
   }
   

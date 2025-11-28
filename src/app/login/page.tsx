@@ -14,17 +14,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const LoadingSpinner = () => (
-    <div className="flex flex-col justify-center items-center h-screen bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <Image
-          src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
-          alt="logo"
-          width={120}
-          height={120}
-          className="object-contain"
-        />
-        <Loader2 className="h-8 w-8 animate-spin text-primary dark:text-primary-foreground" />
-      </div>
+  <div className="flex flex-col justify-center items-center h-screen bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <Image
+        src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
+        alt="logo"
+        width={160}
+        height={160}
+        className="object-contain"
+      />
+      <Loader2 className="h-6 w-6 animate-spin text-black dark:text-white" />
+    </div>
   </div>
 );
 
@@ -33,10 +33,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUserName, setLastUserName] = useState<string | null>(null);
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check for last logged out user's name
+    const storedName = localStorage.getItem('lastLoggedOutUser');
+    if (storedName) {
+      setLastUserName(storedName);
+      // Optionally, clear it after reading so it only shows once
+      localStorage.removeItem('lastLoggedOutUser');
+    }
+  }, []);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -87,14 +98,21 @@ export default function LoginPage() {
       <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
         <div className="flex-1 flex flex-col justify-center text-center">
           <div className="mb-10 flex flex-col items-center">
-            <Image 
-                src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
-                alt="Shabakat Wallet Logo" 
-                width={200} 
-                height={200} 
-                className="object-contain"
-                priority
-            />
+            {lastUserName ? (
+              <div className="text-center mb-4">
+                <h1 className="text-2xl font-bold">أهلاً، {lastUserName}</h1>
+                <p className="text-muted-foreground">تسجيل الدخول</p>
+              </div>
+            ) : (
+              <Image 
+                  src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
+                  alt="Shabakat Wallet Logo" 
+                  width={200} 
+                  height={200} 
+                  className="object-contain"
+                  priority
+              />
+            )}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6 text-right">

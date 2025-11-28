@@ -107,13 +107,7 @@ export default function LoginPage() {
       <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
         <div className="flex-1 flex flex-col justify-center text-center">
           <div className="mb-10 flex flex-col items-center">
-            {lastUserName ? (
-              <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold">أهلاً، {getFirstAndLastName(lastUserName)}</h1>
-                <p className="text-muted-foreground">تسجيل الدخول</p>
-              </div>
-            ) : (
-              <Image 
+             <Image 
                   src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
                   alt="Shabakat Wallet Logo" 
                   width={200} 
@@ -121,6 +115,11 @@ export default function LoginPage() {
                   className="object-contain"
                   priority
               />
+            {lastUserName && (
+              <div className="text-center mt-4">
+                <h1 className="text-2xl font-bold">أهلاً، {getFirstAndLastName(lastUserName)}</h1>
+                <p className="text-muted-foreground">تسجيل الدخول</p>
+              </div>
             )}
           </div>
 

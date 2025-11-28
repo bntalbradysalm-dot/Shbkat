@@ -153,8 +153,8 @@ export default function AccountPage() {
         });
       }
     } catch (error: any) {
-        // Ignore AbortError which occurs when the user cancels the share sheet
-        if (error.name === 'AbortError') {
+        // Ignore AbortError and NotAllowedError which occurs when the user cancels the share sheet
+        if (error.name === 'AbortError' || error.name === 'NotAllowedError') {
           return;
         }
         console.error('Error sharing:', error);

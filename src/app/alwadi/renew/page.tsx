@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, updateDoc, increment } from 'firebase/firestore';
@@ -30,7 +29,7 @@ type UserProfile = {
   displayName?: string;
 };
 
-export default function RenewPage() {
+function RenewPageComponent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -46,7 +45,6 @@ export default function RenewPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
-
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -183,7 +181,6 @@ export default function RenewPage() {
     );
   }
 
-
   return (
     <>
     <div className="flex flex-col h-full bg-background">
@@ -274,4 +271,12 @@ export default function RenewPage() {
     <Toaster />
     </>
   );
+}
+
+export default function RenewPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <RenewPageComponent />
+    </Suspense>
+  )
 }

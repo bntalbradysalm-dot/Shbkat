@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, Save, X, Tag, CreditCard, FileUp, Loader2, List, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Tag, CreditCard, FileUp, Loader2, List, FileText, Package, Calendar } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -17,12 +17,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type CardCategory = {
   id: string;
   name: string;
   price: number;
+  capacity?: string;
+  validity?: string;
 };
 
 type NetworkCard = {
@@ -32,6 +34,8 @@ type NetworkCard = {
     status: 'available' | 'sold';
     categoryId: string;
 };
+
+const validityOptions = ["يوم", "يومين", "3 أيام", "أسبوع", "شهر"];
 
 export default function NetworkDetailPage({ params }: { params: { networkId: string } }) {
   const { networkId } = React.use(params);
@@ -47,9 +51,9 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
   const { data: cards, isLoading: isLoadingCards } = useCollection<NetworkCard>(cardsCollection);
 
   const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', price: '' });
+  const [newCategory, setNewCategory] = useState({ name: '', price: '', capacity: '', validity: '' });
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
-  const [editingCategoryValues, setEditingCategoryValues] = useState<{ name: string, price: string }>({ name: '', price: '' });
+  const [editingCategoryValues, setEditingCategoryValues] = useState<Omit<CardCategory, 'id' | 'price'> & { price: string }>({ name: '', price: '', capacity: '', validity: '' });
   
   const cardsByCategory = useMemo(() => {
     if (!cards) return {};
@@ -64,41 +68,45 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
         addDocumentNonBlocking(categoriesCollection, {
             networkId: networkId,
             name: newCategory.name,
-            price: Number(newCategory.price)
+            price: Number(newCategory.price),
+            capacity: newCategory.capacity || null,
+            validity: newCategory.validity || null,
         });
-        setNewCategory({ name: '', price: '' });
+        setNewCategory({ name: '', price: '', capacity: '', validity: '' });
         setIsAddingCategory(false);
         toast({ title: 'نجاح', description: 'تمت إضافة الفئة بنجاح.' });
     } else {
-        toast({ title: 'خطأ', description: 'يرجى ملء اسم الفئة والسعر.', variant: 'destructive' });
+        toast({ title: 'خطأ', description: 'يرجى ملء اسم الفئة والسعر على الأقل.', variant: 'destructive' });
     }
   };
 
   const handleEditCategory = (category: CardCategory) => {
     setEditingCategoryId(category.id);
-    setEditingCategoryValues({ name: category.name, price: String(category.price) });
+    setEditingCategoryValues({ name: category.name, price: String(category.price), capacity: category.capacity || '', validity: category.validity || '' });
   };
 
   const handleSaveCategory = (id: string) => {
     if (!firestore || !editingCategoryValues.name || !editingCategoryValues.price) return;
     const docRef = doc(firestore, `networks/${networkId}/cardCategories`, id);
-    updateDocumentNonBlocking(docRef, { name: editingCategoryValues.name, price: Number(editingCategoryValues.price) });
+    updateDocumentNonBlocking(docRef, { 
+        name: editingCategoryValues.name, 
+        price: Number(editingCategoryValues.price),
+        capacity: editingCategoryValues.capacity || null,
+        validity: editingCategoryValues.validity || null,
+    });
     setEditingCategoryId(null);
     toast({ title: 'تم الحفظ', description: 'تم تحديث الفئة بنجاح.' });
   };
 
   const handleDeleteCategory = (id: string) => {
     if (!firestore) return;
-    // Note: This does not delete the cards within the category. A more robust solution
-    // would use a Cloud Function to handle cascading deletes.
     const docRef = doc(firestore, `networks/${networkId}/cardCategories`, id);
     deleteDocumentNonBlocking(docRef);
     toast({ title: 'تم الحذف', description: 'تم حذف الفئة. (الكروت لم تحذف)', variant: 'destructive' });
   };
 
-
   const renderCategories = () => {
-    if (isLoadingCategories) return <Skeleton className="h-24 w-full" />;
+    if (isLoadingCategories) return <Skeleton className="h-48 w-full" />;
     return (
         <Card>
             <CardHeader>
@@ -108,21 +116,36 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                 {categories?.map(cat => (
                     <Card key={cat.id} className="p-3">
                        {editingCategoryId === cat.id ? (
-                           <div className="space-y-2">
+                           <div className="space-y-3">
                                <Input value={editingCategoryValues.name} onChange={(e) => setEditingCategoryValues(p => ({...p, name: e.target.value}))} placeholder="اسم الفئة"/>
                                <Input type="number" value={editingCategoryValues.price} onChange={(e) => setEditingCategoryValues(p => ({...p, price: e.target.value}))} placeholder="السعر"/>
+                               <Input value={editingCategoryValues.capacity || ''} onChange={(e) => setEditingCategoryValues(p => ({...p, capacity: e.target.value}))} placeholder="السعة (مثال: 1 GB)"/>
+                               <Select onValueChange={(value) => setEditingCategoryValues(p => ({...p, validity: value}))} defaultValue={editingCategoryValues.validity || ''}>
+                                 <SelectTrigger><SelectValue placeholder="اختر الصلاحية" /></SelectTrigger>
+                                 <SelectContent>
+                                   {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                 </SelectContent>
+                               </Select>
+                               <Input value={editingCategoryValues.validity || ''} onChange={(e) => setEditingCategoryValues(p => ({...p, validity: e.target.value}))} placeholder="أو اكتب صلاحية مخصصة"/>
                                <div className="flex justify-end gap-2">
                                    <Button size="icon" variant="ghost" onClick={() => setEditingCategoryId(null)}><X className="h-4 w-4" /></Button>
                                    <Button size="icon" onClick={() => handleSaveCategory(cat.id)}><Save className="h-4 w-4" /></Button>
                                </div>
                            </div>
                        ) : (
-                        <div className="flex items-center justify-between">
-                            <div>
+                        <div className="flex items-start justify-between">
+                            <div className='flex-1'>
                                 <p className="font-semibold">{cat.name}</p>
-                                <p className="text-sm text-primary dark:text-primary-foreground">{cat.price.toLocaleString('en-US')} ريال</p>
+                                <div className="text-sm text-muted-foreground mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <CreditCard className="w-4 h-4 text-primary dark:text-primary-foreground" />
+                                        <span>{cat.price.toLocaleString('en-US')} ريال</span>
+                                    </div>
+                                    {cat.capacity && <div className="flex items-center gap-1.5"><Package className="w-4 h-4" /><span>{cat.capacity}</span></div>}
+                                    {cat.validity && <div className="flex items-center gap-1.5 col-span-2"><Calendar className="w-4 h-4" /><span>{cat.validity}</span></div>}
+                                </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col gap-2">
                                 <Button variant="outline" size="icon" onClick={() => handleEditCategory(cat)}><Edit className="h-4 w-4" /></Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
@@ -144,9 +167,18 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                 ))}
                  {isAddingCategory && (
                     <Card className="p-3 bg-muted/50">
-                        <div className="space-y-2">
-                            <Input placeholder="اسم الفئة الجديد (مثال: 3 ساعات)" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} />
-                            <Input type="number" placeholder="سعر الفئة" value={newCategory.price} onChange={e => setNewCategory(p => ({...p, price: e.target.value}))} />
+                        <div className="space-y-3">
+                            <Input placeholder="اسم الفئة (مثال: 3 ساعات)" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} />
+                            <Input type="number" placeholder="السعر" value={newCategory.price} onChange={e => setNewCategory(p => ({...p, price: e.target.value}))} />
+                            <Input placeholder="السعة (اختياري، مثال: 1GB)" value={newCategory.capacity} onChange={e => setNewCategory(p => ({...p, capacity: e.target.value}))} />
+                            <Select onValueChange={(value) => setNewCategory(p => ({...p, validity: value}))}>
+                                <SelectTrigger><SelectValue placeholder="اختر الصلاحية (اختياري)" /></SelectTrigger>
+                                <SelectContent>
+                                    {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Input placeholder="أو اكتب صلاحية مخصصة" value={newCategory.validity} onChange={e => setNewCategory(p => ({...p, validity: e.target.value}))} />
+
                             <div className="flex justify-end gap-2">
                                 <Button size="icon" variant="ghost" onClick={() => setIsAddingCategory(false)}><X className="h-4 w-4" /></Button>
                                 <Button onClick={handleAddCategory}>إضافة</Button>

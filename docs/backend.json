@@ -400,16 +400,37 @@
         "required": ["name", "location"]
     },
     "CardCategory": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "Card Category",
-        "type": "object",
-        "description": "Defines a category of WiFi cards for a specific network (e.g., 3 hours, 1 day).",
-        "properties": {
-            "networkId": { "type": "string", "description": "The ID of the parent network." },
-            "name": { "type": "string", "description": "The name of the category (e.g., '3 Hours')." },
-            "price": { "type": "number", "description": "The price for cards in this category." }
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Card Category",
+      "type": "object",
+      "description": "Defines a category of WiFi cards for a specific network (e.g., 3 hours, 1 day).",
+      "properties": {
+        "networkId": {
+          "type": "string",
+          "description": "The ID of the parent network."
         },
-        "required": ["networkId", "name", "price"]
+        "name": {
+          "type": "string",
+          "description": "The name of the category (e.g., '3 Hours')."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price for cards in this category."
+        },
+        "capacity": {
+          "type": "string",
+          "description": "The data capacity for this card category (e.g., '1 GB')."
+        },
+        "validity": {
+          "type": "string",
+          "description": "The validity period for this card category (e.g., '1 Day')."
+        }
+      },
+      "required": [
+        "networkId",
+        "name",
+        "price"
+      ]
     },
     "NetworkCard": {
         "$schema": "http://json-schema.org/draft-07/schema#",

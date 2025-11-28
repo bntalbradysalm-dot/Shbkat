@@ -1,31 +1,12 @@
 'use server';
 
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 
-// Ensure you have the service account key JSON file in your project
-// and the GOOGLE_APPLICATION_CREDENTIALS environment variable is set.
-// For local development, you might need to manually specify the path.
+// In a managed environment like Firebase App Hosting, the Admin SDK is automatically
+// initialized with the correct project credentials and permissions.
 if (!getApps().length) {
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    initializeApp();
-  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // For environments where the service account is a stringified JSON
-    initializeApp({
-        credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
-    });
-  } else {
-    // This is a fallback for local dev if the env var isn't set.
-    // Ensure you have a service account file.
-    try {
-        const serviceAccount = require('../../../service-account.json');
-        initializeApp({
-            credential: cert(serviceAccount)
-        });
-    } catch (e) {
-        console.error("Could not initialize Firebase Admin SDK. Please set GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT environment variables, or provide a service-account.json file.");
-    }
-  }
+  initializeApp();
 }
 
 const db = getFirestore();

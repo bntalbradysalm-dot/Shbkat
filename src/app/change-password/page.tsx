@@ -97,8 +97,8 @@ export default function ChangePasswordPage() {
     <>
       <div className="flex flex-col h-screen bg-background">
         <SimpleHeader title="تغيير كلمة المرور" />
-        <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
-          <Card className="w-full max-w-md">
+        <div className="flex-1 overflow-y-auto p-4 flex justify-center pt-8">
+          <Card className="w-full max-w-md h-fit">
             <CardHeader className="text-center">
               <CardTitle>تحديث كلمة المرور</CardTitle>
               <CardDescription>أدخل كلمة المرور الحالية والجديدة.</CardDescription>

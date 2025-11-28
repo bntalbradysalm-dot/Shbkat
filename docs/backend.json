@@ -382,6 +382,50 @@
         "fromUserId", "fromUserName", "fromUserPhone", "toUserId", "toUserName", 
         "toUserPhone", "amount", "status", "requestTimestamp"
       ]
+    },
+    "Network": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Network",
+        "type": "object",
+        "description": "Represents a WiFi network available for users.",
+        "properties": {
+            "name": { "type": "string", "description": "The name of the WiFi network." },
+            "location": { "type": "string", "description": "The physical location or coverage area of the network." },
+            "phoneNumber": { "type": "string", "description": "A contact phone number for the network provider." }
+        },
+        "required": ["name", "location"]
+    },
+    "CardCategory": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Card Category",
+        "type": "object",
+        "description": "Defines a category of WiFi cards for a specific network (e.g., 3 hours, 1 day).",
+        "properties": {
+            "networkId": { "type": "string", "description": "The ID of the parent network." },
+            "name": { "type": "string", "description": "The name of the category (e.g., '3 Hours')." },
+            "price": { "type": "number", "description": "The price for cards in this category." }
+        },
+        "required": ["networkId", "name", "price"]
+    },
+    "NetworkCard": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Network Card",
+        "type": "object",
+        "description": "Represents an individual WiFi access card.",
+        "properties": {
+            "networkId": { "type": "string", "description": "The ID of the parent network." },
+            "categoryId": { "type": "string", "description": "The ID of the card category this card belongs to." },
+            "cardNumber": { "type": "string", "description": "The unique number or code for the card." },
+            "password": { "type": "string", "description": "The password for the card." },
+            "status": {
+                "type": "string",
+                "enum": ["available", "sold", "expired"],
+                "description": "The current status of the card."
+            },
+            "soldTo": { "type": "string", "description": "The ID of the user who purchased the card." },
+            "soldTimestamp": { "type": "string", "format": "date-time", "description": "When the card was sold." }
+        },
+        "required": ["networkId", "categoryId", "cardNumber", "status"]
     }
   },
   "auth": {
@@ -595,8 +639,49 @@
             }
           ]
         }
+      },
+      {
+        "path": "/networks/{networkId}",
+        "definition": {
+          "entityName": "Network",
+          "schema": {
+            "$ref": "#/backend/entities/Network"
+          },
+          "description": "Stores WiFi network information. Readable by all users, writable by admins.",
+          "params": [{ "name": "networkId", "description": "The unique ID for the network." }]
+        }
+      },
+      {
+        "path": "/networks/{networkId}/cardCategories/{categoryId}",
+        "definition": {
+          "entityName": "CardCategory",
+          "schema": {
+            "$ref": "#/backend/entities/CardCategory"
+          },
+          "description": "Stores categories of cards for a specific network. Readable by all, writable by admins.",
+          "params": [
+            { "name": "networkId", "description": "The parent network ID." },
+            { "name": "categoryId", "description": "The unique ID for the card category." }
+          ]
+        }
+      },
+      {
+        "path": "/networks/{networkId}/cards/{cardId}",
+        "definition": {
+          "entityName": "NetworkCard",
+          "schema": {
+            "$ref": "#/backend/entities/NetworkCard"
+          },
+          "description": "Stores individual WiFi cards. Readable by all, writable by admins, purchasable by users.",
+          "params": [
+            { "name": "networkId", "description": "The parent network ID." },
+            { "name": "cardId", "description": "The unique ID for the card." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
+
+    

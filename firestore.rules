@@ -294,5 +294,47 @@ service cloud.firestore {
           allow update, delete: if false;
       }
     }
+    
+    /**
+     * @description Manages WiFi network information.
+     * @path /networks/{networkId}
+     * @allow Any signed-in user can read network information.
+     * @allow Admins can create, update, or delete networks.
+     */
+    match /networks/{networkId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      /**
+       * @description Manages card categories for a network.
+       * @path /networks/{networkId}/cardCategories/{categoryId}
+       * @allow Any signed-in user can read card categories.
+       * @allow Admins can create, update, or delete categories.
+       */
+      match /cardCategories/{categoryId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
+
+      /**
+       * @description Manages individual WiFi cards.
+       * @path /networks/{networkId}/cards/{cardId}
+       * @allow Admins can manage all aspects of cards.
+       * @allow Signed-in users can read available cards.
+       * @allow A signed-in user can purchase an available card (update status to 'sold').
+       */
+      match /cards/{cardId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isAdmin();
+        // Allow admin to update any field.
+        // Allow user to update only to purchase (set status to 'sold' and add their UID).
+        allow update: if isAdmin() || (isSignedIn() 
+            && request.resource.data.status == 'sold'
+            && resource.data.status == 'available'
+            && request.resource.data.soldTo == request.auth.uid);
+      }
+    }
   }
 }
+
+    

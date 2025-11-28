@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, Edit, Save, X, Tag, CreditCard, FileUp, Loader2, List, FileText, Package, Calendar } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
@@ -50,10 +49,10 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
   const cardsCollection = useMemoFirebase(() => (firestore ? collection(firestore, `networks/${networkId}/cards`) : null), [firestore, networkId]);
   const { data: cards, isLoading: isLoadingCards } = useCollection<NetworkCard>(cardsCollection);
 
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', price: '', capacity: '', validity: '' });
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
-  const [editingCategoryValues, setEditingCategoryValues] = useState<Omit<CardCategory, 'id' | 'price'> & { price: string }>({ name: '', price: '', capacity: '', validity: '' });
+  const [isAddingCategory, setIsAddingCategory] = React.useState(false);
+  const [newCategory, setNewCategory] = React.useState({ name: '', price: '', capacity: '', validity: '' });
+  const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
+  const [editingCategoryValues, setEditingCategoryValues] = React.useState<Omit<CardCategory, 'id' | 'price'> & { price: string }>({ name: '', price: '', capacity: '', validity: '' });
   
   const cardsByCategory = useMemo(() => {
     if (!cards) return {};
@@ -168,7 +167,7 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                  {isAddingCategory && (
                     <Card className="p-3 bg-muted/50">
                         <div className="space-y-3">
-                            <Input placeholder="اسم الفئة (مثال: 3 ساعات)" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} />
+                            <Input placeholder="اسم الفئة" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} />
                             <Input type="number" placeholder="السعر" value={newCategory.price} onChange={e => setNewCategory(p => ({...p, price: e.target.value}))} />
                             <Input placeholder="السعة (اختياري، مثال: 1GB)" value={newCategory.capacity} onChange={e => setNewCategory(p => ({...p, capacity: e.target.value}))} />
                             <Select onValueChange={(value) => setNewCategory(p => ({...p, validity: value}))}>
@@ -220,7 +219,7 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue={categories[0].id} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 3)}, 1fr)` }}>
                          {categories.map(cat => <TabsTrigger key={cat.id} value={cat.id}>{cat.name}</TabsTrigger>)}
                     </TabsList>
                     {categories.map(cat => (

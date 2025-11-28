@@ -156,13 +156,15 @@ export default function TransferPage() {
     const fromUserRef = doc(firestore, 'users', user.uid);
     const toUserRef = doc(firestore, 'users', recipient.id);
 
-    // 1. Deduct from sender, add to receiver
+    // 1. Deduct from sender
     batch.update(fromUserRef, { balance: increment(-numericAmount) });
+    
+    // 2. Add to receiver
     batch.update(toUserRef, { balance: increment(numericAmount) });
 
     const now = new Date().toISOString();
 
-    // 2. Create transaction record for sender
+    // 3. Create transaction record for sender
     const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
     const fromTransactionData = {
         userId: user.uid,
@@ -172,30 +174,19 @@ export default function TransferPage() {
         notes: `إلى رقم: ${recipient.phoneNumber}`
     };
     batch.set(fromTransactionRef, fromTransactionData);
-
-    // 3. Create transaction record for receiver
-    const toTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
-    const toTransactionData = {
-        userId: recipient.id,
-        transactionDate: now,
-        amount: numericAmount,
-        transactionType: `استلام من ${senderProfile.displayName}`,
-        notes: `من رقم: ${senderProfile.phoneNumber}`
-    };
-    batch.set(toTransactionRef, toTransactionData);
     
+    // This batch write will now only contain operations that are permitted by the security rules.
     batch.commit().then(() => {
         setShowSuccess(true);
     }).catch(serverError => {
-        // Here we create and emit the contextual error
+        // Create and emit a contextual error for debugging.
         const permissionError = new FirestorePermissionError({
-            path: `/users/${user.uid} and /users/${recipient.id}`, // Batched writes affect multiple paths
+            path: `users collection`, // Batched writes can affect multiple paths
             operation: 'write',
             requestResourceData: { 
                 senderUpdate: { balance: `DECREMENT(${numericAmount})` },
                 receiverUpdate: { balance: `INCREMENT(${numericAmount})` },
                 senderTransaction: fromTransactionData,
-                receiverTransaction: toTransactionData
             }
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -261,7 +252,7 @@ export default function TransferPage() {
                 <Input
                   id="recipientPhone"
                   type="tel"
-                  placeholder="77xxxxxxxx"
+                  placeholder="7xxxxxxxx"
                   value={recipientPhone}
                   onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                   disabled={isProcessing}

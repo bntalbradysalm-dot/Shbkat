@@ -101,17 +101,14 @@ export default function TransferRequestsPage() {
     try {
         if (finalAction === 'approve') {
             const batch = writeBatch(firestore);
-
-            const fromUserRef = doc(firestore, 'users', selectedRequest.fromUserId);
+            
+            // Balance already deducted from sender, so just add to receiver
             const toUserRef = doc(firestore, 'users', selectedRequest.toUserId);
-
-            // 1. Deduct from sender, add to receiver
-            batch.update(fromUserRef, { balance: increment(-selectedRequest.amount) });
             batch.update(toUserRef, { balance: increment(selectedRequest.amount) });
 
             const now = new Date().toISOString();
 
-            // 2. Create transaction record for sender
+            // Create transaction record for sender (already deducted)
             const fromTransactionRef = doc(collection(firestore, 'users', selectedRequest.fromUserId, 'transactions'));
             batch.set(fromTransactionRef, {
                 userId: selectedRequest.fromUserId,
@@ -121,7 +118,7 @@ export default function TransferRequestsPage() {
                 notes: `إلى رقم: ${selectedRequest.toUserPhone}`
             });
 
-            // 3. Create transaction record for receiver
+            // Create transaction record for receiver
             const toTransactionRef = doc(collection(firestore, 'users', selectedRequest.toUserId, 'transactions'));
             batch.set(toTransactionRef, {
                 userId: selectedRequest.toUserId,
@@ -130,21 +127,30 @@ export default function TransferRequestsPage() {
                 transactionType: `استلام من ${selectedRequest.fromUserName}`,
                 notes: `من رقم: ${selectedRequest.fromUserPhone}`
             });
-
-            // 4. Update request status
+            
+            // Update request status
             batch.update(requestDocRef, { status: 'approved' });
 
             await batch.commit();
+            
+            toast({
+                title: "نجاح",
+                description: "تم قبول الطلب وتنفيذ التحويل بنجاح."
+            });
 
         } else { // 'reject'
+            // Refund the sender
+            const fromUserRef = doc(firestore, 'users', selectedRequest.fromUserId);
+            await updateDoc(fromUserRef, { balance: increment(selectedRequest.amount) });
+            
+            // Update request status
             await updateDoc(requestDocRef, { status: 'rejected' });
+            
+            toast({
+                title: "تم الرفض",
+                description: "تم رفض الطلب وإرجاع المبلغ للمرسل."
+            });
         }
-
-        toast({
-            title: "نجاح",
-            description: `تم ${finalAction === 'approve' ? 'قبول الطلب وتنفيذ التحويل.' : 'رفض الطلب.'}`,
-        });
-
     } catch (error: any) {
         console.error("Error processing request: ", error);
         toast({
@@ -226,7 +232,7 @@ export default function TransferRequestsPage() {
                   </div>
                   </div>
                   <div className="text-left flex flex-col items-end gap-1">
-                      <p className="font-bold text-primary">{request.amount.toLocaleString('en-US')} ريال</p>
+                      <p className="font-bold text-destructive">{request.amount.toLocaleString('en-US')} ريال</p>
                       <StatusBadge status={request.status} />
                   </div>
               </CardContent>
@@ -343,8 +349,8 @@ export default function TransferRequestsPage() {
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
             <AlertDialogDescription>
               {actionToConfirm === 'approve'
-                ? `سيتم خصم المبلغ من المرسل وإضافته للمستلم.`
-                : 'سيتم رفض هذا الطلب. لن يتم أي تغيير في الأرصدة.'}
+                ? `سيتم إضافة المبلغ إلى المستلم. تم خصم المبلغ من المرسل مسبقاً.`
+                : 'سيتم رفض هذا الطلب وإرجاع المبلغ إلى المرسل.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

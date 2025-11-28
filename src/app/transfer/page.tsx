@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, query, where, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -80,11 +80,11 @@ export default function TransferPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
-  const userDocRef = useMemoFirebase(
+  const senderDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
-  const { data: senderProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: senderProfile } = useDoc<UserProfile>(senderDocRef);
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -146,10 +146,28 @@ export default function TransferPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !senderProfile || !recipient || !firestore || !senderProfile.displayName) return;
+    if (!user || !senderProfile || !recipient || !firestore || !senderProfile.displayName || !senderDocRef) return;
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
+
+    // 1. Deduct balance from sender immediately
+    try {
+        await updateDoc(senderDocRef, {
+            balance: increment(-numericAmount)
+        });
+    } catch (error) {
+        console.error("Failed to deduct balance:", error);
+        toast({
+            variant: "destructive",
+            title: "فشل خصم الرصيد",
+            description: "حدث خطأ أثناء محاولة خصم المبلغ من رصيدك.",
+        });
+        setIsProcessing(false);
+        setIsConfirming(false);
+        return;
+    }
+
 
     try {
         const transferRequestsRef = collection(firestore, 'transferRequests');
@@ -170,10 +188,14 @@ export default function TransferPage() {
         setShowSuccess(true);
     } catch (error) {
         console.error("Failed to create transfer request:", error);
+         // If creating the request fails, refund the user
+        await updateDoc(senderDocRef, {
+            balance: increment(numericAmount)
+        });
         toast({
             variant: "destructive",
             title: "فشل إرسال الطلب",
-            description: "حدث خطأ أثناء محاولة إرسال طلب التحويل.",
+            description: "حدث خطأ أثناء محاولة إرسال طلب التحويل. تم استرجاع المبلغ.",
         });
     } finally {
         setIsProcessing(false);
@@ -191,7 +213,7 @@ export default function TransferPage() {
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
                     <h2 className="text-xl font-bold">تم إرسال الطلب بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">تم إرسال طلب التحويل للإدارة. سيتم تنفيذه في أقرب وقت.</p>
+                     <p className="text-sm text-muted-foreground">تم خصم المبلغ من رصيدك وإرسال طلب التحويل للإدارة.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
@@ -199,7 +221,7 @@ export default function TransferPage() {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-semibold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</span>
+                            <span className="font-semibold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</span>
                         </div>
                     </div>
                     <div className="w-full grid grid-cols-2 gap-3 pt-4">
@@ -270,7 +292,7 @@ export default function TransferPage() {
                 </div>
             )}
 
-            <Button onClick={handleConfirmClick} className="w-full" disabled={!recipient || !amount || isProcessing}>
+            <Button onClick={handleConfirmClick} className="w-full h-auto py-2" disabled={!recipient || !amount || isProcessing}>
                 <Send className="ml-2 h-5 w-5"/>
                 إرسال طلب التحويل
             </Button>
@@ -286,8 +308,8 @@ export default function TransferPage() {
                 <AlertDialogTitle className="text-center">تأكيد طلب التحويل</AlertDialogTitle>
                 <AlertDialogDescription asChild>
                     <div className="space-y-4 pt-4 text-base text-foreground text-center">
-                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في إرسال طلب لتحويل مبلغ</p>
-                         <p className="text-2xl font-bold text-primary dark:text-primary-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
+                         <p className="text-sm text-center text-muted-foreground pb-2">سيتم خصم المبلغ من رصيدك الآن وإرسال الطلب للإدارة.</p>
+                         <p className="text-2xl font-bold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</p>
                          <p className="text-sm text-center text-muted-foreground">إلى</p>
                          <p className="font-bold">{recipient?.displayName}</p>
                          <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>

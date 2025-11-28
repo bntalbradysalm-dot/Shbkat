@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -28,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -48,17 +47,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    switch (type) {
-        case 'تجديد الوادي':
-        case 'تجديد كرت':
-            return <SatelliteDish className="h-6 w-6 text-primary" />;
-        case 'تغذية رصيد':
-            return <ArrowLeft className="h-6 w-6 text-green-500" />;
-        case 'تحويل':
-            return <ArrowRight className="h-6 w-6 text-destructive" />;
-        default:
-            return <SatelliteDish className="h-6 w-6 text-primary" />;
+    if (type.startsWith('تغذية') || type.startsWith('استلام')) {
+        return <ArrowDownToLine className="h-6 w-6 text-green-500" />;
     }
+    if (type.startsWith('تحويل') || type.startsWith('تجديد')) {
+        return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
+    }
+    return <SatelliteDish className="h-6 w-6 text-primary" />;
 };
 
 // Simple hashing function to convert a string to a positive number string
@@ -194,8 +189,8 @@ export default function TransactionsPage() {
                             </div>
                         </div>
                         <div className="text-left">
-                            <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                            {tx.transactionType !== 'تغذية رصيد' && '-'}
+                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
+                            {!(tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام')) && '-'}
                             {tx.amount.toLocaleString('en-US')} ريال
                             </p>
                             {tx.notes && (
@@ -222,8 +217,8 @@ export default function TransactionsPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
-                                <span className={`font-bold ${selectedTx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                                    {selectedTx.transactionType !== 'تغذية رصيد' && '-'}
+                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
+                                    {!(selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام')) && '-'}
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>

@@ -5,7 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, FileText, SatelliteDish, ChevronLeft } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Link from 'next/link';
@@ -18,17 +18,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    switch (type) {
-        case 'تجديد الوادي':
-        case 'تجديد كرت':
-            return <SatelliteDish className="h-5 w-5 text-primary" />;
-        case 'تغذية رصيد':
-            return <ArrowLeft className="h-5 w-5 text-green-500" />;
-        case 'تحويل':
-            return <ArrowRight className="h-5 w-5 text-destructive" />;
-        default:
-            return <SatelliteDish className="h-5 w-5 text-primary" />;
+    if (type.startsWith('تغذية') || type.startsWith('استلام')) {
+        return <ArrowDownToLine className="h-5 w-5 text-green-500" />;
     }
+    if (type.startsWith('تحويل') || type.startsWith('تجديد')) {
+        return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
+    }
+    return <SatelliteDish className="h-5 w-5 text-primary" />;
 };
 
 export function RecentTransactions() {
@@ -97,8 +93,8 @@ export function RecentTransactions() {
               </div>
             </div>
             <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
-                {tx.transactionType !== 'تغذية رصيد' && '-'}
+              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
+                {!(tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام')) && '-'}
                 {tx.amount.toLocaleString('en-US')} ريال
               </p>
             </div>

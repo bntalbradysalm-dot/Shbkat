@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 
 type Network = {
@@ -147,41 +148,42 @@ export default function ServicesPage() {
         {filteredNetworks.map((network, index) => {
           const isFavorited = favoriteNetworkIds.has(network.id);
           return (
-            <Card 
-              key={network.id} 
-              className="cursor-pointer hover:border-primary transition-colors animate-in fade-in-0"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+             <Link href={`/services/${network.id}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
+                <Card 
+                  className="cursor-pointer hover:border-primary transition-colors animate-in fade-in-0"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                          <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-bold">{network.name}</h4>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            <MapPin className="h-3 w-3" />
+                            {network.location}
+                          </p>
+                          {network.phoneNumber && (
+                             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Phone className="h-3 w-3" />
+                              {network.phoneNumber}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={(e) => handleFavoriteClick(e, network)}
+                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                        aria-label={`إضافة ${network.name} إلى المفضلة`}
+                      >
+                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-500 text-red-500')} />
+                      </button>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-bold">{network.name}</h4>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" />
-                        {network.location}
-                      </p>
-                      {network.phoneNumber && (
-                         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <Phone className="h-3 w-3" />
-                          {network.phoneNumber}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <button 
-                    onClick={(e) => handleFavoriteClick(e, network)}
-                    className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
-                    aria-label={`إضافة ${network.name} إلى المفضلة`}
-                  >
-                    <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-500 text-red-500')} />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+            </Link>
           )
         })}
       </div>

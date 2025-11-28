@@ -77,7 +77,6 @@ type UserProfile = {
 };
 
 export default function AccountPage() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTheme, setActiveTheme] = useState('light');
   const router = useRouter();
   const auth = useAuth();
@@ -115,20 +114,6 @@ export default function AccountPage() {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
-    }
-  };
-
-
-  const handleImageUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const newImageUrl = URL.createObjectURL(file);
-      localStorage.setItem('promoImageUrl', newImageUrl);
-      window.dispatchEvent(new Event('storage')); 
     }
   };
 
@@ -235,20 +220,6 @@ export default function AccountPage() {
               </div>
                <Card className="bg-card">
                  <CardContent className="p-0">
-                    <button className="group flex items-center justify-between p-3 cursor-pointer border-b w-full" onClick={handleImageUploadClick}>
-                       <div className="flex items-center gap-3">
-                         <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                         <span className="text-xs font-semibold">تغيير الصورة الترويجية</span>
-                       </div>
-                       <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                    </button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept="image/*"
-                    />
                     {appSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
                       return (

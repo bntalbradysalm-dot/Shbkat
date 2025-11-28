@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +35,7 @@ const getLogoSrc = (url?: string) => {
 export default function TopUpPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
+    const { user } = useUser();
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
     const methodsCollection = useMemoFirebase(
@@ -44,8 +45,8 @@ export default function TopUpPage() {
     const { data: methods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
 
     const settingsDocRef = useMemoFirebase(
-      () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
-      [firestore]
+      () => (firestore && user ? doc(firestore, 'appSettings', 'global') : null),
+      [firestore, user]
     );
     const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
@@ -181,7 +182,7 @@ export default function TopUpPage() {
                            <p className="text-sm text-muted-foreground mt-1">بعد التحويل يرجى رفع صورة الايصال عبر واتساب لتاكيد الدفع واضافة المبلغ الى رصيدك</p>
                            <Card className="mt-4">
                                <CardContent className="p-4">
-                                   <Button className="w-full" onClick={openWhatsApp}>
+                                   <Button className="w-full" onClick={openWhatsApp} disabled={!appSettings}>
                                        <Send className="ml-2 h-4 w-4" />
                                        رفع الإيصال عبر واتساب
                                    </Button>

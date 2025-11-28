@@ -150,7 +150,7 @@ export default function ServicesPage() {
           return (
              <Link href={`/services/${network.id}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0"
+                  className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">

@@ -15,6 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
   Dialog,
@@ -40,7 +41,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import Image from 'next/image';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -172,7 +172,7 @@ export default function UsersPage() {
       const date = format(new Date(), 'd MMMM yyyy, h:mm a', { locale: ar });
       const message = `📩 *عملية إيداع من تطبيق شبكات*\nتم بنجاح إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال يمني في حسابك (${selectedUser.phoneNumber}) بتاريخ (${date})\nيُرجى التحقق من الرصيد عبر تطبيق شبكات للتأكد من تفاصيل العملية\n🔒 هذه الرسالة صادرة تلقائيًا من تطبيق شبكات — دقة. أمان. ثقة\n\n*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال يمني*`;
       
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=967${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
 
       toast({

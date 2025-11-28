@@ -44,6 +44,8 @@ import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/fireb
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -57,15 +59,15 @@ const managementLinks = [
 ];
 
 const appSettingsLinks = [
-    { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
-    { title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
+    { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
+    { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
+    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
 ];
 
 const userAppSettingsLinks = [
-    { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
-    { title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
+    { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
+    { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
+    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
 ];
 
 
@@ -98,6 +100,7 @@ export default function AccountPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -132,6 +135,32 @@ export default function AccountPage() {
       document.documentElement.classList.remove('dark');
     }
   };
+  
+  const handleShare = async () => {
+    const shareData = {
+      title: 'محفظة شبكات',
+      text: 'اكتشف محفظة شبكات، الحل الرقمي لجميع احتياجاتك!',
+      url: window.location.origin,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.origin);
+        toast({
+          title: 'تم نسخ الرابط',
+          description: 'تم نسخ رابط التطبيق إلى الحافظة. شاركه مع أصدقائك!',
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء محاولة المشاركة.',
+      });
+    }
+  };
 
   const handleLogout = () => {
     auth.signOut();
@@ -142,6 +171,7 @@ export default function AccountPage() {
   }
 
   return (
+    <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -238,12 +268,11 @@ export default function AccountPage() {
                  <CardContent className="p-0">
                     {appSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
-                      return (
-                        <a
-                        href={link.href}
-                        key={link.title}
-                        target={link.href.startsWith('http') ? '_blank' : '_self'}
-                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                      const isShareButton = link.id === 'share-app';
+                      const element = (
+                        <div
+                        key={link.id}
+                        onClick={isShareButton ? handleShare : undefined}
                         className={`group flex items-center justify-between p-3 cursor-pointer ${
                             index < appSettingsLinks.length - 1 ? 'border-b' : ''
                         }`}
@@ -253,8 +282,22 @@ export default function AccountPage() {
                             <span className="text-xs font-semibold">{link.title}</span>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                        </a>
-                      )
+                        </div>
+                      );
+
+                      if (link.href) {
+                        return (
+                          <a
+                          href={link.href}
+                          key={link.id}
+                          target={link.href.startsWith('http') ? '_blank' : '_self'}
+                          rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                          >
+                           {element}
+                          </a>
+                        )
+                      }
+                      return element;
                     })}
                  </CardContent>
                </Card>
@@ -272,24 +315,37 @@ export default function AccountPage() {
                 <Card className="bg-card">
                     <CardContent className="p-0">
                     {userAppSettingsLinks.map((link, index) => {
-                      const Icon = link.icon;
-                      return (
-                        <a
-                        href={link.href}
-                        key={link.title}
-                        target={link.href.startsWith('http') ? '_blank' : '_self'}
-                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
-                        className={`group flex items-center justify-between p-3 cursor-pointer ${
-                            index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
-                        }`}
-                        >
-                        <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-semibold">{link.title}</span>
-                        </div>
-                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                        </a>
-                      )
+                       const Icon = link.icon;
+                       const isShareButton = link.id === 'share-app';
+                       const element = (
+                         <div
+                         key={link.id}
+                         onClick={isShareButton ? handleShare : undefined}
+                         className={`group flex items-center justify-between p-3 cursor-pointer ${
+                             index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
+                         }`}
+                         >
+                         <div className="flex items-center gap-3">
+                             <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                             <span className="text-xs font-semibold">{link.title}</span>
+                         </div>
+                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                         </div>
+                       );
+ 
+                       if (link.href) {
+                         return (
+                           <a
+                           href={link.href}
+                           key={link.id}
+                           target={link.href.startsWith('http') ? '_blank' : '_self'}
+                           rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                           >
+                            {element}
+                           </a>
+                         )
+                       }
+                       return element;
                     })}
                     </CardContent>
                 </Card>
@@ -329,5 +385,7 @@ export default function AccountPage() {
 
       </div>
     </div>
+    <Toaster />
+    </>
   );
 }

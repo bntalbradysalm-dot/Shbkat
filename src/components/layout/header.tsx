@@ -15,6 +15,7 @@ type Notification = {
 
 type UserProfile = {
   lastNotificationRead?: string;
+  displayName?: string;
 };
 
 const getShortName = (fullName: string | null | undefined): string => {

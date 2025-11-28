@@ -82,6 +82,13 @@ service cloud.firestore {
     function isRequestOwner() {
         return request.resource.data.userId == request.auth.uid;
     }
+    
+    /**
+     * Validates that the user creating the transfer request is the sender.
+     */
+    function isTransferSender() {
+        return request.resource.data.fromUserId == request.auth.uid;
+    }
 
     /**
      * On update, ensures the 'id' field of a user document cannot be changed.
@@ -162,6 +169,19 @@ service cloud.firestore {
       allow create: if isSignedIn() && isRequestOwner();
       allow read, update: if isAdmin();
       allow delete: if isAdmin();
+    }
+    
+    /**
+     * @description Manages fund transfer requests between users.
+     * @path /transferRequests/{requestId}
+     * @allow An authenticated user can create a transfer request if they are the sender. (create)
+     * @allow Admins can read and update the status of any transfer request. (read, update)
+     * @deny Non-admin users cannot read, update, or delete transfer requests.
+     */
+    match /transferRequests/{requestId} {
+        allow create: if isSignedIn() && isTransferSender();
+        allow read, update: if isAdmin();
+        allow delete: if false; // Requests should be archived, not deleted by users
     }
     
     /**
@@ -274,3 +294,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

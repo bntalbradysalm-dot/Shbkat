@@ -200,9 +200,9 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             {categories.map((category, index) => (
                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                     <CardContent className="p-4">
-                       <div className="flex items-center justify-between gap-4">
+                       <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 space-y-1">
-                                <h3 className="font-bold text-base flex items-center gap-2">
+                                <h3 className="font-bold text-sm flex items-center gap-2">
                                     <Tag className="w-4 h-4 text-primary dark:text-primary-foreground" />
                                     <span>{category.name}</span>
                                 </h3>
@@ -215,8 +215,8 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                                 </div>
                             </div>
                             <Button 
-                                size="default" 
-                                className="h-auto py-2 px-5 text-sm font-bold"
+                                size="sm" 
+                                className="h-auto py-2 px-4 text-xs font-bold"
                                 onClick={() => {
                                     setSelectedCategory(category);
                                     setIsConfirming(true);

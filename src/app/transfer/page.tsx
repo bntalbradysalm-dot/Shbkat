@@ -147,53 +147,53 @@ export default function TransferPage() {
 
   const handleFinalConfirmation = async () => {
     if (!user || !senderProfile || !recipient || !firestore) return;
-  
+
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
-    
-    const batch = writeBatch(firestore);
 
     const fromUserRef = doc(firestore, 'users', user.uid);
     const toUserRef = doc(firestore, 'users', recipient.id);
 
-    // 1. Deduct from sender
-    batch.update(fromUserRef, { balance: increment(-numericAmount) });
-    
-    // 2. Add to receiver
-    batch.update(toUserRef, { balance: increment(numericAmount) });
+    try {
+        const batch = writeBatch(firestore);
 
-    const now = new Date().toISOString();
+        // 1. Deduct from sender's balance
+        batch.update(fromUserRef, { balance: increment(-numericAmount) });
 
-    // 3. Create transaction record for sender
-    const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-    const fromTransactionData = {
-        userId: user.uid,
-        transactionDate: now,
-        amount: numericAmount,
-        transactionType: `تحويل إلى ${recipient.displayName}`,
-        notes: `إلى رقم: ${recipient.phoneNumber}`
-    };
-    batch.set(fromTransactionRef, fromTransactionData);
-    
-    // This batch write will now only contain operations that are permitted by the security rules.
-    batch.commit().then(() => {
+        // 2. Add to receiver's balance
+        batch.update(toUserRef, { balance: increment(numericAmount) });
+
+        // 3. Create transaction record for the sender
+        const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        const fromTransactionData = {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: numericAmount,
+            transactionType: `تحويل إلى ${recipient.displayName}`,
+            notes: `إلى رقم: ${recipient.phoneNumber}`
+        };
+        batch.set(fromTransactionRef, fromTransactionData);
+
+        await batch.commit();
+        
         setShowSuccess(true);
-    }).catch(serverError => {
-        // Create and emit a contextual error for debugging.
+    
+    } catch(serverError) {
+        console.error("Transfer failed:", serverError);
         const permissionError = new FirestorePermissionError({
-            path: `users collection`, // Batched writes can affect multiple paths
+            path: `/users/${user.uid} and /users/${recipient.id}`, // Batched writes affect multiple paths
             operation: 'write',
             requestResourceData: { 
                 senderUpdate: { balance: `DECREMENT(${numericAmount})` },
                 receiverUpdate: { balance: `INCREMENT(${numericAmount})` },
-                senderTransaction: fromTransactionData,
+                senderTransaction: { amount: numericAmount, to: recipient.displayName },
             }
         });
         errorEmitter.emit('permission-error', permissionError);
-    }).finally(() => {
-      setIsProcessing(false);
-      setIsConfirming(false);
-    });
+    } finally {
+        setIsProcessing(false);
+        setIsConfirming(false);
+    }
   };
   
   if (showSuccess) {
@@ -206,6 +206,7 @@ export default function TransferPage() {
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
                     <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
+                     <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح. تم إنشاء سجل في عملياتك.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
@@ -319,3 +320,5 @@ export default function TransferPage() {
     </>
   );
 }
+
+    

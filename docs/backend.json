@@ -101,38 +101,42 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Favorite",
       "type": "object",
-      "description": "Represents a user's favorite transaction or contact.",
+      "description": "Represents a user's favorite item, such as a network or a contact.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the favorite.",
-          "format": "uuid"
+          "description": "Unique identifier for the favorite."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the user who created the favorite. (Relationship: User 1:N Favorite)"
+          "description": "Reference to the user who created the favorite."
         },
-        "targetPhoneNumber": {
+        "targetId": {
           "type": "string",
-          "description": "The phone number of the target of the favorite."
+          "description": "The ID of the favorited item (e.g., network ID, contact ID)."
         },
         "name": {
           "type": "string",
-          "description": "A user-defined name for the favorite."
+          "description": "A user-defined name or the name of the item."
         },
-        "description": {
+        "location": {
           "type": "string",
-          "description": "Optional description of the favorite"
+          "description": "Location of the network, if the favorite is a network."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number, if the favorite is a contact or network."
         },
         "favoriteType": {
           "type": "string",
-          "description": "Type of favorite. (e.g., Contact, Transaction)"
+          "enum": ["Network", "Contact"],
+          "description": "Type of favorite (e.g., Network, Contact)."
         }
       },
       "required": [
         "id",
         "userId",
-        "targetPhoneNumber",
+        "targetId",
         "name",
         "favoriteType"
       ]
@@ -683,5 +687,3 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
-
-    

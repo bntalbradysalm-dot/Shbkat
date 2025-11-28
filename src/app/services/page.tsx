@@ -5,11 +5,13 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Wifi, MapPin, Phone, Heart } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, getDocs, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { cn } from '@/lib/utils';
+
 
 type Network = {
   id: string;
@@ -18,16 +20,38 @@ type Network = {
   phoneNumber?: string;
 };
 
+type Favorite = {
+    id: string;
+    targetId: string;
+};
+
 export default function ServicesPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch networks
   const networksCollection = useMemoFirebase(
     () => (firestore ? collection(firestore, 'networks') : null),
     [firestore]
   );
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
+
+  // Fetch user's favorites
+  const favoritesQuery = useMemoFirebase(
+    () =>
+      user
+        ? query(
+            collection(firestore, 'users', user.uid, 'favorites'),
+            where('favoriteType', '==', 'Network')
+          )
+        : null,
+    [firestore, user]
+  );
+  const { data: favorites } = useCollection<Favorite>(favoritesQuery);
+
+  const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
 
   const filteredNetworks = useMemo(() => {
     if (!networks) return [];
@@ -37,13 +61,49 @@ export default function ServicesPage() {
     );
   }, [networks, searchTerm]);
 
-  const handleFavoriteClick = (e: React.MouseEvent, networkName: string) => {
+  const handleFavoriteClick = async (e: React.MouseEvent, network: Network) => {
     e.preventDefault();
     e.stopPropagation();
-    toast({
-      title: 'قيد التطوير',
-      description: `سيتم إضافة شبكة "${networkName}" للمفضلة قريبًا.`,
-    });
+
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'يجب تسجيل الدخول لاستخدام المفضلة.',
+      });
+      return;
+    }
+
+    const isFavorited = favoriteNetworkIds.has(network.id);
+    const favoritesCollectionRef = collection(firestore, 'users', user.uid, 'favorites');
+
+    if (isFavorited) {
+      // Find the favorite document to delete
+      const favToDelete = favorites?.find(f => f.targetId === network.id);
+      if (favToDelete) {
+        const docRef = doc(firestore, 'users', user.uid, 'favorites', favToDelete.id);
+        deleteDocumentNonBlocking(docRef);
+        toast({
+          title: 'تمت الإزالة',
+          description: `تمت إزالة "${network.name}" من المفضلة.`,
+        });
+      }
+    } else {
+      // Add to favorites
+      const favoriteData = {
+        userId: user.uid,
+        targetId: network.id,
+        name: network.name,
+        location: network.location,
+        phoneNumber: network.phoneNumber || '',
+        favoriteType: 'Network',
+      };
+      addDocumentNonBlocking(favoritesCollectionRef, favoriteData);
+      toast({
+        title: 'تمت الإضافة',
+        description: `تمت إضافة "${network.name}" إلى المفضلة.`,
+      });
+    }
   };
 
   const renderContent = () => {
@@ -84,43 +144,46 @@ export default function ServicesPage() {
 
     return (
       <div className="space-y-4">
-        {filteredNetworks.map((network, index) => (
-          <Card 
-            key={network.id} 
-            className="cursor-pointer hover:border-primary transition-colors animate-in fade-in-0"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold">{network.name}</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <MapPin className="h-3 w-3" />
-                      {network.location}
-                    </p>
-                    {network.phoneNumber && (
-                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Phone className="h-3 w-3" />
-                        {network.phoneNumber}
+        {filteredNetworks.map((network, index) => {
+          const isFavorited = favoriteNetworkIds.has(network.id);
+          return (
+            <Card 
+              key={network.id} 
+              className="cursor-pointer hover:border-primary transition-colors animate-in fade-in-0"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-bold">{network.name}</h4>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" />
+                        {network.location}
                       </p>
-                    )}
+                      {network.phoneNumber && (
+                         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <Phone className="h-3 w-3" />
+                          {network.phoneNumber}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <button 
+                    onClick={(e) => handleFavoriteClick(e, network)}
+                    className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                    aria-label={`إضافة ${network.name} إلى المفضلة`}
+                  >
+                    <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-500 text-red-500')} />
+                  </button>
                 </div>
-                <button 
-                  onClick={(e) => handleFavoriteClick(e, network.name)}
-                  className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
-                  aria-label={`إضافة ${network.name} إلى المفضلة`}
-                >
-                  <Heart className="h-5 w-5" />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     );
   };

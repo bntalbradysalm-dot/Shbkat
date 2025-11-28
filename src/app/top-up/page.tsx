@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,10 @@ type PaymentMethod = {
   accountHolderName: string;
   accountNumber: string;
   logoUrl?: string;
+};
+
+type AppSettings = {
+    supportPhoneNumber: string;
 };
 
 const getLogoSrc = (url?: string) => {
@@ -39,6 +43,13 @@ export default function TopUpPage() {
     );
     const { data: methods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
 
+    const settingsDocRef = useMemoFirebase(
+      () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
+      [firestore]
+    );
+    const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
+
+
     // Set the first method as selected by default
     React.useEffect(() => {
         if (!selectedMethod && methods && methods.length > 0) {
@@ -55,7 +66,15 @@ export default function TopUpPage() {
     };
     
     const openWhatsApp = () => {
-        const phoneNumber = '967770326828';
+        if (!appSettings?.supportPhoneNumber) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ',
+                description: 'رقم التواصل غير محدد. يرجى مراجعة الإدارة.'
+            });
+            return;
+        }
+        const phoneNumber = appSettings.supportPhoneNumber;
         const message = encodeURIComponent('أرغب في تأكيد عملية إيداع. هذا هو إيصال الدفع.');
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
         window.open(whatsappUrl, '_blank');

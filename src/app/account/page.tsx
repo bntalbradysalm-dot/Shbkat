@@ -26,6 +26,7 @@ import {
   SatelliteDish,
   Users2,
   Loader2,
+  ListChecks,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -49,25 +50,25 @@ import { Toaster } from '@/components/ui/toaster';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
-  { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
-  { title: 'إدارة الكروت', icon: CreditCard, href: '/cards-management' },
+  { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
-  { title: 'تقرير مبيعات الكروت', icon: BarChart3, href: '/sales-report' },
-  { title: 'إدارة الدفع', icon: Wallet, href: '/payment-management' },
+  { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
+  { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
+  { title: 'إعدادات التطبيق', icon: Settings, href: '/app-settings' },
 ];
 
 const appSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
-    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
+    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=' },
 ];
 
 const userAppSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
-    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
+    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=' },
 ];
 
 
@@ -77,6 +78,11 @@ type UserProfile = {
   phoneNumber?: string;
   balance?: number;
   role?: 'admin' | 'user';
+};
+
+type AppSettings = {
+    appLink: string;
+    supportPhoneNumber: string;
 };
 
 const LoadingSpinner = () => (
@@ -107,6 +113,12 @@ export default function AccountPage() {
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  const settingsDocRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
+    [firestore]
+  );
+  const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
   
   const userRole = userProfile?.role || 'user';
 
@@ -137,23 +149,23 @@ export default function AccountPage() {
   };
   
   const handleShare = async () => {
+    const shareUrl = appSettings?.appLink || window.location.origin;
     const shareData = {
       title: 'محفظة شبكات',
       text: 'اكتشف محفظة شبكات، الحل الرقمي لجميع احتياجاتك!',
-      url: window.location.origin,
+      url: shareUrl,
     };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.origin);
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'تم نسخ الرابط',
           description: 'تم نسخ رابط التطبيق إلى الحافظة. شاركه مع أصدقائك!',
         });
       }
     } catch (error: any) {
-        // Ignore AbortError and NotAllowedError which occurs when the user cancels the share sheet
         if (error.name === 'AbortError' || error.name === 'NotAllowedError') {
           return;
         }
@@ -173,6 +185,10 @@ export default function AccountPage() {
   if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
+  
+  const helpCenterUrl = appSettings?.supportPhoneNumber 
+    ? `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}`
+    : '#';
 
   return (
     <>
@@ -273,6 +289,9 @@ export default function AccountPage() {
                     {appSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
                       const isShareButton = link.id === 'share-app';
+                      const isHelpButton = link.id === 'help-center';
+                      const finalHref = isHelpButton ? helpCenterUrl : link.href;
+
                       const element = (
                         <div
                         key={link.id}
@@ -289,13 +308,13 @@ export default function AccountPage() {
                         </div>
                       );
 
-                      if (link.href) {
+                      if (finalHref) {
                         return (
                           <a
-                          href={link.href}
+                          href={finalHref}
                           key={link.id}
-                          target={link.href.startsWith('http') ? '_blank' : '_self'}
-                          rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                          target={finalHref.startsWith('http') ? '_blank' : '_self'}
+                          rel={finalHref.startsWith('http') ? 'noopener noreferrer' : ''}
                           >
                            {element}
                           </a>
@@ -321,6 +340,9 @@ export default function AccountPage() {
                     {userAppSettingsLinks.map((link, index) => {
                        const Icon = link.icon;
                        const isShareButton = link.id === 'share-app';
+                       const isHelpButton = link.id === 'help-center';
+                       const finalHref = isHelpButton ? helpCenterUrl : link.href;
+
                        const element = (
                          <div
                          key={link.id}
@@ -337,13 +359,13 @@ export default function AccountPage() {
                          </div>
                        );
  
-                       if (link.href) {
+                       if (finalHref) {
                          return (
                            <a
-                           href={link.href}
+                           href={finalHref}
                            key={link.id}
-                           target={link.href.startsWith('http') ? '_blank' : '_self'}
-                           rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                           target={finalHref.startsWith('http') ? '_blank' : '_self'}
+                           rel={finalHref.startsWith('http') ? 'noopener noreferrer' : ''}
                            >
                             {element}
                            </a>

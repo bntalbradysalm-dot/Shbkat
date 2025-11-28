@@ -310,6 +310,24 @@
         "id",
         "name"
       ]
+    },
+    "AppSettings": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Application Settings",
+        "type": "object",
+        "description": "Stores global settings for the application.",
+        "properties": {
+            "appLink": {
+                "type": "string",
+                "format": "uri",
+                "description": "The official shareable link for the application."
+            },
+            "supportPhoneNumber": {
+                "type": "string",
+                "description": "The WhatsApp number for customer support."
+            }
+        },
+        "required": ["appLink", "supportPhoneNumber"]
     }
   },
   "auth": {
@@ -488,6 +506,22 @@
             {
               "name": "subscriberId",
               "description": "The card number of the subscriber."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/appSettings/{settingsId}",
+        "definition": {
+          "entityName": "AppSettings",
+          "schema": {
+            "$ref": "#/backend/entities/AppSettings"
+          },
+          "description": "Stores global application settings. Writable by admins, readable by all users.",
+          "params": [
+            {
+              "name": "settingsId",
+              "description": "The unique identifier for the settings document (e.g., 'global')."
             }
           ]
         }

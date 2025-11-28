@@ -54,7 +54,7 @@ const managementLinks = [
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات التحويل', icon: Repeat, href: '/transfer-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
-  { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
+  { title: 'كروت الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة المشتركين', icon: Users2, href: '/subscribers-management' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
@@ -420,5 +420,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-    

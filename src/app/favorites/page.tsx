@@ -88,7 +88,7 @@ export default function FavoritesPage() {
           <Star className="h-16 w-16 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">لا توجد شبكات مفضلة</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            أضف شبكات إلى مفضلتك للوصول إليها بسرعة.
+            اضف شبكتك المفضلة هنا للوصول إليها بسرعة
           </p>
         </div>
       );

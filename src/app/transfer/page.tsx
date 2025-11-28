@@ -1,0 +1,306 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { SimpleHeader } from '@/components/layout/simple-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Wallet, Send, User, CheckCircle, Search } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { collection, doc, updateDoc, increment, addDoc, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type UserProfile = {
+  id: string;
+  balance?: number;
+  phoneNumber?: string;
+  displayName?: string;
+};
+
+const BalanceDisplay = () => {
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(
+        () => (user ? doc(firestore, 'users', user.uid) : null),
+        [firestore, user]
+    );
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+    const isLoading = isUserLoading || isProfileLoading;
+
+    return (
+        <Card className="shadow-lg">
+            <CardContent className="p-4 flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <div className="p-3 bg-accent/20 rounded-lg">
+                         <Wallet className="h-6 w-6 text-accent-foreground" />
+                    </div>
+                    <span className="text-sm font-semibold text-muted-foreground">رصيدك الحالي</span>
+                </div>
+                {isLoading ? (
+                    <Skeleton className="h-7 w-28" />
+                ) : (
+                    <div className="text-xl font-bold text-accent-foreground">
+                        {(userProfile?.balance ?? 0).toLocaleString('en-US')}
+                        <span className="text-sm mr-1">ريال يمني</span>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+
+export default function TransferPage() {
+  const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const router = useRouter();
+
+  const [recipientPhone, setRecipientPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [recipient, setRecipient] = useState<UserProfile | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: senderProfile } = useDoc<UserProfile>(userDocRef);
+
+
+  const handleSearch = async () => {
+    if (!recipientPhone || !firestore) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف المستلم.' });
+        return;
+    }
+    if (recipientPhone === senderProfile?.phoneNumber) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكنك التحويل إلى نفسك.' });
+        return;
+    }
+    setIsSearching(true);
+    setRecipient(null);
+    try {
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('phoneNumber', '==', recipientPhone));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            toast({ variant: 'destructive', title: 'المستخدم غير موجود', description: 'لم يتم العثور على مستخدم بهذا الرقم.' });
+        } else {
+            const recipientData = querySnapshot.docs[0].data() as UserProfile;
+            recipientData.id = querySnapshot.docs[0].id;
+            setRecipient(recipientData);
+        }
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء البحث عن المستخدم.' });
+    } finally {
+        setIsSearching(false);
+    }
+  };
+  
+  const handleConfirmClick = () => {
+    const numericAmount = parseFloat(amount);
+    if (!recipient || !amount || isNaN(numericAmount) || numericAmount <= 0) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صحيح." });
+      return;
+    }
+    if ((senderProfile?.balance ?? 0) < numericAmount) {
+      toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
+      return;
+    }
+    setIsConfirming(true);
+  };
+
+  const handleFinalConfirmation = async () => {
+    if (!user || !firestore || !senderProfile || !recipient) return;
+    
+    setIsProcessing(true);
+    const numericAmount = parseFloat(amount);
+
+    const senderRef = doc(firestore, 'users', user.uid);
+    const recipientRef = doc(firestore, 'users', recipient.id);
+
+    try {
+        const batch = writeBatch(firestore);
+
+        // 1. Deduct from sender, increment recipient
+        batch.update(senderRef, { balance: increment(-numericAmount) });
+        batch.update(recipientRef, { balance: increment(numericAmount) });
+
+        // 2. Create transaction for sender
+        const senderTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        batch.set(senderTransactionRef, {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: numericAmount,
+            transactionType: `تحويل إلى ${recipient.displayName}`,
+            notes: `إلى رقم: ${recipient.phoneNumber}`
+        });
+
+        // 3. Create transaction for recipient
+        const recipientTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
+        batch.set(recipientTransactionRef, {
+            userId: recipient.id,
+            transactionDate: new Date().toISOString(),
+            amount: numericAmount,
+            transactionType: `استلام من ${senderProfile.displayName}`,
+            notes: `من رقم: ${senderProfile.phoneNumber}`
+        });
+
+        await batch.commit();
+        setShowSuccess(true);
+
+    } catch (error) {
+        console.error("Transfer failed: ", error);
+        toast({ variant: "destructive", title: "فشل التحويل", description: "حدث خطأ أثناء العملية. لم يتم خصم أي مبلغ." });
+    } finally {
+        setIsProcessing(false);
+        setIsConfirming(false);
+    }
+  };
+  
+  if (showSuccess) {
+    return (
+        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+        <Card className="w-full max-w-sm text-center shadow-2xl">
+            <CardContent className="p-6">
+                <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="bg-green-100 p-4 rounded-full">
+                        <CheckCircle className="h-16 w-16 text-green-600" />
+                    </div>
+                    <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
+                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
+                       <div className="flex justify-between">
+                            <span className="text-muted-foreground">المستلم:</span>
+                            <span className="font-semibold">{recipient?.displayName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">المبلغ:</span>
+                            <span className="font-semibold text-accent-foreground">{Number(amount).toLocaleString('en-US')} ريال</span>
+                        </div>
+                    </div>
+                    <div className="w-full grid grid-cols-2 gap-3 pt-4">
+                        <Button variant="outline" onClick={() => router.push('/')}>الرئيسية</Button>
+                        <Button onClick={() => {
+                            setShowSuccess(false);
+                            setRecipient(null);
+                            setRecipientPhone('');
+                            setAmount('');
+                        }} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                           تحويل جديد
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <>
+    <div className="flex flex-col h-full bg-background">
+      <SimpleHeader title="تحويل لمشترك" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <BalanceDisplay />
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-center">تفاصيل التحويل</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="recipientPhone" className="text-muted-foreground">رقم المستلم</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="recipientPhone"
+                  type="tel"
+                  placeholder="77xxxxxxxx"
+                  value={recipientPhone}
+                  onChange={(e) => {
+                    setRecipientPhone(e.target.value);
+                    if (recipient) setRecipient(null); // Reset if number changes
+                  }}
+                  disabled={isSearching}
+                />
+                <Button onClick={handleSearch} disabled={isSearching || !recipientPhone} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  {isSearching ? '...' : <Search className="h-5 w-5" />}
+                </Button>
+              </div>
+            </div>
+            
+            {recipient && (
+                <div className="p-3 bg-muted rounded-lg flex items-center gap-3 animate-in fade-in-0">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <p className="text-sm font-semibold">المستلم: <span className="text-accent-foreground">{recipient.displayName}</span></p>
+                </div>
+            )}
+
+            {recipient && (
+                <div className="animate-in fade-in-0">
+                  <Label htmlFor="amount" className="text-muted-foreground">المبلغ</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    inputMode='numeric'
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+            )}
+
+            <Button onClick={handleConfirmClick} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-bold" disabled={!recipient || !amount}>
+                <Send className="ml-2 h-5 w-5"/>
+                تحويل
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+    <Toaster />
+
+    <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="text-center">تأكيد عملية التحويل</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                    <div className="space-y-4 pt-4 text-base text-foreground text-center">
+                         <p className="text-sm text-center text-muted-foreground pb-2">هل أنت متأكد من رغبتك في تحويل مبلغ</p>
+                         <p className="text-2xl font-bold text-accent-foreground">{Number(amount).toLocaleString('en-US')} ريال</p>
+                         <p className="text-sm text-center text-muted-foreground">إلى</p>
+                         <p className="font-bold">{recipient?.displayName}</p>
+                         <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>
+                    </div>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
+                <AlertDialogAction className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleFinalConfirmation} disabled={isProcessing}>
+                    {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
+                </AlertDialogAction>
+                <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
+  );
+}

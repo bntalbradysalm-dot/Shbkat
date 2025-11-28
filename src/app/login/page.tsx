@@ -11,6 +11,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const LoadingSpinner = () => (
     <div className="flex flex-col justify-center items-center h-screen bg-background">
@@ -22,7 +23,7 @@ const LoadingSpinner = () => (
           height={120}
           className="object-contain"
         />
-        <Loader2 className="h-8 w-8 animate-spin text-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary dark:text-primary-foreground" />
       </div>
   </div>
 );
@@ -131,9 +132,9 @@ export default function LoginPage() {
             </div>
 
             <div className="text-left">
-              <a href="#" className="text-sm font-medium text-primary hover:underline">
+              <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
                 نسيت كلمة المرور؟
-              </a>
+              </Link>
             </div>
 
             <Button type="submit" className="w-full text-lg font-bold h-12" disabled={isLoading}>

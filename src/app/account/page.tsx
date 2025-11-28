@@ -59,13 +59,13 @@ const appSettingsLinks = [
     { title: 'إعدادات التطبيق', icon: Settings, href: '/app-settings' },
     { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
-    { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
+    { title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
 ];
 
 const userAppSettingsLinks = [
     { title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { title: 'شارك التطبيق', icon: Share2, href: '/share-app' },
-    { title: 'مركز المساعدة', icon: HelpCircle, href: '/help-center' },
+    { title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=967770326828' },
 ];
 
 
@@ -256,6 +256,8 @@ export default function AccountPage() {
                         <a
                         href={link.href}
                         key={link.title}
+                        target={link.href.startsWith('http') ? '_blank' : '_self'}
+                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
                         className={`group flex items-center justify-between p-3 cursor-pointer ${
                             index < appSettingsLinks.length - 1 ? 'border-b' : ''
                         }`}
@@ -289,6 +291,8 @@ export default function AccountPage() {
                         <a
                         href={link.href}
                         key={link.title}
+                        target={link.href.startsWith('http') ? '_blank' : '_self'}
+                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
                         className={`group flex items-center justify-between p-3 cursor-pointer ${
                             index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
                         }`}

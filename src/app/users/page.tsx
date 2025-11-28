@@ -418,14 +418,6 @@ export default function UsersPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
               />
           </div>
-          <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger>
-                  <SelectValue placeholder="الكل" />
-              </SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-              </SelectContent>
-          </Select>
           {renderContent()}
         </div>
       </div>

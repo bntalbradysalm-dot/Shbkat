@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { PromotionalImage } from './promotional-image';
+import { RecentTransactions } from './recent-transactions';
 
 type Service = {
   name: string;
@@ -57,6 +58,7 @@ export function ServiceGrid() {
         ))}
       </div>
       <PromotionalImage />
+      <RecentTransactions />
     </div>
   );
 }

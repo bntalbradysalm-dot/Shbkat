@@ -135,7 +135,7 @@ export default function ChangePasswordPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      placeholder="6+ أحرف"
+                      placeholder=".. اكتب كلمة المرور الجديدة"
                     />
                      <button
                       type="button"

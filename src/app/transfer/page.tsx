@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Search } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Search, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,37 +85,51 @@ export default function TransferPage() {
   );
   const { data: senderProfile } = useDoc<UserProfile>(userDocRef);
 
-
-  const handleSearch = async () => {
-    if (!recipientPhone || !firestore) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف المستلم.' });
+  useEffect(() => {
+    const handleSearch = async () => {
+      if (recipientPhone.length !== 9 || !firestore) {
+        setRecipient(null);
         return;
-    }
-    if (recipientPhone === senderProfile?.phoneNumber) {
+      }
+      if (recipientPhone === senderProfile?.phoneNumber) {
         toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكنك التحويل إلى نفسك.' });
+        setRecipient(null);
         return;
-    }
-    setIsSearching(true);
-    setRecipient(null);
-    try {
+      }
+      
+      setIsSearching(true);
+      setRecipient(null);
+
+      try {
         const usersRef = collection(firestore, 'users');
         const q = query(usersRef, where('phoneNumber', '==', recipientPhone));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            toast({ variant: 'destructive', title: 'المستخدم غير موجود', description: 'لم يتم العثور على مستخدم بهذا الرقم.' });
+            toast({ variant: 'destructive', title: 'المستخدم غير موجود', description: 'لم يتم العثور على مستخدم بهذا الرقم.', duration: 2000 });
+            setRecipient(null);
         } else {
             const recipientData = querySnapshot.docs[0].data() as UserProfile;
             recipientData.id = querySnapshot.docs[0].id;
             setRecipient(recipientData);
         }
-    } catch (error) {
+      } catch (error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء البحث عن المستخدم.' });
-    } finally {
+      } finally {
         setIsSearching(false);
-    }
-  };
+      }
+    };
+    
+    // Debounce search
+    const timerId = setTimeout(() => {
+        handleSearch();
+    }, 500);
+
+    return () => clearTimeout(timerId);
+
+  }, [recipientPhone, firestore, senderProfile?.phoneNumber, toast]);
+
   
   const handleConfirmClick = () => {
     const numericAmount = parseFloat(amount);
@@ -230,21 +244,17 @@ export default function TransferPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="recipientPhone" className="text-muted-foreground">رقم المستلم</Label>
-              <div className="flex gap-2">
+              <div className="relative">
                 <Input
                   id="recipientPhone"
                   type="tel"
                   placeholder="77xxxxxxxx"
                   value={recipientPhone}
-                  onChange={(e) => {
-                    setRecipientPhone(e.target.value);
-                    if (recipient) setRecipient(null); // Reset if number changes
-                  }}
-                  disabled={isSearching}
+                  onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  disabled={isProcessing}
+                  maxLength={9}
                 />
-                <Button onClick={handleSearch} disabled={isSearching || !recipientPhone} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  {isSearching ? '...' : <Search className="h-5 w-5" />}
-                </Button>
+                 {isSearching && <Loader2 className="animate-spin absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
               </div>
             </div>
             
@@ -269,7 +279,7 @@ export default function TransferPage() {
                 </div>
             )}
 
-            <Button onClick={handleConfirmClick} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-bold" disabled={!recipient || !amount}>
+            <Button onClick={handleConfirmClick} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-bold" disabled={!recipient || !amount || isProcessing}>
                 <Send className="ml-2 h-5 w-5"/>
                 تحويل
             </Button>

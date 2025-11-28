@@ -230,10 +230,8 @@ service cloud.firestore {
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
       // Allow user to update their own document, or an admin to update any document.
       // For fund transfers, allow any signed-in user to increment another user's balance, but nothing else.
-      allow update: if (isOwner(userId) || isAdmin()) || 
-                      (isSignedIn() && 
-                       request.resource.data.keys().hasOnly(['balance']) &&
-                       request.resource.data.balance == resource.data.balance + request.resource.data.diff.balance);
+      allow update: if (isOwner(userId) || isAdmin()) ||
+                      (isSignedIn() && request.resource.data.balance == resource.data.balance + request.resource.data.diff.balance);
       allow delete: if isAdmin();
 
       /**

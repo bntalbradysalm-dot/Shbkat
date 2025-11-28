@@ -71,12 +71,6 @@ export default function ForgotPasswordPage() {
                     <Send className="ml-2 h-4 w-4" />
                     إرسال طلب إعادة تعيين
                 </Button>
-                <Link href="/login" className='w-full'>
-                    <Button variant="outline" className="w-full">
-                        <LogIn className="ml-2 h-4 w-4" />
-                        العودة إلى تسجيل الدخول
-                    </Button>
-                </Link>
             </div>
 
         </div>

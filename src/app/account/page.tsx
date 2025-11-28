@@ -84,7 +84,7 @@ const LoadingSpinner = () => (
         <Loader2 className="h-24 w-24 animate-spin text-primary/50" />
         <div className="absolute">
           <Image
-            src="https://i.ibb.co/3s0pCVG/logo-transparent.png"
+            src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
             alt="logo"
             width={60}
             height={60}

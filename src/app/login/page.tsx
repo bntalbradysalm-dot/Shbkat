@@ -18,7 +18,7 @@ const LoadingSpinner = () => (
         <Loader2 className="h-24 w-24 animate-spin text-primary/50" />
         <div className="absolute">
           <Image
-            src="https://i.ibb.co/3s0pCVG/logo-transparent.png"
+            src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
             alt="logo"
             width={60}
             height={60}
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <div className="flex-1 flex flex-col justify-center text-center">
           <div className="mb-10 flex flex-col items-center">
             <Image 
-                src="https://i.ibb.co/3s0pCVG/logo-transparent.png" 
+                src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
                 alt="Shabakat Wallet Logo" 
                 width={200} 
                 height={200} 

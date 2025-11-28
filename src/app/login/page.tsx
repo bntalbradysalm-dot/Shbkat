@@ -14,17 +14,15 @@ import Image from 'next/image';
 
 const LoadingSpinner = () => (
     <div className="flex flex-col justify-center items-center h-screen bg-background">
-      <div className="relative flex justify-center items-center">
-        <Loader2 className="h-32 w-32 animate-spin text-primary/50" />
-        <div className="absolute">
-          <Image
-            src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
-            alt="logo"
-            width={80}
-            height={80}
-            className="object-contain"
-          />
-        </div>
+      <div className="flex flex-col items-center gap-4">
+        <Image
+          src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
+          alt="logo"
+          width={120}
+          height={120}
+          className="object-contain"
+        />
+        <Loader2 className="h-8 w-8 animate-spin text-foreground" />
       </div>
   </div>
 );

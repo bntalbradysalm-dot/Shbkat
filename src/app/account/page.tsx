@@ -25,6 +25,7 @@ import {
   Moon,
   SatelliteDish,
   Users2,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -42,6 +43,7 @@ import {
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -75,6 +77,22 @@ type UserProfile = {
   balance?: number;
   role?: 'admin' | 'user';
 };
+
+const LoadingSpinner = () => (
+    <div className="flex flex-col justify-center items-center h-screen bg-background">
+      <div className="relative flex justify-center items-center">
+        <Loader2 className="h-24 w-24 animate-spin text-primary/50" />
+        <div className="absolute">
+          <Image
+            src="https://i.ibb.co/3s0pCVG/logo-transparent.png"
+            alt="logo"
+            width={60}
+            height={60}
+          />
+        </div>
+      </div>
+  </div>
+);
 
 export default function AccountPage() {
   const [activeTheme, setActiveTheme] = useState('light');
@@ -122,7 +140,7 @@ export default function AccountPage() {
   };
 
   if (isUserLoading || !user) {
-    return <div className="flex justify-center items-center h-screen">جاري التحميل...</div>;
+    return <LoadingSpinner />;
   }
 
   return (

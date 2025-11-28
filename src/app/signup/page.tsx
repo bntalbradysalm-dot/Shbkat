@@ -19,6 +19,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
 
 const locations = [
   'سيئون',
@@ -149,7 +150,14 @@ export default function SignupPage() {
       <div className="flex flex-col h-screen bg-background text-foreground">
         <SimpleHeader title="سجل الآن" />
         <div className="flex-1 flex flex-col justify-center text-center px-6">
-          <div className="mb-8">
+          <div className="mb-8 flex flex-col items-center">
+             <Image 
+                src="https://i.ibb.co/3s0pCVG/logo-transparent.png" 
+                alt="Shabakat Wallet Logo" 
+                width={120} 
+                height={120} 
+                className="object-contain mb-4"
+            />
             <h1 className="text-3xl font-bold text-primary">انشاء حساب جديد</h1>
             <p className="text-md text-muted-foreground mt-2">
               ادخل معلوماتك لإنشاء حساب جديد

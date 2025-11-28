@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,23 @@ import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
+
+const LoadingSpinner = () => (
+    <div className="flex flex-col justify-center items-center h-screen bg-background">
+      <div className="relative flex justify-center items-center">
+        <Loader2 className="h-24 w-24 animate-spin text-primary/50" />
+        <div className="absolute">
+          <Image
+            src="https://i.ibb.co/3s0pCVG/logo-transparent.png"
+            alt="logo"
+            width={60}
+            height={60}
+          />
+        </div>
+      </div>
+  </div>
+);
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -62,16 +79,22 @@ export default function LoginPage() {
   };
 
   if (isUserLoading || (!isUserLoading && user)) {
-    return <div className="flex justify-center items-center h-screen">جاري التحميل...</div>;
+    return <LoadingSpinner />;
   }
 
   return (
     <>
       <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
         <div className="flex-1 flex flex-col justify-center text-center">
-          <div className="mb-10">
-            <h1 className="text-4xl font-bold text-primary">شبكتي</h1>
-            <p className="text-lg text-muted-foreground">محفظتك الرقمية لكل احتياجاتك</p>
+          <div className="mb-10 flex flex-col items-center">
+            <Image 
+                src="https://i.ibb.co/3s0pCVG/logo-transparent.png" 
+                alt="Shabakat Wallet Logo" 
+                width={200} 
+                height={200} 
+                className="object-contain"
+                priority
+            />
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6 text-right">

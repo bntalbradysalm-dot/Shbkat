@@ -3,8 +3,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 
-// In a managed environment like Firebase App Hosting, the Admin SDK should be 
-// automatically initialized. This check ensures it only happens once.
+// Ensure Firebase is initialized only once
 if (!getApps().length) {
   initializeApp();
 }
@@ -23,6 +22,10 @@ interface TransferFundsParams {
 
 export async function transferFunds(params: TransferFundsParams): Promise<{success: boolean, error?: string}> {
   const { fromUserId, toUserId, amount, fromUserName, toUserName, fromUserPhone, toUserPhone } = params;
+
+  if (fromUserId === toUserId) {
+    return { success: false, error: 'لا يمكنك التحويل إلى نفسك.' };
+  }
 
   if (amount <= 0) {
     return { success: false, error: 'المبلغ يجب أن يكون أكبر من صفر.' };
@@ -44,19 +47,20 @@ export async function transferFunds(params: TransferFundsParams): Promise<{succe
       }
 
       const fromUserData = fromUserDoc.data();
-      const currentBalance = fromUserData?.balance || 0;
+      const toUserData = toUserDoc.data();
+      const fromBalance = fromUserData?.balance || 0;
 
-      if (currentBalance < amount) {
+      if (fromBalance < amount) {
         throw new Error('الرصيد غير كافٍ لإتمام العملية.');
       }
 
-      // 1. Deduct from sender, increment recipient
-      transaction.update(fromUserRef, { balance: currentBalance - amount });
-      transaction.update(toUserRef, { balance: (toUserDoc.data()?.balance || 0) + amount });
+      // Perform the balance updates
+      transaction.update(fromUserRef, { balance: fromBalance - amount });
+      transaction.update(toUserRef, { balance: (toUserData?.balance || 0) + amount });
 
       const now = new Date().toISOString();
 
-      // 2. Create transaction for sender
+      // Create transaction record for the sender
       const fromTransactionRef = fromUserRef.collection('transactions').doc();
       transaction.set(fromTransactionRef, {
         userId: fromUserId,
@@ -66,7 +70,7 @@ export async function transferFunds(params: TransferFundsParams): Promise<{succe
         notes: `إلى رقم: ${toUserPhone}`
       });
 
-      // 3. Create transaction for recipient
+      // Create transaction record for the recipient
       const toTransactionRef = toUserRef.collection('transactions').doc();
       transaction.set(toTransactionRef, {
         userId: toUserId,

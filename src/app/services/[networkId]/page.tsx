@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Separator } from '@/components/ui/separator';
 
 type CardCategory = {
     id: string;
@@ -178,7 +179,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
     if (isLoadingCategories) {
         return (
             <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
             </div>
         );
     }
@@ -198,33 +199,35 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
     return (
         <div className="space-y-4">
             {categories.map((category, index) => (
-                <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
-                    <CardContent className="p-4">
-                       <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 space-y-1">
-                                <h3 className="font-bold text-sm flex items-center gap-2">
-                                    <Tag className="w-4 h-4 text-primary dark:text-primary-foreground" />
-                                    <span>{category.name}</span>
-                                </h3>
-                                <p className="font-bold text-lg text-primary dark:text-primary-foreground">
-                                    {category.price.toLocaleString('en-US')} ريال
-                                </p>
-                                <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
-                                    {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {category.validity}</span>}
-                                    {category.capacity && <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> {category.capacity}</span>}
+                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
+                    <CardContent className="p-0 flex">
+                        <div className="flex-none w-1/3 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
+                             <Tag className="w-8 h-8 mb-2 text-primary/80" />
+                             <span className="font-bold text-lg text-primary/80">مفتوح</span>
+                        </div>
+                        <div className="flex-grow p-3">
+                             <div className='flex items-start justify-between gap-2'>
+                                <div className='space-y-1 text-right'>
+                                     <h3 className="font-bold text-lg">{category.name}</h3>
+                                     <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
                                 </div>
-                            </div>
-                            <Button 
-                                size="sm" 
-                                className="h-auto py-2 px-4 text-xs font-bold"
-                                onClick={() => {
-                                    setSelectedCategory(category);
-                                    setIsConfirming(true);
-                                }}
-                            >
-                                شراء
-                            </Button>
-                       </div>
+                                <Button 
+                                    size="default" 
+                                    className="h-auto py-2 px-5 text-sm font-bold bg-green-500 hover:bg-green-600 text-white rounded-lg"
+                                    onClick={() => {
+                                        setSelectedCategory(category);
+                                        setIsConfirming(true);
+                                    }}
+                                >
+                                    شراء
+                                </Button>
+                             </div>
+                             <Separator className="my-2" />
+                             <div className="text-xs text-muted-foreground flex items-center justify-end gap-x-4 gap-y-1">
+                                 {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
+                                 {category.capacity && <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> السعة: {category.capacity}</span>}
+                             </div>
+                        </div>
                     </CardContent>
                 </Card>
             ))}

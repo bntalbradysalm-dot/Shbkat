@@ -28,6 +28,15 @@ const LoadingSpinner = () => (
   </div>
 );
 
+const getFirstAndLastName = (fullName: string): string => {
+  const nameParts = fullName.trim().split(/\s+/);
+  if (nameParts.length > 1) {
+    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+  }
+  return fullName;
+};
+
+
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -100,7 +109,7 @@ export default function LoginPage() {
           <div className="mb-10 flex flex-col items-center">
             {lastUserName ? (
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold">أهلاً، {lastUserName}</h1>
+                <h1 className="text-2xl font-bold">أهلاً، {getFirstAndLastName(lastUserName)}</h1>
                 <p className="text-muted-foreground">تسجيل الدخول</p>
               </div>
             ) : (

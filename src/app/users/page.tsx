@@ -7,13 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -41,7 +34,8 @@ import {
   Edit,
   MessageSquare,
   Link as LinkIcon,
-  PlusCircle
+  PlusCircle,
+  MessageCircle,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +43,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import Image from 'next/image';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -243,6 +238,12 @@ export default function UsersPage() {
     }
   };
 
+  const openWhatsAppWithMessage = (phoneNumber: string) => {
+    const message = encodeURIComponent('السلام عليكم');
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=967${phoneNumber}&text=${message}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
+
 
   const filteredUsers = users?.filter(user => {
     const nameMatch = user.displayName?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -275,6 +276,11 @@ export default function UsersPage() {
                           <p className="font-bold text-sm">{user.displayName || 'مستخدم جديد'}</p>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs mt-1">
                               <span>{user.phoneNumber}</span>
+                              {user.phoneNumber && (
+                                <button onClick={() => openWhatsAppWithMessage(user.phoneNumber!)} title="مراسلة عبر واتساب">
+                                    <Image src="https://i.ibb.co/61g3w2z/whatsapp-icon-logo-svgrepo-com.png" alt="WhatsApp" width={16} height={16} />
+                                </button>
+                              )}
                           </div>
                       </div>
                   </div>

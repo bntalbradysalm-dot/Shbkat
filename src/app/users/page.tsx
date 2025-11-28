@@ -47,6 +47,8 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -64,6 +66,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
+  const [isDepositAndNotifyDialogOpen, setIsDepositAndNotifyDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
@@ -137,6 +140,69 @@ export default function UsersPage() {
       });
     }
   };
+  
+  const handleDepositAndNotify = async () => {
+    if (!selectedUser || !topUpAmount || !firestore || !selectedUser.phoneNumber) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال مبلغ صالح أو التأكد من وجود رقم هاتف للمستخدم.",
+      });
+      return;
+    }
+    const amount = parseFloat(topUpAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال مبلغ صالح.",
+      });
+      return;
+    }
+
+    const userDocRef = doc(firestore, 'users', selectedUser.id);
+    const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
+    const newBalance = (selectedUser.balance || 0) + amount;
+
+    try {
+      // 1. Update user balance
+      await updateDoc(userDocRef, {
+        balance: increment(amount)
+      });
+
+      // 2. Send in-app notification
+      await addDoc(userNotificationsRef, {
+        title: 'تمت تغذية حسابك',
+        body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك من قبل الإدارة.`,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 3. Prepare and open WhatsApp message
+      const date = format(new Date(), 'd MMMM yyyy, h:mm a', { locale: ar });
+      const message = `📩 *عملية إيداع من تطبيق شبكات*\nتم بنجاح إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال يمني في حسابك (${selectedUser.phoneNumber}) بتاريخ (${date})\nيُرجى التحقق من الرصيد عبر تطبيق شبكات للتأكد من تفاصيل العملية\n🔒 هذه الرسالة صادرة تلقائيًا من تطبيق شبكات — دقة. أمان. ثقة\n\n*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال يمني*`;
+      
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast({
+        title: "نجاح",
+        description: `تمت إضافة الرصيد وجاري فتح واتساب لإبلاغ ${selectedUser.displayName}.`,
+      });
+
+      setIsDepositAndNotifyDialogOpen(false);
+      setTopUpAmount('');
+      setSelectedUser(null);
+
+    } catch (e) {
+      console.error("Error during deposit and notify:", e);
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "فشل تحديث الرصيد أو إرسال الإشعار. الرجاء المحاولة مرة أخرى.",
+      });
+    }
+  };
+
 
   const handleEditClick = (user: User) => {
     setEditingUser(user);
@@ -244,10 +310,42 @@ export default function UsersPage() {
                       <Edit className="h-4 w-4" />
                     </Button>
 
-                    <Button variant="outline">
-                        <MessageSquare className="ml-2 h-4 w-4" />
-                        إيداع وإبلاغ
-                    </Button>
+                    <Dialog open={isDepositAndNotifyDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                      if (!isOpen) {
+                          setIsDepositAndNotifyDialogOpen(false);
+                          setSelectedUser(null);
+                          setTopUpAmount('');
+                      }
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" onClick={() => {
+                            setSelectedUser(user);
+                            setIsDepositAndNotifyDialogOpen(true);
+                        }}>
+                            <MessageSquare className="ml-2 h-4 w-4" />
+                            إيداع وإبلاغ
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                              <DialogTitle>إيداع وإبلاغ</DialogTitle>
+                              <DialogDescription>
+                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
+                              </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="deposit-amount" className="text-right col-span-1">المبلغ</Label>
+                                  <Input id="deposit-amount" type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
+                              </div>
+                          </div>
+                          <DialogFooter>
+                              <Button type="submit" onClick={handleDepositAndNotify}>تأكيد وإبلاغ</Button>
+                              <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                          </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
                 </div>
                  <Dialog open={isTopUpDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
                     if (!isOpen) {

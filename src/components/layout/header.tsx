@@ -32,6 +32,22 @@ const Header = () => {
   const firestore = useFirestore();
   const router = useRouter();
   const [hasUnread, setHasUnread] = useState(false);
+  const [greeting, setGreeting] = useState('أهلاً');
+
+
+  useEffect(() => {
+    const now = new Date();
+    const day = now.getDay(); // Sunday = 0, Friday = 5
+    const hour = now.getHours();
+
+    if (day === 5) {
+      setGreeting('جمعة مباركة');
+    } else if (hour < 12) {
+      setGreeting('صباحك جميل');
+    } else {
+      setGreeting('مساءك جميل');
+    }
+  }, []);
 
   // Get the last notification only if user is logged in
   const lastNotificationQuery = useMemoFirebase(
@@ -88,7 +104,7 @@ const Header = () => {
              <Skeleton className="h-6 w-32 mt-1" />
            ) : user ? (
             <>
-              <p className="text-sm text-foreground/80">أهلاً</p>
+              <p className="text-sm text-foreground/80">{greeting}</p>
               <h1 className="font-bold text-lg">{getShortName(user.displayName)}</h1>
             </>
            ) : (

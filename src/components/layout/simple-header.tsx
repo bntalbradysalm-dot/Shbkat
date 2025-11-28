@@ -14,7 +14,7 @@ const SimpleHeader = ({ title }: SimpleHeaderProps) => {
       <button onClick={() => router.back()} className="p-2 absolute">
         <ChevronRight className="h-6 w-6" />
       </button>
-      <h1 className="font-bold text-lg text-center flex-1">{title}</h1>
+      <h1 className="font-medium text-lg text-center flex-1">{title}</h1>
     </header>
   );
 };

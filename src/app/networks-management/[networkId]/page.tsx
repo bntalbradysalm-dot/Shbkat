@@ -12,11 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 type CardCategory = {
   id: string;
@@ -54,6 +56,15 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
   const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
   const [editingCategoryValues, setEditingCategoryValues] = React.useState<Omit<CardCategory, 'id' | 'price'> & { price: string }>({ name: '', price: '', capacity: '', validity: '' });
   
+  // State for adding cards dialog
+  const [isAddCardOpen, setIsAddCardOpen] = React.useState(false);
+  const [selectedCategoryIdForCard, setSelectedCategoryIdForCard] = React.useState<string>('');
+  const [addCardMode, setAddCardMode] = React.useState<'single' | 'bulk'>('single');
+  const [singleCard, setSingleCard] = React.useState({ cardNumber: '', password: '' });
+  const [bulkCards, setBulkCards] = React.useState('');
+  const [isProcessingCards, setIsProcessingCards] = React.useState(false);
+
+
   const cardsByCategory = useMemo(() => {
     if (!cards) return {};
     return cards.reduce((acc, card) => {
@@ -68,8 +79,8 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
             networkId: networkId,
             name: newCategory.name,
             price: Number(newCategory.price),
-            capacity: newCategory.capacity || null,
-            validity: newCategory.validity || null,
+            capacity: newCategory.capacity || undefined,
+            validity: newCategory.validity || undefined,
         });
         setNewCategory({ name: '', price: '', capacity: '', validity: '' });
         setIsAddingCategory(false);
@@ -90,8 +101,8 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
     updateDocumentNonBlocking(docRef, { 
         name: editingCategoryValues.name, 
         price: Number(editingCategoryValues.price),
-        capacity: editingCategoryValues.capacity || null,
-        validity: editingCategoryValues.validity || null,
+        capacity: editingCategoryValues.capacity || undefined,
+        validity: editingCategoryValues.validity || undefined,
     });
     setEditingCategoryId(null);
     toast({ title: 'تم الحفظ', description: 'تم تحديث الفئة بنجاح.' });
@@ -103,6 +114,65 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
     deleteDocumentNonBlocking(docRef);
     toast({ title: 'تم الحذف', description: 'تم حذف الفئة. (الكروت لم تحذف)', variant: 'destructive' });
   };
+  
+  const handleOpenAddCardDialog = (categoryId: string) => {
+    setSelectedCategoryIdForCard(categoryId);
+    setIsAddCardOpen(true);
+  };
+  
+  const handleSaveCards = async () => {
+    if (!firestore || !cardsCollection) return;
+    setIsProcessingCards(true);
+
+    const cardsToAdd: Omit<NetworkCard, 'id'>[] = [];
+    if (addCardMode === 'single') {
+        if (singleCard.cardNumber) {
+            cardsToAdd.push({
+                ...singleCard,
+                categoryId: selectedCategoryIdForCard,
+                status: 'available'
+            });
+        }
+    } else {
+        const lines = bulkCards.trim().split('\n');
+        lines.forEach(line => {
+            const [cardNumber, password] = line.split(/[,\t]/).map(s => s.trim());
+            if (cardNumber) {
+                cardsToAdd.push({
+                    cardNumber,
+                    password: password || undefined,
+                    categoryId: selectedCategoryIdForCard,
+                    status: 'available'
+                });
+            }
+        });
+    }
+
+    if (cardsToAdd.length === 0) {
+        toast({ title: 'خطأ', description: 'لم يتم إدخال أي كروت صالحة.', variant: 'destructive'});
+        setIsProcessingCards(false);
+        return;
+    }
+
+    try {
+        const batch = writeBatch(firestore);
+        cardsToAdd.forEach(cardData => {
+            const cardRef = doc(cardsCollection); // Auto-generate ID
+            batch.set(cardRef, cardData);
+        });
+        await batch.commit();
+        toast({ title: 'نجاح', description: `تمت إضافة ${cardsToAdd.length} كرت بنجاح.`});
+        setIsAddCardOpen(false);
+        setSingleCard({ cardNumber: '', password: '' });
+        setBulkCards('');
+    } catch (error) {
+        console.error("Error adding cards:", error);
+        toast({ title: 'خطأ', description: 'فشلت عملية إضافة الكروت.', variant: 'destructive'});
+    } finally {
+        setIsProcessingCards(false);
+    }
+  };
+
 
   const renderCategories = () => {
     if (isLoadingCategories) return <Skeleton className="h-48 w-full" />;
@@ -170,14 +240,13 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                             <Input placeholder="اسم الفئة" value={newCategory.name} onChange={e => setNewCategory(p => ({...p, name: e.target.value}))} />
                             <Input type="number" placeholder="السعر" value={newCategory.price} onChange={e => setNewCategory(p => ({...p, price: e.target.value}))} />
                             <Input placeholder="السعة (اختياري، مثال: 1GB)" value={newCategory.capacity} onChange={e => setNewCategory(p => ({...p, capacity: e.target.value}))} />
-                            <Select onValueChange={(value) => setNewCategory(p => ({...p, validity: value}))}>
+                             <Select onValueChange={(value) => setNewCategory(p => ({...p, validity: value}))} value={newCategory.validity}>
                                 <SelectTrigger><SelectValue placeholder="اختر الصلاحية (اختياري)" /></SelectTrigger>
                                 <SelectContent>
                                     {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <Input placeholder="أو اكتب صلاحية مخصصة" value={newCategory.validity} onChange={e => setNewCategory(p => ({...p, validity: e.target.value}))} />
-
                             <div className="flex justify-end gap-2">
                                 <Button size="icon" variant="ghost" onClick={() => setIsAddingCategory(false)}><X className="h-4 w-4" /></Button>
                                 <Button onClick={handleAddCategory}>إضافة</Button>
@@ -219,7 +288,7 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue={categories[0].id} className="w-full">
-                    <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 3)}, 1fr)` }}>
+                    <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)` }}>
                          {categories.map(cat => <TabsTrigger key={cat.id} value={cat.id}>{cat.name}</TabsTrigger>)}
                     </TabsList>
                     {categories.map(cat => (
@@ -244,9 +313,9 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                                     ) : (
                                         <p className='text-center text-sm text-muted-foreground py-4'>لا توجد كروت في هذه الفئة.</p>
                                     )}
-                                     <Button className="w-full mt-4" size="sm" variant="outline">
+                                     <Button className="w-full mt-4" size="sm" variant="outline" onClick={() => handleOpenAddCardDialog(cat.id)}>
                                         <PlusCircle className="ml-2 h-4 w-4" />
-                                        إضافة كرت جديد لهذه الفئة
+                                        إضافة كروت لهذه الفئة
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -268,6 +337,52 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
         </div>
       </div>
       <Toaster />
+      <Dialog open={isAddCardOpen} onOpenChange={setIsAddCardOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>إضافة كروت جديدة</DialogTitle>
+                <DialogDescription>
+                    أضف كروت جديدة للفئة المختارة.
+                </DialogDescription>
+            </DialogHeader>
+            <Tabs value={addCardMode} onValueChange={(value) => setAddCardMode(value as 'single' | 'bulk')}>
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="single">إضافة كرت واحد</TabsTrigger>
+                    <TabsTrigger value="bulk">إضافة دفعة</TabsTrigger>
+                </TabsList>
+                <TabsContent value="single" className="space-y-4 pt-4">
+                    <div>
+                        <Label htmlFor="cardNumber">رقم الكرت</Label>
+                        <Input id="cardNumber" value={singleCard.cardNumber} onChange={e => setSingleCard(p => ({...p, cardNumber: e.target.value}))} />
+                    </div>
+                     <div>
+                        <Label htmlFor="password">كلمة المرور (اختياري)</Label>
+                        <Input id="password" value={singleCard.password} onChange={e => setSingleCard(p => ({...p, password: e.target.value}))} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="bulk" className="space-y-4 pt-4">
+                    <Label htmlFor="bulkData">بيانات الكروت</Label>
+                    <Textarea 
+                        id="bulkData" 
+                        rows={6}
+                        value={bulkCards}
+                        onChange={e => setBulkCards(e.target.value)}
+                        placeholder="كل كرت في سطر جديد، مثال:&#10;111222,pass1&#10;333444,pass2&#10;555666"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        استخدم فاصلة (,) أو tab للفصل بين رقم الكرت وكلمة المرور. كلمة المرور اختيارية.
+                    </p>
+                </TabsContent>
+            </Tabs>
+            <DialogFooter>
+                <Button onClick={handleSaveCards} disabled={isProcessingCards}>
+                    {isProcessingCards ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Save className="ml-2 h-4 w-4" />}
+                    {isProcessingCards ? 'جاري الحفظ...' : 'حفظ الكروت'}
+                </Button>
+                <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

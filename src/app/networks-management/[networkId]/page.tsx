@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 
 type CardCategory = {
@@ -33,7 +34,7 @@ type NetworkCard = {
 };
 
 export default function NetworkDetailPage({ params }: { params: { networkId: string } }) {
-  const { networkId } = params;
+  const { networkId } = React.use(params);
   const firestore = useFirestore();
   const { toast } = useToast();
 

@@ -154,46 +154,47 @@ export default function TransferPage() {
     const fromUserRef = doc(firestore, 'users', user.uid);
     const toUserRef = doc(firestore, 'users', recipient.id);
 
-    try {
-        const batch = writeBatch(firestore);
+    const batch = writeBatch(firestore);
 
-        // 1. Deduct from sender's balance
-        batch.update(fromUserRef, { balance: increment(-numericAmount) });
+    // 1. Deduct from sender's balance
+    batch.update(fromUserRef, { balance: increment(-numericAmount) });
 
-        // 2. Add to receiver's balance
-        batch.update(toUserRef, { balance: increment(numericAmount) });
+    // 2. Add to receiver's balance
+    batch.update(toUserRef, { balance: increment(numericAmount) });
 
-        // 3. Create transaction record for the sender
-        const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-        const fromTransactionData = {
-            userId: user.uid,
-            transactionDate: new Date().toISOString(),
-            amount: numericAmount,
-            transactionType: `تحويل إلى ${recipient.displayName}`,
-            notes: `إلى رقم: ${recipient.phoneNumber}`
-        };
-        batch.set(fromTransactionRef, fromTransactionData);
+    // 3. Create transaction record for the sender
+    const fromTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+    const fromTransactionData = {
+        userId: user.uid,
+        transactionDate: new Date().toISOString(),
+        amount: numericAmount,
+        transactionType: `تحويل إلى ${recipient.displayName}`,
+        notes: `إلى رقم: ${recipient.phoneNumber}`
+    };
+    batch.set(fromTransactionRef, fromTransactionData);
 
-        await batch.commit();
-        
+    // Commit the batch and handle potential errors
+    batch.commit().then(() => {
         setShowSuccess(true);
-    
-    } catch(serverError) {
-        console.error("Transfer failed:", serverError);
+        setIsProcessing(false);
+        setIsConfirming(false);
+    }).catch(serverError => {
+        // Here we create and emit the contextual error
         const permissionError = new FirestorePermissionError({
             path: `/users/${user.uid} and /users/${recipient.id}`, // Batched writes affect multiple paths
             operation: 'write',
             requestResourceData: { 
                 senderUpdate: { balance: `DECREMENT(${numericAmount})` },
                 receiverUpdate: { balance: `INCREMENT(${numericAmount})` },
-                senderTransaction: { amount: numericAmount, to: recipient.displayName },
+                senderTransaction: fromTransactionData,
             }
         });
         errorEmitter.emit('permission-error', permissionError);
-    } finally {
+
+        // Also update local state
         setIsProcessing(false);
         setIsConfirming(false);
-    }
+    });
   };
   
   if (showSuccess) {
@@ -320,5 +321,3 @@ export default function TransferPage() {
     </>
   );
 }
-
-    

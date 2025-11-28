@@ -18,11 +18,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, doc, updateDoc, increment, addDoc, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
+import { transferFunds } from './actions';
 
 type UserProfile = {
   id: string;
@@ -145,47 +146,30 @@ export default function TransferPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !firestore || !senderProfile || !recipient) return;
-    
+    if (!user || !senderProfile || !recipient) return;
+
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
 
-    const senderRef = doc(firestore, 'users', user.uid);
-    const recipientRef = doc(firestore, 'users', recipient.id);
-
     try {
-        const batch = writeBatch(firestore);
-
-        // 1. Deduct from sender, increment recipient
-        batch.update(senderRef, { balance: increment(-numericAmount) });
-        batch.update(recipientRef, { balance: increment(numericAmount) });
-
-        // 2. Create transaction for sender
-        const senderTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-        batch.set(senderTransactionRef, {
-            userId: user.uid,
-            transactionDate: new Date().toISOString(),
+        const result = await transferFunds({
+            fromUserId: user.uid,
+            toUserId: recipient.id,
             amount: numericAmount,
-            transactionType: `تحويل إلى ${recipient.displayName}`,
-            notes: `إلى رقم: ${recipient.phoneNumber}`
+            fromUserName: senderProfile.displayName || 'مستخدم',
+            toUserName: recipient.displayName || 'مستخدم',
+            fromUserPhone: senderProfile.phoneNumber || 'غير معروف',
+            toUserPhone: recipient.phoneNumber || 'غير معروف',
         });
 
-        // 3. Create transaction for recipient
-        const recipientTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
-        batch.set(recipientTransactionRef, {
-            userId: recipient.id,
-            transactionDate: new Date().toISOString(),
-            amount: numericAmount,
-            transactionType: `استلام من ${senderProfile.displayName}`,
-            notes: `من رقم: ${senderProfile.phoneNumber}`
-        });
-
-        await batch.commit();
-        setShowSuccess(true);
-
+        if (result.success) {
+            setShowSuccess(true);
+        } else {
+            toast({ variant: 'destructive', title: 'فشل التحويل', description: result.error });
+        }
     } catch (error) {
         console.error("Transfer failed: ", error);
-        toast({ variant: "destructive", title: "فشل التحويل", description: "حدث خطأ أثناء العملية. لم يتم خصم أي مبلغ." });
+        toast({ variant: 'destructive', title: 'فشل التحويل', description: 'حدث خطأ غير متوقع أثناء العملية.' });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -314,3 +298,5 @@ export default function TransferPage() {
     </>
   );
 }
+
+    

@@ -152,13 +152,17 @@ export default function AccountPage() {
           description: 'تم نسخ رابط التطبيق إلى الحافظة. شاركه مع أصدقائك!',
         });
       }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء محاولة المشاركة.',
-      });
+    } catch (error: any) {
+        // Ignore AbortError which occurs when the user cancels the share sheet
+        if (error.name === 'AbortError') {
+          return;
+        }
+        console.error('Error sharing:', error);
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'حدث خطأ أثناء محاولة المشاركة.',
+        });
     }
   };
 

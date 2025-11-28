@@ -279,7 +279,7 @@ export default function TransferPage() {
                 </div>
             )}
 
-            <Button onClick={handleConfirmClick} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-bold" disabled={!recipient || !amount || isProcessing}>
+            <Button onClick={handleConfirmClick} className="w-full h-12 text-lg font-bold" disabled={!recipient || !amount || isProcessing}>
                 <Send className="ml-2 h-5 w-5"/>
                 تحويل
             </Button>

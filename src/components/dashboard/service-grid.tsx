@@ -5,7 +5,7 @@ import {
   Wallet,
   SatelliteDish,
   Send,
-  Star,
+  Heart,
   History,
   Wifi,
 } from 'lucide-react';
@@ -24,7 +24,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'المفضلة', icon: Star, href: '/favorites' },
+  { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

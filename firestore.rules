@@ -346,7 +346,7 @@ service cloud.firestore {
        * @allow Admins or the network owner can write categories.
        */
       match /cardCategories/{categoryId} {
-        allow read: if isSignedIn();
+        allow read: if isSignedIn() || isAdmin();
         allow write: if isAdmin() || isNetworkOwner(networkId);
       }
 
@@ -358,7 +358,7 @@ service cloud.firestore {
        * @allow A signed-in user can purchase an available card (update status to 'sold').
        */
       match /cards/{cardId} {
-        allow read: if isSignedIn();
+        allow read: if isSignedIn() || isAdmin();
         allow create, delete: if isAdmin() || isNetworkOwner(networkId);
         // Allow admin/owner to update any field.
         // Allow user to update only to purchase (set status to 'sold' and add their UID).

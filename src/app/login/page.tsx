@@ -17,7 +17,7 @@ const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center h-screen bg-background">
     <div className="flex flex-col items-center gap-4">
       <Image
-        src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png"
+        src="https://i.postimg.cc/XNhdQKqs/44.png"
         alt="logo"
         width={160}
         height={160}
@@ -108,7 +108,7 @@ export default function LoginPage() {
         <div className="flex-1 flex flex-col justify-center text-center">
           <div className="mb-10 flex flex-col items-center">
              <Image 
-                  src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
+                  src="https://i.postimg.cc/XNhdQKqs/44.png" 
                   alt="Shabakat Wallet Logo" 
                   width={140} 
                   height={140} 

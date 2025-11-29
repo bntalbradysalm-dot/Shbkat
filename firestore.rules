@@ -99,6 +99,10 @@ service cloud.firestore {
     function isBuyer() {
       return request.resource.data.buyerId == request.auth.uid;
     }
+    
+    function isWithdrawalRequestOwner() {
+      return request.resource.data.ownerId == request.auth.uid;
+    }
 
 
     /**
@@ -193,6 +197,16 @@ service cloud.firestore {
     }
 
     /**
+     * @description Manages withdrawal requests from network owners.
+     * @path /withdrawalRequests/{requestId}
+     */
+    match /withdrawalRequests/{requestId} {
+      allow create: if isSignedIn() && isWithdrawalRequestOwner();
+      allow read, update: if isAdmin();
+      allow delete: if false; // Requests should be archived, not deleted by users/admins
+    }
+    
+    /**
      * @description Manages user requests to transfer funds. This collection is no longer
      * used for creating new requests but is kept for archival purposes. Only admins
      * can manage old requests.
@@ -256,6 +270,7 @@ service cloud.firestore {
       // Nobody can update or delete records directly.
       allow update, delete: if false;
     }
+    
     // Admins can list all sold cards for reporting.
     match /soldCards {
         allow list: if isAdmin();

@@ -29,6 +29,7 @@ import {
   ListChecks,
   Repeat,
   ClipboardList,
+  Banknote,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -55,6 +56,7 @@ const managementLinks = [
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'تقارير مبيعات الكروت', icon: ClipboardList, href: '/card-sales-reports' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
+  { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
   { title: 'تقارير منظومة الوادي', icon: BarChart3, href: '/alwadi-reports' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag, Calendar, Package, CheckCircle, Copy, AlertCircle } from 'lucide-react';
@@ -42,6 +42,8 @@ type NetworkCard = {
 
 type UserProfile = {
   balance?: number;
+  displayName?: string;
+  phoneNumber?: string;
 };
 
 export default function NetworkPurchasePage({ params }: { params: { networkId: string } }) {
@@ -65,7 +67,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !firestore || !userDocRef) return;
+    if (!selectedCategory || !user || !firestore || !userDocRef || !userProfile) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -99,6 +101,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
         }
 
         const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
+        const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard
         const cardToPurchaseRef = doc(firestore, `networks/${networkId}/cards`, cardToPurchaseDoc.id);
 
         const batch = writeBatch(firestore);
@@ -118,10 +121,26 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
         });
+
+        // 4. Create sold card record
+        const soldCardRef = doc(collection(firestore, 'soldCards'));
+        batch.set(soldCardRef, {
+            networkId: networkId,
+            networkName: networkName,
+            categoryId: selectedCategory.id,
+            categoryName: selectedCategory.name,
+            cardId: cardToPurchaseData.id,
+            cardNumber: cardToPurchaseData.cardNumber,
+            price: selectedCategory.price,
+            buyerId: user.uid,
+            buyerName: userProfile.displayName,
+            buyerPhoneNumber: userProfile.phoneNumber,
+            soldTimestamp: new Date().toISOString()
+        })
         
         await batch.commit();
 
-        setPurchasedCard({ id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard);
+        setPurchasedCard(cardToPurchaseData);
 
     } catch (error) {
         console.error("Purchase failed:", error);

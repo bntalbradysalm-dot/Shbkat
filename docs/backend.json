@@ -382,6 +382,29 @@
             "soldTimestamp": { "type": "string", "format": "date-time", "description": "When the card was sold." }
         },
         "required": ["networkId", "categoryId", "cardNumber", "status"]
+    },
+    "SoldCard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sold Card",
+      "type": "object",
+      "description": "Represents a record of a sold WiFi card.",
+      "properties": {
+        "networkId": { "type": "string", "description": "The ID of the network the card belongs to." },
+        "networkName": { "type": "string", "description": "The name of the network." },
+        "categoryId": { "type": "string", "description": "The ID of the card category." },
+        "categoryName": { "type": "string", "description": "The name of the card category." },
+        "cardId": { "type": "string", "description": "The ID of the sold card." },
+        "cardNumber": { "type": "string", "description": "The number of the sold card." },
+        "price": { "type": "number", "description": "The price the card was sold for." },
+        "buyerId": { "type": "string", "description": "The UID of the user who bought the card." },
+        "buyerName": { "type": "string", "description": "The name of the user who bought the card." },
+        "buyerPhoneNumber": { "type": "string", "description": "The phone number of the user who bought the card." },
+        "soldTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the card was sold." }
+      },
+      "required": [
+        "networkId", "networkName", "categoryId", "categoryName", "cardId", "cardNumber", 
+        "price", "buyerId", "buyerName", "soldTimestamp"
+      ]
     }
   },
   "auth": {
@@ -600,6 +623,19 @@
           "params": [
             { "name": "networkId", "description": "The parent network ID." },
             { "name": "cardId", "description": "The unique ID for the card." }
+          ]
+        }
+      },
+      {
+        "path": "/soldCards/{cardId}",
+        "definition": {
+          "entityName": "SoldCard",
+          "schema": {
+            "$ref": "#/backend/entities/SoldCard"
+          },
+          "description": "A record of every card sold. Writable by users upon purchase, readable by admins for reporting.",
+          "params": [
+            { "name": "cardId", "description": "The unique ID of the sold card record." }
           ]
         }
       }

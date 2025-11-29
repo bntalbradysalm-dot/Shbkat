@@ -94,6 +94,11 @@ service cloud.firestore {
     function isTransferRequestOwner() {
         return request.resource.data.fromUserId == request.auth.uid;
     }
+    
+    function isBuyer() {
+      return request.resource.data.buyerId == request.auth.uid;
+    }
+
 
     /**
      * On update, ensures the 'id' field of a user document cannot be changed.
@@ -237,6 +242,18 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAdmin();
     }
+    
+     /**
+     * @description Stores records of sold cards for reporting.
+     * @path /soldCards/{cardId}
+     * @allow Users can create a record when they purchase a card.
+     * @allow Admins can read all records for reporting purposes.
+     * @deny Users cannot read, update, or delete any records.
+     */
+    match /soldCards/{cardId} {
+      allow create: if isSignedIn() && isBuyer();
+      allow read, update, delete: if isAdmin();
+    }
 
     /**
      * @description Manages user profile documents. Only the owner can read, update,
@@ -351,5 +368,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

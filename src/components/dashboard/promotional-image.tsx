@@ -34,7 +34,7 @@ export function PromotionalImage() {
 
     const promoImage = (ad: Advertisement) => (
         <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
-            <div className="relative aspect-[2/1] w-full">
+            <div className="relative aspect-[16/9] w-full">
                 <Image
                     src={ad.imageUrl}
                     alt="Promotional Banner"
@@ -48,7 +48,7 @@ export function PromotionalImage() {
     if (isLoading) {
         return (
              <div className="px-4 pt-4">
-                <Skeleton className="w-full aspect-[2/1] rounded-2xl" />
+                <Skeleton className="w-full aspect-[16/9] rounded-2xl" />
             </div>
         )
     }
@@ -59,6 +59,7 @@ export function PromotionalImage() {
 
     return (
         <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
+          <div className="px-4">
             <Carousel
                 className="w-full"
                 plugins={[
@@ -87,6 +88,7 @@ export function PromotionalImage() {
                     ))}
                 </CarouselContent>
             </Carousel>
+          </div>
         </div>
     );
 }

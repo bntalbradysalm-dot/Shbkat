@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag, Calendar, Package, CheckCircle, Copy, AlertCircle } from 'lucide-react';
@@ -40,11 +40,18 @@ type NetworkCard = {
     categoryId: string;
 };
 
+type Network = {
+    id: string;
+    ownerId: string;
+};
+
 type UserProfile = {
   balance?: number;
   displayName?: string;
   phoneNumber?: string;
 };
+
+const COMMISSION_RATE = 0.10; // 10%
 
 export default function NetworkPurchasePage({ params }: { params: { networkId: string } }) {
   const { networkId } = React.use(params);
@@ -62,12 +69,15 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
 
   const categoriesCollection = useMemoFirebase(() => (firestore ? collection(firestore, `networks/${networkId}/cardCategories`) : null), [firestore, networkId]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<CardCategory>(categoriesCollection);
+  
+  const networkDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `networks`, networkId) : null), [firestore, networkId]);
+  const { data: networkData } = useDoc<Network>(networkDocRef);
 
   const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !firestore || !userDocRef || !userProfile) return;
+    if (!selectedCategory || !user || !firestore || !userDocRef || !userProfile || !networkData) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -122,20 +132,27 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             notes: `شبكة: ${networkName}`,
         });
 
-        // 4. Create sold card record
+        // 4. Create sold card record with commission calculation
+        const commissionAmount = categoryPrice * COMMISSION_RATE;
+        const payoutAmount = categoryPrice - commissionAmount;
+
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
+            ownerId: networkData.ownerId,
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
             cardId: cardToPurchaseData.id,
             cardNumber: cardToPurchaseData.cardNumber,
             price: selectedCategory.price,
+            commissionAmount: commissionAmount,
+            payoutAmount: payoutAmount,
             buyerId: user.uid,
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
-            soldTimestamp: new Date().toISOString()
+            soldTimestamp: new Date().toISOString(),
+            payoutStatus: 'pending',
         })
         
         await batch.commit();

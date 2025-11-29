@@ -246,14 +246,16 @@ service cloud.firestore {
      /**
      * @description Stores records of sold cards for reporting.
      * @path /soldCards
-     * @allow Admins can list records for reporting purposes.
+     * @allow Admins can list and read records for reporting and payout.
      * @allow Users can create records when they buy a card.
+     * @allow Admins can update the payoutStatus of a card.
      */
     match /soldCards/{cardId} {
         allow create: if isSignedIn() && isBuyer();
         allow get: if isAdmin() || isBuyer();
-        allow list: if isAdmin(); // This rule is for collections, but placed in a document match. This is the fix.
-        allow update, delete: if false;
+        allow list: if isAdmin();
+        allow update: if isAdmin() && request.resource.data.payoutStatus == 'completed';
+        allow delete: if false;
     }
 
 
@@ -370,5 +372,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

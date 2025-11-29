@@ -129,7 +129,7 @@ export default function LoginPage() {
               <Input
                 id="phone"
                 type="tel"
-                className="bg-muted focus-visible:ring-primary border-border text-right"
+                className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
                 placeholder="7xxxxxxxx"
                 value={phoneNumber}
                 onChange={e => setPhoneNumber(e.target.value)}
@@ -143,7 +143,7 @@ export default function LoginPage() {
                   id="password"
                   type={isPasswordVisible ? 'text' : 'password'}
                   placeholder="ادخل كلمة المرور"
-                  className="bg-muted focus-visible:ring-primary border-border text-right"
+                  className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -163,7 +163,7 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full text-lg font-bold h-12" disabled={isLoading}>
+            <Button type="submit" className="w-full text-lg font-bold h-12 rounded-xl" disabled={isLoading}>
               {isLoading ? 'جاري الدخول...' : 'دخول'}
             </Button>
           </form>

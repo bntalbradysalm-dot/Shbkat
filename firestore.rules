@@ -244,24 +244,18 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores records of sold cards for reporting.
-     * @path /soldCards
-     * @allow Admins can list and read records for reporting and payout.
-     * @allow Users can create records when they buy a card.
-     * @allow Admins can update the payoutStatus of a card.
+     * @description Stores records of sold cards for reporting. Admins can list/read
+     * all records. Users can create a record when buying a card and read their own.
      */
     match /soldCards/{cardId} {
-        allow create: if isSignedIn() && isBuyer();
-        allow get: if isAdmin() || isBuyer();
-        allow update: if isAdmin() && request.resource.data.payoutStatus == 'completed';
-        allow delete: if false;
+      allow create: if isSignedIn() && isBuyer();
+      allow get: if isAdmin() || isBuyer();
+      allow update: if isAdmin() && request.resource.data.payoutStatus == 'completed';
+      allow delete: if false;
     }
-
-    // This rule allows the admin to list all documents in the soldCards collection.
     match /soldCards {
-        allow list: if isAdmin();
+      allow list: if isAdmin();
     }
-
 
     /**
      * @description Manages user profile documents. Only the owner can read, update,
@@ -376,3 +370,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

@@ -274,6 +274,7 @@ function RenewPageComponent() {
           rel="noopener noreferrer"
           className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors"
         >
+          <p>لمعرفة صلاحية الفترة المتبقية في الكرت</p>
           <span className="underline">اضغط هنا</span>
         </a>
       </div>

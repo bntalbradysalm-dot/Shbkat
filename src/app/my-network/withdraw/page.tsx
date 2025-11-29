@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,8 +51,14 @@ export default function WithdrawPage() {
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
-    const { data: withdrawalMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
+    const { data: allWithdrawalMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
     
+    const withdrawalMethods = useMemo(() => {
+        if (!allWithdrawalMethods) return [];
+        const allowedNames = ["بنك الكريمي", "شركة العمقي للصرافة"];
+        return allWithdrawalMethods.filter(method => allowedNames.includes(method.name));
+    }, [allWithdrawalMethods]);
+
     useEffect(() => {
         if (!selectedMethodId && withdrawalMethods && withdrawalMethods.length > 0) {
             setSelectedMethodId(withdrawalMethods[0].id);

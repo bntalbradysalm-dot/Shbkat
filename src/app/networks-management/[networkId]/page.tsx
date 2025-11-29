@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 type CardCategory = {
   id: string;
@@ -303,7 +304,10 @@ export default function NetworkDetailPage({ params }: { params: { networkId: str
                                         cardsByCategory[cat.id].map(card => (
                                             <div key={card.id} className='p-2 bg-background border rounded-md flex justify-between items-center'>
                                                 <p className='font-mono text-sm'>{card.cardNumber}</p>
-                                                <Badge variant={card.status === 'sold' ? 'destructive' : 'default'}>
+                                                <Badge className={cn(
+                                                    card.status === 'sold' ? 'bg-red-500' : 'bg-green-500',
+                                                    'text-white'
+                                                )}>
                                                     {card.status === 'sold' ? 'مباع' : 'متاح'}
                                                 </Badge>
                                             </div>

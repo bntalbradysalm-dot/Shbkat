@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const allNavItems = [
   { name: 'الرئيسية', icon: Home, href: '/', roles: ['admin', 'user'] },
-  { name: 'الشبكات', icon: Wifi, href: '/networks-management', roles: ['admin'] },
   { name: 'الطلبات', icon: Repeat, href: '/renewal-requests', roles: ['admin'] },
   { name: 'المستخدمين', icon: Users, href: '/users', roles: ['admin'] },
   { name: 'حسابي', icon: User, href: '/account', roles: ['admin', 'user'] },
@@ -93,7 +92,7 @@ function NavItems() {
           <Link
             key={item.name}
             href={item.href}
-            className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/5 focus:outline-none active:scale-95 ${
+            className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
               isActive
                 ? 'text-primary dark:text-primary-foreground'
                 : 'text-muted-foreground hover:text-primary dark:hover:text-primary-foreground'

@@ -7,7 +7,7 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, User } from 'lucide-react';
+import { Copy, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -25,6 +25,24 @@ type AppSettings = {
     supportPhoneNumber: string;
 };
 
+// Static default payment methods
+const defaultMethods: PaymentMethod[] = [
+    {
+        id: 'static-kuraimee',
+        name: 'بنك الكريمي',
+        accountHolderName: 'محمد راضي باشادي',
+        accountNumber: '121349021',
+        logoUrl: 'https://i.ibb.co/3s4yK1L/image.png'
+    },
+    {
+        id: 'static-alamqi',
+        name: 'شركة العمقي للصرافة',
+        accountHolderName: 'محمد راضي باشادي',
+        accountNumber: '1001001',
+        logoUrl: 'https://i.ibb.co/Ybf3gpb/1690912196053.jpg'
+    }
+];
+
 const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
@@ -36,13 +54,18 @@ export default function TopUpPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const { user } = useUser();
-    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-
+    
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
-    const { data: methods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
+    const { data: dynamicMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
+    
+    const allMethods = useMemo(() => {
+        return [...defaultMethods, ...(dynamicMethods || [])];
+    }, [dynamicMethods]);
+    
+    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
     const settingsDocRef = useMemoFirebase(
       () => (firestore && user ? doc(firestore, 'appSettings', 'global') : null),
@@ -50,13 +73,11 @@ export default function TopUpPage() {
     );
     const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
-
-    // Set the first method as selected by default
     React.useEffect(() => {
-        if (!selectedMethod && methods && methods.length > 0) {
-            setSelectedMethod(methods[0]);
+        if (!selectedMethod && allMethods.length > 0) {
+            setSelectedMethod(allMethods[0]);
         }
-    }, [methods, selectedMethod]);
+    }, [allMethods, selectedMethod]);
 
     const handleCopy = (accountNumber: string) => {
         navigator.clipboard.writeText(accountNumber);
@@ -95,7 +116,7 @@ export default function TopUpPage() {
             );
         }
 
-        if (!methods || methods.length === 0) {
+        if (allMethods.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center text-center h-40 px-4">
                     <p className="mt-4 text-lg font-semibold">لا توجد طرق دفع متاحة</p>
@@ -108,7 +129,7 @@ export default function TopUpPage() {
 
         return (
             <div className="grid grid-cols-2 gap-4 px-4">
-                {methods.map(method => (
+                {allMethods.map(method => (
                     <Card
                         key={method.id}
                         onClick={() => setSelectedMethod(method)}

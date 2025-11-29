@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Banknote, User } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Image as ImageIcon, Banknote, User, ShieldCheck } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,24 @@ const getLogoSrc = (url?: string) => {
     return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
 };
 
+// Static default payment methods
+const defaultMethods: PaymentMethod[] = [
+    {
+        id: 'static-kuraimee',
+        name: 'بنك الكريمي',
+        accountHolderName: 'محمد راضي باشادي',
+        accountNumber: '121349021',
+        logoUrl: 'https://i.ibb.co/3s4yK1L/image.png'
+    },
+    {
+        id: 'static-alamqi',
+        name: 'شركة العمقي للصرافة',
+        accountHolderName: 'محمد راضي باشادي',
+        accountNumber: '1001001',
+        logoUrl: 'https://i.ibb.co/Ybf3gpb/1690912196053.jpg'
+    }
+];
+
 export default function PaymentManagementPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -37,7 +55,7 @@ export default function PaymentManagementPage() {
     () => (firestore ? collection(firestore, 'paymentMethods') : null),
     [firestore]
   );
-  const { data: methods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
+  const { data: dynamicMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -105,18 +123,42 @@ export default function PaymentManagementPage() {
     <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="إدارة طرق الدفع" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className='text-center'>طرق الدفع المتاحة</CardTitle>
+            <CardTitle className='text-center'>طرق الدفع الأساسية</CardTitle>
+            <CardDescription className='text-center'>هذه الطرق ثابتة ولا يمكن تعديلها من هنا.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {defaultMethods.map((method) => (
+              <Card key={method.id} className="p-4 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                     <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain bg-background" />
+                    <div>
+                      <p className="font-semibold">{method.name}</p>
+                      <p className="text-sm text-muted-foreground">{method.accountHolderName}</p>
+                      <p className="text-sm text-primary dark:text-primary-foreground">{method.accountNumber}</p>
+                    </div>
+                  </div>
+                  <ShieldCheck className="h-5 w-5 text-green-500" />
+                </div>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-center'>طرق الدفع الإضافية</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
                 <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+                    <Skeleton className="h-24 w-full rounded-lg" />
                 </div>
-            ) : (
-                methods?.map((method) => (
+            ) : dynamicMethods && dynamicMethods.length > 0 ? (
+                dynamicMethods.map((method) => (
                 <Card key={method.id} className="p-4">
                     {editingId === method.id ? (
                     <div className="space-y-4">
@@ -159,13 +201,16 @@ export default function PaymentManagementPage() {
                     )}
                 </Card>
                 ))
+            ) : (
+                <p className='text-center text-muted-foreground py-4'>لم يتم إضافة طرق دفع أخرى.</p>
             )}
+
              {isAdding && (
               <Card className="p-4 bg-muted/50">
                  <div className="space-y-4">
                     <div>
                       <Label htmlFor="new-name" className='flex items-center gap-2'><Banknote className='w-4 h-4' /> اسم البنك</Label>
-                      <Input id="new-name" value={newMethod.name} onChange={(e) => setNewMethod(p=>({...p, name: e.target.value}))} placeholder="مثال: بنك الكريمي" />
+                      <Input id="new-name" value={newMethod.name} onChange={(e) => setNewMethod(p=>({...p, name: e.target.value}))} placeholder="مثال: بنك الأمل" />
                     </div>
                     <div>
                       <Label htmlFor="new-holder-name" className='flex items-center gap-2'><User className='w-4 h-4' /> اسم صاحب الحساب</Label>
@@ -186,15 +231,15 @@ export default function PaymentManagementPage() {
                   </div>
               </Card>
             )}
+
+             {!isAdding && (
+                <Button className="w-full mt-4" onClick={() => setIsAdding(true)}>
+                    <PlusCircle className="ml-2 h-4 w-4" />
+                    إضافة طريقة دفع أخرى
+                </Button>
+            )}
           </CardContent>
         </Card>
-        
-        {!isAdding && (
-            <Button className="w-full" onClick={() => setIsAdding(true)}>
-            <PlusCircle className="ml-2 h-4 w-4" />
-            إضافة طريقة دفع
-            </Button>
-        )}
       </div>
     </div>
     <Toaster />

@@ -251,7 +251,7 @@ service cloud.firestore {
      */
     match /soldCards/{cardId} {
         allow create: if isSignedIn() && isBuyer();
-        allow get: if isAdmin();
+        allow get: if isAdmin() || isBuyer();
         allow list: if isAdmin();
         allow update, delete: if false;
     }
@@ -370,3 +370,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

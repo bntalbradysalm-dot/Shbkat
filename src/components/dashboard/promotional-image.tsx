@@ -58,7 +58,7 @@ export function PromotionalImage() {
     }
 
     return (
-        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
+        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500 px-4">
             <Carousel
                 className="w-full"
                 plugins={[
@@ -73,14 +73,16 @@ export function PromotionalImage() {
             >
                 <CarouselContent>
                     {ads.map((ad) => (
-                        <CarouselItem key={ad.id} className="px-2">
-                            {ad.linkUrl ? (
-                                <Link href={ad.linkUrl} className="block">
-                                    {promoImage(ad)}
-                                </Link>
-                            ) : (
-                                promoImage(ad)
-                            )}
+                        <CarouselItem key={ad.id}>
+                           <div className="p-1">
+                                {ad.linkUrl ? (
+                                    <Link href={ad.linkUrl} className="block">
+                                        {promoImage(ad)}
+                                    </Link>
+                                ) : (
+                                    promoImage(ad)
+                                )}
+                           </div>
                         </CarouselItem>
                     ))}
                 </CarouselContent>

@@ -1,12 +1,13 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, doc, writeBatch, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, User, Phone, CreditCard, Calendar, AlertCircle, Banknote, Percent } from 'lucide-react';
+import { Wifi, User, Phone, CreditCard, Calendar, AlertCircle, Banknote, Check } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -17,20 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
 
 type Network = {
   id: string;
@@ -59,10 +47,10 @@ type SoldCard = {
     payoutStatus: 'pending' | 'completed';
 };
 
-const InfoRow = ({ icon: Icon, label, value, isMono = false }: { icon: React.ElementType, label: string, value: string | number, isMono?: boolean }) => (
+const InfoRow = ({ icon: Icon, label, value, isMono = false, valueClassName }: { icon: React.ElementType, label: string, value: string | number, isMono?: boolean, valueClassName?: string }) => (
     <div className="flex justify-between items-center text-xs py-2 border-b last:border-b-0">
         <span className="text-muted-foreground flex items-center gap-2"><Icon className="h-4 w-4" /> {label}:</span>
-        <span className={isMono ? 'font-mono' : 'font-semibold'}>
+        <span className={isMono ? 'font-mono' : `font-semibold ${valueClassName}`}>
             {typeof value === 'number' ? `${value.toLocaleString('en-US')} ريال` : value}
         </span>
     </div>
@@ -70,8 +58,6 @@ const InfoRow = ({ icon: Icon, label, value, isMono = false }: { icon: React.Ele
 
 const NetworkDetails = ({ network }: { network: Network }) => {
     const firestore = useFirestore();
-    const { toast } = useToast();
-    const [isConfirmingPayout, setIsConfirmingPayout] = useState(false);
 
     const soldCardsQuery = useMemoFirebase(
       () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id), orderBy('soldTimestamp', 'desc')) : null,
@@ -85,42 +71,15 @@ const NetworkDetails = ({ network }: { network: Network }) => {
     );
     const { data: availableCards, isLoading: isLoadingAvailable } = useCollection<NetworkCard>(availableCardsQuery);
     
-    const pendingPayouts = useMemo(() => soldCards?.filter(c => c.payoutStatus === 'pending') || [], [soldCards]);
-    const totalPayoutAmount = useMemo(() => pendingPayouts.reduce((sum, card) => sum + card.payoutAmount, 0), [pendingPayouts]);
+    const { totalSales, totalPayout } = useMemo(() => {
+        if (!soldCards) return { totalSales: 0, totalPayout: 0 };
+        return soldCards.reduce((acc, card) => {
+            acc.totalSales += card.price;
+            acc.totalPayout += card.payoutAmount;
+            return acc;
+        }, { totalSales: 0, totalPayout: 0 });
+    }, [soldCards]);
 
-    const handlePayout = async () => {
-        if (!firestore || !network.ownerId || totalPayoutAmount <= 0) return;
-
-        const batch = writeBatch(firestore);
-
-        // 1. Add balance to network owner
-        const ownerRef = doc(firestore, 'users', network.ownerId);
-        batch.update(ownerRef, { balance: increment(totalPayoutAmount) });
-
-        // 2. Mark cards as completed
-        pendingPayouts.forEach(card => {
-            const cardRef = doc(firestore, 'soldCards', card.id);
-            batch.update(cardRef, { payoutStatus: 'completed' });
-        });
-
-        try {
-            await batch.commit();
-            toast({
-                title: "تم التحويل بنجاح",
-                description: `تم تحويل مبلغ ${totalPayoutAmount.toLocaleString('en-US')} ريال إلى حساب مالك الشبكة.`,
-            });
-        } catch (error) {
-            console.error("Payout failed:", error);
-            toast({
-                variant: 'destructive',
-                title: "فشل التحويل",
-                description: "حدث خطأ أثناء محاولة تحويل المستحقات.",
-            });
-        } finally {
-            setIsConfirmingPayout(false);
-        }
-    };
-    
     const isLoading = isLoadingSold || isLoadingAvailable;
 
     if (isLoading) {
@@ -135,48 +94,38 @@ const NetworkDetails = ({ network }: { network: Network }) => {
 
     return (
         <>
-        <Tabs defaultValue="pending" className="w-full">
-            <Card className="mb-4">
-                <CardHeader className="p-4">
-                    <CardTitle className="text-base text-center">المستحقات المعلقة</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 space-y-4">
-                     <div className="text-center">
-                        <p className="text-3xl font-bold text-primary">{totalPayoutAmount.toLocaleString('en-US')}</p>
-                        <p className="text-sm text-muted-foreground">ريال يمني</p>
-                    </div>
-                    <Button className="w-full" onClick={() => setIsConfirmingPayout(true)} disabled={totalPayoutAmount <= 0}>
-                        <Banknote className="ml-2 h-4 w-4" />
-                        تحويل المستحقات
-                    </Button>
-                </CardContent>
-            </Card>
+        <Tabs defaultValue="sold" className="w-full">
+             <div className="grid grid-cols-2 gap-4 mb-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">إجمالي المبيعات</CardTitle>
+                        <Banknote className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-primary">{totalSales.toLocaleString('en-US')}</div>
+                        <p className="text-xs text-muted-foreground">ريال يمني</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">إجمالي الأرباح المحولة</CardTitle>
+                        <Check className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-600">{totalPayout.toLocaleString('en-US')}</div>
+                        <p className="text-xs text-muted-foreground">ريال يمني</p>
+                    </CardContent>
+                </Card>
+            </div>
 
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pending">
-                    للتحويل ({pendingPayouts.length})
-                </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="sold">
-                    كل المباعة ({soldCards?.length || 0})
+                    الكروت المباعة ({soldCards?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger value="available">
-                    المتوفرة ({availableCards?.length || 0})
+                    الكروت المتوفرة ({availableCards?.length || 0})
                 </TabsTrigger>
             </TabsList>
-            <TabsContent value="pending" className='pt-4'>
-                {pendingPayouts.length > 0 ? (
-                    <div className="space-y-3">
-                        {pendingPayouts.map(card => (
-                            <Card key={card.id} className="p-3 bg-muted/30">
-                                <InfoRow icon={CreditCard} label="رقم الكرت" value={card.cardNumber} isMono />
-                                <InfoRow icon={User} label="المشتري" value={card.buyerName} />
-                                <InfoRow icon={Calendar} label="تاريخ البيع" value={format(parseISO(card.soldTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
-                                <InfoRow icon={Banknote} label="المبلغ المستحق" value={card.payoutAmount} />
-                            </Card>
-                        ))}
-                    </div>
-                ) : <p className="text-center text-muted-foreground py-8">لا توجد مستحقات معلقة.</p>}
-            </TabsContent>
             <TabsContent value="sold" className='pt-4'>
                 {soldCards && soldCards.length > 0 ? (
                     <div className="space-y-3">
@@ -186,8 +135,10 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                                 <InfoRow icon={User} label="المشتري" value={card.buyerName} />
                                 <InfoRow icon={Phone} label="رقم المشتري" value={card.buyerPhoneNumber} />
                                 <InfoRow icon={Calendar} label="تاريخ البيع" value={format(parseISO(card.soldTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
-                                <div className="flex justify-between items-center text-xs py-2">
-                                     <span className="text-muted-foreground flex items-center gap-2"><Banknote className="h-4 w-4" /> الحالة:</span>
+                                <InfoRow icon={Banknote} label="سعر البيع" value={card.price} valueClassName="text-primary" />
+                                <InfoRow icon={Banknote} label="المبلغ المحول" value={card.payoutAmount} valueClassName="text-green-600" />
+                                 <div className="flex justify-between items-center text-xs py-2">
+                                     <span className="text-muted-foreground flex items-center gap-2"><Check className="h-4 w-4" /> الحالة:</span>
                                     <Badge variant={card.payoutStatus === 'completed' ? 'default' : 'secondary'}>{card.payoutStatus === 'completed' ? 'تم التحويل' : 'معلق'}</Badge>
                                 </div>
                             </Card>
@@ -208,20 +159,6 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                 ) : <p className="text-center text-muted-foreground py-8">لا توجد كروت متوفرة.</p>}
             </TabsContent>
         </Tabs>
-        <AlertDialog open={isConfirmingPayout} onOpenChange={setIsConfirmingPayout}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>تأكيد تحويل المستحقات</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        هل أنت متأكد من رغبتك في تحويل مبلغ {totalPayoutAmount.toLocaleString('en-US')} ريال إلى حساب مالك الشبكة؟ سيتم تحديث حالة جميع الكروت المعلقة إلى "تم التحويل".
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction onClick={handlePayout}>تأكيد التحويل</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
         </>
     )
 }
@@ -254,7 +191,7 @@ export default function CardSalesReportsPage() {
         <Card>
             <CardHeader>
                 <CardTitle className="text-center">تقارير مبيعات الكروت</CardTitle>
-                <CardDescription className="text-center">اختر شبكة لعرض تقارير مبيعاتها ومستحقاتها.</CardDescription>
+                <CardDescription className="text-center">اختر شبكة لعرض تقارير مبيعاتها وأرباحها.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Accordion type="single" collapsible className="w-full">

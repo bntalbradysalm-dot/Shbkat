@@ -122,7 +122,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
         // 2. Deduct balance from user
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
 
-        // 3. Create a transaction record
+        // 3. Create a transaction record for buyer
         const transactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(transactionRef, {
             userId: user.uid,
@@ -132,10 +132,14 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             notes: `شبكة: ${networkName}`,
         });
 
-        // 4. Create sold card record with commission calculation
+        // 4. Calculate commission and payout, then update owner's balance
         const commissionAmount = categoryPrice * COMMISSION_RATE;
         const payoutAmount = categoryPrice - commissionAmount;
 
+        const ownerRef = doc(firestore, 'users', networkData.ownerId);
+        batch.update(ownerRef, { balance: increment(payoutAmount) });
+
+        // 5. Create sold card record with commission calculation
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -152,7 +156,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
             soldTimestamp: new Date().toISOString(),
-            payoutStatus: 'pending',
+            payoutStatus: 'completed', // Set to completed as it's transferred instantly
         })
         
         await batch.commit();

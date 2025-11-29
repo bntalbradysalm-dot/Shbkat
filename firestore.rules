@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-
  * related data, including profiles, transactions, and favorites, is private. A user
@@ -116,12 +117,13 @@ service cloud.firestore {
     
      /**
      * Validates that an update operation is only incrementing the balance field
-     * and not touching any other fields. This is used for direct user-to-user transfers.
+     * and not touching any other fields. This is used for direct user-to-user transfers
+     * or automated payouts.
      */
-    function isBalanceIncrementOnly(incrementAmount) {
+    function isBalanceIncrementOnly() {
       let otherFields = request.resource.data.diff(resource.data).affectedKeys();
       return otherFields.hasOnly(['balance']) &&
-             request.resource.data.balance == resource.data.balance + incrementAmount;
+             request.resource.data.balance > resource.data.balance;
     }
 
 
@@ -244,17 +246,19 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores records of sold cards for reporting. Admins can list/read
-     * all records. Users can create a record when buying a card and read their own.
+     * @description Stores records of sold cards for reporting.
      */
     match /soldCards/{cardId} {
+      // Users can create a record when they buy a card.
       allow create: if isSignedIn() && isBuyer();
+      // Admins and the buyer can read individual sold card records.
       allow get: if isAdmin() || isBuyer();
-      allow update: if isAdmin() && request.resource.data.payoutStatus == 'completed';
-      allow delete: if false;
+      // Nobody can update or delete records directly.
+      allow update, delete: if false;
     }
+    // Admins can list all sold cards for reporting.
     match /soldCards {
-       allow list: if isAdmin();
+        allow list: if isAdmin();
     }
 
 
@@ -274,8 +278,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      allow update: if (isOwner(userId) || isAdmin()) || 
-                      (isSignedIn() && isBalanceIncrementOnly(request.resource.data.balance - resource.data.balance));
+      // Allow owner/admin to update, or any user to perform a validated balance increment (for transfers/payouts).
+      allow update: if (isOwner(userId) || isAdmin()) || (isSignedIn() && isBalanceIncrementOnly());
       allow delete: if isAdmin();
 
       /**
@@ -371,5 +375,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

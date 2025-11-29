@@ -101,7 +101,7 @@ export default function WithdrawPage() {
     };
 
     const handleFinalConfirmation = async () => {
-        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing || isAmountInvalid) return;
+        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing || isAmountInvalid || !userProfile.displayName || !userProfile.phoneNumber) return;
 
         setIsProcessing(true);
 
@@ -133,7 +133,7 @@ export default function WithdrawPage() {
     
     if (showSuccess) {
       return (
-        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
                 <CardContent className="p-6">
                     <div className="flex flex-col items-center justify-center gap-4">

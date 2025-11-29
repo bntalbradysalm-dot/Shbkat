@@ -36,7 +36,7 @@ const OwnerDashboard = () => (
               <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
                   <Banknote className="w-10 h-10 text-primary" />
                   <p className="font-bold">سحب</p>
-                  <p className="text-xs text-muted-foreground">الأرباح والطلبات</p>
+                  <p className="text-xs text-muted-foreground">سحب الارباح</p>
               </Card>
           </Link>
       </div>

@@ -11,6 +11,7 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type RenewalRequest = {
   id: string;
@@ -49,6 +50,7 @@ const StatusBadge = ({ status }: { status: RenewalRequest['status'] }) => {
 export default function AlwadiReportsPage() {
   const firestore = useFirestore();
   const [filter, setFilter] = useState<'all' | 'approved' | 'rejected'>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
 
   const requestsQuery = useMemoFirebase(
     () => (firestore ? query(
@@ -66,14 +68,13 @@ export default function AlwadiReportsPage() {
   }, [allRequests, filter]);
   
   const { monthlyData, totalAmount, totalProfit } = useMemo(() => {
-    if (!allRequests) { // Calculate totals from ALL requests, but only 'approved' ones
+    if (!allRequests) { 
       return { monthlyData: {}, totalAmount: 0, totalProfit: 0 };
     }
 
     const data: { [key: string]: RenewalRequest[] } = {};
     let total = 0;
 
-    // Use filteredRequests to populate the monthly tabs
     filteredRequests.forEach(req => {
         const monthKey = format(parseISO(req.requestTimestamp), 'yyyy-MM');
         if (!data[monthKey]) {
@@ -82,7 +83,6 @@ export default function AlwadiReportsPage() {
         data[monthKey].push(req);
     });
 
-    // Use allRequests to calculate the totals, but only for approved
     allRequests.forEach(req => {
         if (req.status === 'approved') {
             total += req.packagePrice;
@@ -97,7 +97,12 @@ export default function AlwadiReportsPage() {
   }, [allRequests, filteredRequests]);
 
   const sortedMonths = Object.keys(monthlyData).sort().reverse();
-  const defaultTab = sortedMonths.length > 0 ? sortedMonths[0] : '';
+  
+  React.useEffect(() => {
+    if (sortedMonths.length > 0 && !selectedMonth) {
+      setSelectedMonth(sortedMonths[0]);
+    }
+  }, [sortedMonths, selectedMonth]);
   
   const renderContent = () => {
     if (isLoading) {
@@ -116,6 +121,11 @@ export default function AlwadiReportsPage() {
     if (!allRequests || allRequests.length === 0) {
         return <p className="text-center text-muted-foreground mt-10">لا توجد طلبات لعرضها.</p>;
     }
+    
+    const monthRequests = selectedMonth ? monthlyData[selectedMonth] : [];
+    const monthTotal = monthRequests
+      ?.filter(req => req.status === 'approved')
+      .reduce((sum, req) => sum + req.packagePrice, 0) || 0;
 
     return (
       <div className="p-4 space-y-4">
@@ -150,50 +160,47 @@ export default function AlwadiReportsPage() {
             </TabsList>
         </Tabs>
 
-        <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            {sortedMonths.map(monthKey => (
-              <TabsTrigger key={monthKey} value={monthKey}>
-                {format(parseISO(`${monthKey}-01`), 'MMM yyyy', { locale: ar })}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {sortedMonths.map(monthKey => {
-            const monthRequests = monthlyData[monthKey];
-            const monthTotal = monthRequests
-              .filter(req => req.status === 'approved')
-              .reduce((sum, req) => sum + req.packagePrice, 0);
+         {sortedMonths.length > 0 && selectedMonth && (
+          <div className='space-y-4'>
+            <Select onValueChange={setSelectedMonth} value={selectedMonth}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="اختر شهراً" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortedMonths.map(monthKey => (
+                   <SelectItem key={monthKey} value={monthKey}>
+                    {format(parseISO(`${monthKey}-01`), 'MMMM yyyy', { locale: ar })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            return (
-              <TabsContent key={monthKey} value={monthKey} className="pt-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className='text-base flex justify-between items-center'>
-                           <span>طلبات شهر {format(parseISO(`${monthKey}-01`), 'MMMM yyyy', { locale: ar })}</span>
-                           <span className='text-sm font-bold text-primary dark:text-primary-foreground'>{monthTotal.toLocaleString('en-US')} ريال</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {monthRequests.map(request => (
-                            <Card key={request.id} className="p-3 bg-muted/30">
-                               <div className="space-y-1">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-bold">{request.userName}</h4>
-                                    <StatusBadge status={request.status} />
-                                </div>
-                                <InfoRow icon={Tag} label="الباقة" value={request.packageTitle} />
-                                <InfoRow icon={CreditCard} label="رقم الكرت" value={request.cardNumber} />
-                                <InfoRow icon={Calendar} label="التاريخ" value={format(parseISO(request.requestTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
-                                <InfoRow icon={Wallet} label="المبلغ" value={request.packagePrice} />
-                               </div>
-                            </Card>
-                        ))}
-                    </CardContent>
-                </Card>
-              </TabsContent>
-            )
-          })}
-        </Tabs>
+            <Card>
+                <CardHeader>
+                    <CardTitle className='text-base flex justify-between items-center'>
+                       <span>طلبات شهر {format(parseISO(`${selectedMonth}-01`), 'MMMM yyyy', { locale: ar })}</span>
+                       <span className='text-sm font-bold text-primary dark:text-primary-foreground'>{monthTotal.toLocaleString('en-US')} ريال</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {monthRequests && monthRequests.length > 0 ? monthRequests.map(request => (
+                        <Card key={request.id} className="p-3 bg-muted/30">
+                           <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                                <h4 className="font-bold">{request.userName}</h4>
+                                <StatusBadge status={request.status} />
+                            </div>
+                            <InfoRow icon={Tag} label="الباقة" value={request.packageTitle} />
+                            <InfoRow icon={CreditCard} label="رقم الكرت" value={request.cardNumber} />
+                            <InfoRow icon={Calendar} label="التاريخ" value={format(parseISO(request.requestTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
+                            <InfoRow icon={Wallet} label="المبلغ" value={request.packagePrice} />
+                           </div>
+                        </Card>
+                    )) : <p className="text-center text-muted-foreground py-4">لا توجد طلبات لهذا الشهر.</p>}
+                </CardContent>
+            </Card>
+          </div>
+         )}
       </div>
     );
   };

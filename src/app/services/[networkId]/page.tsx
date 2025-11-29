@@ -216,7 +216,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                                 </div>
                                 <Button 
                                     size="default" 
-                                    className="h-auto py-2 px-5 text-sm font-bold bg-green-500 hover:bg-green-600 text-white rounded-lg"
+                                    className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
                                     onClick={() => {
                                         setSelectedCategory(category);
                                         setIsConfirming(true);

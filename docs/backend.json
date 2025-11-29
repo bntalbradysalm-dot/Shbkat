@@ -42,6 +42,11 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of the last notification read by the user."
+        },
+        "accountType": {
+          "type": "string",
+          "enum": ["user", "network-owner"],
+          "description": "The type of user account."
         }
       },
       "required": [
@@ -319,11 +324,12 @@
         "type": "object",
         "description": "Represents a WiFi network available for users.",
         "properties": {
+            "ownerId": { "type": "string", "description": "The UID of the user who owns the network." },
             "name": { "type": "string", "description": "The name of the WiFi network." },
             "location": { "type": "string", "description": "The physical location or coverage area of the network." },
             "phoneNumber": { "type": "string", "description": "A contact phone number for the network provider." }
         },
-        "required": ["name", "location"]
+        "required": ["ownerId", "name", "location"]
     },
     "CardCategory": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -364,7 +370,7 @@
         "type": "object",
         "description": "Represents an individual WiFi access card.",
         "properties": {
-            "networkId": { "type": "string", "description": "The ID of the parent network." },
+            "networkId": { "type": "string", "description": "The parent network ID." },
             "categoryId": { "type": "string", "description": "The ID of the card category this card belongs to." },
             "cardNumber": { "type": "string", "description": "The unique number or code for the card." },
             "status": {
@@ -565,7 +571,7 @@
           "schema": {
             "$ref": "#/backend/entities/Network"
           },
-          "description": "Stores WiFi network information. Readable by all users, writable by admins.",
+          "description": "Stores WiFi network information. Readable by all users, writable by admins or the network owner.",
           "params": [{ "name": "networkId", "description": "The unique ID for the network." }]
         }
       },
@@ -576,7 +582,7 @@
           "schema": {
             "$ref": "#/backend/entities/CardCategory"
           },
-          "description": "Stores categories of cards for a specific network. Readable by all, writable by admins.",
+          "description": "Stores categories of cards for a specific network. Readable by all, writable by admins or the network owner.",
           "params": [
             { "name": "networkId", "description": "The parent network ID." },
             { "name": "categoryId", "description": "The unique ID for the card category." }
@@ -590,7 +596,7 @@
           "schema": {
             "$ref": "#/backend/entities/NetworkCard"
           },
-          "description": "Stores individual WiFi cards. Readable by all, writable by admins, purchasable by users.",
+          "description": "Stores individual WiFi cards. Readable by all, writable by admins or network owner, purchasable by users.",
           "params": [
             { "name": "networkId", "description": "The parent network ID." },
             { "name": "cardId", "description": "The unique ID for the card." }

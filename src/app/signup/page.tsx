@@ -13,9 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Eye, EyeOff } from 'lucide-react';
@@ -44,6 +44,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [location, setLocation] = useState('');
+  const [accountType, setAccountType] = useState('user');
+  const [networkName, setNetworkName] = useState('');
+  const [networkLocation, setNetworkLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
@@ -81,6 +84,15 @@ export default function SignupPage() {
           });
         return;
     }
+    
+    if (accountType === 'network-owner' && (!networkName || !networkLocation)) {
+       toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "الرجاء تعبئة اسم وموقع الشبكة.",
+          });
+        return;
+    }
 
     setIsLoading(true);
     try {
@@ -94,13 +106,15 @@ export default function SignupPage() {
         await updateProfile(user, {
           displayName: fullName.trim(),
         });
+        
+        const batch = writeBatch(firestore);
 
-        // Create user document in Firestore
+        // 1. Create user document in Firestore
         const userRef = doc(firestore, 'users', user.uid);
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ');
 
-        await setDoc(userRef, {
+        batch.set(userRef, {
           id: user.uid,
           displayName: fullName.trim(),
           firstName: firstName,
@@ -110,7 +124,21 @@ export default function SignupPage() {
           location: location,
           registrationDate: new Date().toISOString(),
           balance: 0,
+          accountType: accountType,
         });
+        
+        // 2. If network owner, create network document
+        if (accountType === 'network-owner') {
+          const networkRef = doc(collection(firestore, 'networks'));
+          batch.set(networkRef, {
+            name: networkName,
+            location: networkLocation,
+            ownerId: user.uid,
+            phoneNumber: phoneNumber.trim()
+          });
+        }
+        
+        await batch.commit();
       }
 
       toast({
@@ -144,7 +172,7 @@ export default function SignupPage() {
 
   return (
     <>
-      <div className="flex flex-col h-screen bg-background text-foreground">
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
         <SimpleHeader title="سجل الآن" />
         <div className="flex-1 flex flex-col justify-center text-center px-6">
           <div className="mb-8 flex flex-col items-center">
@@ -249,8 +277,35 @@ export default function SignupPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="accountType">نوع الحساب</Label>
+              <Select onValueChange={setAccountType} value={accountType} dir="rtl">
+                <SelectTrigger className="w-full bg-muted focus:ring-primary border-border">
+                  <SelectValue placeholder="اختر نوع الحساب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">مستخدم</SelectItem>
+                  <SelectItem value="network-owner">مالك شبكة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {accountType === 'network-owner' && (
+              <div className="space-y-4 pt-2 animate-in fade-in-0">
+                 <div className="space-y-2">
+                    <Label htmlFor="networkName">اسم الشبكة</Label>
+                    <Input id="networkName" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="اكتب اسم شبكتك التجارية" />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="networkLocation">عنوان الشبكة</Label>
+                    <Input id="networkLocation" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - الغرفة" />
+                 </div>
+              </div>
+            )}
 
-            <Button type="submit" className="w-full text-lg font-bold h-12 mt-6" disabled={isLoading}>
+
+            <Button type="submit" className="w-full text-lg font-bold h-12 !mt-6" disabled={isLoading}>
               {isLoading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
             </Button>
           </form>

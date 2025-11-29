@@ -41,6 +41,10 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth.token.email == '770326828@shabakat.com';
     }
+    
+    function isNetworkOwner(networkId) {
+      return isSignedIn() && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
+    }
 
 
     /**
@@ -178,9 +182,7 @@ service cloud.firestore {
      */
     match /renewalRequests/{requestId} {
       allow create: if isSignedIn() && isRequestOwner();
-      allow read: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     /**
@@ -310,35 +312,38 @@ service cloud.firestore {
      * @path /networks/{networkId}
      * @allow Any signed-in user can read network information.
      * @allow Admins can create, update, or delete networks.
+     * @allow The owner of the network can update it.
      */
     match /networks/{networkId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow create: if isAdmin() || request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAdmin() || isNetworkOwner(networkId);
+      allow delete: if isAdmin() || isNetworkOwner(networkId);
 
       /**
        * @description Manages card categories for a network.
        * @path /networks/{networkId}/cardCategories/{categoryId}
        * @allow Any signed-in user can read card categories.
-       * @allow Admins can create, update, or delete categories.
+       * @allow Admins or the network owner can write categories.
        */
       match /cardCategories/{categoryId} {
         allow read: if isSignedIn();
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isNetworkOwner(networkId);
       }
 
       /**
        * @description Manages individual WiFi cards.
        * @path /networks/{networkId}/cards/{cardId}
-       * @allow Admins can manage all aspects of cards.
+       * @allow Admins or network owner can manage cards.
        * @allow Signed-in users can read available cards.
        * @allow A signed-in user can purchase an available card (update status to 'sold').
        */
       match /cards/{cardId} {
         allow read: if isSignedIn();
-        allow create, delete: if isAdmin();
-        // Allow admin to update any field.
+        allow create, delete: if isAdmin() || isNetworkOwner(networkId);
+        // Allow admin/owner to update any field.
         // Allow user to update only to purchase (set status to 'sold' and add their UID).
-        allow update: if isAdmin() || (isSignedIn() 
+        allow update: if (isAdmin() || isNetworkOwner(networkId)) || (isSignedIn() 
             && request.resource.data.status == 'sold'
             && resource.data.status == 'available'
             && request.resource.data.soldTo == request.auth.uid);

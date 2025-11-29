@@ -1,15 +1,78 @@
+
+'use client';
+
 import { BalanceCard } from '@/components/dashboard/balance-card';
 import { ServiceGrid } from '@/components/dashboard/service-grid';
 import { Header } from '@/components/layout/header';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Wifi, PieChart } from 'lucide-react';
+import { PromotionalImage } from '@/components/dashboard/promotional-image';
+import { RecentTransactions } from '@/components/dashboard/recent-transactions';
+
+type UserProfile = {
+  accountType?: 'user' | 'network-owner';
+};
+
+const OwnerDashboard = () => (
+  <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
+      <div className="px-4 pt-6 animate-in fade-in-0 duration-500">
+          <div className="flex justify-between items-center mb-3 px-2">
+              <h3 className="text-md font-bold">لوحة تحكم مالك الشبكة</h3>
+          </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 px-4 py-2">
+          <Link href="/my-network/manage">
+              <Card className="aspect-square flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
+                  <Wifi className="w-12 h-12 text-primary" />
+                  <p className="font-bold">إدارة شبكتي</p>
+              </Card>
+          </Link>
+          <Link href="/my-network/earnings">
+              <Card className="aspect-square flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
+                  <PieChart className="w-12 h-12 text-primary" />
+                  <p className="font-bold">إدارة الأرباح</p>
+              </Card>
+          </Link>
+      </div>
+       <PromotionalImage />
+      <RecentTransactions />
+  </div>
+);
+
 
 export default function Home() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+
+  if (isLoading) {
+    return (
+       <>
+        <Header />
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-48 w-full" />
+        </div>
+        <Skeleton className="h-full w-full rounded-t-3xl" />
+      </>
+    )
+  }
+
   return (
     <>
       <Header />
       <div className="p-4 space-y-4">
         <BalanceCard />
       </div>
-      <ServiceGrid />
+      {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <ServiceGrid />}
     </>
   );
 }

@@ -115,12 +115,10 @@ export default function LoginPage() {
                   className="object-contain"
                   priority
               />
-            {lastUserName && (
               <div className="text-center mt-4">
-                <h1 className="text-2xl font-bold">أهلاً، {getFirstAndLastName(lastUserName)}</h1>
+                <h1 className="text-2xl font-bold">أهلاً بك</h1>
                 <p className="text-muted-foreground">تسجيل الدخول</p>
               </div>
-            )}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6 text-right">

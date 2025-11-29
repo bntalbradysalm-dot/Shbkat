@@ -70,9 +70,9 @@ export function PromotionalImage() {
                     loop: true,
                 }}
             >
-                <CarouselContent className="-ml-4">
+                <CarouselContent className="-ml-2">
                     {ads.map((ad) => (
-                        <CarouselItem key={ad.id} className="pl-4">
+                        <CarouselItem key={ad.id} className="pl-2">
                             {ad.linkUrl ? (
                                 <Link href={ad.linkUrl} className="block">
                                     {promoImage(ad)}

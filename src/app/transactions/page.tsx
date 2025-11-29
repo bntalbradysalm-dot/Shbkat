@@ -48,13 +48,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    if (type.startsWith('تغذية') || type.startsWith('استلام')) {
+    if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
         return <ArrowDownToLine className="h-6 w-6 text-green-500" />;
     }
     if (type.startsWith('تحويل')) {
         return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
     }
-    if (type.startsWith('تجديد')) {
+    if (type.startsWith('تجديد') || type.startsWith('شراء')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
     }
     return <SatelliteDish className="h-6 w-6 text-primary" />;
@@ -193,8 +193,8 @@ export default function TransactionsPage() {
                             </div>
                         </div>
                         <div className="text-left">
-                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
-                            {tx.amount.toLocaleString('en-US')} ريال
+                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
+                              {tx.amount.toLocaleString('en-US')} ريال
                             </p>
                             {tx.notes && (
                                 <p className="text-xs text-muted-foreground truncate max-w-[120px]" title={tx.notes}>
@@ -220,7 +220,7 @@ export default function TransactionsPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
-                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
+                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>
@@ -244,12 +244,6 @@ export default function TransactionsPage() {
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
-                                </div>
-                            )}
-                            {selectedTx.notes && (
-                                <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
-                                    <span className="text-muted-foreground">الملاحظات:</span>
-                                    <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
                                 </div>
                             )}
                         </div>

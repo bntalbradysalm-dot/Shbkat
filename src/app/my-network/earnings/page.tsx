@@ -5,8 +5,27 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Banknote, History } from 'lucide-react';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type UserProfile = {
+  balance?: number;
+};
 
 export default function EarningsPage() {
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(
+      () => (user ? doc(firestore, 'users', user.uid) : null),
+      [firestore, user]
+    );
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+    
+    const isLoading = isUserLoading || isProfileLoading;
+    const balance = userProfile?.balance ?? 0;
+
   return (
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="الأرباح والسحب" />
@@ -16,7 +35,11 @@ export default function EarningsPage() {
             <CardTitle className="text-center">رصيد الأرباح</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-4xl font-bold text-primary">5,250 <span className="text-lg">ريال</span></p>
+            {isLoading ? (
+                <Skeleton className="h-10 w-32 mx-auto" />
+            ) : (
+                <p className="text-4xl font-bold text-primary">{balance.toLocaleString('en-US')} <span className="text-lg">ريال</span></p>
+            )}
             <p className="text-sm text-muted-foreground mt-1">هذا هو رصيدك القابل للسحب</p>
           </CardContent>
         </Card>

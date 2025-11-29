@@ -247,13 +247,12 @@ service cloud.firestore {
      * @description Stores records of sold cards for reporting.
      * @path /soldCards
      * @allow Admins can list records for reporting purposes.
+     * @allow Users can create records when they buy a card.
      */
     match /soldCards/{cardId} {
-        // Users can create a record when they purchase a card.
         allow create: if isSignedIn() && isBuyer();
-        // Admins can read individual records and list the collection.
-        allow read, list: if isAdmin();
-        // No one can update or delete records directly.
+        allow get: if isAdmin();
+        allow list: if isAdmin();
         allow update, delete: if false;
     }
 

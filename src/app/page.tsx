@@ -9,7 +9,7 @@ import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { Wifi, PieChart } from 'lucide-react';
+import { Wifi, Banknote } from 'lucide-react';
 import { PromotionalImage } from '@/components/dashboard/promotional-image';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 
@@ -26,15 +26,17 @@ const OwnerDashboard = () => (
       </div>
       <div className="grid grid-cols-2 gap-4 px-4 py-2">
           <Link href="/my-network/manage">
-              <Card className="aspect-square flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
-                  <Wifi className="w-12 h-12 text-primary" />
+              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
+                  <Wifi className="w-10 h-10 text-primary" />
                   <p className="font-bold">إدارة شبكتي</p>
+                  <p className="text-xs text-muted-foreground">الفئات والكروت</p>
               </Card>
           </Link>
           <Link href="/my-network/withdraw">
-              <Card className="aspect-square flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
-                  <PieChart className="w-12 h-12 text-primary" />
+              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
+                  <Banknote className="w-10 h-10 text-primary" />
                   <p className="font-bold">سحب</p>
+                  <p className="text-xs text-muted-foreground">الأرباح والطلبات</p>
               </Card>
           </Link>
       </div>

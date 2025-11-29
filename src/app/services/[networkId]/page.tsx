@@ -115,18 +115,19 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
         const cardToPurchaseRef = doc(firestore, `networks/${networkId}/cards`, cardToPurchaseDoc.id);
 
         const batch = writeBatch(firestore);
+        const now = new Date().toISOString();
 
         // 1. Mark card as sold
-        batch.update(cardToPurchaseRef, { status: 'sold', soldTo: user.uid, soldTimestamp: new Date().toISOString() });
+        batch.update(cardToPurchaseRef, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
         
         // 2. Deduct balance from user
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
 
         // 3. Create a transaction record for buyer
-        const transactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
-        batch.set(transactionRef, {
+        const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+        batch.set(buyerTransactionRef, {
             userId: user.uid,
-            transactionDate: new Date().toISOString(),
+            transactionDate: now,
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
@@ -139,7 +140,17 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
         const ownerRef = doc(firestore, 'users', networkData.ownerId);
         batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-        // 5. Create sold card record with commission calculation
+        // 5. Create a transaction record for network owner
+        const ownerTransactionRef = doc(collection(firestore, `users/${networkData.ownerId}/transactions`));
+        batch.set(ownerTransactionRef, {
+            userId: networkData.ownerId,
+            transactionDate: now,
+            amount: payoutAmount,
+            transactionType: `أرباح بيع كرت ${selectedCategory.name}`,
+            notes: `من المشتري: ${userProfile.displayName}`,
+        });
+
+        // 6. Create sold card record with commission calculation
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -155,8 +166,8 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             buyerId: user.uid,
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
-            soldTimestamp: new Date().toISOString(),
-            payoutStatus: 'completed', // Set to completed as it's transferred instantly
+            soldTimestamp: now,
+            payoutStatus: 'completed',
         })
         
         await batch.commit();

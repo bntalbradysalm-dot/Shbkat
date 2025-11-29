@@ -248,11 +248,12 @@ service cloud.firestore {
      * @path /soldCards/{cardId}
      * @allow Users can create a record when they purchase a card.
      * @allow Admins can read all records for reporting purposes.
-     * @deny Users cannot read, update, or delete any records.
+     * @deny Users cannot update, or delete any records.
      */
     match /soldCards/{cardId} {
       allow create: if isSignedIn() && isBuyer();
-      allow read, update, delete: if isAdmin();
+      allow list, get: if isAdmin();
+      allow update, delete: if false;
     }
 
     /**
@@ -269,7 +270,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isSignedIn();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
       allow update: if (isOwner(userId) || isAdmin()) || 
                       (isSignedIn() && isBalanceIncrementOnly(request.resource.data.balance - resource.data.balance));

@@ -178,7 +178,7 @@ service cloud.firestore {
      */
     match /renewalRequests/{requestId} {
       allow create: if isSignedIn() && isRequestOwner();
-      allow get, list: if isAdmin(); // Explicitly allow list for admins
+      allow get, list: if isAdmin();
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -346,3 +346,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

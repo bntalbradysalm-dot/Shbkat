@@ -203,10 +203,10 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                  <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                     <CardContent className="p-0 flex">
                         <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
-                            <Package className="w-8 h-8 text-primary/80" />
-                            {category.capacity && (
+                           <Package className="w-8 h-8 text-primary/80" />
+                           {category.capacity && (
                                 <span className="font-bold text-lg text-primary/80 mt-2">{category.capacity}</span>
-                            )}
+                           )}
                         </div>
                         <div className="flex-grow p-3">
                              <div className='flex items-start justify-between gap-2'>
@@ -226,7 +226,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                                 </Button>
                              </div>
                              <Separator className="my-2" />
-                             <div className="text-xs text-muted-foreground flex items-center justify-end gap-x-4 gap-y-1">
+                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
                                  {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
                                  {category.capacity && <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> السعة: {category.capacity}</span>}
                              </div>

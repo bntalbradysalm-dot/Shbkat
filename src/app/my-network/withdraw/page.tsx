@@ -23,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from 'next/navigation';
 
@@ -86,7 +85,7 @@ export default function WithdrawPage() {
     const numericAmount = parseFloat(amount);
     const isAmountInvalid = isNaN(numericAmount) || numericAmount <= 0;
     const isBalanceInsufficient = numericAmount > balance;
-    const isButtonDisabled = isAmountInvalid || isBalanceInsufficient;
+    const isButtonDisabled = isAmountInvalid || isBalanceInsufficient || !recipientName || !accountNumber;
 
     const handleConfirmRequest = () => {
         if (!selectedMethod || !recipientName || !accountNumber || isAmountInvalid) {
@@ -101,7 +100,7 @@ export default function WithdrawPage() {
     };
 
     const handleFinalConfirmation = async () => {
-        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing || isAmountInvalid || !userProfile.displayName || !userProfile.phoneNumber) return;
+        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing || isAmountInvalid || !userProfile.displayName || !userProfile.phoneNumber || !userDocRef) return;
 
         setIsProcessing(true);
 
@@ -119,8 +118,20 @@ export default function WithdrawPage() {
         };
 
         try {
+            const batch = writeBatch(firestore);
+
+            // 1. Create the withdrawal request
             const requestsCollection = collection(firestore, 'withdrawalRequests');
-            await addDocumentNonBlocking(requestsCollection, requestData);
+            const requestDocRef = doc(requestsCollection);
+            batch.set(requestDocRef, requestData);
+
+            // 2. Deduct the amount from the owner's balance immediately
+            batch.update(userDocRef, {
+                balance: increment(-numericAmount)
+            });
+
+            await batch.commit();
+
             setShowSuccess(true);
         } catch (error) {
             console.error("Failed to create withdrawal request:", error);
@@ -247,7 +258,7 @@ export default function WithdrawPage() {
                             <AlertDialogHeader>
                                 <AlertDialogTitle>تأكيد طلب السحب</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    هل أنت متأكد من إرسال طلب سحب بالمبلغ والتفاصيل التالية؟
+                                    هل أنت متأكد من إرسال طلب سحب بالمبلغ والتفاصيل التالية؟ سيتم خصم المبلغ من رصيدك فوراً.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <div className="space-y-2 py-2 text-sm">

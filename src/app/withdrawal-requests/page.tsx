@@ -102,16 +102,10 @@ export default function WithdrawalRequestsPage() {
     if (!selectedRequest || !finalAction || !firestore) return;
 
     const requestDocRef = doc(firestore, 'withdrawalRequests', selectedRequest.id);
-    const ownerDocRef = doc(firestore, 'users', selectedRequest.ownerId);
-
+    
     try {
       if (finalAction === 'approve') {
-        // 1. Deduct balance from the owner's account
-        await updateDoc(ownerDocRef, {
-          balance: increment(-selectedRequest.amount)
-        });
-
-        // 2. Add transaction record for the owner
+        // Balance was already deducted. Just add a transaction log.
         const ownerTransactionsRef = collection(firestore, 'users', selectedRequest.ownerId, 'transactions');
         await addDoc(ownerTransactionsRef, {
             userId: selectedRequest.ownerId,
@@ -120,8 +114,13 @@ export default function WithdrawalRequestsPage() {
             transactionType: 'سحب أرباح',
             notes: `إلى حساب: ${selectedRequest.recipientName} (${selectedRequest.paymentMethodName})`,
         });
+      } else { // 'reject'
+        // Refund the user's balance because it was deducted on request.
+        const ownerDocRef = doc(firestore, 'users', selectedRequest.ownerId);
+        await updateDoc(ownerDocRef, {
+            balance: increment(selectedRequest.amount)
+        });
       }
-      // For rejection, we don't do anything to the balance.
 
       // Update request status for both approve and reject
       await updateDoc(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
@@ -256,7 +255,7 @@ export default function WithdrawalRequestsPage() {
                 {selectedRequest.status === 'pending' && (
                     <DialogFooter className="grid grid-cols-2 gap-2">
                         <Button variant="destructive" onClick={() => setActionToConfirm('reject')}><X className="ml-2"/> رفض الطلب</Button>
-                        <Button onClick={() => setActionToConfirm('approve')}><Check className="ml-2"/> قبول وخصم الرصيد</Button>
+                        <Button onClick={() => setActionToConfirm('approve')}><Check className="ml-2"/> قبول الطلب</Button>
                     </DialogFooter>
                 )}
                  {selectedRequest.status !== 'pending' && (
@@ -276,8 +275,8 @@ export default function WithdrawalRequestsPage() {
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
             <AlertDialogDescription>
               {actionToConfirm === 'approve'
-                ? `سيتم خصم مبلغ ${selectedRequest?.amount.toLocaleString('en-US')} ريال من رصيد ${selectedRequest?.ownerName} وتأكيد الطلب كمقبول.`
-                : 'سيتم رفض هذا الطلب. لا يمكن التراجع عن هذا الإجراء.'}
+                ? `سيتم تأكيد الطلب كمقبول وتسجيل عملية السحب في سجل المالك.`
+                : 'سيتم رفض هذا الطلب وإعادة المبلغ إلى رصيد المالك. لا يمكن التراجع عن هذا الإجراء.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

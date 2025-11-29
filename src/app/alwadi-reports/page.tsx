@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 type RenewalRequest = {
   id: string;
@@ -30,42 +31,70 @@ const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label:
   </div>
 );
 
+const StatusBadge = ({ status }: { status: RenewalRequest['status'] }) => {
+    const statusStyles = {
+      pending: 'bg-yellow-400/20 text-yellow-600 border-yellow-400/30',
+      approved: 'bg-green-400/20 text-green-600 border-green-400/30',
+      rejected: 'bg-red-400/20 text-red-600 border-red-400/30',
+    };
+    const statusText = {
+      pending: 'قيد الانتظار',
+      approved: 'مقبول',
+      rejected: 'مرفوض',
+    };
+  
+    return <Badge className={statusStyles[status]}>{statusText[status]}</Badge>;
+};
+
 export default function AlwadiReportsPage() {
   const firestore = useFirestore();
+  const [filter, setFilter] = useState<'all' | 'approved' | 'rejected'>('all');
 
-  const approvedRequestsQuery = useMemoFirebase(
+  const requestsQuery = useMemoFirebase(
     () => (firestore ? query(
-        collection(firestore, 'renewalRequests'), 
-        where('status', '==', 'approved'),
+        collection(firestore, 'renewalRequests'),
         orderBy('requestTimestamp', 'desc')
     ) : null),
     [firestore]
   );
-  const { data: requests, isLoading } = useCollection<RenewalRequest>(approvedRequestsQuery);
+  const { data: allRequests, isLoading } = useCollection<RenewalRequest>(requestsQuery);
 
+  const filteredRequests = useMemo(() => {
+    if (!allRequests) return [];
+    if (filter === 'all') return allRequests;
+    return allRequests.filter(req => req.status === filter);
+  }, [allRequests, filter]);
+  
   const { monthlyData, totalAmount, totalProfit } = useMemo(() => {
-    if (!requests) {
+    if (!allRequests) { // Calculate totals from ALL requests, but only 'approved' ones
       return { monthlyData: {}, totalAmount: 0, totalProfit: 0 };
     }
 
     const data: { [key: string]: RenewalRequest[] } = {};
     let total = 0;
 
-    requests.forEach(req => {
-      const monthKey = format(parseISO(req.requestTimestamp), 'yyyy-MM');
-      if (!data[monthKey]) {
-        data[monthKey] = [];
-      }
-      data[monthKey].push(req);
-      total += req.packagePrice;
+    // Use filteredRequests to populate the monthly tabs
+    filteredRequests.forEach(req => {
+        const monthKey = format(parseISO(req.requestTimestamp), 'yyyy-MM');
+        if (!data[monthKey]) {
+          data[monthKey] = [];
+        }
+        data[monthKey].push(req);
     });
 
-    return { 
-        monthlyData: data, 
+    // Use allRequests to calculate the totals, but only for approved
+    allRequests.forEach(req => {
+        if (req.status === 'approved') {
+            total += req.packagePrice;
+        }
+    });
+
+    return {
+        monthlyData: data,
         totalAmount: total,
         totalProfit: total * 0.05
     };
-  }, [requests]);
+  }, [allRequests, filteredRequests]);
 
   const sortedMonths = Object.keys(monthlyData).sort().reverse();
   const defaultTab = sortedMonths.length > 0 ? sortedMonths[0] : '';
@@ -84,8 +113,8 @@ export default function AlwadiReportsPage() {
       );
     }
 
-    if (!requests || requests.length === 0) {
-        return <p className="text-center text-muted-foreground mt-10">لا توجد طلبات مكتملة لعرضها.</p>;
+    if (!allRequests || allRequests.length === 0) {
+        return <p className="text-center text-muted-foreground mt-10">لا توجد طلبات لعرضها.</p>;
     }
 
     return (
@@ -93,7 +122,7 @@ export default function AlwadiReportsPage() {
         <div className="grid grid-cols-2 gap-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">إجمالي المبالغ</CardTitle>
+                    <CardTitle className="text-sm font-medium">إجمالي المبالغ (المقبولة)</CardTitle>
                     <Wallet className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -112,6 +141,14 @@ export default function AlwadiReportsPage() {
                 </CardContent>
             </Card>
         </div>
+        
+        <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">الكل</TabsTrigger>
+                <TabsTrigger value="approved">المقبولة</TabsTrigger>
+                <TabsTrigger value="rejected">المرفوضة</TabsTrigger>
+            </TabsList>
+        </Tabs>
 
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -123,7 +160,9 @@ export default function AlwadiReportsPage() {
           </TabsList>
           {sortedMonths.map(monthKey => {
             const monthRequests = monthlyData[monthKey];
-            const monthTotal = monthRequests.reduce((sum, req) => sum + req.packagePrice, 0);
+            const monthTotal = monthRequests
+              .filter(req => req.status === 'approved')
+              .reduce((sum, req) => sum + req.packagePrice, 0);
 
             return (
               <TabsContent key={monthKey} value={monthKey} className="pt-4">
@@ -138,7 +177,10 @@ export default function AlwadiReportsPage() {
                         {monthRequests.map(request => (
                             <Card key={request.id} className="p-3 bg-muted/30">
                                <div className="space-y-1">
-                                <InfoRow icon={User} label="اسم المستخدم" value={request.userName} />
+                                <div className="flex justify-between items-center">
+                                    <h4 className="font-bold">{request.userName}</h4>
+                                    <StatusBadge status={request.status} />
+                                </div>
                                 <InfoRow icon={Tag} label="الباقة" value={request.packageTitle} />
                                 <InfoRow icon={CreditCard} label="رقم الكرت" value={request.cardNumber} />
                                 <InfoRow icon={Calendar} label="التاريخ" value={format(parseISO(request.requestTimestamp), 'd/M/y, h:mm a', { locale: ar })} />

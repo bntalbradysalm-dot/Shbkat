@@ -158,17 +158,15 @@ export default function WithdrawPage() {
             <SimpleHeader title="سحب الأرباح" />
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <Card>
-                    <CardContent className="p-4 flex items-center justify-between">
+                    <CardContent className="p-4 flex flex-col items-center justify-center">
                         <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <Wallet className="h-6 w-6 text-primary" />
-                        </div>
                         <p className="font-semibold text-muted-foreground">رصيدك من الأرباح</p>
+                        <Wallet className="h-6 w-6 text-primary" />
                         </div>
                         {isLoading ? (
-                            <Skeleton className="h-8 w-24" />
+                            <Skeleton className="h-8 w-32 mt-2" />
                         ) : (
-                            <p className="text-2xl font-bold text-primary">{balance.toLocaleString('en-US')} <span className="text-sm">ريال يمني</span></p>
+                            <p className="text-3xl font-bold text-primary mt-1">{balance.toLocaleString('en-US')} <span className="text-base">ريال</span></p>
                         )}
                     </CardContent>
                 </Card>

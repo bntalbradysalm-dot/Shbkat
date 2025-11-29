@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, query, orderBy, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, query, orderBy, updateDoc, increment, addDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,9 +106,19 @@ export default function WithdrawalRequestsPage() {
 
     try {
       if (finalAction === 'approve') {
-        // Deduct balance from the owner's account
+        // 1. Deduct balance from the owner's account
         await updateDoc(ownerDocRef, {
           balance: increment(-selectedRequest.amount)
+        });
+
+        // 2. Add transaction record for the owner
+        const ownerTransactionsRef = collection(firestore, 'users', selectedRequest.ownerId, 'transactions');
+        await addDoc(ownerTransactionsRef, {
+            userId: selectedRequest.ownerId,
+            transactionDate: new Date().toISOString(),
+            amount: selectedRequest.amount,
+            transactionType: 'سحب أرباح',
+            notes: `إلى حساب: ${selectedRequest.recipientName} (${selectedRequest.paymentMethodName})`,
         });
       }
       // For rejection, we don't do anything to the balance.

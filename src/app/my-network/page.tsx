@@ -28,7 +28,7 @@ export default function MyNetworkPage() {
                 <ChevronLeft className="w-6 h-6 text-muted-foreground" />
               </div>
             </Link>
-            <Link href="/my-network/earnings">
+            <Link href="/my-network/withdraw">
                <div className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <PieChart className="w-8 h-8 text-primary" />

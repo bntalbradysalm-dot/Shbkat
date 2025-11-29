@@ -5,7 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft, Undo2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Link from 'next/link';
@@ -18,10 +18,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
+    if (type.startsWith('استرجاع')) {
+        return <Undo2 className="h-5 w-5 text-orange-500" />;
+    }
     if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
         return <ArrowDownToLine className="h-5 w-5 text-green-500" />;
     }
-    if (type.startsWith('تحويل')) {
+    if (type.startsWith('تحويل') || type.startsWith('سحب')) {
         return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
     }
     if (type.startsWith('تجديد') || type.startsWith('شراء')) {
@@ -96,7 +99,7 @@ export function RecentTransactions() {
               </div>
             </div>
             <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
+              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') || tx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
                 {tx.amount.toLocaleString('en-US')} ريال
               </p>
             </div>

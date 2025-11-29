@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -48,10 +48,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
+    if (type.startsWith('استرجاع')) {
+        return <Undo2 className="h-6 w-6 text-orange-500" />;
+    }
     if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
         return <ArrowDownToLine className="h-6 w-6 text-green-500" />;
     }
-    if (type.startsWith('تحويل')) {
+    if (type.startsWith('تحويل') || type.startsWith('سحب')) {
         return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
     }
     if (type.startsWith('تجديد') || type.startsWith('شراء')) {
@@ -193,7 +196,7 @@ export default function TransactionsPage() {
                             </div>
                         </div>
                         <div className="text-left">
-                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
+                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') || tx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
                               {tx.amount.toLocaleString('en-US')} ريال
                             </p>
                             {tx.notes && (
@@ -220,7 +223,7 @@ export default function TransactionsPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
-                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
+                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') || selectedTx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>

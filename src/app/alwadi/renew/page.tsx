@@ -275,7 +275,7 @@ function RenewPageComponent() {
           className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2"
         >
           <Info className="h-4 w-4" />
-          لمعرفة صلاحية الفترة المتبقية في الكرت..
+          لمعرفة صلاحية الفترة المتبقية في الكرت
         </a>
       </div>
     </div>

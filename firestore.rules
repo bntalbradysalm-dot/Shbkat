@@ -254,8 +254,9 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /soldCards {
-      allow list: if isAdmin();
+       allow list: if isAdmin();
     }
+
 
     /**
      * @description Manages user profile documents. Only the owner can read, update,

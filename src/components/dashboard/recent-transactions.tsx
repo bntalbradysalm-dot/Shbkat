@@ -18,13 +18,13 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    if (type.startsWith('تغذية') || type.startsWith('استلام')) {
+    if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
         return <ArrowDownToLine className="h-5 w-5 text-green-500" />;
     }
     if (type.startsWith('تحويل')) {
         return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
     }
-    if (type.startsWith('تجديد')) {
+    if (type.startsWith('تجديد') || type.startsWith('شراء')) {
         return <SatelliteDish className="h-5 w-5 text-primary" />;
     }
     return <SatelliteDish className="h-5 w-5 text-primary" />;
@@ -96,8 +96,7 @@ export function RecentTransactions() {
               </div>
             </div>
             <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
-                {!(tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام')) && '-'}
+              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') ? 'text-green-600' : 'text-destructive'}`}>
                 {tx.amount.toLocaleString('en-US')} ريال
               </p>
             </div>

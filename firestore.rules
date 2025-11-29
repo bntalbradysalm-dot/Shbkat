@@ -253,9 +253,12 @@ service cloud.firestore {
     match /soldCards/{cardId} {
         allow create: if isSignedIn() && isBuyer();
         allow get: if isAdmin() || isBuyer();
-        allow list: if isAdmin();
         allow update: if isAdmin() && request.resource.data.payoutStatus == 'completed';
         allow delete: if false;
+    }
+
+    match /soldCards/{cardId} {
+        allow list: if isAdmin();
     }
 
 

@@ -25,24 +25,6 @@ type AppSettings = {
     supportPhoneNumber: string;
 };
 
-// Static default payment methods
-const defaultMethods: PaymentMethod[] = [
-    {
-        id: 'static-kuraimee',
-        name: 'بنك الكريمي',
-        accountHolderName: 'محمد راضي باشادي',
-        accountNumber: '121349021',
-        logoUrl: 'https://i.ibb.co/3s4yK1L/image.png'
-    },
-    {
-        id: 'static-alamqi',
-        name: 'شركة العمقي للصرافة',
-        accountHolderName: 'محمد راضي باشادي',
-        accountNumber: '1001001',
-        logoUrl: 'https://i.ibb.co/Ybf3gpb/1690912196053.jpg'
-    }
-];
-
 const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
@@ -59,11 +41,7 @@ export default function TopUpPage() {
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
-    const { data: dynamicMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
-    
-    const allMethods = useMemo(() => {
-        return [...defaultMethods, ...(dynamicMethods || [])];
-    }, [dynamicMethods]);
+    const { data: paymentMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
@@ -74,10 +52,10 @@ export default function TopUpPage() {
     const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
     React.useEffect(() => {
-        if (!selectedMethod && allMethods.length > 0) {
-            setSelectedMethod(allMethods[0]);
+        if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
+            setSelectedMethod(paymentMethods[0]);
         }
-    }, [allMethods, selectedMethod]);
+    }, [paymentMethods, selectedMethod]);
 
     const handleCopy = (accountNumber: string) => {
         navigator.clipboard.writeText(accountNumber);
@@ -116,7 +94,7 @@ export default function TopUpPage() {
             );
         }
 
-        if (allMethods.length === 0) {
+        if (!paymentMethods || paymentMethods.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center text-center h-40 px-4">
                     <p className="mt-4 text-lg font-semibold">لا توجد طرق دفع متاحة</p>
@@ -129,7 +107,7 @@ export default function TopUpPage() {
 
         return (
             <div className="grid grid-cols-2 gap-4 px-4">
-                {allMethods.map(method => (
+                {paymentMethods.map(method => (
                     <Card
                         key={method.id}
                         onClick={() => setSelectedMethod(method)}

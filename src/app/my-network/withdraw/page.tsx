@@ -25,25 +25,6 @@ type PaymentMethod = {
     accountNumber: string;
 };
 
-// Re-introduce default methods here to ensure they are always available for withdrawal
-const defaultMethods: PaymentMethod[] = [
-    {
-        id: 'static-kuraimee',
-        name: 'بنك الكريمي',
-        accountHolderName: 'محمد راضي باشادي',
-        accountNumber: '121349021',
-        logoUrl: 'https://i.ibb.co/3s4yK1L/image.png'
-    },
-    {
-        id: 'static-alamqi',
-        name: 'شركة العمقي للصرافة',
-        accountHolderName: 'محمد راضي باشادي',
-        accountNumber: '1001001',
-        logoUrl: 'https://i.ibb.co/Ybf3gpb/1690912196053.jpg'
-    }
-];
-
-
 const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
       return url;
@@ -70,14 +51,14 @@ export default function WithdrawPage() {
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
-    const { data: dynamicMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
+    const { data: paymentMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
     
     // Combine static default methods with dynamic ones from Firestore, then filter for withdrawal options
     const withdrawalMethods = useMemo(() => {
-        const allMethods = [...defaultMethods, ...(dynamicMethods || [])];
+        if (!paymentMethods) return [];
         const allowedNames = ["بنك الكريمي", "شركة العمقي للصرافة"];
-        return allMethods.filter(method => allowedNames.includes(method.name));
-    }, [dynamicMethods]);
+        return paymentMethods.filter(method => allowedNames.includes(method.name));
+    }, [paymentMethods]);
 
     useEffect(() => {
         if (!selectedMethodId && withdrawalMethods && withdrawalMethods.length > 0) {

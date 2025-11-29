@@ -57,7 +57,10 @@ const getTransactionIcon = (type: string) => {
     if (type.startsWith('تحويل') || type.startsWith('سحب')) {
         return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
     }
-    if (type.startsWith('تجديد') || type.startsWith('شراء')) {
+    if (type.startsWith('شراء كرت')) {
+        return <CreditCard className="h-6 w-6 text-blue-500" />;
+    }
+    if (type.startsWith('تجديد')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
     }
     return <SatelliteDish className="h-6 w-6 text-primary" />;

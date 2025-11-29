@@ -5,7 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft, Undo2 } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft, Undo2, CreditCard } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Link from 'next/link';
@@ -27,7 +27,10 @@ const getTransactionIcon = (type: string) => {
     if (type.startsWith('تحويل') || type.startsWith('سحب')) {
         return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
     }
-    if (type.startsWith('تجديد') || type.startsWith('شراء')) {
+    if (type.startsWith('شراء كرت')) {
+        return <CreditCard className="h-5 w-5 text-blue-500" />;
+    }
+    if (type.startsWith('تجديد')) {
         return <SatelliteDish className="h-5 w-5 text-primary" />;
     }
     return <SatelliteDish className="h-5 w-5 text-primary" />;

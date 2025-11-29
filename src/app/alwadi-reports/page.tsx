@@ -12,6 +12,13 @@ import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
 
 type RenewalRequest = {
   id: string;
@@ -26,7 +33,7 @@ type RenewalRequest = {
 };
 
 const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | number }) => (
-  <div className="flex justify-between items-center text-xs py-2 border-b">
+  <div className="flex justify-between items-center text-xs py-2 border-b last:border-b-0">
       <span className="text-muted-foreground flex items-center gap-2"><Icon className="h-4 w-4" /> {label}:</span>
       <span className="font-semibold">{typeof value === 'number' ? `${value.toLocaleString('en-US')} ريال` : value}</span>
   </div>
@@ -182,21 +189,29 @@ export default function AlwadiReportsPage() {
                        <span className='text-sm font-bold text-primary dark:text-primary-foreground'>{monthTotal.toLocaleString('en-US')} ريال</span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    {monthRequests && monthRequests.length > 0 ? monthRequests.map(request => (
-                        <Card key={request.id} className="p-3 bg-muted/30">
-                           <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                                <h4 className="font-bold">{request.userName}</h4>
-                                <StatusBadge status={request.status} />
-                            </div>
-                            <InfoRow icon={Tag} label="الباقة" value={request.packageTitle} />
-                            <InfoRow icon={CreditCard} label="رقم الكرت" value={request.cardNumber} />
-                            <InfoRow icon={Calendar} label="التاريخ" value={format(parseISO(request.requestTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
-                            <InfoRow icon={Wallet} label="المبلغ" value={request.packagePrice} />
-                           </div>
-                        </Card>
-                    )) : <p className="text-center text-muted-foreground py-4">لا توجد طلبات لهذا الشهر.</p>}
+                <CardContent>
+                    {monthRequests && monthRequests.length > 0 ? (
+                        <Accordion type="single" collapsible className="w-full">
+                            {monthRequests.map(request => (
+                                <AccordionItem value={request.id} key={request.id}>
+                                    <AccordionTrigger className="p-3 bg-muted/30 rounded-t-lg text-sm [&[data-state=open]]:rounded-b-none [&[data-state=open]]:border-b">
+                                        <div className="flex justify-between items-center w-full">
+                                            <h4 className="font-bold">{request.userName}</h4>
+                                            <StatusBadge status={request.status} />
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-3 bg-muted/30 border-t-0 rounded-b-lg">
+                                       <div className="space-y-1">
+                                            <InfoRow icon={Tag} label="الباقة" value={request.packageTitle} />
+                                            <InfoRow icon={CreditCard} label="رقم الكرت" value={request.cardNumber} />
+                                            <InfoRow icon={Calendar} label="التاريخ" value={format(parseISO(request.requestTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
+                                            <InfoRow icon={Wallet} label="المبلغ" value={request.packagePrice} />
+                                       </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    ) : <p className="text-center text-muted-foreground py-4">لا توجد طلبات لهذا الشهر.</p>}
                 </CardContent>
             </Card>
           </div>

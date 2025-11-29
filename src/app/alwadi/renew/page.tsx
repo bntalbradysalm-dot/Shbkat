@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Info } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -274,10 +274,6 @@ function RenewPageComponent() {
           rel="noopener noreferrer"
           className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors"
         >
-          <div className="flex items-center justify-center gap-2">
-            <Info className="h-4 w-4" />
-            <span>لمعرفة صلاحية الفترة المتبقية في الكرت</span>
-          </div>
           <span className="underline">اضغط هنا</span>
         </a>
       </div>

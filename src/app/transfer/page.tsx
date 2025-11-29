@@ -208,7 +208,7 @@ export default function TransferPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم التحويل بنجاح</h2>
+                    <h2 className="text-2xl font-bold">تم التحويل بنجاح</h2>
                      <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح.</p>
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">

@@ -194,7 +194,6 @@ export default function TransactionsPage() {
                         </div>
                         <div className="text-left">
                             <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
-                            {!(tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام')) && '-'}
                             {tx.amount.toLocaleString('en-US')} ريال
                             </p>
                             {tx.notes && (
@@ -222,7 +221,6 @@ export default function TransactionsPage() {
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
                                 <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') ? 'text-green-600' : 'text-destructive'}`}>
-                                    {!(selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام')) && '-'}
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>

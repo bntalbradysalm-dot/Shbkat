@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Banknote, User as UserIcon, Wallet, Send, Building } from 'lucide-react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -17,16 +17,26 @@ type UserProfile = {
   balance?: number;
 };
 
-const withdrawalMethods = [
-    { id: 'al-kuraimi', name: 'خدمة حاسب | بنك الكريمي', logo: 'https://i.ibb.co/C07B1sD/Kuraimi-Bank-2.png' },
-    { id: 'al-amqi', name: 'شركة العمقي للصرافة', logo: 'https://i.ibb.co/KFWT5G9/alamqi.png' },
-];
+type PaymentMethod = {
+    id: string;
+    name: string;
+    logoUrl?: string;
+    accountHolderName: string;
+    accountNumber: string;
+};
+
+const getLogoSrc = (url?: string) => {
+    if (url && (url.startsWith('http') || url.startsWith('/'))) {
+      return url;
+    }
+    return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
+};
 
 export default function WithdrawPage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    const [selectedMethod, setSelectedMethod] = useState(withdrawalMethods[0].id);
+    const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
     const [recipientName, setRecipientName] = useState('');
     const [accountNumber, setAccountNumber] = useState('');
     const [amount, setAmount] = useState('');
@@ -36,8 +46,20 @@ export default function WithdrawPage() {
       [firestore, user]
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
+    const methodsCollection = useMemoFirebase(
+        () => (firestore ? collection(firestore, 'paymentMethods') : null),
+        [firestore]
+    );
+    const { data: withdrawalMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
     
-    const isLoading = isUserLoading || isProfileLoading;
+    useEffect(() => {
+        if (!selectedMethodId && withdrawalMethods && withdrawalMethods.length > 0) {
+            setSelectedMethodId(withdrawalMethods[0].id);
+        }
+    }, [withdrawalMethods, selectedMethodId]);
+
+    const isLoading = isUserLoading || isProfileLoading || isLoadingMethods;
     const balance = userProfile?.balance ?? 0;
 
   return (
@@ -65,21 +87,28 @@ export default function WithdrawPage() {
                 <CardTitle className="text-center">اختر طريقة السحب</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
-                {withdrawalMethods.map((method) => (
-                     <div
-                        key={method.id}
-                        onClick={() => setSelectedMethod(method.id)}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-2 rounded-xl p-4 aspect-square cursor-pointer transition-all border-2",
-                            selectedMethod === method.id
-                                ? 'border-primary shadow-lg bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                        )}
-                    >
-                        <Image src={method.logo} alt={method.name} width={56} height={56} className="rounded-lg object-contain" />
-                        <p className="text-center text-xs font-semibold mt-2">{method.name}</p>
-                    </div>
-                ))}
+                {isLoadingMethods ? (
+                    <>
+                        <Skeleton className="h-32 w-full" />
+                        <Skeleton className="h-32 w-full" />
+                    </>
+                ) : (
+                    withdrawalMethods?.map((method) => (
+                         <div
+                            key={method.id}
+                            onClick={() => setSelectedMethodId(method.id)}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-2 rounded-xl p-4 aspect-square cursor-pointer transition-all border-2",
+                                selectedMethodId === method.id
+                                    ? 'border-primary shadow-lg bg-primary/5'
+                                    : 'border-border hover:border-primary/50'
+                            )}
+                        >
+                            <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={56} height={56} className="rounded-lg object-contain" />
+                            <p className="text-center text-xs font-semibold mt-2">{method.name}</p>
+                        </div>
+                    ))
+                )}
             </CardContent>
         </Card>
 

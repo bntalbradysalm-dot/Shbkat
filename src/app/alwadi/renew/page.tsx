@@ -272,10 +272,12 @@ function RenewPageComponent() {
           href="https://play.google.com/store/apps/details?id=com.app.dev.al_wadiapp"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2"
+          className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
         >
-          <Info className="h-4 w-4" />
-          لمعرفة صلاحية الفترة المتبقية في الكرت
+          <span className="flex items-center gap-2">
+            <Info className="h-4 w-4" />
+            لمعرفة صلاحية الفترة المتبقية في الكرت
+          </span>
         </a>
       </div>
     </div>

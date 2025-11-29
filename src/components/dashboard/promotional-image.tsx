@@ -58,7 +58,7 @@ export function PromotionalImage() {
     }
 
     return (
-        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500 px-4">
+        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
             <Carousel
                 className="w-full"
                 plugins={[

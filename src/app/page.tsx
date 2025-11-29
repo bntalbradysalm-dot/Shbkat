@@ -38,8 +38,9 @@ const OwnerDashboard = () => (
               </Card>
           </Link>
       </div>
-       <PromotionalImage />
-      <RecentTransactions />
+      <div className="pt-4">
+        <ServiceGrid />
+      </div>
   </div>
 );
 

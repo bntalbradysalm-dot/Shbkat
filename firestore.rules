@@ -178,7 +178,8 @@ service cloud.firestore {
      */
     match /renewalRequests/{requestId} {
       allow create: if isSignedIn() && isRequestOwner();
-      allow read, update: if isAdmin();
+      allow get, list: if isAdmin(); // Explicitly allow list for admins
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 

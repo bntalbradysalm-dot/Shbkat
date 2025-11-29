@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, query, orderBy, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { collection, doc, query, orderBy, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Phone, Check, X, Archive, Inbox, Banknote, Building, Image as ImageIcon } from 'lucide-react';
+import { User, Phone, Check, X, Archive, Inbox, Banknote, Building, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -34,6 +34,8 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type WithdrawalRequest = {
   id: string;
@@ -77,6 +79,8 @@ export default function WithdrawalRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<WithdrawalRequest | null>(null);
   const [actionToConfirm, setActionToConfirm] = useState<'approve' | 'reject' | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [rejectionNote, setRejectionNote] = useState('');
+
 
   const requestsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'withdrawalRequests'), orderBy('requestTimestamp', 'desc')) : null),
@@ -102,45 +106,70 @@ export default function WithdrawalRequestsPage() {
     if (!selectedRequest || !finalAction || !firestore) return;
 
     const requestDocRef = doc(firestore, 'withdrawalRequests', selectedRequest.id);
+    const ownerDocRef = doc(firestore, 'users', selectedRequest.ownerId);
+    const ownerTransactionsRef = collection(firestore, 'users', selectedRequest.ownerId, 'transactions');
+    const ownerNotificationsRef = collection(firestore, 'users', selectedRequest.ownerId, 'notifications');
     
     try {
-      if (finalAction === 'approve') {
-        // Balance was already deducted. Just add a transaction log.
-        const ownerTransactionsRef = collection(firestore, 'users', selectedRequest.ownerId, 'transactions');
-        await addDoc(ownerTransactionsRef, {
-            userId: selectedRequest.ownerId,
-            transactionDate: new Date().toISOString(),
-            amount: selectedRequest.amount,
-            transactionType: 'سحب أرباح',
-            notes: `إلى حساب: ${selectedRequest.recipientName} (${selectedRequest.paymentMethodName})`,
-        });
-      } else { // 'reject'
-        // Refund the user's balance because it was deducted on request.
-        const ownerDocRef = doc(firestore, 'users', selectedRequest.ownerId);
-        await updateDoc(ownerDocRef, {
-            balance: increment(selectedRequest.amount)
-        });
-      }
+        const batch = writeBatch(firestore);
 
-      // Update request status for both approve and reject
-      await updateDoc(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
+        if (finalAction === 'approve') {
+            // Balance already deducted, just create transaction record for audit
+            const transactionRef = doc(ownerTransactionsRef);
+            batch.set(transactionRef, {
+                userId: selectedRequest.ownerId,
+                transactionDate: new Date().toISOString(),
+                amount: selectedRequest.amount,
+                transactionType: 'سحب أرباح',
+                notes: `إلى حساب: ${selectedRequest.recipientName} (${selectedRequest.paymentMethodName})`,
+            });
+        } else { // 'reject'
+            // Refund the user's balance
+            batch.update(ownerDocRef, {
+                balance: increment(selectedRequest.amount)
+            });
 
-      toast({
-        title: "نجاح",
-        description: `تم ${finalAction === 'approve' ? 'قبول' : 'رفض'} طلب السحب بنجاح.`,
-      });
+            // Create a refund transaction record
+            const refundTransactionRef = doc(ownerTransactionsRef);
+            batch.set(refundTransactionRef, {
+                userId: selectedRequest.ownerId,
+                transactionDate: new Date().toISOString(),
+                amount: selectedRequest.amount,
+                transactionType: 'استرجاع مبلغ مرفوض',
+                notes: rejectionNote || 'تم رفض طلب السحب من قبل الإدارة.',
+            });
+            
+             // Create a notification for the user
+            const notificationRef = doc(ownerNotificationsRef);
+            batch.set(notificationRef, {
+                title: 'تم رفض طلب السحب',
+                body: `تم رفض طلب سحب مبلغ ${selectedRequest.amount.toLocaleString('en-US')} ريال. السبب: ${rejectionNote || 'لا يوجد سبب محدد.'}`,
+                timestamp: new Date().toISOString(),
+            });
+        }
+
+        // Update request status for both approve and reject
+        batch.update(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
+        
+        await batch.commit();
+
+        toast({
+            title: "نجاح",
+            description: `تم ${finalAction === 'approve' ? 'قبول' : 'رفض'} طلب السحب بنجاح.`,
+        });
 
     } catch (error: any) {
-      console.error("Error processing request: ", error);
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "حدث خطأ أثناء معالجة الطلب.",
-      });
+        console.error("Error processing request: ", error);
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "حدث خطأ أثناء معالجة الطلب.",
+        });
     } finally {
-      setActionToConfirm(null);
-      setSelectedRequest(null);
-      setIsDialogOpen(false);
+        setActionToConfirm(null);
+        setSelectedRequest(null);
+        setIsDialogOpen(false);
+        setRejectionNote('');
     }
   };
   
@@ -269,7 +298,12 @@ export default function WithdrawalRequestsPage() {
         )}
       </Dialog>
 
-      <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
+      <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => {
+        if (!open) {
+            setActionToConfirm(null);
+            setRejectionNote('');
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
@@ -279,6 +313,17 @@ export default function WithdrawalRequestsPage() {
                 : 'سيتم رفض هذا الطلب وإعادة المبلغ إلى رصيد المالك. لا يمكن التراجع عن هذا الإجراء.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {actionToConfirm === 'reject' && (
+             <div className="grid w-full gap-1.5 pt-2">
+                <Label htmlFor="rejection-note" className="flex items-center gap-1.5"><MessageCircle className="w-4 h-4" /> سبب الرفض (اختياري)</Label>
+                <Textarea 
+                    placeholder="اكتب سبب رفض الطلب هنا..." 
+                    id="rejection-note" 
+                    value={rejectionNote}
+                    onChange={(e) => setRejectionNote(e.target.value)}
+                />
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction onClick={() => handleAction()}>تأكيد</AlertDialogAction>

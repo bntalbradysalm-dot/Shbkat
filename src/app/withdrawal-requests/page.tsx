@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { collection, doc, query, orderBy, updateDoc, increment } from 'firebase/firestore';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -51,15 +51,8 @@ export default function WithdrawPage() {
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
-    const { data: paymentMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
+    const { data: withdrawalMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
     
-    // Combine static default methods with dynamic ones from Firestore, then filter for withdrawal options
-    const withdrawalMethods = useMemo(() => {
-        if (!paymentMethods) return [];
-        const allowedNames = ["بنك الكريمي", "شركة العمقي للصرافة"];
-        return paymentMethods.filter(method => allowedNames.includes(method.name));
-    }, [paymentMethods]);
-
     useEffect(() => {
         if (!selectedMethodId && withdrawalMethods && withdrawalMethods.length > 0) {
             setSelectedMethodId(withdrawalMethods[0].id);

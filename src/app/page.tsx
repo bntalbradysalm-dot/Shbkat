@@ -31,14 +31,14 @@ const OwnerDashboard = () => (
                   <p className="font-bold">إدارة شبكتي</p>
               </Card>
           </Link>
-          <Link href="/my-network/earnings">
+          <Link href="/my-network/withdraw">
               <Card className="aspect-square flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
                   <PieChart className="w-12 h-12 text-primary" />
-                  <p className="font-bold">إدارة الأرباح</p>
+                  <p className="font-bold">سحب</p>
               </Card>
           </Link>
       </div>
-      <div className="pt-4">
+       <div className="pt-4">
         <ServiceGrid />
       </div>
   </div>

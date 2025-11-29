@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2 } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2, Info } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -186,7 +186,7 @@ function RenewPageComponent() {
     <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title={title || 'تجديد الاشتراك'} />
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-center">{title}</CardTitle>
@@ -267,6 +267,16 @@ function RenewPageComponent() {
             </form>
           </CardContent>
         </Card>
+        
+        <a
+          href="https://play.google.com/store/apps/details?id=com.app.dev.al_wadiapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto pt-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2"
+        >
+          <Info className="h-4 w-4" />
+          لمعرفة صلاحية الفترة المتبقية في الكرت..
+        </a>
       </div>
     </div>
     <Toaster />

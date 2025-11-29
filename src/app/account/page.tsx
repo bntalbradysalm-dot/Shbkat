@@ -54,7 +54,6 @@ import { Toaster } from '@/components/ui/toaster';
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
-  { title: 'تقارير مبيعات الكروت', icon: ClipboardList, href: '/card-sales-reports' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },

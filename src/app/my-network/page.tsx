@@ -3,7 +3,7 @@ import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wifi, PieChart, ChevronLeft } from 'lucide-react';
+import { Wifi, Banknote, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MyNetworkPage() {
@@ -31,7 +31,7 @@ export default function MyNetworkPage() {
             <Link href="/my-network/withdraw">
                <div className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <PieChart className="w-8 h-8 text-primary" />
+                  <Banknote className="w-8 h-8 text-primary" />
                   <div>
                     <h3 className="font-bold">الأرباح والسحب</h3>
                     <p className="text-sm text-muted-foreground">اطلع على أرباحك وقدم طلبات سحب.</p>

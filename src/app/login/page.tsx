@@ -110,8 +110,8 @@ export default function LoginPage() {
              <Image 
                   src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
                   alt="Shabakat Wallet Logo" 
-                  width={200} 
-                  height={200} 
+                  width={140} 
+                  height={140} 
                   className="object-contain"
                   priority
               />

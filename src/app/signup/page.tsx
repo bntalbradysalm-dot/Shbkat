@@ -150,8 +150,8 @@ export default function SignupPage() {
              <Image 
                 src="https://i.postimg.cc/BbZRYPNs/Screenshot-20251128-001018-One-Drive.png" 
                 alt="Shabakat Wallet Logo" 
-                width={120} 
-                height={120} 
+                width={100} 
+                height={100} 
                 className="object-contain mb-4"
             />
             <h1 className="text-3xl font-bold text-primary">انشاء حساب جديد</h1>

@@ -83,14 +83,17 @@ export default function WithdrawPage() {
     
     const balance = userProfile?.balance ?? 0;
     const isLoading = isUserLoading || isProfileLoading || isLoadingMethods;
+    const numericAmount = parseFloat(amount);
+    const isAmountInvalid = isNaN(numericAmount) || numericAmount <= 0;
+    const isBalanceInsufficient = numericAmount > balance;
+    const isButtonDisabled = isAmountInvalid || isBalanceInsufficient;
 
     const handleConfirmRequest = () => {
-        const numericAmount = parseFloat(amount);
-        if (!selectedMethod || !recipientName || !accountNumber || !amount || isNaN(numericAmount) || numericAmount <= 0) {
+        if (!selectedMethod || !recipientName || !accountNumber || isAmountInvalid) {
             toast({ variant: "destructive", title: "بيانات غير مكتملة", description: "الرجاء تعبئة جميع الحقول بشكل صحيح." });
             return;
         }
-        if (balance < numericAmount) {
+        if (isBalanceInsufficient) {
             toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لطلب هذا المبلغ." });
             return;
         }
@@ -98,10 +101,9 @@ export default function WithdrawPage() {
     };
 
     const handleFinalConfirmation = async () => {
-        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing) return;
+        if (!user || !userProfile || !selectedMethod || !firestore || isProcessing || isAmountInvalid) return;
 
         setIsProcessing(true);
-        const numericAmount = parseFloat(amount);
 
         const requestData = {
             ownerId: user.uid,
@@ -221,10 +223,15 @@ export default function WithdrawPage() {
                             <Input id="accountNumber" type="number" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="ادخل رقم الحساب" />
                         </div>
                         <div>
-                            <Label htmlFor="amount" className="flex items-center gap-2 mb-1">
-                                <Banknote className="h-4 w-4" />
-                                المبلغ المراد سحبه
-                            </Label>
+                            <div className="flex justify-between items-center mb-1">
+                                <Label htmlFor="amount" className="flex items-center gap-2">
+                                    <Banknote className="h-4 w-4" />
+                                    المبلغ المراد سحبه
+                                </Label>
+                                {isBalanceInsufficient && (
+                                    <span className="text-xs font-semibold text-destructive">رصيد غير كافٍ</span>
+                                )}
+                            </div>
                             <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
                         </div>
                     </CardContent>
@@ -232,7 +239,7 @@ export default function WithdrawPage() {
 
                 <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                     <AlertDialogTrigger asChild>
-                        <Button className="w-full h-12 text-lg" onClick={handleConfirmRequest}>
+                        <Button className="w-full h-12 text-lg" onClick={handleConfirmRequest} disabled={isButtonDisabled}>
                           <Send className="ml-2" />
                           إرسال طلب السحب
                         </Button>

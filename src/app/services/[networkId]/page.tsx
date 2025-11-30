@@ -130,7 +130,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
             transactionDate: now,
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
-            notes: networkName,
+            notes: `كرت: ${networkName}`,
         });
 
         // 4. Calculate commission and payout, then update owner's balance

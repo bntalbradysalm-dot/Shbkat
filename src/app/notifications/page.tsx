@@ -7,6 +7,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing, BellOff } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import React from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type Notification = {
   id: string;
@@ -31,18 +38,31 @@ export default function NotificationsPage() {
 
   const { data: notifications, isLoading } = useCollection<Notification>(notificationsQuery);
 
+  const groupedNotifications = React.useMemo(() => {
+    if (!notifications) return {};
+    
+    return notifications.reduce((acc, notification) => {
+      const monthKey = format(parseISO(notification.timestamp), 'yyyy-MM');
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push(notification);
+      return acc;
+    }, {} as Record<string, Notification[]>);
+  }, [notifications]);
+
+  const sortedMonths = React.useMemo(() => {
+    return Object.keys(groupedNotifications).sort().reverse();
+  }, [groupedNotifications]);
+
+
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
              <div key={i} className="p-4 rounded-lg border bg-card flex items-start gap-4">
-                <Skeleton className="h-6 w-6 rounded-full mt-1" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-full" />
-                   <Skeleton className="h-3 w-1/2 mt-2" />
-                </div>
+                <Skeleton className="h-6 w-full" />
               </div>
           ))}
         </div>
@@ -62,24 +82,34 @@ export default function NotificationsPage() {
     }
 
     return (
-      <div className="space-y-3">
-        {notifications.map((notification, index) => (
-          <div 
-            key={notification.id} 
-            className="p-4 rounded-lg border bg-card flex items-start gap-4 animate-in fade-in-0"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground mt-1 shrink-0" />
-            <div className="flex-1">
-                <p className="font-bold text-sm">{notification.title}</p>
-                <p className="text-sm text-foreground/80 mt-1">{notification.body}</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                    {format(parseISO(notification.timestamp), 'd MMMM yyyy, h:mm a', { locale: ar })}
-                </p>
-            </div>
-          </div>
+      <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={sortedMonths[0]}>
+        {sortedMonths.map(monthKey => (
+            <AccordionItem value={monthKey} key={monthKey} className="border bg-card rounded-lg px-4">
+                <AccordionTrigger className="py-4 text-base font-bold hover:no-underline">
+                    {format(parseISO(`${monthKey}-01`), 'MMMM yyyy', { locale: ar })}
+                </AccordionTrigger>
+                <AccordionContent className="border-t pt-4">
+                    <div className="space-y-4">
+                        {groupedNotifications[monthKey].map((notification) => (
+                        <div 
+                            key={notification.id} 
+                            className="flex items-start gap-4"
+                        >
+                            <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground mt-1 shrink-0" />
+                            <div className="flex-1">
+                                <p className="font-bold text-sm">{notification.title}</p>
+                                <p className="text-sm text-foreground/80 mt-1">{notification.body}</p>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    {format(parseISO(notification.timestamp), 'd MMMM yyyy, h:mm a', { locale: ar })}
+                                </p>
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                </AccordionContent>
+            </AccordionItem>
         ))}
-      </div>
+      </Accordion>
     );
   };
 

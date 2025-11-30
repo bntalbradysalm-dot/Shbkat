@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2 } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -224,6 +224,12 @@ export default function TransactionsPage() {
                                 <span className="text-muted-foreground">الباقة:</span>
                                 <span className="font-semibold">{selectedTx.transactionType}</span>
                             </div>
+                            {selectedTx.notes && selectedTx.transactionType.startsWith('شراء كرت') && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wifi className="h-4 w-4"/> الشبكة:</span>
+                                    <span className="font-semibold">{selectedTx.notes.replace('كرت: ', '')}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
                                 <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') || selectedTx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
@@ -252,7 +258,7 @@ export default function TransactionsPage() {
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
                             )}
-                             {selectedTx.notes && (
+                             {selectedTx.notes && !selectedTx.transactionType.startsWith('شراء كرت') && (
                                 <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
                                     <span className="text-muted-foreground">الملاحظات:</span>
                                     <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
@@ -308,3 +314,5 @@ export default function TransactionsPage() {
     </>
   );
 }
+
+    

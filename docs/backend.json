@@ -374,7 +374,8 @@
         "networkId",
         "name",
         "price",
-        "validity"
+        "validity",
+        "capacity"
       ]
     },
     "NetworkCard": {
@@ -690,5 +691,4 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
-
     

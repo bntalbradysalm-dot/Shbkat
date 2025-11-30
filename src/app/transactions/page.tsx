@@ -58,7 +58,7 @@ const getTransactionIcon = (type: string) => {
         return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
     }
     if (type.startsWith('شراء كرت')) {
-        return <CreditCard className="h-6 w-6 text-blue-500" />;
+        return <CreditCard className="h-6 w-6 text-primary" />;
     }
     if (type.startsWith('تجديد')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
@@ -227,7 +227,7 @@ export default function TransactionsPage() {
                             {selectedTx.notes && selectedTx.transactionType.startsWith('شراء كرت') && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wifi className="h-4 w-4"/> الشبكة:</span>
-                                    <span className="font-semibold">{selectedTx.notes.replace('كرت: ', '')}</span>
+                                    <span className="font-semibold">{selectedTx.notes}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">

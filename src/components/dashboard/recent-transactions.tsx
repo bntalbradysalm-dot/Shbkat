@@ -28,7 +28,7 @@ const getTransactionIcon = (type: string) => {
         return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
     }
     if (type.startsWith('شراء كرت')) {
-        return <CreditCard className="h-5 w-5 text-blue-500" />;
+        return <CreditCard className="h-5 w-5 text-primary" />;
     }
     if (type.startsWith('تجديد')) {
         return <SatelliteDish className="h-5 w-5 text-primary" />;

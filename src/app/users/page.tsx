@@ -28,12 +28,20 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   User as UserIcon,
   Search,
   Trash2,
   Edit,
   MessageSquare,
   PlusCircle,
+  Crown,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +49,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -48,11 +58,13 @@ type User = {
   displayName: string;
   phoneNumber?: string;
   balance?: number;
+  accountType?: 'user' | 'network-owner';
 };
 
 export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'network-owner'>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -242,9 +254,17 @@ export default function UsersPage() {
 
 
   const filteredUsers = users?.filter(user => {
-    const nameMatch = user.displayName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const phoneMatch = user.phoneNumber?.includes(searchTerm);
-    return nameMatch || phoneMatch;
+    const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.phoneNumber?.includes(searchTerm));
+    
+    if (accountTypeFilter === 'all') {
+      return searchMatch;
+    }
+    if (accountTypeFilter === 'network-owner') {
+      return searchMatch && user.accountType === 'network-owner';
+    }
+    // accountTypeFilter === 'user'
+    return searchMatch && user.accountType !== 'network-owner';
   });
 
   const renderContent = () => {
@@ -269,7 +289,15 @@ export default function UsersPage() {
                           <UserIcon className="h-5 w-5 text-primary dark:text-primary-foreground" />
                       </div>
                       <div className="text-right">
-                          <p className="font-bold text-sm">{user.displayName || 'مستخدم جديد'}</p>
+                          <div className='flex items-center gap-2'>
+                            <p className="font-bold text-sm">{user.displayName || 'مستخدم جديد'}</p>
+                            {user.accountType === 'network-owner' && (
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    <Crown className="h-3 w-3" />
+                                    مالك شبكة
+                                </Badge>
+                            )}
+                          </div>
                           <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs mt-1">
                               <span>{user.phoneNumber}</span>
                               {user.phoneNumber && (
@@ -420,6 +448,16 @@ export default function UsersPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
               />
           </div>
+          <Select value={accountTypeFilter} onValueChange={(value) => setAccountTypeFilter(value as any)}>
+            <SelectTrigger>
+              <SelectValue placeholder="فلترة حسب نوع الحساب" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="user">مستخدمون فقط</SelectItem>
+              <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
+            </SelectContent>
+          </Select>
           {renderContent()}
         </div>
       </div>

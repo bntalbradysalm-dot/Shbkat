@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { collection, doc, query, orderBy, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Phone, Check, X, Archive, Inbox, Banknote, Building, Image as ImageIcon, MessageCircle } from 'lucide-react';
+import { User, Phone, Check, X, Archive, Inbox, Banknote, Building, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -79,6 +79,7 @@ export default function WithdrawalRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<WithdrawalRequest | null>(null);
   const [actionToConfirm, setActionToConfirm] = useState<'approve' | 'reject' | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [rejectionNote, setRejectionNote] = useState('');
 
 
@@ -171,6 +172,19 @@ export default function WithdrawalRequestsPage() {
         setIsDialogOpen(false);
         setRejectionNote('');
     }
+  };
+
+  const handleDelete = () => {
+    if (!selectedRequest || !firestore) return;
+    const docRef = doc(firestore, 'withdrawalRequests', selectedRequest.id);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+      title: 'تم الحذف',
+      description: `تم حذف طلب "${selectedRequest.ownerName}" بنجاح.`,
+    });
+    setIsDeleteAlertOpen(false);
+    setIsDialogOpen(false);
+    setSelectedRequest(null);
   };
   
   const RequestList = ({ list, emptyMessage }: { list: WithdrawalRequest[], emptyMessage: string }) => {
@@ -281,22 +295,40 @@ export default function WithdrawalRequestsPage() {
                     <InfoRow icon={User} label="اسم المستلم" value={selectedRequest.recipientName} />
                     <InfoRow icon={Building} label="رقم الحساب" value={selectedRequest.accountNumber} />
                 </div>
-                {selectedRequest.status === 'pending' && (
+                {selectedRequest.status === 'pending' ? (
                     <DialogFooter className="grid grid-cols-2 gap-2">
                         <Button variant="destructive" onClick={() => setActionToConfirm('reject')}><X className="ml-2"/> رفض الطلب</Button>
                         <Button onClick={() => setActionToConfirm('approve')}><Check className="ml-2"/> قبول الطلب</Button>
                     </DialogFooter>
-                )}
-                 {selectedRequest.status !== 'pending' && (
-                     <DialogFooter>
+                ) : (
+                     <DialogFooter className="grid grid-cols-2 gap-2">
+                        <Button variant="destructive" onClick={() => setIsDeleteAlertOpen(true)}>
+                          <Trash2 className="ml-2 h-4 w-4" />
+                          حذف
+                        </Button>
                         <DialogClose asChild>
-                            <Button variant="outline" className="w-full">إغلاق</Button>
+                            <Button variant="outline">إغلاق</Button>
                         </DialogClose>
                      </DialogFooter>
                  )}
             </DialogContent>
         )}
       </Dialog>
+      
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                <AlertDialogDescription>
+                هل أنت متأكد من رغبتك في حذف هذا الطلب من الأرشيف؟ لا يمكن التراجع عن هذا الإجراء.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">حذف</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => {
         if (!open) {

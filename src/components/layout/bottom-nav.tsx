@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 
 const allNavItems = [
-  { name: 'الرئيسية', icon: Home, href: '/dashboard', roles: ['admin', 'user'] },
+  { name: 'الرئيسية', icon: Home, href: '/login', roles: ['admin', 'user'] },
   { name: 'الطلبات', icon: Repeat, href: '/renewal-requests', roles: ['admin'] },
   { name: 'المستخدمين', icon: Users, href: '/users', roles: ['admin'] },
   { name: 'حسابي', icon: User, href: '/account', roles: ['admin', 'user'] },
@@ -30,7 +30,7 @@ function NavItems() {
   const [navItems, setNavItems] = useState(allNavItems.filter(item => item.roles.includes('user')));
   
   const getActiveState = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/login') return pathname === '/login';
     if (href === '/renewal-requests') return pathname.startsWith('/renewal-requests') || pathname.startsWith('/transfer-requests');
     return pathname.startsWith(href);
   };

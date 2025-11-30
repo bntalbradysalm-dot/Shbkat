@@ -99,19 +99,19 @@ export default function OwnerNetworkManagePage() {
   }, [cards]);
   
   const handleAddCategory = () => {
-    if (newCategory.name && newCategory.price && categoriesCollection && networkId) {
+    if (newCategory.name && newCategory.price && newCategory.validity && categoriesCollection && networkId) {
         addDocumentNonBlocking(categoriesCollection, {
             networkId: networkId,
             name: newCategory.name,
             price: Number(newCategory.price),
             capacity: newCategory.capacity || undefined,
-            validity: newCategory.validity || undefined,
+            validity: newCategory.validity,
         });
         setNewCategory({ name: '', price: '', capacity: '', validity: '' });
         setIsAddingCategory(false);
         toast({ title: 'نجاح', description: 'تمت إضافة الفئة بنجاح.' });
     } else {
-        toast({ title: 'خطأ', description: 'يرجى ملء اسم الفئة والسعر على الأقل.', variant: 'destructive' });
+        toast({ title: 'خطأ', description: 'يرجى ملء جميع الحقول المطلوبة.', variant: 'destructive' });
     }
   };
 
@@ -121,13 +121,16 @@ export default function OwnerNetworkManagePage() {
   };
 
   const handleSaveCategory = (id: string) => {
-    if (!firestore || !networkId || !editingCategoryValues.name || !editingCategoryValues.price) return;
+    if (!firestore || !networkId || !editingCategoryValues.name || !editingCategoryValues.price || !editingCategoryValues.validity) {
+        toast({ title: 'خطأ', description: 'يرجى ملء جميع الحقول المطلوبة.', variant: 'destructive' });
+        return;
+    }
     const docRef = doc(firestore, `networks/${networkId}/cardCategories`, id);
     updateDocumentNonBlocking(docRef, { 
         name: editingCategoryValues.name, 
         price: Number(editingCategoryValues.price),
         capacity: editingCategoryValues.capacity || undefined,
-        validity: editingCategoryValues.validity || undefined,
+        validity: editingCategoryValues.validity,
     });
     setEditingCategoryId(null);
     toast({ title: 'تم الحفظ', description: 'تم تحديث الفئة بنجاح.' });
@@ -265,7 +268,7 @@ export default function OwnerNetworkManagePage() {
                             <Input type="number" placeholder="السعر" value={newCategory.price} onChange={e => setNewCategory(p => ({...p, price: e.target.value}))} />
                             <Input placeholder="السعة (اختياري، مثال: 1GB)" value={newCategory.capacity} onChange={e => setNewCategory(p => ({...p, capacity: e.target.value}))} />
                              <Select onValueChange={(value) => setNewCategory(p => ({...p, validity: value}))} value={newCategory.validity}>
-                                <SelectTrigger><SelectValue placeholder="اختر الصلاحية (اختياري)" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="اختر الصلاحية" /></SelectTrigger>
                                 <SelectContent>
                                     {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                 </SelectContent>
@@ -435,3 +438,5 @@ export default function OwnerNetworkManagePage() {
     </>
   );
 }
+
+    

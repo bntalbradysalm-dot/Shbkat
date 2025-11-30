@@ -51,7 +51,7 @@ const BalanceDisplay = () => {
                     {isLoading ? (
                         <Skeleton className="h-8 w-32 mt-2" />
                     ) : (
-                        <p className="text-3xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
                     )}
                 </div>
                 <Wallet className="h-8 w-8 text-primary" />

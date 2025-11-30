@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -45,6 +45,9 @@ type Transaction = {
   notes?: string;
   subscriberName?: string;
   cardNumber?: string;
+  paymentMethodName?: string;
+  recipientName?: string;
+  accountNumber?: string;
 };
 
 const getTransactionIcon = (type: string) => {
@@ -246,7 +249,7 @@ export default function TransactionsPage() {
                                 <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/> الوقت:</span>
                                 <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
                             </div>
-                            {selectedTx.subscriberName && (
+                             {selectedTx.subscriberName && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المشترك:</span>
                                     <span className="font-semibold">{selectedTx.subscriberName}</span>
@@ -257,6 +260,27 @@ export default function TransactionsPage() {
                                     <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
+                            )}
+                             {selectedTx.transactionType === 'سحب أرباح' && (
+                                <>
+                                    <div className="pt-4 mt-2 border-t">
+                                        <h4 className="font-bold text-base mb-2">تفاصيل السحب</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground flex items-center gap-2"><Building className="h-4 w-4"/> البنك:</span>
+                                                <span className="font-semibold">{selectedTx.paymentMethodName}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المستلم:</span>
+                                                <span className="font-semibold">{selectedTx.recipientName}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الحساب:</span>
+                                                <span className="font-semibold">{selectedTx.accountNumber}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                         <DialogFooter>
@@ -308,3 +332,5 @@ export default function TransactionsPage() {
     </>
   );
 }
+
+    

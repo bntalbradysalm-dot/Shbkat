@@ -122,7 +122,9 @@ export default function WithdrawalRequestsPage() {
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.amount,
                 transactionType: 'سحب أرباح',
-                notes: `إلى حساب: ${selectedRequest.recipientName} (${selectedRequest.paymentMethodName})`,
+                paymentMethodName: selectedRequest.paymentMethodName,
+                recipientName: selectedRequest.recipientName,
+                accountNumber: selectedRequest.accountNumber,
             });
         } else { // 'reject'
             // Refund the user's balance
@@ -365,3 +367,5 @@ export default function WithdrawalRequestsPage() {
     </>
   );
 }
+
+    

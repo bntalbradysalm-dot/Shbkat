@@ -379,7 +379,7 @@ export default function OwnerNetworkManagePage() {
   return (
     <>
       <div className="flex flex-col h-full bg-background">
-        <SimpleHeader title={`إدارة شبكة: ${network.name}`} />
+        <SimpleHeader title={`إدارة: ${network.name}`} />
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {renderCategories()}
             {renderCards()}

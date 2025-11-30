@@ -46,20 +46,15 @@ const BalanceDisplay = () => {
     return (
         <Card className="shadow-lg">
             <CardContent className="p-4 flex items-center justify-between">
-                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                         <Wallet className="h-6 w-6 text-primary dark:text-primary-foreground" />
-                    </div>
-                    <span className="text-sm font-semibold text-muted-foreground">رصيدك الحالي</span>
+                <div>
+                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
+                    {isLoading ? (
+                        <Skeleton className="h-8 w-32 mt-2" />
+                    ) : (
+                        <p className="text-3xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                    )}
                 </div>
-                {isLoading ? (
-                    <Skeleton className="h-7 w-28" />
-                ) : (
-                    <div className="text-xl font-bold text-primary dark:text-primary-foreground">
-                        {(userProfile?.balance ?? 0).toLocaleString('en-US')}
-                        <span className="text-sm mr-1">ريال يمني</span>
-                    </div>
-                )}
+                <Wallet className="h-8 w-8 text-primary" />
             </CardContent>
         </Card>
     );

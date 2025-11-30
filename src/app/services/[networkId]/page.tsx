@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tag, Calendar, Package, CheckCircle, Copy, AlertCircle } from 'lucide-react';
+import { Tag, Calendar, Database, CheckCircle, Copy, AlertCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -254,7 +254,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                  <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                     <CardContent className="p-0 flex">
                         <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
-                           <Package className="w-8 h-8 text-primary/80" />
+                           <Database className="w-8 h-8 text-primary/80" />
                            {category.capacity && (
                                 <span className="font-bold text-lg text-primary/80 mt-2">{category.capacity}</span>
                            )}
@@ -279,7 +279,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                              <Separator className="my-2" />
                              <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
                                  {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
-                                 {category.capacity && <span className="flex items-center gap-1.5"><Package className="w-3 h-3" /> السعة: {category.capacity}</span>}
+                                 {category.capacity && <span className="flex items-center gap-1.5"><Database className="w-3 h-3" /> السعة: {category.capacity}</span>}
                              </div>
                         </div>
                     </CardContent>

@@ -6,7 +6,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Trash2, Edit, Save, X, Tag, CreditCard, FileUp, Loader2, List, FileText, Package, Calendar } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Save, X, Tag, CreditCard, FileUp, Loader2, List, FileText, Database, Calendar } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, doc, writeBatch, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -244,7 +244,7 @@ export default function OwnerNetworkManagePage() {
                                         <CreditCard className="w-4 h-4 text-primary dark:text-primary-foreground" />
                                         <span>{cat.price.toLocaleString('en-US')} ريال</span>
                                     </div>
-                                    {cat.capacity && <div className="flex items-center gap-1.5"><Package className="w-4 h-4" /><span>{cat.capacity}</span></div>}
+                                    {cat.capacity && <div className="flex items-center gap-1.5"><Database className="w-4 h-4" /><span>{cat.capacity}</span></div>}
                                     {cat.validity && <div className="flex items-center gap-1.5 col-span-2"><Calendar className="w-4 h-4" /><span>{cat.validity}</span></div>}
                                 </div>
                             </div>

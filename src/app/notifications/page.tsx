@@ -41,7 +41,8 @@ export default function NotificationsPage() {
   const { toast } = useToast();
   const [monthToDelete, setMonthToDelete] = useState<string | null>(null);
 
-  const notificationsQuery = useMemoFirebase(
+  // 1. Fetch personal notifications
+  const personalNotificationsQuery = useMemoFirebase(
     () => user && firestore
         ? query(
             collection(firestore, 'users', user.uid, 'notifications'),
@@ -50,13 +51,35 @@ export default function NotificationsPage() {
         : null,
     [firestore, user]
   );
+  const { data: personalNotifications, isLoading: isLoadingPersonal } = useCollection<Notification>(personalNotificationsQuery);
+  
+  // 2. Fetch global notifications
+  const globalNotificationsQuery = useMemoFirebase(
+    () => firestore
+        ? query(
+            collection(firestore, 'notifications'),
+            orderBy('timestamp', 'desc')
+          )
+        : null,
+    [firestore]
+  );
+  const { data: globalNotifications, isLoading: isLoadingGlobal } = useCollection<Notification>(globalNotificationsQuery);
 
-  const { data: notifications, isLoading } = useCollection<Notification>(notificationsQuery);
+  // 3. Merge and sort notifications
+  const allNotifications = React.useMemo(() => {
+    const combined = [
+      ...(personalNotifications || []),
+      ...(globalNotifications || [])
+    ];
+    // Sort descending by timestamp
+    return combined.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [personalNotifications, globalNotifications]);
+
 
   const groupedNotifications = React.useMemo(() => {
-    if (!notifications) return {};
+    if (!allNotifications) return {};
     
-    return notifications.reduce((acc, notification) => {
+    return allNotifications.reduce((acc, notification) => {
       const monthKey = format(parseISO(notification.timestamp), 'yyyy-MM');
       if (!acc[monthKey]) {
         acc[monthKey] = [];
@@ -64,7 +87,7 @@ export default function NotificationsPage() {
       acc[monthKey].push(notification);
       return acc;
     }, {} as Record<string, Notification[]>);
-  }, [notifications]);
+  }, [allNotifications]);
 
   const sortedMonths = React.useMemo(() => {
     return Object.keys(groupedNotifications).sort().reverse();
@@ -73,8 +96,19 @@ export default function NotificationsPage() {
   const handleDeleteMonth = () => {
     if (!monthToDelete || !user || !firestore) return;
 
-    const notificationsToDelete = groupedNotifications[monthToDelete];
-    if (!notificationsToDelete || notificationsToDelete.length === 0) return;
+    // We only delete PERSONAL notifications for that month
+    const notificationsToDelete = (personalNotifications || []).filter(
+        n => format(parseISO(n.timestamp), 'yyyy-MM') === monthToDelete
+    );
+
+    if (notificationsToDelete.length === 0) {
+        toast({
+            title: "لا يوجد ما يمكن حذفه",
+            description: "لا توجد إشعارات شخصية في هذا الشهر لحذفها."
+        });
+        setMonthToDelete(null);
+        return;
+    }
 
     const batch = writeBatch(firestore);
     notificationsToDelete.forEach(notification => {
@@ -85,7 +119,7 @@ export default function NotificationsPage() {
     batch.commit().then(() => {
         toast({
             title: "تم الحذف",
-            description: `تم حذف جميع إشعارات شهر ${format(parseISO(`${monthToDelete}-01`), 'MMMM yyyy', { locale: ar })} بنجاح.`
+            description: `تم حذف الإشعارات الشخصية لشهر ${format(parseISO(`${monthToDelete}-01`), 'MMMM yyyy', { locale: ar })}.`
         });
     }).catch(error => {
         console.error("Error deleting notifications:", error);
@@ -98,6 +132,8 @@ export default function NotificationsPage() {
         setMonthToDelete(null);
     });
   };
+
+  const isLoading = isLoadingPersonal || isLoadingGlobal;
 
   const renderContent = () => {
     if (isLoading) {
@@ -112,7 +148,7 @@ export default function NotificationsPage() {
       );
     }
 
-    if (!notifications || notifications.length === 0) {
+    if (allNotifications.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center text-center h-64">
           <BellOff className="h-16 w-16 text-muted-foreground" />
@@ -181,8 +217,8 @@ export default function NotificationsPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
                 <AlertDialogDescription>
-                    هل أنت متأكد من رغبتك في حذف جميع إشعارات شهر {monthToDelete && format(parseISO(`${monthToDelete}-01`), 'MMMM yyyy', { locale: ar })}؟
-                    لا يمكن التراجع عن هذا الإجراء.
+                    هل أنت متأكد من رغبتك في حذف جميع إشعاراتك الشخصية لشهر {monthToDelete && format(parseISO(`${monthToDelete}-01`), 'MMMM yyyy', { locale: ar })}؟
+                    (الإشعارات العامة لن تتأثر).
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

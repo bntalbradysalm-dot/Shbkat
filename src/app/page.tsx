@@ -42,8 +42,18 @@ const OwnerDashboard = () => (
       </div>
        <div className="pt-4">
         <ServiceGrid />
+        <PromotionalImage />
+        <RecentTransactions />
       </div>
   </div>
+);
+
+const UserDashboard = () => (
+  <>
+    <ServiceGrid />
+    <PromotionalImage />
+    <RecentTransactions />
+  </>
 );
 
 
@@ -75,7 +85,7 @@ export default function Home() {
       <div className="p-4 space-y-4">
         <BalanceCard />
       </div>
-      {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <ServiceGrid />}
+      {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
     </>
   );
 }

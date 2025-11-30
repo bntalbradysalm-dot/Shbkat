@@ -57,8 +57,6 @@ export function ServiceGrid() {
           <ServiceItem key={service.name} {...service} index={index} />
         ))}
       </div>
-      <PromotionalImage />
-      <RecentTransactions />
     </div>
   );
 }

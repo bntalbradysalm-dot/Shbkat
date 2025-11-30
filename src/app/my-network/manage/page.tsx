@@ -380,6 +380,9 @@ export default function OwnerNetworkManagePage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title={`إدارة: ${network.name}`} />
+         <p className="text-center text-xs text-muted-foreground -mt-2 mb-4 px-4">
+          سيتم خصم 10% من كل كرت كرسوم عمولة
+        </p>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {renderCategories()}
             {renderCards()}

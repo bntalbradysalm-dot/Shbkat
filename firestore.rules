@@ -203,7 +203,7 @@ service cloud.firestore {
     match /withdrawalRequests/{requestId} {
       allow create: if isSignedIn() && isWithdrawalRequestOwner();
       allow read, update: if isAdmin();
-      allow delete: if false; // Requests should be archived, not deleted by users/admins
+      allow delete: if isAdmin();
     }
     
     /**

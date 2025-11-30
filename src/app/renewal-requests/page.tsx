@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2 } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -35,6 +35,8 @@ import { ar } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type RenewalRequest = {
   id: string;
@@ -72,6 +74,7 @@ export default function RenewalRequestsPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [rejectionNote, setRejectionNote] = useState('');
 
 
   const requestsQuery = useMemoFirebase(
@@ -99,11 +102,17 @@ export default function RenewalRequestsPage() {
     if (!selectedRequest || !finalAction || !firestore) return;
 
     const requestDocRef = doc(firestore, 'renewalRequests', selectedRequest.id);
+    const userDocRef = doc(firestore, 'users', selectedRequest.userId);
+    const userTransactionsRef = collection(firestore, 'users', selectedRequest.userId, 'transactions');
+    const userNotificationsRef = collection(firestore, 'users', selectedRequest.userId, 'notifications');
     
     try {
+        const batch = writeBatch(firestore);
+
         if (finalAction === 'approve') {
              // Balance already deducted, just create transaction record
-              const transactionData = {
+              const transactionRef = doc(userTransactionsRef);
+              batch.set(transactionRef, {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.packagePrice,
@@ -111,18 +120,36 @@ export default function RenewalRequestsPage() {
                 notes: 'تم التجديد بنجاح',
                 subscriberName: selectedRequest.subscriberName,
                 cardNumber: selectedRequest.cardNumber,
-              };
-            await addDoc(collection(firestore, 'users', selectedRequest.userId, 'transactions'), transactionData);
+              });
         } else { // 'reject'
             // Refund the user
-            const userDocRef = doc(firestore, 'users', selectedRequest.userId);
-            await updateDoc(userDocRef, {
+            batch.update(userDocRef, {
                 balance: increment(selectedRequest.packagePrice)
+            });
+
+            // Create a refund transaction record
+            const refundTransactionRef = doc(userTransactionsRef);
+            batch.set(refundTransactionRef, {
+                userId: selectedRequest.userId,
+                transactionDate: new Date().toISOString(),
+                amount: selectedRequest.packagePrice,
+                transactionType: 'استرجاع مبلغ مرفوض',
+                notes: `تم رفض طلب تجديد باقة "${selectedRequest.packageTitle}". ${rejectionNote ? `السبب: ${rejectionNote}` : ''}`,
+            });
+
+             // Create a notification for the user
+            const notificationRef = doc(userNotificationsRef);
+            batch.set(notificationRef, {
+                title: 'تم رفض طلب التجديد',
+                body: `تم رفض طلب تجديد باقة "${selectedRequest.packageTitle}". السبب: ${rejectionNote || 'لا يوجد سبب محدد.'}`,
+                timestamp: new Date().toISOString(),
             });
         }
 
         // Update request status for both approve and reject
-        await updateDoc(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
+        batch.update(requestDocRef, { status: finalAction === 'approve' ? 'approved' : 'rejected' });
+
+        await batch.commit();
 
         toast({
             title: "نجاح",
@@ -140,6 +167,7 @@ export default function RenewalRequestsPage() {
         setActionToConfirm(null);
         setSelectedRequest(null);
         setIsDialogOpen(false);
+        setRejectionNote('');
     }
   };
 
@@ -323,7 +351,12 @@ export default function RenewalRequestsPage() {
         )}
       </Dialog>
 
-      <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
+      <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => {
+          if (!open) {
+            setActionToConfirm(null);
+            setRejectionNote('');
+          }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
@@ -333,6 +366,17 @@ export default function RenewalRequestsPage() {
                 : 'سيتم رفض هذا الطلب وإرجاع المبلغ للعميل. لا يمكن التراجع عن هذا الإجراء.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
+           {actionToConfirm === 'reject' && (
+             <div className="grid w-full gap-1.5 pt-2">
+                <Label htmlFor="rejection-note" className="flex items-center gap-1.5"><MessageCircle className="w-4 h-4" /> سبب الرفض (اختياري)</Label>
+                <Textarea 
+                    placeholder="اكتب سبب رفض الطلب هنا..." 
+                    id="rejection-note" 
+                    value={rejectionNote}
+                    onChange={(e) => setRejectionNote(e.target.value)}
+                />
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction onClick={() => handleAction()}>تأكيد</AlertDialogAction>

@@ -1,7 +1,7 @@
 'use client';
 
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useFirestore, useCollection, useMemoFirebase, useUser, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, writeBatch, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing, BellOff, Trash2 } from 'lucide-react';
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Notification = {
   id: string;
@@ -111,8 +113,9 @@ export default function NotificationsPage() {
     }
 
     const batch = writeBatch(firestore);
+    const userNotificationsPath = `users/${user.uid}/notifications`;
     notificationsToDelete.forEach(notification => {
-        const docRef = doc(firestore, 'users', user.uid, 'notifications', notification.id);
+        const docRef = doc(firestore, userNotificationsPath, notification.id);
         batch.delete(docRef);
     });
 
@@ -121,13 +124,12 @@ export default function NotificationsPage() {
             title: "تم الحذف",
             description: `تم حذف الإشعارات الشخصية لشهر ${format(parseISO(`${monthToDelete}-01`), 'MMMM yyyy', { locale: ar })}.`
         });
-    }).catch(error => {
-        console.error("Error deleting notifications:", error);
-        toast({
-            variant: 'destructive',
-            title: 'خطأ',
-            description: 'فشل حذف الإشعارات.'
+    }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: userNotificationsPath,
+            operation: 'delete',
         });
+        errorEmitter.emit('permission-error', permissionError);
     }).finally(() => {
         setMonthToDelete(null);
     });

@@ -258,12 +258,6 @@ export default function TransactionsPage() {
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
                             )}
-                             {selectedTx.notes && !selectedTx.transactionType.startsWith('شراء كرت') && (
-                                <div className="flex flex-col text-right items-start space-y-2 pt-4 mt-2 border-t">
-                                    <span className="text-muted-foreground">الملاحظات:</span>
-                                    <p className="font-semibold bg-muted/50 p-2 rounded-md w-full">{selectedTx.notes}</p>
-                                </div>
-                            )}
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>
@@ -314,5 +308,3 @@ export default function TransactionsPage() {
     </>
   );
 }
-
-    

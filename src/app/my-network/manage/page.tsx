@@ -89,6 +89,14 @@ export default function OwnerNetworkManagePage() {
   const [singleCard, setSingleCard] = React.useState({ cardNumber: '' });
   const [bulkCards, setBulkCards] = React.useState('');
   const [isProcessingCards, setIsProcessingCards] = React.useState(false);
+  const [selectedCategoryForView, setSelectedCategoryForView] = useState<string>('');
+
+
+  useEffect(() => {
+    if (categories && categories.length > 0 && !selectedCategoryForView) {
+      setSelectedCategoryForView(categories[0].id);
+    }
+  }, [categories, selectedCategoryForView]);
 
   const cardsByCategory = useMemo(() => {
     if (!cards) return {};
@@ -222,7 +230,6 @@ export default function OwnerNetworkManagePage() {
                                    {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                  </SelectContent>
                                </Select>
-                               <Input value={editingCategoryValues.validity || ''} onChange={(e) => setEditingCategoryValues(p => ({...p, validity: e.target.value}))} placeholder="أو اكتب صلاحية مخصصة"/>
                                <div className="flex justify-end gap-2">
                                    <Button size="icon" variant="ghost" onClick={() => setEditingCategoryId(null)}><X className="h-4 w-4" /></Button>
                                    <Button size="icon" onClick={() => handleSaveCategory(cat.id)}><Save className="h-4 w-4" /></Button>
@@ -273,7 +280,6 @@ export default function OwnerNetworkManagePage() {
                                     {validityOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                 </SelectContent>
                             </Select>
-                            <Input placeholder="أو اكتب صلاحية مخصصة" value={newCategory.validity} onChange={e => setNewCategory(p => ({...p, validity: e.target.value}))} />
                             <div className="flex justify-end gap-2">
                                 <Button size="icon" variant="ghost" onClick={() => setIsAddingCategory(false)}><X className="h-4 w-4" /></Button>
                                 <Button onClick={handleAddCategory}>إضافة</Button>
@@ -307,53 +313,61 @@ export default function OwnerNetworkManagePage() {
         )
     }
 
+    const currentCards = cardsByCategory[selectedCategoryForView] || [];
+
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-center">كروت الشبكة</CardTitle>
-                <CardDescription className="text-center">إدارة الكروت المتاحة لكل فئة.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue={categories[0].id} className="w-full">
-                    <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)` }}>
-                         {categories.map(cat => <TabsTrigger key={cat.id} value={cat.id}>{cat.name}</TabsTrigger>)}
-                    </TabsList>
-                    {categories.map(cat => (
-                        <TabsContent key={cat.id} value={cat.id} className="pt-4">
-                             <Card className='bg-muted/30'>
-                                <CardHeader>
-                                    <CardTitle className='text-base flex justify-between items-center'>
-                                        <span>كروت فئة "{cat.name}"</span>
-                                        <span className='text-sm text-primary dark:text-primary-foreground'>({cardsByCategory[cat.id]?.length || 0} كرت)</span>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className='space-y-3'>
-                                    {cardsByCategory[cat.id] && cardsByCategory[cat.id].length > 0 ? (
-                                        cardsByCategory[cat.id].map(card => (
-                                            <div key={card.id} className='p-2 bg-background border rounded-md flex justify-between items-center'>
-                                                <p className='font-mono text-sm'>{card.cardNumber}</p>
-                                                <Badge className={cn(
-                                                    card.status === 'sold' ? 'bg-red-500' : 'bg-green-500',
-                                                    'text-white'
-                                                )}>
-                                                    {card.status === 'sold' ? 'مباع' : 'متاح'}
-                                                </Badge>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className='text-center text-sm text-muted-foreground py-4'>لا توجد كروت في هذه الفئة.</p>
-                                    )}
-                                     <Button className="w-full mt-4" size="sm" variant="outline" onClick={() => handleOpenAddCardDialog(cat.id)}>
-                                        <PlusCircle className="ml-2 h-4 w-4" />
-                                        إضافة كروت لهذه الفئة
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">كروت الشبكة</CardTitle>
+          <CardDescription className="text-center">إدارة الكروت المتاحة لكل فئة.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Select value={selectedCategoryForView} onValueChange={setSelectedCategoryForView}>
+            <SelectTrigger>
+              <SelectValue placeholder="اختر فئة لعرض الكروت" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedCategoryForView && (
+            <Card className='bg-muted/30'>
+              <CardHeader>
+                <CardTitle className='text-base flex justify-between items-center'>
+                  <span>كروت فئة "{categories.find(c => c.id === selectedCategoryForView)?.name}"</span>
+                  <span className='text-sm text-primary dark:text-primary-foreground'>({currentCards.length} كرت)</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-3'>
+                {currentCards.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
+                    {currentCards.map(card => (
+                      <div key={card.id} className='p-2 bg-background border rounded-md flex justify-between items-center'>
+                        <p className='font-mono text-sm'>{card.cardNumber}</p>
+                        <Badge className={cn(
+                          card.status === 'sold' ? 'bg-red-500' : 'bg-green-500',
+                          'text-white'
+                        )}>
+                          {card.status === 'sold' ? 'مباع' : 'متاح'}
+                        </Badge>
+                      </div>
                     ))}
-                </Tabs>
-            </CardContent>
-        </Card>
+                  </div>
+                ) : (
+                  <p className='text-center text-sm text-muted-foreground py-4'>لا توجد كروت في هذه الفئة.</p>
+                )}
+                <Button className="w-full mt-4" size="sm" variant="outline" onClick={() => handleOpenAddCardDialog(selectedCategoryForView)}>
+                  <PlusCircle className="ml-2 h-4 w-4" />
+                  إضافة كروت لهذه الفئة
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
     );
   };
   
@@ -438,5 +452,7 @@ export default function OwnerNetworkManagePage() {
     </>
   );
 }
+
+    
 
     

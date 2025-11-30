@@ -138,7 +138,7 @@ export default function AccountPage() {
   
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.push('/');
     }
   }, [user, isUserLoading, router]);
 
@@ -170,7 +170,7 @@ export default function AccountPage() {
       localStorage.setItem('lastLoggedOutUser', user.displayName);
     }
     auth.signOut();
-    router.push('/login');
+    router.push('/');
   };
 
   if (isUserLoading || !user || !userProfile) {

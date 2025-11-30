@@ -16,7 +16,7 @@ export default function RootLayout({
   const [isNavVisible, setIsNavVisible] = useState(false);
 
   useEffect(() => {
-    const pagesWithoutNav = ['/login', '/signup', '/forgot-password'];
+    const pagesWithoutNav = ['/', '/signup', '/forgot-password'];
     setIsNavVisible(!pagesWithoutNav.includes(pathname));
   }, [pathname]);
 

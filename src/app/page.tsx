@@ -1,91 +1,186 @@
-
 'use client';
 
-import { BalanceCard } from '@/components/dashboard/balance-card';
-import { ServiceGrid } from '@/components/dashboard/service-grid';
-import { Header } from '@/components/layout/header';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Wifi, Banknote } from 'lucide-react';
-import { PromotionalImage } from '@/components/dashboard/promotional-image';
-import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 
-type UserProfile = {
-  accountType?: 'user' | 'network-owner';
-};
-
-const OwnerDashboard = () => (
-  <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
-      <div className="px-4 pt-6 animate-in fade-in-0 duration-500">
-          <div className="flex justify-between items-center mb-3 px-2">
-              <h3 className="text-md font-bold">لوحة تحكم مالك الشبكة</h3>
-          </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4 px-4 py-2">
-          <Link href="/my-network/manage">
-              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
-                  <Wifi className="w-10 h-10 text-primary" />
-                  <p className="font-bold">إدارة شبكتي</p>
-                  <p className="text-xs text-muted-foreground">الفئات والكروت</p>
-              </Card>
-          </Link>
-          <Link href="/my-network/withdraw">
-              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
-                  <Banknote className="w-10 h-10 text-primary" />
-                  <p className="font-bold">سحب</p>
-                  <p className="text-xs text-muted-foreground">سحب الارباح</p>
-              </Card>
-          </Link>
-      </div>
-       <div className="pt-4">
-        <ServiceGrid />
-        <PromotionalImage />
-        <RecentTransactions />
-      </div>
+const LoadingSpinner = () => (
+  <div className="flex flex-col justify-center items-center h-screen bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <Image
+        src="https://i.postimg.cc/XNhdQKqs/44.png"
+        alt="logo"
+        width={160}
+        height={160}
+        className="object-contain"
+      />
+      <Loader2 className="h-6 w-6 animate-spin text-black dark:text-white" />
+    </div>
   </div>
 );
 
-const UserDashboard = () => (
-  <>
-    <ServiceGrid />
-    <PromotionalImage />
-    <RecentTransactions />
-  </>
-);
+const getFirstAndLastName = (fullName: string): string => {
+  const nameParts = fullName.trim().split(/\s+/);
+  if (nameParts.length > 1) {
+    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+  }
+  return fullName;
+};
 
 
-export default function Home() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+export default function LoginPage() {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUserName, setLastUserName] = useState<string | null>(null);
+  const router = useRouter();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
-  const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
-    [firestore, user]
-  );
-  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+  useEffect(() => {
+    // Check for last logged out user's name
+    const storedName = localStorage.getItem('lastLoggedOutUser');
+    if (storedName) {
+      setLastUserName(storedName);
+      // Optionally, clear it after reading so it only shows once
+      localStorage.removeItem('lastLoggedOutUser');
+    }
+  }, []);
 
-  if (isLoading) {
-    return (
-       <>
-        <Header />
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-48 w-full" />
-        </div>
-        <Skeleton className="h-full w-full rounded-t-3xl" />
-      </>
-    )
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phoneNumber || !password) {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في تسجيل الدخول',
+        description: 'الرجاء إدخال رقم الهاتف وكلمة المرور.',
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+
+    const email = `${phoneNumber.trim()}@shabakat.com`;
+    try {
+      await signInWithEmailAndPassword(auth, email, password.trim());
+      // The onAuthStateChanged listener in the provider will handle the redirect
+    } catch (error: any) {
+      let description = 'فشل تسجيل الدخول. يرجى التحقق من رقم الهاتف وكلمة المرور.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        description = 'رقم الهاتف أو كلمة المرور غير صحيحة.';
+      } else if (error.code === 'auth/invalid-email') {
+        description = 'صيغة رقم الهاتف غير صالحة.';
+      }
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في تسجيل الدخول',
+        description: description,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isUserLoading || (!isUserLoading && user)) {
+    return <LoadingSpinner />;
   }
 
   return (
     <>
-      <Header />
-      <div className="p-4 space-y-4">
-        <BalanceCard />
+      <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
+        <div className="flex-1 flex flex-col justify-center text-center">
+          <div className="mb-10 flex flex-col items-center">
+             <Image 
+                  src="https://i.postimg.cc/XNhdQKqs/44.png" 
+                  alt="Shabakat Wallet Logo" 
+                  width={140} 
+                  height={140} 
+                  className="object-contain"
+                  priority
+              />
+              <div className="text-center mt-4">
+                <h1 className="text-2xl font-bold">أهلاً بك</h1>
+                <p className="text-muted-foreground">تسجيل الدخول</p>
+              </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6 text-right">
+            <div className="space-y-2">
+              <Label htmlFor="phone">رقم الهاتف</Label>
+              <Input
+                id="phone"
+                type="tel"
+                className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
+                placeholder="7xxxxxxxx"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">كلمة المرور</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  placeholder="ادخل كلمة المرور"
+                  className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-left">
+              <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                نسيت كلمة المرور؟
+              </Link>
+            </div>
+
+            <Button type="submit" className="w-full text-lg font-bold h-12 rounded-xl" disabled={isLoading}>
+              {isLoading ? 'جاري الدخول...' : 'دخول'}
+            </Button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground">
+              ليس لديك حساب؟{' '}
+              <a href="/signup" className="font-bold text-primary hover:underline">
+                سجل الآن
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <footer className="text-center text-xs text-muted-foreground pb-4">
+          <p>تم التطوير بواسطة محمد راضي باشادي</p>
+        </footer>
       </div>
-      {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
+      <Toaster />
     </>
   );
 }

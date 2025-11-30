@@ -115,7 +115,6 @@ export default function WithdrawalRequestsPage() {
         const batch = writeBatch(firestore);
 
         if (finalAction === 'approve') {
-            // Balance already deducted, just create transaction record for audit
             const transactionRef = doc(ownerTransactionsRef);
             batch.set(transactionRef, {
                 userId: selectedRequest.ownerId,

@@ -23,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 type PaymentMethod = {
@@ -108,7 +107,7 @@ export default function TopUpPage() {
     };
     
     const handleConfirmDeposit = async () => {
-        if (!receiptImage || !amount || !user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber) {
+        if (!receiptImage || !amount || !user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber || !firestore) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات غير مكتملة.' });
             return;
         }

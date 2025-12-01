@@ -13,8 +13,9 @@ import {
   FirestoreError
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { errorEmitter }from '@/firebase/error-emitter';
+import type { SecurityRuleContext } from '@/firebase/errors';
+
 
 const ProcessReceiptInputSchema = z.object({
   receiptImage: z
@@ -35,8 +36,6 @@ const ReceiptDataSchema = z.object({
   extractedAmount: z.number().optional().describe('The numerical amount of money transferred according to the receipt.'),
   recipientName: z.string().optional().describe('The name of the recipient or beneficiary of the transfer.'),
 });
-type ReceiptData = z.infer<typeof ReceiptDataSchema>;
-
 
 const ProcessReceiptOutputSchema = z.object({
   success: z.boolean(),
@@ -86,7 +85,7 @@ const processReceiptFlow = ai.defineFlow(
       return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     if (!aiResponse.extractedAmount) {
-      return { success: false, message: 'لم يتم العور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
+      return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     if (!aiResponse.recipientName) {
         return { success: false, message: 'لم يتمكن الذكاء الاصطناعي من قراءة اسم المستلم من الإيصال.', transactionId: null, extractedAmount: null };
@@ -98,14 +97,8 @@ const processReceiptFlow = ai.defineFlow(
     try {
         paymentMethodsSnap = await getDocs(paymentMethodsRef);
     } catch (error) {
-        // This is a Firestore permission error if it fails.
-        const permissionError = new FirestorePermissionError({
-            path: 'paymentMethods',
-            operation: 'list',
-        });
-        // We will emit it to be caught by the listener, but also return a friendly error.
-        errorEmitter.emit('permission-error', permissionError);
-        return { success: false, message: 'حدث خطأ أثناء التحقق من طرق الدفع.', transactionId: null, extractedAmount: null };
+        console.error("Firestore permission error while fetching paymentMethods:", error);
+        return { success: false, message: 'حدث خطأ أثناء التحقق من طرق الدفع. قد تكون هناك مشكلة في الأذونات.', transactionId: null, extractedAmount: null };
     }
 
     const registeredAccountHolders = paymentMethodsSnap.docs.map(doc => doc.data().accountHolderName as string);
@@ -175,20 +168,19 @@ const processReceiptFlow = ai.defineFlow(
     batch.set(userTransactionRef, transactionData);
 
     // Commit the batch and handle errors without try/catch
-    await batch.commit().catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: '/', // Path is complex for a batch, using root as placeholder
-            operation: 'write', 
-            requestResourceData: {
-                batchOperations: [
-                    { path: depositRequestRef.path, data: depositRequestData, operation: 'set' },
-                    { path: userDocRef.path, data: { balance: `increment(${amount})` }, operation: 'update' },
-                    { path: userTransactionRef.path, data: transactionData, operation: 'set' }
-                ]
-            },
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    try {
+        await batch.commit();
+    } catch (serverError) {
+        console.error("Error committing batch:", serverError);
+        // This is a generic server-side error. We can't use FirestorePermissionError here.
+        // We will just return a generic failure message.
+        return {
+            success: false,
+            message: 'فشلت عملية تحديث الرصيد النهائية. الرجاء التواصل مع الدعم الفني.',
+            transactionId: aiResponse.transactionId,
+            extractedAmount: aiResponse.extractedAmount,
+        };
+    }
         
     return {
         success: true,
@@ -203,5 +195,3 @@ const processReceiptFlow = ai.defineFlow(
 export async function processReceipt(input: ProcessReceiptInput): Promise<ProcessReceiptOutput> {
   return processReceiptFlow(input);
 }
-
-    

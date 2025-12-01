@@ -9,7 +9,9 @@ import {
   query,
   where,
   writeBatch,
+  updateDoc,
   increment,
+  setDoc,
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
 
@@ -94,23 +96,38 @@ const processReceiptFlow = ai.defineFlow(
     const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
     
     try {
-        const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(q);
 
-        if (!querySnapshot.empty) {
-          return {
-            success: false,
-            message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
-            transactionId: aiResponse.transactionId,
-            extractedAmount: aiResponse.extractedAmount,
-          };
-        }
+      if (!querySnapshot.empty) {
+        return {
+          success: false,
+          message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
+          transactionId: aiResponse.transactionId,
+          extractedAmount: aiResponse.extractedAmount,
+        };
+      }
+    } catch (e) {
+      console.error('Error checking for duplicate transaction ID:', e);
+      return {
+        success: false,
+        message: 'حدث خطأ أثناء التحقق من تكرار العملية.',
+        transactionId: aiResponse.transactionId,
+        extractedAmount: aiResponse.extractedAmount,
+      };
+    }
         
-        // 4. All checks passed, proceed with balance update and logging
+    // 4. All checks passed, proceed with balance update and logging
+    const now = new Date().toISOString();
+    const amount = aiResponse.extractedAmount;
+    const userDocRef = doc(firestore, 'users', input.userId);
+    
+    try {
+        // STEP 1: Update user's balance first.
+        await updateDoc(userDocRef, { balance: increment(amount) });
+        
+        // STEP 2: If balance update is successful, log the transaction and deposit request.
         const batch = writeBatch(firestore);
-        const now = new Date().toISOString();
-        const amount = aiResponse.extractedAmount;
 
-        // a. Log the successful deposit request
         const depositRequestRef = doc(collection(firestore, 'depositRequests'));
         const depositRequestData = {
             userId: input.userId,
@@ -126,11 +143,6 @@ const processReceiptFlow = ai.defineFlow(
         };
         batch.set(depositRequestRef, depositRequestData);
 
-        // b. Update user's balance
-        const userDocRef = doc(firestore, 'users', input.userId);
-        batch.update(userDocRef, { balance: increment(amount) });
-        
-        // c. Create a transaction record for the user
         const userTransactionRef = doc(collection(firestore, `users/${input.userId}/transactions`));
         const transactionData = {
             id: userTransactionRef.id,
@@ -141,7 +153,8 @@ const processReceiptFlow = ai.defineFlow(
             notes: `رقم العملية: ${aiResponse.transactionId}`,
         };
         batch.set(userTransactionRef, transactionData);
-
+        
+        // This batch only contains non-balance-update writes, which should have permissions.
         await batch.commit();
             
         return {
@@ -153,10 +166,10 @@ const processReceiptFlow = ai.defineFlow(
 
     } catch (serverError) {
         console.error("Error during deposit process:", serverError);
-        // This is a generic server-side error.
+        // This is a generic server-side error, likely from the balance update.
         return {
             success: false,
-            message: 'فشلت عملية تحديث الرصيد النهائية. قد تكون هناك مشكلة في أذونات الوصول.',
+            message: 'فشل عملية تحديث الرصيد للمستخدم. قد تكون هناك مشكلة في أذونات الوصول.',
             transactionId: aiResponse.transactionId,
             extractedAmount: aiResponse.extractedAmount,
         };

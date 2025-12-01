@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, ChangeEvent } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -112,7 +112,7 @@ export default function TopUpPage() {
     };
     
     const handleConfirmDeposit = async () => {
-        if (!user || !userProfile || !firestore || !receiptFile || isProcessing) return;
+        if (!user || !userProfile || !firestore || !receiptFile || isProcessing || !receiptImage || !selectedMethod) return;
         
         setIsProcessing(true);
         const numericAmount = parseFloat(amount);
@@ -121,7 +121,7 @@ export default function TopUpPage() {
             // 1. Upload image to Firebase Storage
             const storage = getStorage();
             const storageRef = ref(storage, `receipts/${user.uid}/${new Date().toISOString()}_${receiptFile.name}`);
-            const uploadResult = await uploadString(storageRef, receiptImage!, 'data_url');
+            const uploadResult = await uploadString(storageRef, receiptImage, 'data_url');
             const downloadURL = await getDownloadURL(uploadResult.ref);
 
             // 2. Create manual deposit request in Firestore

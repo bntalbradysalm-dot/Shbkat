@@ -20,9 +20,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type UserProfile = {
   balance?: number;
@@ -75,7 +77,7 @@ function RenewPageComponent() {
   };
   
   const handleFinalConfirmation = async () => {
-    if (!user || !firestore || !price || !userProfile || !title || isProcessing || !userProfile.displayName || !userProfile.phoneNumber) return;
+    if (!user || !firestore || !price || !userProfile || !title || isProcessing || !userProfile.displayName || !userProfile.phoneNumber || !userDocRef) return;
   
     setIsProcessing(true);
     const numericPrice = Number(price);
@@ -92,53 +94,53 @@ function RenewPageComponent() {
       return;
     }
   
-    try {
-      const newBalance = currentBalance - numericPrice;
-      setFinalRemainingBalance(newBalance);
+    const renewalRequestData = {
+      userId: user.uid,
+      userName: userProfile.displayName,
+      userPhoneNumber: userProfile.phoneNumber,
+      packageTitle: title,
+      packagePrice: numericPrice,
+      subscriberName: subscriberName,
+      cardNumber: cardNumber,
+      status: 'pending',
+      requestTimestamp: new Date().toISOString(),
+    };
 
-      // 1. Deduct balance immediately
-      if (userDocRef) {
-        await updateDoc(userDocRef, {
-          balance: increment(-numericPrice),
+    const batch = writeBatch(firestore);
+    
+    // 1. Deduct balance
+    batch.update(userDocRef, {
+      balance: increment(-numericPrice),
+    });
+
+    // 2. Create renewal request
+    const renewalRequestsRef = collection(firestore, 'renewalRequests');
+    const newRequestRef = doc(renewalRequestsRef);
+    batch.set(newRequestRef, renewalRequestData);
+    
+    batch.commit().then(() => {
+        setFinalRemainingBalance(currentBalance - numericPrice);
+        setShowSuccessOverlay(true);
+    }).catch(serverError => {
+         const permissionError = new FirestorePermissionError({
+            operation: 'write',
+            path: `users/${user.uid} and renewalRequests/${newRequestRef.id}`,
+            requestResourceData: { 
+                balanceUpdate: `increment(${-numericPrice})`,
+                renewalRequest: renewalRequestData 
+            },
         });
-      }
-  
-      // 2. Create a renewal request for the admin
-      const renewalRequestsRef = collection(firestore, 'renewalRequests');
-      const renewalRequestData = {
-        userId: user.uid,
-        userName: userProfile.displayName,
-        userPhoneNumber: userProfile.phoneNumber,
-        packageTitle: title,
-        packagePrice: numericPrice,
-        subscriberName: subscriberName,
-        cardNumber: cardNumber,
-        status: 'pending',
-        requestTimestamp: new Date().toISOString(),
-      };
-      // We can use non-blocking here as well, as admin can check the list
-      addDocumentNonBlocking(renewalRequestsRef, renewalRequestData);
-  
-      // 3. Show success overlay to the user
-      setShowSuccessOverlay(true);
-  
-    } catch (error) {
-      console.error("Renewal process failed:", error);
-      // If anything fails, refund the user's balance
-      if (userDocRef) {
-        await updateDoc(userDocRef, {
-          balance: increment(numericPrice),
+        errorEmitter.emit('permission-error', permissionError);
+        
+        toast({
+            variant: "destructive",
+            title: "فشل إرسال الطلب",
+            description: "حدث خطأ أثناء محاولة إرسال طلب التجديد. لم يتم خصم المبلغ.",
         });
-      }
-      toast({
-        variant: "destructive",
-        title: "فشل إرسال الطلب",
-        description: "حدث خطأ أثناء محاولة إرسال طلب التجديد. تم استرجاع المبلغ.",
-      });
-    } finally {
-      setIsProcessing(false);
-      setShowDialog(false);
-    }
+    }).finally(() => {
+        setIsProcessing(false);
+        setShowDialog(false);
+    });
   };
   
   if (showSuccessOverlay) {
@@ -150,8 +152,8 @@ function RenewPageComponent() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم التجديد بنجاح</h2>
-                    <p className="text-sm text-muted-foreground">تم خصم المبلغ من رصيدك وتجديد اشتراكك بنجاح.</p>
+                    <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
+                    <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك وتجديد اشتراكك قريبًا.</p>
                     
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">
@@ -232,7 +234,7 @@ function RenewPageComponent() {
                <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
                 <AlertDialogTrigger asChild>
                    <Button className="w-full" onClick={handleConfirmClick} disabled={isProcessing}>
-                      {isProcessing ? 'جاري التجديد...' : 'تجديد الكرت'}
+                      {isProcessing ? 'جاري الإرسال...' : 'إرسال طلب التجديد'}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="rounded-lg">

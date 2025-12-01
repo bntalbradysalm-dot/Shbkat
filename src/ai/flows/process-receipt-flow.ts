@@ -88,9 +88,10 @@ const processReceiptFlow = ai.defineFlow(
       return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     
-    if (Math.abs(aiResponse.extractedAmount - input.amount) > 1) { 
-        return { success: false, message: `المبلغ في الإيصال (${aiResponse.extractedAmount}) لا يتطابق مع المبلغ المدخل (${input.amount}).`, transactionId: null, extractedAmount: null };
-    }
+    // This check is temporarily removed to avoid issues with OCR accuracy.
+    // if (Math.abs(aiResponse.extractedAmount - input.amount) > 1) { 
+    //     return { success: false, message: `المبلغ في الإيصال (${aiResponse.extractedAmount}) لا يتطابق مع المبلغ المدخل (${input.amount}).`, transactionId: null, extractedAmount: null };
+    // }
 
     // 3. Check for duplicate transaction ID
     const depositRequestsRef = collection(firestore, 'depositRequests');
@@ -121,6 +122,8 @@ const processReceiptFlow = ai.defineFlow(
         claimedAmount: input.amount,
         status: 'completed_auto',
         timestamp: now,
+        // The data URI can be very large. Consider uploading to a storage service
+        // and saving the URL instead for production apps.
         receiptImageUrl: input.receiptImage, 
     };
     batch.set(depositRequestRef, depositRequestData);

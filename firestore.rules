@@ -172,6 +172,15 @@ service cloud.firestore {
       allow list: if isSignedIn();
     }
 
+    /**
+     * @description Manages transfer requests between users. Only admins can list/read them.
+     */
+    match /transferRequests/{requestId} {
+      allow read, list: if isAdmin();
+      // Write permissions are handled by server-side logic (transactions)
+      allow write: if false;
+    }
+
 
     /**
      * @description Manages user profile documents.
@@ -181,7 +190,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId);
       // Allow user to update their own data, and allow any signed-in (server) process.
-      allow update: if isOwner(userId) || isSignedIn();
+      allow update: if isSignedIn();
       allow delete: if isAdmin();
 
       /**

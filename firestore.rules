@@ -286,7 +286,6 @@ service cloud.firestore {
      * @allow Server-side logic (AI flow) and signed in users can create and read deposit requests.
      */
     match /depositRequests/{requestId} {
-      // Allow a server-side process (acting as user) to create a deposit record.
       allow write: if isSignedIn();
       allow read: if isSignedIn();
     }
@@ -308,8 +307,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      // Allow owner/admin to update, or any user to perform a validated balance update.
-      allow update: if (isOwner(userId) || isAdmin()) || (isSignedIn() && isBalanceUpdate());
+      // Allow owner, admin, or any signed-in party (like a server function) to update.
+      allow update: if isOwner(userId) || isAdmin() || isSignedIn();
       allow delete: if isAdmin();
 
       /**

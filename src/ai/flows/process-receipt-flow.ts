@@ -79,9 +79,10 @@ const processReceiptFlow = ai.defineFlow(
     }
 
     // 2. Validate extracted data
-    if (!aiResponse.transactionId) {
-      return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
-    }
+    // Transaction ID check is disabled as per user request.
+    // if (!aiResponse.transactionId) {
+    //   return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
+    // }
     if (!aiResponse.extractedAmount) {
       return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
@@ -91,7 +92,8 @@ const processReceiptFlow = ai.defineFlow(
     //     return { success: false, message: 'لم يتمكن الذكاء الاصطناعي من قراءة اسم المستلم من الإيصال.', transactionId: null, extractedAmount: null };
     // }
 
-    // 3. Check for duplicate transaction ID
+    // 3. Check for duplicate transaction ID is disabled as per user request.
+    /*
     const depositRequestsRef = collection(firestore, 'depositRequests');
     const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
     
@@ -115,6 +117,7 @@ const processReceiptFlow = ai.defineFlow(
         extractedAmount: aiResponse.extractedAmount,
       };
     }
+    */
         
     // 4. All checks passed, proceed with balance update and logging
     const now = new Date().toISOString();
@@ -135,7 +138,7 @@ const processReceiptFlow = ai.defineFlow(
             userPhoneNumber: input.userPhoneNumber,
             claimedAmount: input.amount,
             extractedAmount: aiResponse.extractedAmount,
-            transactionId: aiResponse.transactionId,
+            transactionId: aiResponse.transactionId || 'N/A',
             recipientName: aiResponse.recipientName || 'غير محدد',
             receiptImageUrl: input.receiptImage,
             status: 'completed_auto',
@@ -150,7 +153,7 @@ const processReceiptFlow = ai.defineFlow(
             transactionDate: now,
             amount: amount,
             transactionType: 'تغذية رصيد (آلي)',
-            notes: `رقم العملية: ${aiResponse.transactionId}`,
+            notes: `رقم العملية: ${aiResponse.transactionId || 'غير متوفر'}`,
         };
         batch.set(userTransactionRef, transactionData);
         
@@ -169,7 +172,7 @@ const processReceiptFlow = ai.defineFlow(
         // This is a generic server-side error, likely from the balance update.
         return {
             success: false,
-            message: 'فشل عملية تحديث الرصيد للمستخدم. قد تكون هناك مشكلة في أذونات الوصول.',
+            message: 'فشلت عملية تحديث الرصيد للمستخدم. قد تكون هناك مشكلة في أذونات الوصول.',
             transactionId: aiResponse.transactionId,
             extractedAmount: aiResponse.extractedAmount,
         };

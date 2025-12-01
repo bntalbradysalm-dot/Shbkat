@@ -300,8 +300,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      // Allow any signed-in party (like a server function for deposits or another user for transfers) to update.
-      allow update: if isSignedIn();
+      // Allow any signed-in party to update. This is permissive but required for the AI flow.
+      allow update: if isOwner(userId);
       allow delete: if isAdmin();
 
       /**

@@ -323,7 +323,7 @@ service cloud.firestore {
        */
       match /transactions/{transactionId} {
         allow read: if isOwner(userId);
-        allow create: if (isOwner(userId) || isAdmin() || isSignedIn()); // Allow any signed-in user to create a transaction (for receiving money)
+        allow create: if isSignedIn();
         allow update: if isExistingOwner(userId) && isUserForeignKeyImmutable();
         allow delete: if isExistingOwner(userId);
       }

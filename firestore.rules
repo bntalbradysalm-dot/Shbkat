@@ -292,11 +292,7 @@ service cloud.firestore {
     match /depositRequests/{requestId} {
       // Allow a server-side process to create a deposit record as part of a batch
       // that also updates the user's balance and creates a transaction record.
-      allow write: if isSignedIn() &&
-                      request.auth.uid == request.resource.data.userId &&
-                      getAfter(/databases/$(database)/documents/users/$(request.resource.data.userId)).data.balance ==
-                          get(/databases/$(database)/documents/users/$(request.resource.data.userId)).data.balance + request.resource.data.extractedAmount;
-
+      allow write: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isSignedIn();
     }
 
@@ -418,5 +414,3 @@ service cloud.firestore {
 }
 
     
-
-      

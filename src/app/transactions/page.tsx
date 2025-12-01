@@ -127,11 +127,6 @@ export default function TransactionsPage() {
           path: userTransactionsPath
         });
         errorEmitter.emit('permission-error', contextualError);
-         toast({
-          variant: "destructive",
-          title: "خطأ",
-          description: "فشلت عملية الأرشفة. قد لا تملك الصلاحيات الكافية.",
-        });
       });
       
     setIsDeleteAllAlertOpen(false);

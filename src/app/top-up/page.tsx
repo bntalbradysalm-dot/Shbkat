@@ -2,29 +2,20 @@
 
 import React, { useState, useMemo, ChangeEvent } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, updateDoc, increment } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Loader2, CheckCircle, Wallet } from 'lucide-react';
+import { Copy, Send, Loader2, CheckCircle, Upload, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useRouter } from 'next/navigation';
-
 
 type PaymentMethod = {
   id: string;
@@ -37,7 +28,6 @@ type PaymentMethod = {
 type UserProfile = {
     displayName?: string;
     phoneNumber?: string;
-    balance?: number;
 };
 
 const getLogoSrc = (url?: string) => {
@@ -54,12 +44,14 @@ export default function TopUpPage() {
     const router = useRouter();
 
     const [amount, setAmount] = useState('');
+    const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
     
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
       [firestore, user]
     );
-    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+    const { data: userProfile } = useMemoFirebase(() => useDoc<UserProfile>(userDocRef), [userDocRef]);
     
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
@@ -86,6 +78,18 @@ export default function TopUpPage() {
         });
     };
 
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setReceiptFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setReceiptImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleTriggerConfirmation = () => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
@@ -96,51 +100,47 @@ export default function TopUpPage() {
             });
             return;
         }
+        if (!receiptImage || !receiptFile) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ',
+                description: 'الرجاء رفع صورة من إيصال التحويل.',
+            });
+            return;
+        }
         setIsConfirming(true);
     };
     
     const handleConfirmDeposit = async () => {
-        if (!user || !userDocRef || !firestore) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'المستخدم غير مسجل.' });
-            return;
-        }
-
-        const numericAmount = parseFloat(amount);
-        if (isNaN(numericAmount) || numericAmount <= 0) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.' });
-            return;
-        }
-
+        if (!user || !userProfile || !firestore || !receiptFile || isProcessing) return;
+        
         setIsProcessing(true);
+        const numericAmount = parseFloat(amount);
 
         try {
-            // Update user's balance
-            await updateDoc(userDocRef, {
-                balance: increment(numericAmount)
-            });
+            // 1. Upload image to Firebase Storage
+            const storage = getStorage();
+            const storageRef = ref(storage, `receipts/${user.uid}/${new Date().toISOString()}_${receiptFile.name}`);
+            const uploadResult = await uploadString(storageRef, receiptImage!, 'data_url');
+            const downloadURL = await getDownloadURL(uploadResult.ref);
 
-            // Add a transaction record
-            const transactionsCollection = collection(firestore, 'users', user.uid, 'transactions');
-            await addDocumentNonBlocking(transactionsCollection, {
+            // 2. Create manual deposit request in Firestore
+            const requestsCollection = collection(firestore, 'manualDepositRequests');
+            await addDocumentNonBlocking(requestsCollection, {
                 userId: user.uid,
-                transactionDate: new Date().toISOString(),
+                userName: userProfile.displayName,
+                userPhoneNumber: userProfile.phoneNumber,
                 amount: numericAmount,
-                transactionType: 'تغذية رصيد (يدوي)',
-                notes: `إيداع عبر ${selectedMethod?.name || 'طريقة غير محددة'}`,
-            });
-            
-            // Send notification to user
-            const notificationsCollection = collection(firestore, 'users', user.uid, 'notifications');
-             await addDocumentNonBlocking(notificationsCollection, {
-                title: 'تمت تغذية حسابك',
-                body: `تمت إضافة مبلغ ${numericAmount.toLocaleString('en-US')} ريال إلى رصيدك.`,
-                timestamp: new Date().toISOString(),
+                receiptImageUrl: downloadURL,
+                status: 'pending',
+                requestTimestamp: new Date().toISOString(),
+                notes: `إلى حساب ${selectedMethod?.name}: ${selectedMethod?.accountHolderName}`
             });
 
             setShowSuccess(true);
         } catch (error) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'خطأ فني', description: 'حدث خطأ غير متوقع أثناء عملية الإيداع.' });
+            toast({ variant: 'destructive', title: 'خطأ فني', description: 'حدث خطأ غير متوقع أثناء إرسال الطلب.' });
         } finally {
             setIsProcessing(false);
             setIsConfirming(false);
@@ -151,7 +151,7 @@ export default function TopUpPage() {
         if (isLoading) {
             return (
                 <div className="grid grid-cols-2 gap-4 px-4">
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(2)].map((_, i) => (
                          <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-xl bg-card p-4 aspect-square border">
                             <Skeleton className="h-12 w-12 rounded-lg"/>
                             <Skeleton className="h-4 w-24"/>
@@ -181,7 +181,7 @@ export default function TopUpPage() {
                         className={cn(
                             "flex flex-col items-center justify-center space-y-2 rounded-xl p-4 aspect-square cursor-pointer transition-all border-2",
                             selectedMethod?.id === method.id 
-                                ? 'border-primary shadow-lg' 
+                                ? 'border-primary shadow-lg bg-primary/5' 
                                 : 'border-border hover:border-primary/50'
                         )}
                     >
@@ -208,9 +208,8 @@ export default function TopUpPage() {
                         <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
-                        <h2 className="text-2xl font-bold">تم الإيداع بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">تمت إضافة المبلغ التالي إلى رصيدك:</p>
-                        <p className="text-3xl font-bold text-primary">{parseFloat(amount).toLocaleString('en-US')} ريال</p>
+                        <h2 className="text-2xl font-bold">تم إرسال طلبك بنجاح</h2>
+                        <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك وتأكيد الإيداع في أقرب وقت.</p>
                         <div className="w-full pt-4">
                              <Button variant="default" className="w-full" onClick={() => router.push('/')}>العودة للرئيسية</Button>
                         </div>
@@ -266,8 +265,8 @@ export default function TopUpPage() {
                     
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
-                           <h2 className="text-lg font-bold">3. تأكيد الإيداع</h2>
-                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ الذي قمت بتحويله لتأكيد الإيداع فوراً.</p>
+                           <h2 className="text-lg font-bold">3. ارفع الإيصال وأكد العملية</h2>
+                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ الذي قمت بتحويله وارفع صورة من إيصال التحويل.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
                                     <div>
@@ -281,22 +280,44 @@ export default function TopUpPage() {
                                             className="mt-1"
                                         />
                                     </div>
+                                    <div>
+                                        <label htmlFor="receipt-upload" className="text-sm font-medium">إيصال التحويل</label>
+                                        <label htmlFor="receipt-upload" className="mt-1 cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl bg-muted hover:bg-muted/80">
+                                            {receiptImage ? (
+                                                <Image src={receiptImage} alt="معاينة الإيصال" width={100} height={100} className="h-full w-auto object-contain rounded-md py-2" />
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                                    <Upload className="w-8 h-8" />
+                                                    <p className="mt-2 text-sm font-semibold">انقر لرفع صورة الإيصال</p>
+                                                </div>
+                                            )}
+                                        </label>
+                                        <Input id="receipt-upload" type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                        {receiptImage && <p className="text-xs text-center text-green-600 mt-2 font-semibold">تم اختيار صورة</p>}
+                                    </div>
                                      <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-                                          <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing || !amount}>
-                                              {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
-                                              {isProcessing ? 'جاري التأكيد...' : 'تأكيد الإيداع'}
-                                          </Button>
+                                      <AlertDialogTrigger asChild>
+                                       <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing || !receiptImage || !amount}>
+                                           {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
+                                           {isProcessing ? 'جاري إرسال الطلب...' : 'إرسال طلب الإيداع'}
+                                       </Button>
+                                      </AlertDialogTrigger>
                                          <AlertDialogContent>
                                              <AlertDialogHeader>
                                                  <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                                                  <AlertDialogDescription>
-                                                     سيتم إضافة مبلغ {parseFloat(amount || '0').toLocaleString('en-US')} ريال إلى رصيدك. هل تؤكد أنك قمت بتحويل هذا المبلغ؟
+                                                     سيتم إرسال طلب إيداع بمبلغ {parseFloat(amount || '0').toLocaleString('en-US')} ريال. هل البيانات صحيحة؟
                                                  </AlertDialogDescription>
+                                                  <div className="space-y-4 pt-4 text-base text-foreground text-center">
+                                                    <div className='flex justify-between items-center'><span className='text-muted-foreground'>المبلغ:</span> <span className='font-bold'>{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span></div>
+                                                    <div className='flex justify-between items-center'><span className='text-muted-foreground'>المستلم:</span> <span className='font-bold'>{selectedMethod.accountHolderName}</span></div>
+                                                    <div className='flex justify-between items-center'><span className='text-muted-foreground'>التاريخ:</span> <span className='font-bold'>{new Date().toLocaleDateString('ar-EG-u-nu-latn')}</span></div>
+                                                  </div>
                                              </AlertDialogHeader>
                                              <AlertDialogFooter>
                                                  <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
                                                  <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing}>
-                                                     {isProcessing ? 'جاري...' : 'تأكيد'}
+                                                     {isProcessing ? 'جاري...' : 'تأكيد وإرسال'}
                                                  </AlertDialogAction>
                                              </AlertDialogFooter>
                                          </AlertDialogContent>

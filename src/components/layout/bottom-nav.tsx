@@ -31,7 +31,7 @@ function NavItems() {
   
   const getActiveState = (href: string) => {
     if (href === '/login') return pathname === '/login';
-    if (href === '/renewal-requests') return pathname.startsWith('/renewal-requests') || pathname.startsWith('/transfer-requests');
+    if (href === '/renewal-requests') return pathname.startsWith('/renewal-requests') || pathname.startsWith('/withdrawal-requests');
     return pathname.startsWith(href);
   };
 
@@ -47,11 +47,11 @@ function NavItems() {
     [firestore, isUserAdmin]
   );
   
-  const transferRequestsQuery = useMemoFirebase(
+  const withdrawalRequestsQuery = useMemoFirebase(
     () =>
       firestore && isUserAdmin
         ? query(
-            collection(firestore, 'transferRequests'),
+            collection(firestore, 'withdrawalRequests'),
             where('status', '==', 'pending')
           )
         : null,
@@ -59,9 +59,9 @@ function NavItems() {
   );
 
   const { data: renewalRequests } = useCollection<RenewalRequest>(renewalRequestsQuery);
-  const { data: transferRequests } = useCollection<RenewalRequest>(transferRequestsQuery);
+  const { data: withdrawalRequests } = useCollection<RenewalRequest>(withdrawalRequestsQuery);
   
-  const totalPending = (renewalRequests?.length || 0) + (transferRequests?.length || 0);
+  const totalPending = (renewalRequests?.length || 0) + (withdrawalRequests?.length || 0);
   
   useEffect(() => {
     const userRole = isUserAdmin ? 'admin' : 'user';
@@ -86,7 +86,7 @@ function NavItems() {
      <>
       {navItems.map(item => {
         const isActive = getActiveState(item.href);
-        const showIndicator = item.href === '/renewal-requests' && totalPending > 0;
+        const showIndicator = (item.href === '/renewal-requests' || item.href === '/withdrawal-requests') && totalPending > 0;
 
         return (
           <Link

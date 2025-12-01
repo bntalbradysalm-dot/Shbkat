@@ -7,13 +7,25 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { Copy, Send, Upload, Loader2, CheckCircle, Banknote, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { processReceipt, type ProcessReceiptOutput } from '@/ai/flows/process-receipt-flow';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 type PaymentMethod = {
   id: string;
@@ -61,6 +73,7 @@ export default function TopUpPage() {
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
 
 
     const settingsDocRef = useMemoFirebase(
@@ -93,6 +106,18 @@ export default function TopUpPage() {
             reader.readAsDataURL(file);
         }
     };
+
+    const handleTriggerConfirmation = () => {
+        if (!receiptImage || !amount) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال المبلغ ورفع صورة الإيصال.' });
+            return;
+        }
+        if (!user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن إتمام العملية، بيانات المستخدم غير مكتملة.' });
+            return;
+        }
+        setIsConfirming(true);
+    };
     
     const handleConfirmDeposit = async () => {
         if (!receiptImage || !amount) {
@@ -105,6 +130,7 @@ export default function TopUpPage() {
         }
 
         setIsProcessing(true);
+        setIsConfirming(false);
         try {
             const response: ProcessReceiptOutput = await processReceipt({
                 receiptImage,
@@ -277,10 +303,44 @@ export default function TopUpPage() {
                                         </div>
                                     )}
 
-                                   <Button className="w-full" onClick={handleConfirmDeposit} disabled={isProcessing}>
-                                        {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
-                                        {isProcessing ? 'جاري المعالجة...' : 'تأكيد الإيداع'}
-                                   </Button>
+                                   <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+                                     <AlertDialogTrigger asChild>
+                                      <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing}>
+                                          {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
+                                          {isProcessing ? 'جاري المعالجة...' : 'تأكيد الإيداع'}
+                                      </Button>
+                                     </AlertDialogTrigger>
+                                     {selectedMethod && (
+                                       <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                              <AlertDialogTitle>تأكيد الإيداع</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                  هل أنت متأكد من أنك تريد إيداع هذا المبلغ؟
+                                              </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <div className="space-y-3 py-2 text-sm">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" /> اسم المستلم:</span>
+                                                <span className="font-semibold">{selectedMethod.accountHolderName}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-muted-foreground flex items-center gap-2"><Banknote className="h-4 w-4" /> المبلغ:</span>
+                                                <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                            </div>
+                                             <div className="flex justify-between items-center">
+                                                <span className="text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" /> البنك:</span>
+                                                <span className="font-semibold">{selectedMethod.name}</span>
+                                            </div>
+                                          </div>
+                                          <AlertDialogFooter>
+                                              <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                                              <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing}>
+                                                  {isProcessing ? 'جاري التأكيد...' : 'تأكيد'}
+                                              </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                     )}
+                                   </AlertDialog>
                                </CardContent>
                            </Card>
                        </div>

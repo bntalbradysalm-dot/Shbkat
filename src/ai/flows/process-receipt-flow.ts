@@ -14,7 +14,7 @@ import {
 import { getSdks } from '@/firebase';
 
 // Input Schema
-export const ProcessReceiptInputSchema = z.object({
+const ProcessReceiptInputSchema = z.object({
   receiptImage: z
     .string()
     .describe(
@@ -36,7 +36,7 @@ const ReceiptDataSchema = z.object({
 });
 
 // Final Flow Output Schema
-export const ProcessReceiptOutputSchema = z.object({
+const ProcessReceiptOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   transactionId: z.string().optional().nullable(),
@@ -75,24 +75,24 @@ const processReceiptFlow = ai.defineFlow(
     // 1. Get AI analysis of the receipt
     const { output: aiResponse } = await processReceiptPrompt(input);
     if (!aiResponse) {
-      return { success: false, message: 'فشل الذكاء الاصطناعي في تحليل الإيصال.' };
+      return { success: false, message: 'فشل الذكاء الاصطناعي في تحليل الإيصال.', transactionId: null, extractedAmount: null };
     }
 
     if (!aiResponse.isReceipt) {
-      return { success: false, message: 'الصورة المرفقة لا تبدو كإيصال دفع صالح.' };
+      return { success: false, message: 'الصورة المرفقة لا تبدو كإيصال دفع صالح.', transactionId: null, extractedAmount: null };
     }
 
     // 2. Validate extracted data
     if (!aiResponse.transactionId) {
-      return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.' };
+      return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     if (!aiResponse.extractedAmount) {
-      return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.' };
+      return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     
     // Optional: Check if extracted amount matches user-provided amount (with a small tolerance)
     if (Math.abs(aiResponse.extractedAmount - input.amount) > 1) { // Tolerance of 1 unit
-        return { success: false, message: `المبلغ في الإيصال (${aiResponse.extractedAmount}) لا يتطابق مع المبلغ المدخل (${input.amount}).` };
+        return { success: false, message: `المبلغ في الإيصال (${aiResponse.extractedAmount}) لا يتطابق مع المبلغ المدخل (${input.amount}).`, transactionId: null, extractedAmount: null };
     }
 
 
@@ -117,7 +117,7 @@ const processReceiptFlow = ai.defineFlow(
         const amount = aiResponse.extractedAmount;
 
         // a. Log the successful deposit request
-        const depositRequestRef = doc(depositRequestsRef);
+        const depositRequestRef = doc(collection(firestore, 'depositRequests'));
         batch.set(depositRequestRef, {
             ...aiResponse,
             userId: input.userId,
@@ -154,7 +154,7 @@ const processReceiptFlow = ai.defineFlow(
 
     } catch(error) {
         console.error("Firestore batch write failed: ", error);
-        return { success: false, message: 'فشلت عملية تحديث الرصيد. الرجاء المحاولة مرة أخرى.' };
+        return { success: false, message: 'فشلت عملية تحديث الرصيد. الرجاء المحاولة مرة أخرى.', transactionId: null, extractedAmount: null };
     }
   }
 );

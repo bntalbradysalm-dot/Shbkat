@@ -13,7 +13,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { processReceipt } from '@/ai/flows/process-receipt-flow';
+import { processReceipt, type ProcessReceiptOutput } from '@/ai/flows/process-receipt-flow';
 
 type PaymentMethod = {
   id: string;
@@ -106,7 +106,7 @@ export default function TopUpPage() {
 
         setIsProcessing(true);
         try {
-            const response = await processReceipt({
+            const response: ProcessReceiptOutput = await processReceipt({
                 receiptImage,
                 amount: parseFloat(amount),
                 userId: user.uid,

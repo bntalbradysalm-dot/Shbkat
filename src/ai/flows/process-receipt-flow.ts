@@ -11,7 +11,7 @@ import {
   writeBatch,
   increment
 } from 'firebase/firestore';
-import { getSdks } from '@/firebase';
+import { initializeServerFirebase } from '@/firebase/server-init';
 
 // Input Schema
 const ProcessReceiptInputSchema = z.object({
@@ -42,7 +42,7 @@ const ProcessReceiptOutputSchema = z.object({
   transactionId: z.string().optional().nullable(),
   extractedAmount: z.number().optional().nullable(),
 });
-export type ProcessReceiptOutput = z.infer<typeof ProcessReceiptOutputSchema>;
+type ProcessReceiptOutput = z.infer<typeof ProcessReceiptOutputSchema>;
 
 // Define the AI prompt
 const processReceiptPrompt = ai.definePrompt({
@@ -70,7 +70,7 @@ const processReceiptFlow = ai.defineFlow(
     outputSchema: ProcessReceiptOutputSchema,
   },
   async (input) => {
-    const { firestore } = getSdks();
+    const { firestore } = initializeServerFirebase();
 
     // 1. Get AI analysis of the receipt
     const { output: aiResponse } = await processReceiptPrompt(input);

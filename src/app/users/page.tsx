@@ -42,6 +42,7 @@ import {
   MessageSquare,
   PlusCircle,
   Crown,
+  Wallet,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +70,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
-  const [isDepositAndNotifyDialogOpen, setIsDepositAndNotifyDialogOpen] = useState(false);
+  const [isManualDepositOpen, setIsManualDepositOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
@@ -144,12 +145,12 @@ export default function UsersPage() {
     }
   };
   
-  const handleDepositAndNotify = async () => {
-    if (!selectedUser || !topUpAmount || !firestore || !selectedUser.phoneNumber) {
+  const handleManualDeposit = async () => {
+    if (!selectedUser || !topUpAmount || !firestore) {
       toast({
         variant: "destructive",
         title: "خطأ",
-        description: "الرجاء إدخال مبلغ صالح أو التأكد من وجود رقم هاتف للمستخدم.",
+        description: "الرجاء إدخال مبلغ صالح.",
       });
       return;
     }
@@ -165,6 +166,7 @@ export default function UsersPage() {
 
     const userDocRef = doc(firestore, 'users', selectedUser.id);
     const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
+    const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
     const newBalance = (selectedUser.balance || 0) + amount;
 
     try {
@@ -172,36 +174,40 @@ export default function UsersPage() {
       await updateDoc(userDocRef, {
         balance: increment(amount)
       });
+      
+      // 2. Add transaction record
+      await addDoc(userTransactionsRef, {
+          id: doc(userTransactionsRef).id,
+          userId: selectedUser.id,
+          transactionDate: new Date().toISOString(),
+          amount: amount,
+          transactionType: 'تغذية رصيد (يدوي)',
+          notes: `إيداع يدوي من قبل الإدارة`,
+      });
 
-      // 2. Send in-app notification
+      // 3. Send in-app notification
       await addDoc(userNotificationsRef, {
         title: 'تمت تغذية حسابك',
         body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك من قبل الإدارة.`,
         timestamp: new Date().toISOString()
       });
       
-      // 3. Prepare and open WhatsApp message
-      const date = format(new Date(), 'd MMMM yyyy, h:mm a', { locale: ar });
-      const message = `📩 *عملية إيداع من تطبيق شبكات*\nتم بنجاح إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال يمني في حسابك (${selectedUser.phoneNumber}) بتاريخ (${date})\nيُرجى التحقق من الرصيد عبر تطبيق شبكات للتأكد من تفاصيل العملية\n🔒 هذه الرسالة صادرة تلقائيًا من تطبيق شبكات — دقة. أمان. ثقة\n\n*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال يمني*`;
-      
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=967${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
 
       toast({
         title: "نجاح",
-        description: `تمت إضافة الرصيد وجاري فتح واتساب لإبلاغ ${selectedUser.displayName}.`,
+        description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حساب ${selectedUser.displayName}.`,
       });
 
-      setIsDepositAndNotifyDialogOpen(false);
+      setIsManualDepositOpen(false);
       setTopUpAmount('');
       setSelectedUser(null);
 
     } catch (e) {
-      console.error("Error during deposit and notify:", e);
+      console.error("Error during manual deposit:", e);
       toast({
         variant: "destructive",
         title: "خطأ",
-        description: "فشل تحديث الرصيد أو إرسال الإشعار. الرجاء المحاولة مرة أخرى.",
+        description: "فشل تحديث الرصيد أو تسجيل العملية. الرجاء المحاولة مرة أخرى.",
       });
     }
   };
@@ -340,9 +346,9 @@ export default function UsersPage() {
                       <Edit className="h-4 w-4" />
                     </Button>
 
-                    <Dialog open={isDepositAndNotifyDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                    <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
                       if (!isOpen) {
-                          setIsDepositAndNotifyDialogOpen(false);
+                          setIsManualDepositOpen(false);
                           setSelectedUser(null);
                           setTopUpAmount('');
                       }
@@ -350,17 +356,17 @@ export default function UsersPage() {
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" onClick={() => {
                             setSelectedUser(user);
-                            setIsDepositAndNotifyDialogOpen(true);
+                            setIsManualDepositOpen(true);
                         }}>
-                            <MessageSquare className="ml-1 h-4 w-4" />
-                            إبلاغ
+                            <Wallet className="ml-1 h-4 w-4" />
+                            إيداع يدوي
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
                           <DialogHeader>
-                              <DialogTitle>إيداع وإبلاغ</DialogTitle>
+                              <DialogTitle>إيداع يدوي</DialogTitle>
                               <DialogDescription>
-                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
+                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName}.
                               </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
@@ -370,7 +376,7 @@ export default function UsersPage() {
                               </div>
                           </div>
                           <DialogFooter>
-                              <Button type="submit" onClick={handleDepositAndNotify}>تأكيد وإبلاغ</Button>
+                              <Button type="submit" onClick={handleManualDeposit}>تأكيد الإيداع</Button>
                               <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
                           </DialogFooter>
                       </DialogContent>

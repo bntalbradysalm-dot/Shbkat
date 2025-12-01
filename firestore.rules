@@ -118,16 +118,6 @@ service cloud.firestore {
     function isUserForeignKeyImmutable() {
       return request.resource.data.userId == resource.data.userId;
     }
-    
-     /**
-     * Validates that an update operation is only incrementing the balance field
-     * and not touching any other fields. This is used for direct user-to-user transfers
-     * or automated payouts.
-     */
-    function isBalanceUpdate() {
-        let otherFields = request.resource.data.diff(resource.data).affectedKeys();
-        return otherFields.hasOnly(['balance']);
-    }
 
 
     // -------------------------------------------------------------------------
@@ -406,6 +396,8 @@ service cloud.firestore {
     }
   }
 }
+    
+
     
 
     

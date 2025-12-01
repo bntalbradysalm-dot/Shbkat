@@ -275,6 +275,15 @@ service cloud.firestore {
     match /soldCards {
         allow list: if isAdmin();
     }
+    
+    /**
+     * @description Stores records of automated deposits to prevent duplicates.
+     * @path /depositRequests/{requestId}
+     * @allow Server-side logic (AI flow) can create and read deposit requests.
+     */
+    match /depositRequests/{requestId} {
+      allow read, create: if isSignedIn();
+    }
 
 
     /**
@@ -392,3 +401,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

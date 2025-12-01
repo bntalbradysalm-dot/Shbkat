@@ -86,7 +86,7 @@ const processReceiptFlow = ai.defineFlow(
       return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     if (!aiResponse.extractedAmount) {
-      return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
+      return { success: false, message: 'لم يتم العور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     if (!aiResponse.recipientName) {
         return { success: false, message: 'لم يتمكن الذكاء الاصطناعي من قراءة اسم المستلم من الإيصال.', transactionId: null, extractedAmount: null };
@@ -98,14 +98,13 @@ const processReceiptFlow = ai.defineFlow(
     try {
         paymentMethodsSnap = await getDocs(paymentMethodsRef);
     } catch (error) {
-        if (error instanceof FirestoreError) {
-             const permissionError = new FirestorePermissionError({
-                path: 'paymentMethods',
-                operation: 'list',
-            } satisfies SecurityRuleContext);
-            errorEmitter.emit('permission-error', permissionError);
-        }
-        // Return a generic error to the user but the specific one to the dev console
+        // This is a Firestore permission error if it fails.
+        const permissionError = new FirestorePermissionError({
+            path: 'paymentMethods',
+            operation: 'list',
+        });
+        // We will emit it to be caught by the listener, but also return a friendly error.
+        errorEmitter.emit('permission-error', permissionError);
         return { success: false, message: 'حدث خطأ أثناء التحقق من طرق الدفع.', transactionId: null, extractedAmount: null };
     }
 
@@ -204,3 +203,5 @@ const processReceiptFlow = ai.defineFlow(
 export async function processReceipt(input: ProcessReceiptInput): Promise<ProcessReceiptOutput> {
   return processReceiptFlow(input);
 }
+
+    

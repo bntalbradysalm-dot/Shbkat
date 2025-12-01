@@ -177,9 +177,13 @@ service cloud.firestore {
      * @description Manages transfer requests between users. Only admins can list/read them.
      */
     match /transferRequests/{requestId} {
-      allow read, list: if isAdmin();
+      allow read: if isAdmin();
       // Write permissions are handled by server-side logic (transactions)
       allow write: if false;
+    }
+
+    match /transferRequests {
+        allow list: if isAdmin();
     }
 
 

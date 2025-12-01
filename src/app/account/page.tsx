@@ -54,7 +54,6 @@ import { Toaster } from '@/components/ui/toaster';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
-  { title: 'طلبات الإيداع اليدوي', icon: Upload, href: '/manual-deposits' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
@@ -424,4 +423,3 @@ export default function AccountPage() {
     </>
   );
 }
-    

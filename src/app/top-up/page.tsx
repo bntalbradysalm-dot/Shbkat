@@ -2,31 +2,18 @@
 
 import React, { useState, useMemo, ChangeEvent } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser, addDocumentNonBlocking } from '@/firebase';
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
+import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, Loader2, CheckCircle, Image as ImageIcon, User, Calendar } from 'lucide-react';
+import { Copy, Send, Upload, Loader2, CheckCircle, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { processReceipt } from '@/ai/flows/process-receipt-flow';
 
 
 type PaymentMethod = {
@@ -54,7 +41,7 @@ export default function TopUpPage() {
     const { toast } = useToast();
     const { user } = useUser();
     const [receiptImage, setReceiptImage] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+    const [receiptImageDataUrl, setReceiptImageDataUrl] = useState<string | null>(null);
     
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -69,10 +56,9 @@ export default function TopUpPage() {
     const { data: paymentMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-    const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [isConfirming, setIsConfirming] = useState(false);
+    const [processedAmount, setProcessedAmount] = useState(0);
 
     React.useEffect(() => {
         if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
@@ -82,7 +68,14 @@ export default function TopUpPage() {
     
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
-          setReceiptImage(e.target.files[0]);
+          const file = e.target.files[0];
+          setReceiptImage(file);
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+              setReceiptImageDataUrl(event.target?.result as string);
+          };
+          reader.readAsDataURL(file);
       }
     };
 
@@ -95,74 +88,36 @@ export default function TopUpPage() {
         });
     };
     
-    const handleTriggerConfirmation = () => {
-        const numericAmount = parseFloat(amount);
-        if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.' });
+    const handleProcessReceipt = async () => {
+        if (!receiptImageDataUrl || !user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء رفع صورة الإيصال أولاً.' });
             return;
         }
-        if (!receiptImage) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء رفع صورة الإيصال.' });
-            return;
-        }
-        if (!user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن إتمام العملية، بيانات المستخدم غير مكتملة.' });
-            return;
-        }
-        setIsConfirming(true);
-    };
-    
-    const handleConfirmDeposit = async () => {
-        if (!receiptImage || !user || !userProfile || !firestore || !userProfile.displayName || !userProfile.phoneNumber) return;
 
         setIsProcessing(true);
-        setIsConfirming(false);
 
         try {
-            const storage = getStorage();
-            const storageRef = ref(storage, `receipts/${user.uid}/${Date.now()}-${receiptImage.name}`);
+            const result = await processReceipt({
+                receiptImage: receiptImageDataUrl,
+                userId: user.uid,
+                userName: userProfile.displayName,
+                userPhoneNumber: userProfile.phoneNumber,
+            });
 
-            // Convert file to data URL for upload
-            const reader = new FileReader();
-            reader.readAsDataURL(receiptImage);
-            reader.onload = async (event) => {
-                const dataUrl = event.target?.result as string;
-                if (dataUrl) {
-                    try {
-                        const uploadTask = await uploadString(storageRef, dataUrl, 'data_url');
-                        const downloadURL = await getDownloadURL(uploadTask.ref);
-
-                        const depositRequestData = {
-                            userId: user.uid,
-                            userName: userProfile.displayName!,
-                            userPhoneNumber: userProfile.phoneNumber!,
-                            amount: parseFloat(amount),
-                            receiptImageUrl: downloadURL,
-                            status: 'pending',
-                            requestTimestamp: new Date().toISOString(),
-                        };
-
-                        const requestsCollection = collection(firestore, 'manualDepositRequests');
-                        await addDocumentNonBlocking(requestsCollection, depositRequestData);
-                        
-                        setShowSuccess(true);
-                    } catch (uploadError) {
-                        console.error('Error uploading receipt and creating request:', uploadError);
-                        toast({ variant: 'destructive', title: 'خطأ', description: 'فشل رفع الإيصال أو إنشاء الطلب.' });
-                    } finally {
-                        setIsProcessing(false);
-                    }
-                }
-            };
-            reader.onerror = (error) => {
-                console.error("File reading error:", error);
-                toast({ variant: 'destructive', title: 'خطأ', description: 'فشل قراءة ملف الصورة.' });
-                setIsProcessing(false);
-            };
-
+            if (result.isReceipt && result.amount > 0) {
+                setProcessedAmount(result.amount);
+                setShowSuccess(true);
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: 'فشل معالجة الإيصال',
+                    description: 'لم نتمكن من قراءة البيانات من الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.',
+                });
+            }
         } catch (error) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'خطأ فني', description: 'حدث خطأ غير متوقع أثناء إرسال الطلب.' });
+            toast({ variant: 'destructive', title: 'خطأ فني', description: 'حدث خطأ غير متوقع أثناء معالجة الإيصال.' });
+        } finally {
             setIsProcessing(false);
         }
     };
@@ -228,8 +183,9 @@ export default function TopUpPage() {
                         <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
-                        <h2 className="text-2xl font-bold">تم إرسال طلبك بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك وتأكيد الإيداع.</p>
+                        <h2 className="text-2xl font-bold">تم الإيداع بنجاح</h2>
+                        <p className="text-sm text-muted-foreground">تمت إضافة المبلغ التالي إلى رصيدك:</p>
+                        <p className="text-3xl font-bold text-primary">{processedAmount.toLocaleString('en-US')} ريال</p>
                         <div className="w-full pt-4">
                             <Button variant="default" className="w-full" onClick={() => window.location.href = '/'}>العودة للرئيسية</Button>
                         </div>
@@ -285,22 +241,10 @@ export default function TopUpPage() {
                     
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
-                           <h2 className="text-lg font-bold">3. ارفع الإيصال وأكد العملية</h2>
-                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ الذي قمت بتحويله وارفع صورة من إيصال التحويل.</p>
+                           <h2 className="text-lg font-bold">3. ارفع الإيصال للتأكيد الفوري</h2>
+                           <p className="text-sm text-muted-foreground mt-1">ارفع صورة من إيصال التحويل وسيقوم النظام بمعالجتها وإضافة الرصيد تلقائياً.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
-                                    <div>
-                                        <label htmlFor="amount" className="text-sm font-medium">المبلغ المحوّل</label>
-                                        <Input
-                                            id="amount"
-                                            type="number"
-                                            placeholder="ادخل المبلغ"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                            className="mt-1"
-                                        />
-                                    </div>
-                                    
                                      <div>
                                         <label htmlFor="receipt-upload" className="text-sm font-medium">إيصال التحويل</label>
                                         <label htmlFor="receipt-upload" className="mt-1 cursor-pointer flex items-center justify-center w-full p-4 border-2 border-dashed rounded-xl text-muted-foreground hover:bg-muted/50 hover:border-primary">
@@ -312,42 +256,10 @@ export default function TopUpPage() {
                                         </label>
                                     </div>
 
-                                   <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-                                     <AlertDialogTrigger asChild>
-                                      <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing || !receiptImage || !amount}>
+                                      <Button className="w-full" onClick={handleProcessReceipt} disabled={isProcessing || !receiptImage}>
                                           {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
-                                          {isProcessing ? 'جاري إرسال الطلب...' : 'إرسال طلب الإيداع'}
+                                          {isProcessing ? 'جاري المعالجة والتحقق...' : 'تأكيد الإيداع'}
                                       </Button>
-                                     </AlertDialogTrigger>
-                                     <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>تأكيد طلب الإيداع</AlertDialogTitle>
-                                            <AlertDialogDescription asChild>
-                                                 <div className="space-y-4 pt-4 text-sm text-foreground">
-                                                     <p className='text-sm text-center text-muted-foreground pb-2'>سيتم إرسال المعلومات التالية للمراجعة.</p>
-                                                     <div className="flex justify-between items-center">
-                                                         <span className='text-muted-foreground flex items-center gap-2'><User className='h-4 w-4' /> المستلم:</span>
-                                                         <span className="font-bold">{selectedMethod.accountHolderName}</span>
-                                                     </div>
-                                                     <div className="flex justify-between items-center">
-                                                         <span className='text-muted-foreground flex items-center gap-2'><ImageIcon className='h-4 w-4' /> المبلغ:</span>
-                                                         <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
-                                                     </div>
-                                                     <div className="flex justify-between items-center">
-                                                          <span className='text-muted-foreground flex items-center gap-2'><Calendar className='h-4 w-4' /> التاريخ:</span>
-                                                          <span className="font-bold">{format(new Date(), 'd MMMM yyyy', { locale: ar })}</span>
-                                                     </div>
-                                                 </div>
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing}>
-                                                {isProcessing ? 'جاري الإرسال...' : 'نعم، إرسال الطلب'}
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                     </AlertDialogContent>
-                                   </AlertDialog>
                                </CardContent>
                            </Card>
                        </div>

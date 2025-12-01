@@ -9,13 +9,8 @@ import {
   query,
   where,
   writeBatch,
-  updateDoc,
-  increment,
-  setDoc,
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 const ProcessReceiptInputSchema = z.object({
   receiptImage: z
@@ -108,7 +103,12 @@ const processReceiptFlow = ai.defineFlow(
         const batch = writeBatch(firestore);
         
         // STEP 1: Update user's balance
-        batch.update(userDocRef, { balance: increment(amount) });
+         // Note: We are no longer using increment here, but setting the value directly.
+         // This is a placeholder for the logic that would calculate the new balance.
+         // For the purpose of this flow, we assume the AI gives the correct amount to add.
+         const userDocForBalance = await getDocs(query(collection(firestore, 'users'), where('id', '==', input.userId)));
+         const currentBalance = userDocForBalance.docs[0]?.data()?.balance || 0;
+         batch.update(userDocRef, { balance: currentBalance + amount });
         
         // STEP 2: Log the deposit request to prevent duplicates
         const depositRequestRef = doc(depositRequestsRef); // Create a new doc ref
@@ -143,22 +143,22 @@ const processReceiptFlow = ai.defineFlow(
             extractedAmount: aiResponse.extractedAmount,
         };
 
-    } catch (serverError) {
-        const contextualError = new FirestorePermissionError({
-            operation: 'write', // 'write' covers create, update, set in a batch
-            path: `users/${input.userId} and subcollections`,
-            requestResourceData: { 
-                balanceUpdate: `increment(${amount})`,
-                depositRequest: '...',
-                userTransaction: '...'
-            },
-        });
-        errorEmitter.emit('permission-error', contextualError);
+    } catch (serverError: any) {
+        // Construct a more detailed error message for permission issues.
+        if (serverError.code === 'permission-denied') {
+             return {
+                success: false,
+                message: `فشلت عملية تحديث الرصيد بسبب عدم كفاية الأذونات. الرجاء التحقق من قواعد الأمان الخاصة بك للسماح بالكتابة إلى 'users', 'depositRequests', و 'transactions'.`,
+                transactionId: aiResponse.transactionId,
+                extractedAmount: aiResponse.extractedAmount,
+            };
+        }
         
-        // Return a generic failure message to the user as the error is now handled globally
+        // For other types of errors, return a generic message.
+        console.error("Error processing receipt flow:", serverError);
         return {
             success: false,
-            message: 'فشلت عملية تحديث الرصيد. خطأ في الأذونات.',
+            message: 'حدث خطأ غير متوقع أثناء معالجة الإيصال. لم يتم تحديث الرصيد.',
             transactionId: aiResponse.transactionId,
             extractedAmount: aiResponse.extractedAmount,
         };

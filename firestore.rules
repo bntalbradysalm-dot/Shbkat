@@ -221,12 +221,12 @@ service cloud.firestore {
     
     /**
      * @description Manages available payment methods. Any authenticated user can read
-     * them, but only admins can create, update, or delete them.
+     * them (including server-side functions), but only admins can modify them.
      * @path /paymentMethods/{methodId}
-     * @allow Any signed-in user can read the list of payment methods. (list, get)
+     * @allow Any signed-in user or server process can read the list of payment methods. (list, get)
      * @allow An admin user can create, update, or delete payment methods. (create, update, delete)
      * @deny A non-admin user tries to modify payment methods.
-     * @principle Centralized payment configuration, admin-controlled.
+     * @principle Centralized payment configuration, admin-controlled, server-readable.
      */
     match /paymentMethods/{methodId} {
       allow read: if isSignedIn();
@@ -279,7 +279,7 @@ service cloud.firestore {
     /**
      * @description Stores records of automated deposits to prevent duplicates.
      * @path /depositRequests/{requestId}
-     * @allow Server-side logic (AI flow) can create and read deposit requests.
+     * @allow Server-side logic (AI flow) and signed in users can create and read deposit requests.
      */
     match /depositRequests/{requestId} {
       allow read, create: if isSignedIn();

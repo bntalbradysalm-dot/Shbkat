@@ -14,12 +14,14 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const ProcessReceiptInputSchema = z.object({
   receiptImage: z
     .string()
     .describe(
-      "A photo of a payment receipt, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of a payment receipt, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
   amount: z.number().describe('The amount the user claims to have deposited.'),
   userId: z.string().describe('The ID of the user submitting the receipt.'),
@@ -142,10 +144,21 @@ const processReceiptFlow = ai.defineFlow(
         };
 
     } catch (serverError) {
-        console.error("Error during deposit process:", serverError);
+        const contextualError = new FirestorePermissionError({
+            operation: 'write', // 'write' covers create, update, set in a batch
+            path: `users/${input.userId} and subcollections`,
+            requestResourceData: { 
+                balanceUpdate: `increment(${amount})`,
+                depositRequest: '...',
+                userTransaction: '...'
+            },
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        
+        // Return a generic failure message to the user as the error is now handled globally
         return {
             success: false,
-            message: 'فشلت عملية تحديث الرصيد النهائية. قد تكون هناك مشكلة في أذونات الوصول.',
+            message: 'فشلت عملية تحديث الرصيد. خطأ في الأذونات.',
             transactionId: aiResponse.transactionId,
             extractedAmount: aiResponse.extractedAmount,
         };

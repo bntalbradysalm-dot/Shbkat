@@ -189,7 +189,6 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow user to update their own data, and allow any signed-in (server) process.
       allow update: if isSignedIn();
       allow delete: if isAdmin();
 
@@ -257,3 +256,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

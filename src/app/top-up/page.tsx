@@ -7,7 +7,7 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, WhatsApp } from 'lucide-react';
+import { Copy, Send, Upload, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -45,6 +45,8 @@ export default function TopUpPage() {
     const { user } = useUser();
     
     const [amount, setAmount] = useState('');
+    const [receiptImage, setReceiptImage] = useState<File | null>(null);
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
     
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -67,7 +69,7 @@ export default function TopUpPage() {
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
     
     useEffect(() => {
-        if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
+        if (paymentMethods && paymentMethods.length > 0 && !selectedMethod) {
             setSelectedMethod(paymentMethods[0]);
         }
     }, [paymentMethods, selectedMethod]);
@@ -80,22 +82,31 @@ export default function TopUpPage() {
         });
     };
 
-    const handleSendWhatsApp = () => {
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setReceiptImage(file);
+            setReceiptPreview(URL.createObjectURL(file));
+        }
+    };
+    
+    const handleShareViaWhatsApp = async () => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'الرجاء إدخال مبلغ صحيح للإيداع.',
-            });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح للإيداع.' });
             return;
         }
 
-        if (!appSettings?.supportPhoneNumber) {
+        if (!receiptImage) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار صورة إيصال التحويل.' });
+            return;
+        }
+
+        if (!navigator.canShare || !navigator.canShare({ files: [receiptImage] })) {
             toast({
                 variant: 'destructive',
-                title: 'خطأ',
-                description: 'رقم الدعم الفني غير محدد. يرجى المحاولة لاحقاً.'
+                title: 'المتصفح لا يدعم هذه الميزة',
+                description: 'متصفحك الحالي لا يدعم مشاركة الملفات مباشرة. الرجاء استخدام متصفح أحدث.'
             });
             return;
         }
@@ -114,13 +125,22 @@ export default function TopUpPage() {
 *المبلغ:* ${numericAmount.toLocaleString('en-US')} ريال
 *إلى حساب:* ${paymentMethodName} (${recipientAccountName})
 *تاريخ الطلب:* ${new Date().toLocaleString('ar-EG-u-nu-latn')}
-
-----------------------
-الرجاء إرفاق صورة واضحة من إيصال التحويل.
         `;
-
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}&text=${encodeURIComponent(message.trim())}`;
-        window.open(whatsappUrl, '_blank');
+        
+        try {
+            await navigator.share({
+                files: [receiptImage],
+                text: message.trim(),
+                title: 'إيصال إيداع',
+            });
+        } catch (error) {
+            console.error('Error sharing:', error);
+            toast({
+                variant: 'destructive',
+                title: 'فشلت المشاركة',
+                description: 'حدث خطأ أثناء محاولة مشاركة الإيصال.'
+            });
+        }
     };
 
     const isLoading = isLoadingMethods || isLoadingSettings;
@@ -223,7 +243,7 @@ export default function TopUpPage() {
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
                            <h2 className="text-lg font-bold">3. أرسل تفاصيل الإيداع</h2>
-                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ وأرسل الطلب عبر واتساب لإرفاق الإيصال.</p>
+                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ، ارفع صورة الإيصال ثم أرسل الطلب.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
                                     <div>
@@ -237,8 +257,22 @@ export default function TopUpPage() {
                                             className="mt-1"
                                         />
                                     </div>
+                                    <div>
+                                        <label htmlFor="receipt-upload" className="text-sm font-medium">إيصال التحويل</label>
+                                        <label htmlFor="receipt-upload" className="mt-1 flex items-center justify-center w-full p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
+                                            {receiptPreview ? (
+                                                <Image src={receiptPreview} alt="معاينة الإيصال" width={100} height={100} className="object-contain rounded-md" />
+                                            ) : (
+                                                <div className="text-center text-muted-foreground">
+                                                    <ImageIcon className="mx-auto h-8 w-8" />
+                                                    <p className="mt-1 text-xs">انقر لرفع صورة الإيصال</p>
+                                                </div>
+                                            )}
+                                        </label>
+                                        <Input id="receipt-upload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                                    </div>
                                     
-                                    <Button className="w-full h-12 text-base" onClick={handleSendWhatsApp} disabled={!amount || isLoading}>
+                                    <Button className="w-full h-12 text-base" onClick={handleShareViaWhatsApp} disabled={!amount || !receiptImage || isLoading}>
                                         <Send className="ml-2 h-4 w-4" />
                                         إرسال الإيصال عبر واتساب
                                     </Button>

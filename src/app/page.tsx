@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center h-screen bg-background">
@@ -28,33 +38,25 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const getFirstAndLastName = (fullName: string): string => {
-  const nameParts = fullName.trim().split(/\s+/);
-  if (nameParts.length > 1) {
-    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-  }
-  return fullName;
-};
-
-
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastUserName, setLastUserName] = useState<string | null>(null);
+  const [biometricUser, setBiometricUser] = useState<{ phone: string, name: string } | null>(null);
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+  
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for last logged out user's name
-    const storedName = localStorage.getItem('lastLoggedOutUser');
-    if (storedName) {
-      setLastUserName(storedName);
-      // Optionally, clear it after reading so it only shows once
-      localStorage.removeItem('lastLoggedOutUser');
+    // Check for user who enabled biometric login on this device
+    const bioUserPhone = localStorage.getItem('biometricUserPhone');
+    const bioUserName = localStorage.getItem('biometricUserName');
+    if (bioUserPhone && bioUserName) {
+      setBiometricUser({ phone: bioUserPhone, name: bioUserName });
     }
   }, []);
 
@@ -98,6 +100,29 @@ export default function LoginPage() {
     }
   };
 
+  const handleBiometricLogin = () => {
+    // This is a simulation. A real implementation would use WebAuthn's
+    // navigator.credentials.get() and verify the result on a server.
+    if (biometricUser) {
+        setShowBiometricPrompt(true);
+    }
+  };
+
+  const handleBiometricConfirm = () => {
+     if (biometricUser) {
+        // Simulate a successful login by filling the fields and logging in
+        setPhoneNumber(biometricUser.phone);
+        // We can't know the password, so we show a message.
+        // In a real app, the biometric assertion would be sent to a server
+        // which would log the user in without a password.
+        setShowBiometricPrompt(false);
+        toast({
+            title: "محاكاة ناجحة",
+            description: "في التطبيق الحقيقي، سيتم تسجيل دخولك الآن. لأغراض العرض، يرجى إدخال كلمة المرور.",
+        });
+     }
+  };
+
   if (isUserLoading || (!isUserLoading && user)) {
     return <LoadingSpinner />;
   }
@@ -122,6 +147,13 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6 text-right">
+            {biometricUser && (
+                <Button type="button" variant="outline" className="w-full h-12" onClick={handleBiometricLogin}>
+                    <Fingerprint className="ml-2 h-5 w-5 text-primary" />
+                    الدخول باستخدام البصمة
+                </Button>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="phone">رقم الهاتف</Label>
               <Input
@@ -181,6 +213,23 @@ export default function LoginPage() {
         </footer>
       </div>
       <Toaster />
+
+      <AlertDialog open={showBiometricPrompt} onOpenChange={setShowBiometricPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="items-center">
+            <Fingerprint className="h-16 w-16 text-primary" />
+            <AlertDialogTitle>تسجيل الدخول بالبصمة</AlertDialogTitle>
+            <AlertDialogDescription>
+              الرجاء استخدام بصمة الإصبع للدخول كـ {biometricUser?.name}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row justify-center">
+            {/* In a real app, this would be handled by browser APIs. We simulate a success button. */}
+            <AlertDialogAction onClick={handleBiometricConfirm}>محاكاة بصمة ناجحة</AlertDialogAction>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

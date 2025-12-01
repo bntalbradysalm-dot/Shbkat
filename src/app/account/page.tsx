@@ -31,6 +31,7 @@ import {
   ClipboardList,
   Banknote,
   Upload,
+  Fingerprint,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -51,6 +52,8 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -108,6 +111,7 @@ const LoadingSpinner = () => (
 
 export default function AccountPage() {
   const [activeTheme, setActiveTheme] = useState('light');
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -136,7 +140,14 @@ export default function AccountPage() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, []);
+
+    // Check biometric setting in localStorage
+    if (user) {
+        const bioEnabled = localStorage.getItem('biometricUserPhone') === userProfile?.phoneNumber;
+        setIsBiometricEnabled(bioEnabled);
+    }
+
+  }, [user, userProfile]);
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -167,10 +178,33 @@ export default function AccountPage() {
     window.open(appSettings.appLink, '_blank', 'noopener,noreferrer');
   };
 
-  const handleLogout = () => {
-    if (user && user.displayName) {
-      localStorage.setItem('lastLoggedOutUser', user.displayName);
+  const handleBiometricToggle = async (enabled: boolean) => {
+    // This is a simulation. A real implementation would use WebAuthn APIs
+    // to register or unregister the device credential.
+    if (enabled) {
+        // In a real app, you would call navigator.credentials.create() here.
+        if (userProfile?.phoneNumber && userProfile?.displayName) {
+            localStorage.setItem('biometricUserPhone', userProfile.phoneNumber);
+            localStorage.setItem('biometricUserName', userProfile.displayName);
+            setIsBiometricEnabled(true);
+            toast({
+                title: "تم تفعيل البصمة",
+                description: "يمكنك الآن استخدام بصمتك لتسجيل الدخول على هذا الجهاز.",
+            });
+        }
+    } else {
+        localStorage.removeItem('biometricUserPhone');
+        localStorage.removeItem('biometricUserName');
+        setIsBiometricEnabled(false);
+        toast({
+            variant: "destructive",
+            title: "تم إلغاء تفعيل البصمة",
+            description: "تمت إزالة بصمتك من هذا الجهاز.",
+        });
     }
+  }
+
+  const handleLogout = () => {
     auth.signOut();
     router.push('/');
   };
@@ -338,6 +372,17 @@ export default function AccountPage() {
                 </div>
                 <Card className="bg-card">
                     <CardContent className="p-0">
+                    <div className="group flex items-center justify-between p-3 cursor-pointer border-b">
+                        <div className="flex items-center gap-3">
+                            <Fingerprint className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <Label htmlFor="biometric-switch" className="text-xs font-semibold cursor-pointer">تفعيل الدخول بالبصمة</Label>
+                        </div>
+                        <Switch
+                            id="biometric-switch"
+                            checked={isBiometricEnabled}
+                            onCheckedChange={handleBiometricToggle}
+                        />
+                    </div>
                     {userAppSettingsLinks.map((link, index) => {
                        const Icon = link.icon;
                        const isShareButton = link.id === 'share-app';

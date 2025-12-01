@@ -307,8 +307,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      // Allow owner, admin, or any signed-in party (like a server function) to update.
-      allow update: if isOwner(userId) || isAdmin() || isSignedIn();
+      // Allow any signed-in party (like a server function for deposits or another user for transfers) to update.
+      allow update: if isSignedIn();
       allow delete: if isAdmin();
 
       /**
@@ -406,6 +406,8 @@ service cloud.firestore {
     }
   }
 }
+    
+
     
 
     

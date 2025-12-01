@@ -15,7 +15,6 @@ import { initializeServerFirebase } from '@/firebase/server-init';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
-
 const ProcessReceiptInputSchema = z.object({
   receiptImage: z
     .string()
@@ -60,7 +59,6 @@ const processReceiptPrompt = ai.definePrompt({
   Receipt Image: {{media url=receiptImage}}`,
 });
 
-
 const processReceiptFlow = ai.defineFlow(
   {
     name: 'processReceiptFlow',
@@ -87,13 +85,30 @@ const processReceiptFlow = ai.defineFlow(
     if (!aiResponse.extractedAmount) {
       return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
-    
-    // This check is temporarily removed to avoid issues with OCR accuracy.
-    // if (Math.abs(aiResponse.extractedAmount - input.amount) > 1) { 
-    //     return { success: false, message: `المبلغ في الإيصال (${aiResponse.extractedAmount}) لا يتطابق مع المبلغ المدخل (${input.amount}).`, transactionId: null, extractedAmount: null };
-    // }
+    if (!aiResponse.recipientName) {
+        return { success: false, message: 'لم يتمكن الذكاء الاصطناعي من قراءة اسم المستلم من الإيصال.', transactionId: null, extractedAmount: null };
+    }
 
-    // 3. Check for duplicate transaction ID
+    // 3. Fetch registered payment methods and validate recipient name
+    const paymentMethodsRef = collection(firestore, 'paymentMethods');
+    const paymentMethodsSnap = await getDocs(paymentMethodsRef);
+    const registeredAccountHolders = paymentMethodsSnap.docs.map(doc => doc.data().accountHolderName as string);
+
+    const isRecipientValid = registeredAccountHolders.some(holderName => 
+      aiResponse.recipientName!.toLowerCase().includes(holderName.toLowerCase()) || 
+      holderName.toLowerCase().includes(aiResponse.recipientName!.toLowerCase())
+    );
+
+    if (!isRecipientValid) {
+        return { 
+            success: false, 
+            message: `اسم المستلم في الإيصال (${aiResponse.recipientName}) لا يطابق أي من حساباتنا المسجلة.`, 
+            transactionId: aiResponse.transactionId, 
+            extractedAmount: aiResponse.extractedAmount 
+        };
+    }
+
+    // 4. Check for duplicate transaction ID
     const depositRequestsRef = collection(firestore, 'depositRequests');
     const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
     const querySnapshot = await getDocs(q);
@@ -107,7 +122,7 @@ const processReceiptFlow = ai.defineFlow(
       };
     }
     
-    // 4. All checks passed, proceed with balance update and logging
+    // 5. All checks passed, proceed with balance update and logging
     const batch = writeBatch(firestore);
     const now = new Date().toISOString();
     const amount = aiResponse.extractedAmount;
@@ -115,16 +130,15 @@ const processReceiptFlow = ai.defineFlow(
     // a. Log the successful deposit request
     const depositRequestRef = doc(collection(firestore, 'depositRequests'));
     const depositRequestData = {
-        ...aiResponse,
         userId: input.userId,
         userName: input.userName,
         userPhoneNumber: input.userPhoneNumber,
         claimedAmount: input.amount,
+        extractedAmount: aiResponse.extractedAmount,
+        transactionId: aiResponse.transactionId,
+        recipientName: aiResponse.recipientName,
         status: 'completed_auto',
         timestamp: now,
-        // The data URI can be very large. Consider uploading to a storage service
-        // and saving the URL instead for production apps.
-        receiptImageUrl: input.receiptImage, 
     };
     batch.set(depositRequestRef, depositRequestData);
 
@@ -146,25 +160,15 @@ const processReceiptFlow = ai.defineFlow(
 
     // Commit the batch and handle errors without try/catch
     await batch.commit().catch(async (serverError) => {
-        // Create and emit a contextual error for debugging security rules.
         const permissionError = new FirestorePermissionError({
-            path: '/', // The batch can affect multiple paths. Use a generic path or the primary one.
+            path: '/', 
             operation: 'write', 
             requestResourceData: {
-                depositRequest: {
-                  path: depositRequestRef.path,
-                  data: depositRequestData
-                },
-                userBalanceUpdate: {
-                  path: userDocRef.path,
-                  data: { balance: `increment(${amount})` }
-                },
-                userTransaction: {
-                  path: userTransactionRef.path,
-                  data: transactionData
-                }
+                depositRequest: { path: depositRequestRef.path, data: depositRequestData },
+                userBalanceUpdate: { path: userDocRef.path, data: { balance: `increment(${amount})` } },
+                userTransaction: { path: userTransactionRef.path, data: transactionData }
             },
-        } as SecurityRuleContext); // Casting to SecurityRuleContext to satisfy type
+        } as SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
     });
         

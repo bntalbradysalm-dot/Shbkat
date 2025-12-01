@@ -9,7 +9,8 @@ import {
   query,
   where,
   writeBatch,
-  increment
+  increment,
+  FirestoreError
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -34,6 +35,8 @@ const ReceiptDataSchema = z.object({
   extractedAmount: z.number().optional().describe('The numerical amount of money transferred according to the receipt.'),
   recipientName: z.string().optional().describe('The name of the recipient or beneficiary of the transfer.'),
 });
+type ReceiptData = z.infer<typeof ReceiptDataSchema>;
+
 
 const ProcessReceiptOutputSchema = z.object({
   success: z.boolean(),
@@ -91,9 +94,22 @@ const processReceiptFlow = ai.defineFlow(
 
     // 3. Fetch registered payment methods and validate recipient name
     const paymentMethodsRef = collection(firestore, 'paymentMethods');
-    const paymentMethodsSnap = await getDocs(paymentMethodsRef);
-    const registeredAccountHolders = paymentMethodsSnap.docs.map(doc => doc.data().accountHolderName as string);
+    let paymentMethodsSnap;
+    try {
+        paymentMethodsSnap = await getDocs(paymentMethodsRef);
+    } catch (error) {
+        if (error instanceof FirestoreError) {
+             const permissionError = new FirestorePermissionError({
+                path: 'paymentMethods',
+                operation: 'list',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+        }
+        // Return a generic error to the user but the specific one to the dev console
+        return { success: false, message: 'حدث خطأ أثناء التحقق من طرق الدفع.', transactionId: null, extractedAmount: null };
+    }
 
+    const registeredAccountHolders = paymentMethodsSnap.docs.map(doc => doc.data().accountHolderName as string);
     const isRecipientValid = registeredAccountHolders.some(holderName => 
       aiResponse.recipientName!.toLowerCase().includes(holderName.toLowerCase()) || 
       holderName.toLowerCase().includes(aiResponse.recipientName!.toLowerCase())
@@ -137,6 +153,7 @@ const processReceiptFlow = ai.defineFlow(
         extractedAmount: aiResponse.extractedAmount,
         transactionId: aiResponse.transactionId,
         recipientName: aiResponse.recipientName,
+        receiptImageUrl: input.receiptImage, // Save image for auditing
         status: 'completed_auto',
         timestamp: now,
     };
@@ -161,14 +178,16 @@ const processReceiptFlow = ai.defineFlow(
     // Commit the batch and handle errors without try/catch
     await batch.commit().catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
-            path: '/', 
+            path: '/', // Path is complex for a batch, using root as placeholder
             operation: 'write', 
             requestResourceData: {
-                depositRequest: { path: depositRequestRef.path, data: depositRequestData },
-                userBalanceUpdate: { path: userDocRef.path, data: { balance: `increment(${amount})` } },
-                userTransaction: { path: userTransactionRef.path, data: transactionData }
+                batchOperations: [
+                    { path: depositRequestRef.path, data: depositRequestData, operation: 'set' },
+                    { path: userDocRef.path, data: { balance: `increment(${amount})` }, operation: 'update' },
+                    { path: userTransactionRef.path, data: transactionData, operation: 'set' }
+                ]
             },
-        } as SecurityRuleContext);
+        } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
     });
         

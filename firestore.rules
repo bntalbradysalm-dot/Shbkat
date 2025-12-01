@@ -163,6 +163,7 @@ service cloud.firestore {
     
     /**
      * @description Stores records of automated deposits to prevent duplicates.
+     * Allow any signed in process (like a server function) to read and write.
      */
     match /depositRequests/{requestId} {
       allow read, write: if isSignedIn();
@@ -189,6 +190,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
+      // Allow any signed-in process (like server functions) to update user data.
       allow update: if isSignedIn();
       allow delete: if isAdmin();
 
@@ -256,5 +258,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

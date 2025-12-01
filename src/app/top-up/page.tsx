@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, ChangeEvent } from 'react';
+import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -51,7 +51,7 @@ export default function TopUpPage() {
       () => (user ? doc(firestore, 'users', user.uid) : null),
       [firestore, user]
     );
-    const { data: userProfile } = useMemoFirebase(() => useDoc<UserProfile>(userDocRef), [userDocRef]);
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
     
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
@@ -64,7 +64,7 @@ export default function TopUpPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
             setSelectedMethod(paymentMethods[0]);
         }
@@ -332,3 +332,4 @@ export default function TopUpPage() {
         </>
     );
 }
+    

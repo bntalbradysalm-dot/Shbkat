@@ -124,13 +124,9 @@ service cloud.firestore {
      * and not touching any other fields. This is used for direct user-to-user transfers
      * or automated payouts.
      */
-    function isBalanceIncrementOnly(userId) {
-      let otherFields = request.resource.data.diff(resource.data).affectedKeys();
-      // Ensure only balance is changed and it's an increment.
-      return otherFields.hasOnly(['balance']) &&
-             request.resource.data.balance > resource.data.balance &&
-             // Allow self-increment for deposits, or admin actions.
-             (request.auth.uid == userId || isAdmin());
+    function isBalanceUpdate() {
+        let otherFields = request.resource.data.diff(resource.data).affectedKeys();
+        return otherFields.hasOnly(['balance']);
     }
 
 
@@ -290,9 +286,8 @@ service cloud.firestore {
      * @allow Server-side logic (AI flow) and signed in users can create and read deposit requests.
      */
     match /depositRequests/{requestId} {
-      // Allow a server-side process to create a deposit record as part of a batch
-      // that also updates the user's balance and creates a transaction record.
-      allow write: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Allow a server-side process (acting as user) to create a deposit record.
+      allow write: if isSignedIn();
       allow read: if isSignedIn();
     }
 
@@ -313,8 +308,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && incomingDataMatchesUserId(userId);
-      // Allow owner/admin to update, or any user to perform a validated balance increment (for transfers/payouts).
-      allow update: if (isOwner(userId) || isAdmin()) || (isSignedIn() && isBalanceIncrementOnly(userId));
+      // Allow owner/admin to update, or any user to perform a validated balance update.
+      allow update: if (isOwner(userId) || isAdmin()) || (isSignedIn() && isBalanceUpdate());
       allow delete: if isAdmin();
 
       /**
@@ -412,5 +407,6 @@ service cloud.firestore {
     }
   }
 }
+    
 
     

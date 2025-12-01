@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, ChangeEvent } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send } from 'lucide-react';
+import { Copy, Send, Upload, Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { processReceipt } from '@/ai/flows/process-receipt-flow';
 
 type PaymentMethod = {
   id: string;
@@ -23,6 +25,11 @@ type PaymentMethod = {
 
 type AppSettings = {
     supportPhoneNumber: string;
+};
+
+type UserProfile = {
+    displayName?: string;
+    phoneNumber?: string;
 };
 
 const getLogoSrc = (url?: string) => {
@@ -37,6 +44,12 @@ export default function TopUpPage() {
     const { toast } = useToast();
     const { user } = useUser();
     
+    const userDocRef = useMemoFirebase(
+      () => (user ? doc(firestore, 'users', user.uid) : null),
+      [firestore, user]
+    );
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+    
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
@@ -44,6 +57,11 @@ export default function TopUpPage() {
     const { data: paymentMethods, isLoading } = useCollection<PaymentMethod>(methodsCollection);
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+    const [receiptImage, setReceiptImage] = useState<string | null>(null);
+    const [amount, setAmount] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
 
     const settingsDocRef = useMemoFirebase(
       () => (firestore && user ? doc(firestore, 'appSettings', 'global') : null),
@@ -65,19 +83,48 @@ export default function TopUpPage() {
         });
     };
     
-    const openWhatsApp = () => {
-        if (!appSettings?.supportPhoneNumber) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'رقم التواصل غير محدد. يرجى مراجعة الإدارة.'
-            });
+    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setReceiptImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const handleConfirmDeposit = async () => {
+        if (!receiptImage || !amount) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال المبلغ ورفع صورة الإيصال.' });
             return;
         }
-        const phoneNumber = appSettings.supportPhoneNumber;
-        const message = encodeURIComponent('أرغب في تأكيد عملية إيداع. هذا هو إيصال الدفع.');
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
-        window.open(whatsappUrl, '_blank');
+        if (!user || !userProfile || !userProfile.displayName || !userProfile.phoneNumber) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن إتمام العملية، بيانات المستخدم غير مكتملة.' });
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            const response = await processReceipt({
+                receiptImage,
+                amount: parseFloat(amount),
+                userId: user.uid,
+                userName: userProfile.displayName,
+                userPhoneNumber: userProfile.phoneNumber,
+            });
+
+            if (response.success) {
+                setShowSuccess(true);
+            } else {
+                 toast({ variant: 'destructive', title: 'فشل الإيداع', description: response.message });
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'خطأ فني', description: 'حدث خطأ غير متوقع أثناء معالجة الإيصال.' });
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const renderPaymentMethods = () => {
@@ -132,6 +179,28 @@ export default function TopUpPage() {
         );
     };
 
+    if (showSuccess) {
+      return (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <Card className="w-full max-w-sm text-center shadow-2xl">
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
+                            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h2 className="text-2xl font-bold">تم الإيداع بنجاح</h2>
+                        <p className="text-sm text-muted-foreground">تمت إضافة المبلغ إلى رصيدك بنجاح.</p>
+                        <div className="w-full pt-4">
+                            <Button variant="default" className="w-full" onClick={() => window.location.reload()}>العودة للرئيسية</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      );
+    }
+
+
     return (
         <>
             <div className="flex flex-col h-full bg-background">
@@ -177,13 +246,40 @@ export default function TopUpPage() {
                     
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
-                           <h2 className="text-lg font-bold">3. أرسل الإيصال عبر واتساب</h2>
-                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل يرجى رفع صورة الايصال عبر واتساب لتاكيد الدفع واضافة المبلغ الى رصيدك</p>
+                           <h2 className="text-lg font-bold">3. تأكيد الإيداع</h2>
+                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ وارفع صورة من إيصال التحويل لإتمام العملية تلقائياً.</p>
                            <Card className="mt-4">
-                               <CardContent className="p-4">
-                                   <Button className="w-full" onClick={openWhatsApp} disabled={!appSettings}>
-                                       <Send className="ml-2 h-4 w-4" />
-                                       رفع الإيصال عبر واتساب
+                               <CardContent className="p-4 space-y-4">
+                                    <div>
+                                        <label htmlFor="amount" className="text-sm font-medium">المبلغ المحوّل</label>
+                                        <Input
+                                            id="amount"
+                                            type="number"
+                                            placeholder="ادخل المبلغ"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="receipt" className="text-sm font-medium">إيصال التحويل</label>
+                                         <Button asChild variant="outline" className="w-full mt-1 border-dashed">
+                                            <label htmlFor="receipt-upload" className="cursor-pointer">
+                                                <Upload className="ml-2 h-4 w-4" />
+                                                <span>{receiptImage ? "تم اختيار صورة" : "اختر صورة الإيصال"}</span>
+                                            </label>
+                                        </Button>
+                                        <Input id="receipt-upload" type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" />
+                                    </div>
+                                    {receiptImage && (
+                                        <div className="border rounded-lg p-2">
+                                            <Image src={receiptImage} alt="معاينة الإيصال" width={400} height={400} className="rounded-md object-contain max-h-48 w-full" />
+                                        </div>
+                                    )}
+
+                                   <Button className="w-full" onClick={handleConfirmDeposit} disabled={isProcessing}>
+                                        {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
+                                        {isProcessing ? 'جاري المعالجة...' : 'تأكيد الإيداع'}
                                    </Button>
                                </CardContent>
                            </Card>

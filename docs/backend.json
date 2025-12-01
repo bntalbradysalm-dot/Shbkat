@@ -93,6 +93,14 @@
           "type": "string",
           "description": "Additional notes or details about the transaction."
         },
+        "subscriberName": {
+          "type": "string",
+          "description": "The name of the subscriber for a renewal."
+        },
+        "cardNumber": {
+          "type": "string",
+          "description": "The card number for a renewal."
+        },
         "paymentMethodName": {
           "type": "string",
           "description": "Name of the payment method used for withdrawal."
@@ -442,6 +450,25 @@
             "requestTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was made." }
         },
         "required": ["ownerId", "ownerName", "amount", "paymentMethodName", "recipientName", "accountNumber", "status", "requestTimestamp"]
+    },
+    "DepositRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Deposit Request",
+      "type": "object",
+      "description": "A record of an automated deposit processed from a receipt.",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who made the deposit." },
+        "userName": { "type": "string", "description": "The name of the user." },
+        "claimedAmount": { "type": "number", "description": "The amount the user claimed to have deposited." },
+        "extractedAmount": { "type": "number", "description": "The amount extracted from the receipt by AI." },
+        "transactionId": { "type": "string", "description": "The unique transaction ID from the receipt to prevent duplicates." },
+        "recipientName": { "type": "string", "description": "The recipient name extracted from the receipt by AI." },
+        "status": { "type": "string", "enum": ["completed_auto", "failed"], "description": "The status of the automated deposit." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was processed." }
+      },
+      "required": [
+        "userId", "userName", "claimedAmount", "extractedAmount", "transactionId", "status", "timestamp"
+      ]
     }
   },
   "auth": {
@@ -686,9 +713,19 @@
             { "name": "cardId", "description": "The unique ID of the sold card record." }
           ]
         }
+      },
+      {
+        "path": "/depositRequests/{requestId}",
+        "definition": {
+          "entityName": "DepositRequest",
+          "schema": { "$ref": "#/backend/entities/DepositRequest" },
+          "description": "Stores records of automated deposits to prevent duplicate processing.",
+          "params": [
+            { "name": "requestId", "description": "The unique ID of the deposit request." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
-    

@@ -98,7 +98,7 @@ export default function NotificationsPage() {
   const handleDeleteMonth = () => {
     if (!monthToDelete || !user || !firestore) return;
 
-    // We only delete PERSONAL notifications for that month
+    const userNotificationsPath = `users/${user.uid}/notifications`;
     const notificationsToDelete = (personalNotifications || []).filter(
         n => format(parseISO(n.timestamp), 'yyyy-MM') === monthToDelete
     );
@@ -113,7 +113,6 @@ export default function NotificationsPage() {
     }
 
     const batch = writeBatch(firestore);
-    const userNotificationsPath = `users/${user.uid}/notifications`;
     notificationsToDelete.forEach(notification => {
         const docRef = doc(firestore, userNotificationsPath, notification.id);
         batch.delete(docRef);

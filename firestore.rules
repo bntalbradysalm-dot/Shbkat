@@ -276,8 +276,11 @@ service cloud.firestore {
      * @allow Server-side logic (AI flow) and signed in users can create and read deposit requests.
      */
     match /depositRequests/{requestId} {
-      allow write: if isSignedIn();
-      allow read: if isSignedIn();
+      allow read, write: if isSignedIn();
+    }
+    
+    match /depositRequests {
+      allow list: if isSignedIn();
     }
 
 
@@ -407,3 +410,5 @@ service cloud.firestore {
     
 
     
+
+      

@@ -78,46 +78,24 @@ const processReceiptFlow = ai.defineFlow(
       return { success: false, message: 'الصورة المرفقة لا تبدو كإيصال دفع صالح.', transactionId: null, extractedAmount: null };
     }
 
-    // 2. Validate extracted data
-    // Transaction ID check is disabled as per user request.
-    // if (!aiResponse.transactionId) {
-    //   return { success: false, message: 'لم يتم العثور على رقم عملية في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
-    // }
     if (!aiResponse.extractedAmount) {
       return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
     
-    // Disabling recipient name check to bypass permission issues.
-    // if (!aiResponse.recipientName) {
-    //     return { success: false, message: 'لم يتمكن الذكاء الاصطناعي من قراءة اسم المستلم من الإيصال.', transactionId: null, extractedAmount: null };
-    // }
-
     // 3. Check for duplicate transaction ID is disabled as per user request.
-    /*
     const depositRequestsRef = collection(firestore, 'depositRequests');
-    const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
-    
-    try {
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        return {
-          success: false,
-          message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
-          transactionId: aiResponse.transactionId,
-          extractedAmount: aiResponse.extractedAmount,
-        };
-      }
-    } catch (e) {
-      console.error('Error checking for duplicate transaction ID:', e);
-      return {
-        success: false,
-        message: 'حدث خطأ أثناء التحقق من تكرار العملية.',
-        transactionId: aiResponse.transactionId,
-        extractedAmount: aiResponse.extractedAmount,
-      };
+    if (aiResponse.transactionId) {
+        const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            return {
+            success: false,
+            message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
+            transactionId: aiResponse.transactionId,
+            extractedAmount: aiResponse.extractedAmount,
+            };
+        }
     }
-    */
         
     // 4. All checks passed, proceed with balance update and logging
     const now = new Date().toISOString();
@@ -125,39 +103,35 @@ const processReceiptFlow = ai.defineFlow(
     const userDocRef = doc(firestore, 'users', input.userId);
     
     try {
-        // STEP 1: Update user's balance first.
-        await updateDoc(userDocRef, { balance: increment(amount) });
-        
-        // STEP 2: If balance update is successful, log the transaction and deposit request.
         const batch = writeBatch(firestore);
-
-        const depositRequestRef = doc(collection(firestore, 'depositRequests'));
-        const depositRequestData = {
+        
+        // STEP 1: Update user's balance
+        batch.update(userDocRef, { balance: increment(amount) });
+        
+        // STEP 2: Log the deposit request to prevent duplicates
+        const depositRequestRef = doc(depositRequestsRef); // Create a new doc ref
+        batch.set(depositRequestRef, {
             userId: input.userId,
             userName: input.userName,
-            userPhoneNumber: input.userPhoneNumber,
+            transactionId: aiResponse.transactionId || `MANUAL-${Date.now()}`,
             claimedAmount: input.amount,
-            extractedAmount: aiResponse.extractedAmount,
-            transactionId: aiResponse.transactionId || 'N/A',
-            recipientName: aiResponse.recipientName || 'غير محدد',
-            receiptImageUrl: input.receiptImage,
+            extractedAmount: amount,
             status: 'completed_auto',
             timestamp: now,
-        };
-        batch.set(depositRequestRef, depositRequestData);
+        });
 
+        // STEP 3: Log the transaction for the user's history
         const userTransactionRef = doc(collection(firestore, `users/${input.userId}/transactions`));
-        const transactionData = {
+        batch.set(userTransactionRef, {
             id: userTransactionRef.id,
             userId: input.userId,
             transactionDate: now,
             amount: amount,
             transactionType: 'تغذية رصيد (آلي)',
             notes: `رقم العملية: ${aiResponse.transactionId || 'غير متوفر'}`,
-        };
-        batch.set(userTransactionRef, transactionData);
-        
-        // This batch only contains non-balance-update writes, which should have permissions.
+        });
+
+        // Commit all writes at once
         await batch.commit();
             
         return {
@@ -169,10 +143,9 @@ const processReceiptFlow = ai.defineFlow(
 
     } catch (serverError) {
         console.error("Error during deposit process:", serverError);
-        // This is a generic server-side error, likely from the balance update.
         return {
             success: false,
-            message: 'فشلت عملية تحديث الرصيد للمستخدم. قد تكون هناك مشكلة في أذونات الوصول.',
+            message: 'فشلت عملية تحديث الرصيد النهائية. قد تكون هناك مشكلة في أذونات الوصول.',
             transactionId: aiResponse.transactionId,
             extractedAmount: aiResponse.extractedAmount,
         };

@@ -104,7 +104,7 @@ export default function TopUpPage() {
                 userPhoneNumber: userProfile.phoneNumber,
             });
 
-            if (result.isReceipt && result.amount > 0) {
+            if (result && result.isReceipt && result.amount > 0) {
                 setProcessedAmount(result.amount);
                 setShowSuccess(true);
             } else {

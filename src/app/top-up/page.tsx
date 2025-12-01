@@ -305,7 +305,7 @@ export default function TopUpPage() {
 
                                    <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                      <AlertDialogTrigger asChild>
-                                      <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing}>
+                                      <Button className="w-full" onClick={handleTriggerConfirmation} disabled={isProcessing || !receiptImage || !amount}>
                                           {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
                                           {isProcessing ? 'جاري المعالجة...' : 'تأكيد الإيداع'}
                                       </Button>

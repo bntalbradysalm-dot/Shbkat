@@ -8,7 +8,7 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Copy, Send, Upload, Loader2, CheckCircle, Image as ImageIcon, User, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -25,6 +25,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+
 
 type PaymentMethod = {
   id: string;
@@ -319,8 +322,22 @@ export default function TopUpPage() {
                                      <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>تأكيد طلب الإيداع</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                هل أنت متأكد من أنك قمت بتحويل مبلغ {parseFloat(amount || '0').toLocaleString('en-US')} ريال؟ سيتم إرسال طلبك للمراجعة.
+                                            <AlertDialogDescription asChild>
+                                                 <div className="space-y-4 pt-4 text-sm text-foreground">
+                                                     <p className='text-sm text-center text-muted-foreground pb-2'>سيتم إرسال المعلومات التالية للمراجعة.</p>
+                                                     <div className="flex justify-between items-center">
+                                                         <span className='text-muted-foreground flex items-center gap-2'><User className='h-4 w-4' /> المستلم:</span>
+                                                         <span className="font-bold">{selectedMethod.accountHolderName}</span>
+                                                     </div>
+                                                     <div className="flex justify-between items-center">
+                                                         <span className='text-muted-foreground flex items-center gap-2'><ImageIcon className='h-4 w-4' /> المبلغ:</span>
+                                                         <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                                     </div>
+                                                     <div className="flex justify-between items-center">
+                                                          <span className='text-muted-foreground flex items-center gap-2'><Calendar className='h-4 w-4' /> التاريخ:</span>
+                                                          <span className="font-bold">{format(new Date(), 'd MMMM yyyy', { locale: ar })}</span>
+                                                     </div>
+                                                 </div>
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>

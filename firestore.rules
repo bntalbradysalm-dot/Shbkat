@@ -162,14 +162,6 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores manual deposit requests.
-     */
-    match /manualDepositRequests/{requestId} {
-      allow create: if isSignedIn() && isRequestOwner();
-      allow read, update, delete: if isAdmin();
-    }
-    
-    /**
      * @description Manages transfer requests between users. Only admins can list/read them.
      */
     match /transferRequests/{requestId} {

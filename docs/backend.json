@@ -450,23 +450,6 @@
             "requestTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was made." }
         },
         "required": ["ownerId", "ownerName", "amount", "paymentMethodName", "recipientName", "accountNumber", "status", "requestTimestamp"]
-    },
-    "ManualDepositRequest": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Manual Deposit Request",
-      "type": "object",
-      "description": "A user's request for a manual deposit, including a receipt image.",
-      "properties": {
-        "userId": { "type": "string", "description": "The ID of the user making the request." },
-        "userName": { "type": "string", "description": "The name of the user." },
-        "userPhoneNumber": { "type": "string", "description": "The phone number of the user." },
-        "amount": { "type": "number", "description": "The amount the user claims to have deposited." },
-        "receiptImageUrl": { "type": "string", "description": "URL of the uploaded receipt image." },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the deposit request." },
-        "requestTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was made." },
-        "notes": { "type": "string", "description": "Optional notes from the admin regarding the request." }
-      },
-      "required": ["userId", "userName", "userPhoneNumber", "amount", "receiptImageUrl", "status", "requestTimestamp"]
     }
   },
   "auth": {
@@ -711,20 +694,8 @@
             { "name": "cardId", "description": "The unique ID of the sold card record." }
           ]
         }
-      },
-      {
-        "path": "/manualDepositRequests/{requestId}",
-        "definition": {
-          "entityName": "ManualDepositRequest",
-          "schema": { "$ref": "#/backend/entities/ManualDepositRequest" },
-          "description": "Stores manual deposit requests from users for admin review.",
-          "params": [
-            { "name": "requestId", "description": "The unique ID of the deposit request." }
-          ]
-        }
       }
     ],
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
-    

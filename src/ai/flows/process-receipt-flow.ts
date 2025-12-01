@@ -9,6 +9,8 @@ import {
   query,
   where,
   writeBatch,
+  updateDoc,
+  increment,
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
 
@@ -65,64 +67,54 @@ const processReceiptFlow = ai.defineFlow(
   async (input) => {
     const { firestore } = initializeServerFirebase();
 
-    // 1. Get AI analysis of the receipt
-    const { output: aiResponse } = await processReceiptPrompt(input);
-    if (!aiResponse) {
+    const aiResponse = await processReceiptPrompt(input);
+    const receiptData = aiResponse.output();
+
+    if (!receiptData) {
       return { success: false, message: 'فشل الذكاء الاصطناعي في تحليل الإيصال.', transactionId: null, extractedAmount: null };
     }
-
-    if (!aiResponse.isReceipt) {
+    if (!receiptData.isReceipt) {
       return { success: false, message: 'الصورة المرفقة لا تبدو كإيصال دفع صالح.', transactionId: null, extractedAmount: null };
     }
-
-    if (!aiResponse.extractedAmount) {
+    if (!receiptData.extractedAmount) {
       return { success: false, message: 'لم يتم العثور على مبلغ في الإيصال. الرجاء استخدام إيصال واضح.', transactionId: null, extractedAmount: null };
     }
-    
-    // 3. Check for duplicate transaction ID is disabled as per user request.
+
     const depositRequestsRef = collection(firestore, 'depositRequests');
-    if (aiResponse.transactionId) {
-        const q = query(depositRequestsRef, where('transactionId', '==', aiResponse.transactionId));
+    if (receiptData.transactionId) {
+        const q = query(depositRequestsRef, where('transactionId', '==', receiptData.transactionId));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             return {
-            success: false,
-            message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
-            transactionId: aiResponse.transactionId,
-            extractedAmount: aiResponse.extractedAmount,
+              success: false,
+              message: 'هذا الإيصال تم استخدامه مسبقاً. لا يمكن معالجة نفس العملية مرتين.',
+              transactionId: receiptData.transactionId,
+              extractedAmount: receiptData.extractedAmount,
             };
         }
     }
         
-    // 4. All checks passed, proceed with balance update and logging
     const now = new Date().toISOString();
-    const amount = aiResponse.extractedAmount;
+    const amount = receiptData.extractedAmount;
     const userDocRef = doc(firestore, 'users', input.userId);
     
     try {
         const batch = writeBatch(firestore);
         
-        // STEP 1: Update user's balance
-         // Note: We are no longer using increment here, but setting the value directly.
-         // This is a placeholder for the logic that would calculate the new balance.
-         // For the purpose of this flow, we assume the AI gives the correct amount to add.
-         const userDocForBalance = await getDocs(query(collection(firestore, 'users'), where('id', '==', input.userId)));
-         const currentBalance = userDocForBalance.docs[0]?.data()?.balance || 0;
-         batch.update(userDocRef, { balance: currentBalance + amount });
+        // Use a direct update for balance to simplify and ensure it works
+        batch.update(userDocRef, { balance: increment(amount) });
         
-        // STEP 2: Log the deposit request to prevent duplicates
-        const depositRequestRef = doc(depositRequestsRef); // Create a new doc ref
+        const depositRequestRef = doc(depositRequestsRef);
         batch.set(depositRequestRef, {
             userId: input.userId,
             userName: input.userName,
-            transactionId: aiResponse.transactionId || `MANUAL-${Date.now()}`,
+            transactionId: receiptData.transactionId || `MANUAL-${Date.now()}`,
             claimedAmount: input.amount,
             extractedAmount: amount,
             status: 'completed_auto',
             timestamp: now,
         });
 
-        // STEP 3: Log the transaction for the user's history
         const userTransactionRef = doc(collection(firestore, `users/${input.userId}/transactions`));
         batch.set(userTransactionRef, {
             id: userTransactionRef.id,
@@ -130,37 +122,34 @@ const processReceiptFlow = ai.defineFlow(
             transactionDate: now,
             amount: amount,
             transactionType: 'تغذية رصيد (آلي)',
-            notes: `رقم العملية: ${aiResponse.transactionId || 'غير متوفر'}`,
+            notes: `رقم العملية: ${receiptData.transactionId || 'غير متوفر'}`,
         });
 
-        // Commit all writes at once
         await batch.commit();
             
         return {
             success: true,
             message: 'تمت إضافة المبلغ إلى رصيدك بنجاح.',
-            transactionId: aiResponse.transactionId,
-            extractedAmount: aiResponse.extractedAmount,
+            transactionId: receiptData.transactionId,
+            extractedAmount: receiptData.extractedAmount,
         };
 
     } catch (serverError: any) {
-        // Construct a more detailed error message for permission issues.
         if (serverError.code === 'permission-denied') {
              return {
                 success: false,
                 message: `فشلت عملية تحديث الرصيد بسبب عدم كفاية الأذونات. الرجاء التحقق من قواعد الأمان الخاصة بك للسماح بالكتابة إلى 'users', 'depositRequests', و 'transactions'.`,
-                transactionId: aiResponse.transactionId,
-                extractedAmount: aiResponse.extractedAmount,
+                transactionId: receiptData.transactionId,
+                extractedAmount: receiptData.extractedAmount,
             };
         }
         
-        // For other types of errors, return a generic message.
         console.error("Error processing receipt flow:", serverError);
         return {
             success: false,
             message: 'حدث خطأ غير متوقع أثناء معالجة الإيصال. لم يتم تحديث الرصيد.',
-            transactionId: aiResponse.transactionId,
-            extractedAmount: aiResponse.extractedAmount,
+            transactionId: receiptData.transactionId,
+            extractedAmount: receiptData.extractedAmount,
         };
     }
   }

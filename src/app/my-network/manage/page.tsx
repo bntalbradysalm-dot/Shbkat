@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Network = {
     id: string;
@@ -157,7 +159,7 @@ export default function OwnerNetworkManagePage() {
   };
   
   const handleSaveCards = async () => {
-    if (!firestore || !cardsCollection) return;
+    if (!firestore || !cardsCollection || !networkId) return;
     setIsProcessingCards(true);
 
     const cardsToAdd: Omit<NetworkCard, 'id'>[] = [];
@@ -189,23 +191,27 @@ export default function OwnerNetworkManagePage() {
         return;
     }
 
-    try {
-        const batch = writeBatch(firestore);
-        cardsToAdd.forEach(cardData => {
-            const cardRef = doc(cardsCollection); // Auto-generate ID
-            batch.set(cardRef, cardData);
-        });
-        await batch.commit();
+    const batch = writeBatch(firestore);
+    cardsToAdd.forEach(cardData => {
+        const cardRef = doc(cardsCollection); // Auto-generate ID
+        batch.set(cardRef, cardData);
+    });
+
+    batch.commit().then(() => {
         toast({ title: 'نجاح', description: `تمت إضافة ${cardsToAdd.length} كرت بنجاح.`});
         setIsAddCardOpen(false);
         setSingleCard({ cardNumber: ''});
         setBulkCards('');
-    } catch (error) {
-        console.error("Error adding cards:", error);
-        toast({ title: 'خطأ', description: 'فشلت عملية إضافة الكروت.', variant: 'destructive'});
-    } finally {
+    }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            operation: 'write',
+            path: `networks/${networkId}/cards`,
+            requestResourceData: { cards: cardsToAdd.length },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
         setIsProcessingCards(false);
-    }
+    });
   };
 
 
@@ -456,3 +462,4 @@ export default function OwnerNetworkManagePage() {
     
 
     
+

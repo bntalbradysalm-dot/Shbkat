@@ -233,6 +233,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Allow AI flow to list payment methods
+    match /paymentMethods {
+      allow list: if isSignedIn();
+    }
+    
     /**
      * @description Manages the list of Al-Wadi subscribers, keyed by their card number.
      * Used for auto-filling subscriber names during renewal.

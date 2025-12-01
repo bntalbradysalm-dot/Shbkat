@@ -162,17 +162,13 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores records of automated deposits to prevent duplicates.
-     * Allow any signed in process (like a server function) to read and write.
+     * @description Stores manual deposit requests.
      */
-    match /depositRequests/{requestId} {
-      allow read, write: if isSignedIn();
+    match /manualDepositRequests/{requestId} {
+      allow create: if isSignedIn() && isRequestOwner();
+      allow read, update, delete: if isAdmin();
     }
     
-    match /depositRequests {
-      allow list: if isSignedIn();
-    }
-
     /**
      * @description Manages transfer requests between users. Only admins can list/read them.
      */
@@ -262,3 +258,4 @@ service cloud.firestore {
     }
   }
 }
+    

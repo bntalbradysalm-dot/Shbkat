@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 
 const ProcessReceiptInputSchema = z.object({
@@ -135,6 +135,7 @@ const processReceiptFlow = ai.defineFlow(
     // c. Create a transaction record for the user
     const userTransactionRef = doc(collection(firestore, `users/${input.userId}/transactions`));
     const transactionData = {
+        id: userTransactionRef.id,
         userId: input.userId,
         transactionDate: now,
         amount: amount,
@@ -144,17 +145,26 @@ const processReceiptFlow = ai.defineFlow(
     batch.set(userTransactionRef, transactionData);
 
     // Commit the batch and handle errors without try/catch
-    await batch.commit().catch((serverError) => {
+    await batch.commit().catch(async (serverError) => {
         // Create and emit a contextual error for debugging security rules.
         const permissionError = new FirestorePermissionError({
             path: '/', // The batch can affect multiple paths. Use a generic path or the primary one.
             operation: 'write', 
             requestResourceData: {
-                deposit: depositRequestData,
-                transaction: transactionData,
-                userUpdate: { balance: `increment(${amount})` }
+                depositRequest: {
+                  path: depositRequestRef.path,
+                  data: depositRequestData
+                },
+                userBalanceUpdate: {
+                  path: userDocRef.path,
+                  data: { balance: `increment(${amount})` }
+                },
+                userTransaction: {
+                  path: userTransactionRef.path,
+                  data: transactionData
+                }
             },
-        });
+        } as SecurityRuleContext); // Casting to SecurityRuleContext to satisfy type
         errorEmitter.emit('permission-error', permissionError);
     });
         

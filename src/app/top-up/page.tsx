@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { collection, doc, writeBatch, increment, getDoc, setDoc } from 'firebase
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, Image as ImageIcon, Loader2, CheckCircle, User, Calendar, Wallet } from 'lucide-react';
+import { Copy, Send, Upload, Image as ImageIcon, Loader2, CheckCircle, User, Calendar, Wallet, Building, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -44,7 +45,7 @@ type UserProfile = {
     balance?: number;
 };
 
-type ExtractedReceiptData = Omit<ReceiptOutput, 'isReceipt' | 'isNameMatch'>;
+type ExtractedReceiptData = Omit<ReceiptOutput, 'isReceipt'>;
 
 
 const getLogoSrc = (url?: string) => {
@@ -134,9 +135,10 @@ export default function TopUpPage() {
                 userName: userProfile.displayName || '',
                 userPhoneNumber: userProfile.phoneNumber || '',
                 expectedRecipientName: selectedMethod.accountHolderName,
+                expectedAccountNumber: selectedMethod.accountNumber,
             });
 
-            if (!aiResult.transactionReference || aiResult.amount <= 0) {
+            if (!aiResult.isReceipt || !aiResult.transactionReference || aiResult.amount <= 0) {
                 throw new Error("فشل تحليل الإيصال. تأكد من وضوح الصورة وأنها تحتوي على رقم عملية ومبلغ صحيحين.");
             }
             
@@ -161,6 +163,13 @@ export default function TopUpPage() {
         setIsProcessing(true);
 
         try {
+             if (!extractedData.isNameMatch) {
+                throw new Error(`اسم المستلم في الإيصال (${extractedData.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
+            }
+            if (!extractedData.isAccountNumberMatch) {
+                throw new Error(`رقم الحساب في الإيصال (${extractedData.accountNumber}) لا يتطابق مع المطلوب.`);
+            }
+
             const numericAmount = extractedData.amount;
             const transactionRefId = extractedData.transactionReference;
 
@@ -406,16 +415,26 @@ export default function TopUpPage() {
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground flex items-center gap-2"><User className="w-4 h-4" /> اسم المستلم:</span>
-                                <span className="font-semibold">{extractedData.recipientName}</span>
+                                <span className={cn("font-semibold flex items-center gap-1.5", extractedData.isNameMatch ? 'text-green-600' : 'text-destructive')}>
+                                   {extractedData.isNameMatch ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                                   {extractedData.recipientName}
+                                </span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><Building className="w-4 h-4" /> رقم الحساب:</span>
+                                 <span className={cn("font-semibold flex items-center gap-1.5", extractedData.isAccountNumberMatch ? 'text-green-600' : 'text-destructive')}>
+                                   {extractedData.isAccountNumberMatch ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                                   {extractedData.accountNumber}
+                                </span>
                             </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> تاريخ العملية:</span>
-                                <span className="font-semibold">{format(parseISO(extractedData.transactionDate), 'd/M/yyyy', { locale: ar })}</span>
+                                <span className="font-semibold">{extractedData.transactionDate ? format(parseISO(extractedData.transactionDate), 'd/M/yyyy', { locale: ar }) : 'غير متوفر'}</span>
                             </div>
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing}>
+                            <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing || !extractedData.isNameMatch || !extractedData.isAccountNumberMatch}>
                                 {isProcessing ? "جاري التأكيد..." : "صحيح، قم بالإيداع"}
                             </AlertDialogAction>
                         </AlertDialogFooter>

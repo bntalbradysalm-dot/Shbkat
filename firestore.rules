@@ -192,8 +192,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow any signed-in process (like server functions) to update user data.
-      allow update: if isSignedIn();
+      // Allow user or admin to update the document.
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
       /**

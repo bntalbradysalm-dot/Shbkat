@@ -145,11 +145,6 @@ export default function TopUpPage() {
                 throw new Error(`اسم المستلم في الإيصال (${aiResult.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
             
-            const extractedAmount = aiResult.amount;
-            if (extractedAmount !== numericAmount) {
-                throw new Error(`المبلغ المدخل (${numericAmount} ريال) لا يتطابق مع المبلغ في الإيصال (${extractedAmount} ريال).`);
-            }
-
             // Check for duplicate receipt
             const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
             const receiptSnap = await getDoc(receiptRef);

@@ -3,8 +3,8 @@
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, increment, getDoc, setDoc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -163,7 +163,7 @@ export default function TopUpPage() {
         setIsProcessing(true);
 
         try {
-             if (!extractedData.isNameMatch) {
+            if (!extractedData.isNameMatch) {
                 throw new Error(`اسم المستلم في الإيصال (${extractedData.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
             if (!extractedData.isAccountNumberMatch) {
@@ -184,8 +184,9 @@ export default function TopUpPage() {
             
             batch.update(userDocRef, { balance: increment(numericAmount) });
 
-            const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-            batch.set(transactionRef, {
+            const transactionCollectionRef = collection(firestore, 'users', user.uid, 'transactions');
+            const transactionDocRef = doc(transactionCollectionRef);
+            batch.set(transactionDocRef, {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
                 amount: numericAmount,

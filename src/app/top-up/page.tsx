@@ -3,7 +3,7 @@
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment, getDoc, setDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -156,12 +156,21 @@ export default function TopUpPage() {
     };
 
     const handleConfirmDeposit = async () => {
-        if (!user || !userProfile || !selectedMethod || !userDocRef || !extractedData) return;
+        if (!user || !userProfile || !selectedMethod || !userDocRef || !extractedData || !firestore) return;
         
         setIsProcessing(true);
-        const numericAmount = extractedData.amount;
 
         try {
+            const numericAmount = extractedData.amount;
+            const transactionRefId = extractedData.transactionReference;
+
+            // Check for duplicate receipt
+            const receiptRef = doc(firestore, 'processedReceipts', transactionRefId);
+            const receiptSnap = await getDoc(receiptRef);
+            if (receiptSnap.exists()) {
+                throw new Error("هذا الإيصال قد تم استخدامه من قبل.");
+            }
+            
             const batch = writeBatch(firestore);
             
             batch.update(userDocRef, { balance: increment(numericAmount) });
@@ -175,6 +184,13 @@ export default function TopUpPage() {
                 notes: `إيداع إلى ${selectedMethod.name}. المستلم المؤكد: ${extractedData.recipientName}.`,
             });
             
+             // Mark receipt as processed
+            batch.set(receiptRef, {
+                userId: user.uid,
+                processedAt: new Date().toISOString(),
+                amount: numericAmount,
+            });
+            
             await batch.commit();
             
             const newBalance = (userProfile.balance || 0) + numericAmount;
@@ -184,10 +200,10 @@ export default function TopUpPage() {
         } catch (error: any) {
              if (error.code?.startsWith('permission-denied')) {
                 const permissionError = new FirestorePermissionError({
-                  path: userDocRef.path,
+                  path: userDocRef.path, // Use a representative path
                   operation: 'write',
                   requestResourceData: { 
-                      userBalanceUpdate: `increment(${numericAmount})`,
+                      userBalanceUpdate: `increment(${extractedData.amount})`,
                       processedReceipt: extractedData.transactionReference,
                    },
                 });

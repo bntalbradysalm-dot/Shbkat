@@ -26,6 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 type PaymentMethod = {
   id: string;
@@ -123,9 +126,10 @@ export default function TopUpPage() {
 
         setIsProcessing(true);
 
+        let aiResult: Awaited<ReturnType<typeof processReceipt>>;
         try {
             const dataUri = await fileToDataUri(receiptImage);
-            const aiResult = await processReceipt({
+            aiResult = await processReceipt({
                 receiptImage: dataUri,
                 userId: user.uid,
                 userName: userProfile.displayName || '',
@@ -138,7 +142,7 @@ export default function TopUpPage() {
             }
 
             if (!aiResult.isNameMatch) {
-                throw new Error(`اسم المستلم في الإيصال لا يتطابق مع "${selectedMethod.accountHolderName}".`);
+                throw new Error(`اسم المستلم في الإيصال (${aiResult.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
 
             // Check for duplicate receipt
@@ -179,12 +183,24 @@ export default function TopUpPage() {
             setShowSuccess(true);
 
         } catch (error: any) {
-            console.error('Error processing deposit:', error);
-            toast({
-                variant: 'destructive',
-                title: 'فشل معالجة الإيداع',
-                description: error.message || 'حدث خطأ أثناء فحص الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.',
-            });
+            if (error.code?.startsWith('permission-denied')) {
+                const permissionError = new FirestorePermissionError({
+                  path: userDocRef.path, // Use a representative path
+                  operation: 'write',
+                  requestResourceData: { 
+                      userBalanceUpdate: `increment(${numericAmount})`,
+                      processedReceipt: aiResult?.transactionReference || 'unknown',
+                   },
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                console.error('Error processing deposit:', error);
+                toast({
+                    variant: 'destructive',
+                    title: 'فشل معالجة الإيداع',
+                    description: error.message || 'حدث خطأ أثناء فحص الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.',
+                });
+            }
         } finally {
             setIsProcessing(false);
         }

@@ -144,6 +144,11 @@ export default function TopUpPage() {
             if (!aiResult.isNameMatch) {
                 throw new Error(`اسم المستلم في الإيصال (${aiResult.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
+            
+            const extractedAmount = aiResult.amount;
+            if (extractedAmount !== numericAmount) {
+                throw new Error(`المبلغ المدخل (${numericAmount} ريال) لا يتطابق مع المبلغ في الإيصال (${extractedAmount} ريال).`);
+            }
 
             // Check for duplicate receipt
             const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
@@ -151,8 +156,6 @@ export default function TopUpPage() {
             if (receiptSnap.exists()) {
                 throw new Error("هذا الإيصال قد تم استخدامه من قبل.");
             }
-            
-            const extractedAmount = aiResult.amount;
 
             const batch = writeBatch(firestore);
 

@@ -193,7 +193,6 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId);
       // Allow user to update their own document, or an admin to update any user document.
-      // This also allows a user to update their own balance.
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 

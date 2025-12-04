@@ -116,7 +116,7 @@ export default function TopUpPage() {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار صورة إيصال التحويل.' });
             return;
         }
-        if (!user || !userProfile || !selectedMethod) {
+        if (!user || !userProfile || !selectedMethod || !userDocRef) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'معلومات المستخدم أو طريقة الدفع غير متوفرة.' });
             return;
         }
@@ -133,9 +133,6 @@ export default function TopUpPage() {
                 expectedRecipientName: selectedMethod.accountHolderName,
             });
 
-            if (!aiResult.isReceipt) {
-                throw new Error("الصورة لا تبدو كإيصال صحيح.");
-            }
              if (!aiResult.transactionReference) {
                 throw new Error("لم يتم العثور على رقم عملية في الإيصال. تأكد من وضوح الصورة.");
             }

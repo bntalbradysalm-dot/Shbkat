@@ -2,20 +2,19 @@
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, Image as ImageIcon, Loader2, CheckCircle } from 'lucide-react';
+import { Copy, Send, Upload, Image as ImageIcon, Loader2, CheckCircle, User, Calendar, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { processReceipt } from '@/ai/flows/process-receipt-flow';
+import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
+import { format, parseISO } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 type PaymentMethod = {
   id: string;
@@ -43,6 +43,9 @@ type UserProfile = {
     phoneNumber?: string;
     balance?: number;
 };
+
+type ExtractedReceiptData = Omit<ReceiptOutput, 'isReceipt' | 'isNameMatch'>;
+
 
 const getLogoSrc = (url?: string) => {
     if (url && (url.startsWith('http') || url.startsWith('/'))) {
@@ -66,12 +69,14 @@ export default function TopUpPage() {
     const { toast } = useToast();
     const { user } = useUser();
     
-    const [amount, setAmount] = useState('');
     const [receiptImage, setReceiptImage] = useState<File | null>(null);
     const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [finalBalance, setFinalBalance] = useState(0);
+    const [extractedData, setExtractedData] = useState<ExtractedReceiptData | null>(null);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+
 
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -109,12 +114,7 @@ export default function TopUpPage() {
         }
     };
     
-   const handleDeposit = async () => {
-        const numericAmount = parseFloat(amount);
-        if (isNaN(numericAmount) || numericAmount <= 0) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح للإيداع.' });
-            return;
-        }
+   const handleProcessReceipt = async () => {
         if (!receiptImage) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار صورة إيصال التحويل.' });
             return;
@@ -126,10 +126,9 @@ export default function TopUpPage() {
 
         setIsProcessing(true);
 
-        let aiResult: Awaited<ReturnType<typeof processReceipt>>;
         try {
             const dataUri = await fileToDataUri(receiptImage);
-            aiResult = await processReceipt({
+            const aiResult = await processReceipt({
                 receiptImage: dataUri,
                 userId: user.uid,
                 userName: userProfile.displayName || '',
@@ -137,23 +136,43 @@ export default function TopUpPage() {
                 expectedRecipientName: selectedMethod.accountHolderName,
             });
 
-            if (!aiResult.transactionReference) {
-                throw new Error("لم يتم العثور على رقم عملية في الإيصال. تأكد من وضوح الصورة.");
+            if (!aiResult.transactionReference || aiResult.amount <= 0) {
+                throw new Error("فشل تحليل الإيصال. تأكد من وضوح الصورة وأنها تحتوي على رقم عملية ومبلغ صحيحين.");
             }
             
-            const batch = writeBatch(firestore);
+            setExtractedData(aiResult);
+            setShowConfirmation(true);
 
-            // 1. Update user balance
+        } catch (error: any) {
+            console.error('Error processing receipt:', error);
+            toast({
+                variant: 'destructive',
+                title: 'فشل فحص الإيصال',
+                description: error.message || 'حدث خطأ أثناء فحص الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const handleConfirmDeposit = async () => {
+        if (!user || !userProfile || !selectedMethod || !userDocRef || !extractedData) return;
+        
+        setIsProcessing(true);
+        const numericAmount = extractedData.amount;
+
+        try {
+            const batch = writeBatch(firestore);
+            
             batch.update(userDocRef, { balance: increment(numericAmount) });
 
-            // 2. Add transaction record
             const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
             batch.set(transactionRef, {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
                 amount: numericAmount,
                 transactionType: 'تغذية رصيد (آلي)',
-                notes: `إيداع إلى ${selectedMethod.name}. المستلم المؤكد: ${aiResult.recipientName}.`,
+                notes: `إيداع إلى ${selectedMethod.name}. المستلم المؤكد: ${extractedData.recipientName}.`,
             });
             
             await batch.commit();
@@ -163,13 +182,13 @@ export default function TopUpPage() {
             setShowSuccess(true);
 
         } catch (error: any) {
-            if (error.code?.startsWith('permission-denied')) {
+             if (error.code?.startsWith('permission-denied')) {
                 const permissionError = new FirestorePermissionError({
-                  path: userDocRef.path, // Use a representative path
+                  path: userDocRef.path,
                   operation: 'write',
                   requestResourceData: { 
                       userBalanceUpdate: `increment(${numericAmount})`,
-                      processedReceipt: aiResult?.transactionReference || 'unknown',
+                      processedReceipt: extractedData.transactionReference,
                    },
                 });
                 errorEmitter.emit('permission-error', permissionError);
@@ -177,14 +196,15 @@ export default function TopUpPage() {
                 console.error('Error processing deposit:', error);
                 toast({
                     variant: 'destructive',
-                    title: 'فشل معالجة الإيداع',
-                    description: error.message || 'حدث خطأ أثناء فحص الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.',
+                    title: 'فشل إتمام الإيداع',
+                    description: error.message || 'حدث خطأ. الرجاء المحاولة مرة أخرى.',
                 });
             }
         } finally {
             setIsProcessing(false);
+            setShowConfirmation(false);
         }
-    };
+    }
     
     if (showSuccess) {
         return (
@@ -201,7 +221,7 @@ export default function TopUpPage() {
                             <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">المبلغ المضاف:</span>
-                                    <span className="font-bold text-green-600">{Number(amount).toLocaleString('en-US')} ريال</span>
+                                    <span className="font-bold text-green-600">{extractedData?.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">الرصيد الجديد:</span>
@@ -316,21 +336,9 @@ export default function TopUpPage() {
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
                            <h2 className="text-lg font-bold">3. تأكيد الإيداع</h2>
-                           <p className="text-sm text-muted-foreground mt-1">أدخل المبلغ وأرفق الإيصال ليتم فحصها آلياً.</p>
+                           <p className="text-sm text-muted-foreground mt-1">أرفق الإيصال ليتم فحصه آلياً.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
-                                    <div>
-                                        <label htmlFor="deposit-amount" className="text-sm font-medium">المبلغ المحوّل</label>
-                                        <Input 
-                                            id="deposit-amount"
-                                            type="number"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                            placeholder="0.00"
-                                            className="mt-1"
-                                            disabled={isProcessing}
-                                        />
-                                    </div>
                                     <div>
                                         <label htmlFor="receipt-upload" className="text-sm font-medium">إيصال التحويل</label>
                                         <label htmlFor="receipt-upload" className="mt-1 flex items-center justify-center w-full p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
@@ -346,7 +354,7 @@ export default function TopUpPage() {
                                         <Input id="receipt-upload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} disabled={isProcessing} />
                                     </div>
                                     
-                                    <Button className="w-full h-12 text-base" onClick={handleDeposit} disabled={!amount || !receiptImage || isProcessing}>
+                                    <Button className="w-full h-12 text-base" onClick={handleProcessReceipt} disabled={!receiptImage || isProcessing}>
                                         {isProcessing ? (
                                             <>
                                                 <Loader2 className="ml-2 h-4 w-4 animate-spin" />
@@ -366,6 +374,38 @@ export default function TopUpPage() {
                 </div>
             </div>
             <Toaster />
+            {extractedData && (
+                 <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>تأكيد معلومات الإيصال</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                الرجاء مراجعة البيانات المستخرجة من الإيصال. هل هي صحيحة؟
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="space-y-3 py-2 text-sm">
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-4 h-4" /> المبلغ:</span>
+                                <span className="font-bold text-lg text-primary">{extractedData.amount.toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><User className="w-4 h-4" /> اسم المستلم:</span>
+                                <span className="font-semibold">{extractedData.recipientName}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" /> تاريخ العملية:</span>
+                                <span className="font-semibold">{format(parseISO(extractedData.transactionDate), 'd/M/yyyy', { locale: ar })}</span>
+                            </div>
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleConfirmDeposit} disabled={isProcessing}>
+                                {isProcessing ? "جاري التأكيد..." : "صحيح، قم بالإيداع"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </>
     );
 }

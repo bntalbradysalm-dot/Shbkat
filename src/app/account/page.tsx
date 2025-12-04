@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -56,7 +57,6 @@ import { Label } from '@/components/ui/label';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
-  { title: 'طلبات الإيداع اليدوي', icon: Upload, href: '/manual-deposits' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },

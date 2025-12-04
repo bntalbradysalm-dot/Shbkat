@@ -137,9 +137,8 @@ export default function TopUpPage() {
                 expectedRecipientName: selectedMethod.accountHolderName,
             });
 
-            const extractedAmount = aiResult.amount;
-            if (extractedAmount !== numericAmount) {
-                throw new Error(`المبلغ المدخل (${numericAmount} ريال) لا يتطابق مع المبلغ في الإيصال (${extractedAmount} ريال).`);
+            if (!aiResult.transactionReference) {
+                throw new Error("لم يتم العثور على رقم عملية في الإيصال. تأكد من وضوح الصورة.");
             }
             
             const batch = writeBatch(firestore);

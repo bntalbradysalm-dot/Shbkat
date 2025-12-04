@@ -137,10 +137,6 @@ export default function TopUpPage() {
                 expectedRecipientName: selectedMethod.accountHolderName,
             });
 
-            if (!aiResult.isNameMatch) {
-                throw new Error(`اسم المستلم في الإيصال (${aiResult.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
-            }
-
             const extractedAmount = aiResult.amount;
             if (extractedAmount !== numericAmount) {
                 throw new Error(`المبلغ المدخل (${numericAmount} ريال) لا يتطابق مع المبلغ في الإيصال (${extractedAmount} ريال).`);
@@ -161,16 +157,6 @@ export default function TopUpPage() {
                 notes: `إيداع إلى ${selectedMethod.name}. المستلم المؤكد: ${aiResult.recipientName}.`,
             });
             
-            // 3. Mark receipt as processed to prevent duplicates
-            if (aiResult.transactionReference) {
-                const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
-                batch.set(receiptRef, {
-                    userId: user.uid,
-                    processedAt: new Date().toISOString(),
-                    amount: numericAmount,
-                });
-            }
-
             await batch.commit();
             
             const newBalance = (userProfile.balance || 0) + numericAmount;

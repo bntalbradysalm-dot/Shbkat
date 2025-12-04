@@ -450,6 +450,32 @@
             "requestTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was made." }
         },
         "required": ["ownerId", "ownerName", "amount", "paymentMethodName", "recipientName", "accountNumber", "status", "requestTimestamp"]
+    },
+     "ProcessedReceipt": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Processed Receipt",
+      "type": "object",
+      "description": "Stores a record of a processed receipt to prevent duplicates.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The transaction reference number from the receipt."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who submitted the receipt."
+        },
+        "processedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the receipt was processed."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount that was deposited."
+        }
+      },
+      "required": ["userId", "processedAt", "amount"]
     }
   },
   "auth": {
@@ -692,6 +718,22 @@
           "description": "A record of every card sold. Writable by users upon purchase, readable by admins for reporting and payout.",
           "params": [
             { "name": "cardId", "description": "The unique ID of the sold card record." }
+          ]
+        }
+      },
+       {
+        "path": "/processedReceipts/{receiptId}",
+        "definition": {
+          "entityName": "ProcessedReceipt",
+          "schema": {
+            "$ref": "#/backend/entities/ProcessedReceipt"
+          },
+          "description": "Stores processed receipt IDs to prevent duplicates. Writable by the system, readable by admins.",
+          "params": [
+            {
+              "name": "receiptId",
+              "description": "The unique identifier from the receipt."
+            }
           ]
         }
       }

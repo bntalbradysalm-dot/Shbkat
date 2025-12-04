@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, writeBatch, increment } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -71,7 +70,6 @@ export default function TopUpPage() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [finalBalance, setFinalBalance] = useState(0);
 
-    
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
       [firestore, user]
@@ -87,7 +85,7 @@ export default function TopUpPage() {
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
     
     useEffect(() => {
-        if (paymentMethods && paymentMethods.length > 0 && !selectedMethod) {
+        if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
             setSelectedMethod(paymentMethods[0]);
         }
     }, [paymentMethods, selectedMethod]);
@@ -138,16 +136,23 @@ export default function TopUpPage() {
             if (!aiResult.isReceipt) {
                 throw new Error("الصورة لا تبدو كإيصال صحيح.");
             }
+             if (!aiResult.transactionReference) {
+                throw new Error("لم يتم العثور على رقم عملية في الإيصال. تأكد من وضوح الصورة.");
+            }
 
             if (!aiResult.isNameMatch) {
                 throw new Error(`اسم المستلم في الإيصال لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
+
+            // Check for duplicate receipt
+            const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
+            const receiptSnap = await getDoc(receiptRef);
+            if (receiptSnap.exists()) {
+                throw new Error("هذا الإيصال قد تم استخدامه من قبل.");
+            }
             
             const extractedAmount = aiResult.amount;
 
-            // Optional: You can choose to trust the user's input or the AI's extracted amount.
-            // Here, we'll trust the user's input for now. A stricter implementation could compare them.
-            
             const batch = writeBatch(firestore);
 
             // 1. Update user balance
@@ -163,6 +168,13 @@ export default function TopUpPage() {
                 notes: `إيداع إلى ${selectedMethod.name}. المستلم المؤكد: ${aiResult.recipientName}.`,
             });
             
+            // 3. Mark receipt as processed to prevent duplicates
+            batch.set(receiptRef, {
+                userId: user.uid,
+                processedAt: new Date().toISOString(),
+                amount: numericAmount,
+            });
+
             await batch.commit();
             
             const newBalance = (userProfile.balance || 0) + numericAmount;

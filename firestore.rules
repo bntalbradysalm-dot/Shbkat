@@ -174,6 +174,16 @@ service cloud.firestore {
         allow list: if isAdmin();
     }
 
+    /**
+     * @description Stores processed receipt IDs to prevent duplicates. Only authenticated
+     * users (representing the system) can write. Admins can read.
+     */
+    match /processedReceipts/{receiptId} {
+      allow get: if isAdmin();
+      allow create: if isSignedIn();
+      allow list, update, delete: if false;
+    }
+
 
     /**
      * @description Manages user profile documents.

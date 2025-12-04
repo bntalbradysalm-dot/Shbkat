@@ -137,21 +137,15 @@ export default function TopUpPage() {
                 expectedRecipientName: selectedMethod.accountHolderName,
             });
 
-             if (!aiResult.transactionReference) {
-                throw new Error("لم يتم العثور على رقم عملية في الإيصال. تأكد من وضوح الصورة.");
-            }
-
             if (!aiResult.isNameMatch) {
                 throw new Error(`اسم المستلم في الإيصال (${aiResult.recipientName}) لا يتطابق مع "${selectedMethod.accountHolderName}".`);
             }
-            
-            // Check for duplicate receipt
-            const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
-            const receiptSnap = await getDoc(receiptRef);
-            if (receiptSnap.exists()) {
-                throw new Error("هذا الإيصال قد تم استخدامه من قبل.");
-            }
 
+            const extractedAmount = aiResult.amount;
+            if (extractedAmount !== numericAmount) {
+                throw new Error(`المبلغ المدخل (${numericAmount} ريال) لا يتطابق مع المبلغ في الإيصال (${extractedAmount} ريال).`);
+            }
+            
             const batch = writeBatch(firestore);
 
             // 1. Update user balance
@@ -168,11 +162,14 @@ export default function TopUpPage() {
             });
             
             // 3. Mark receipt as processed to prevent duplicates
-            batch.set(receiptRef, {
-                userId: user.uid,
-                processedAt: new Date().toISOString(),
-                amount: numericAmount,
-            });
+            if (aiResult.transactionReference) {
+                const receiptRef = doc(firestore, "processedReceipts", aiResult.transactionReference);
+                batch.set(receiptRef, {
+                    userId: user.uid,
+                    processedAt: new Date().toISOString(),
+                    amount: numericAmount,
+                });
+            }
 
             await batch.commit();
             

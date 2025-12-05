@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@genkit-ai/google-genai'],
   },
-  env: {
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  },
   devIndicators: false,
   typescript: {
     ignoreBuildErrors: true,

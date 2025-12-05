@@ -45,6 +45,9 @@ const prompt = ai.definePrompt({
   name: 'processReceiptPrompt',
   input: {schema: ReceiptInputSchema},
   output: {schema: ReceiptOutputSchema},
+  config: {
+    apiKey: process.env.GEMINI_API_KEY,
+  },
   prompt: `You are an expert financial assistant specialized in processing bank transfer receipts from Yemen.
 Your task is to analyze the provided receipt image and extract key information.
 

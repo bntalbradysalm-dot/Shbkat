@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { collection, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
   Dialog,
@@ -148,66 +147,67 @@ export default function UsersPage() {
   const handleManualDeposit = async () => {
     if (!selectedUser || !topUpAmount || !firestore) {
       toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال مبلغ صالح.",
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'الرجاء إدخال مبلغ صالح.',
       });
       return;
     }
     const amount = parseFloat(topUpAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال مبلغ صالح.",
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'الرجاء إدخال مبلغ صالح.',
       });
       return;
     }
-
+  
     const userDocRef = doc(firestore, 'users', selectedUser.id);
-    const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
     const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
-    const newBalance = (selectedUser.balance || 0) + amount;
-
+    const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
+  
     try {
+      const batch = writeBatch(firestore);
+  
       // 1. Update user balance
-      await updateDoc(userDocRef, {
-        balance: increment(amount)
-      });
-      
+      batch.update(userDocRef, { balance: increment(amount) });
+  
       // 2. Add transaction record
-      await addDoc(userTransactionsRef, {
-          id: doc(userTransactionsRef).id,
-          userId: selectedUser.id,
-          transactionDate: new Date().toISOString(),
-          amount: amount,
-          transactionType: 'تغذية رصيد (يدوي)',
-          notes: `إيداع يدوي من قبل الإدارة`,
+      const transactionDoc = doc(userTransactionsRef);
+      batch.set(transactionDoc, {
+        userId: selectedUser.id,
+        transactionDate: new Date().toISOString(),
+        amount: amount,
+        transactionType: 'إيداع مع إبلاغ',
+        notes: 'إيداع من الإدارة',
       });
-
+  
       // 3. Send in-app notification
-      await addDoc(userNotificationsRef, {
-        title: 'تمت تغذية حسابك',
-        body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك من قبل الإدارة.`,
-        timestamp: new Date().toISOString()
+      const notificationDoc = doc(userNotificationsRef);
+      batch.set(notificationDoc, {
+        title: 'تمت إضافة رصيد إلى حسابك',
+        body: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حسابك من قبل الإدارة.`,
+        timestamp: new Date().toISOString(),
       });
-      
-
+  
+      await batch.commit();
+  
       toast({
-        title: "نجاح",
-        description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حساب ${selectedUser.displayName}.`,
+        title: 'نجاح',
+        description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حساب ${selectedUser.displayName} وإبلاغه.`,
       });
-
+  
       setIsManualDepositOpen(false);
       setTopUpAmount('');
       setSelectedUser(null);
-
+  
     } catch (e) {
-      console.error("Error during manual deposit:", e);
+      console.error('Error during manual deposit:', e);
       toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "فشل تحديث الرصيد أو تسجيل العملية. الرجاء المحاولة مرة أخرى.",
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'فشل تحديث الرصيد أو تسجيل العملية. الرجاء المحاولة مرة أخرى.',
       });
     }
   };
@@ -359,14 +359,14 @@ export default function UsersPage() {
                             setIsManualDepositOpen(true);
                         }}>
                             <Wallet className="ml-1 h-4 w-4" />
-                            إيداع يدوي
+                            إيداع مع إبلاغ
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
                           <DialogHeader>
-                              <DialogTitle>إيداع يدوي</DialogTitle>
+                              <DialogTitle>إيداع مع إبلاغ</DialogTitle>
                               <DialogDescription>
-                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName}.
+                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه.
                               </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">

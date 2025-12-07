@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -148,69 +147,78 @@ export default function UsersPage() {
   
   const handleManualDeposit = async () => {
     if (!selectedUser || !topUpAmount || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'الرجاء إدخال مبلغ صالح.',
-      });
-      return;
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'الرجاء إدخال مبلغ صالح.',
+        });
+        return;
     }
     const amount = parseFloat(topUpAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'الرجاء إدخال مبلغ صالح.',
-      });
-      return;
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'الرجاء إدخال مبلغ صالح.',
+        });
+        return;
     }
-  
+
     const userDocRef = doc(firestore, 'users', selectedUser.id);
     const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
     const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
-  
+
     try {
-      const batch = writeBatch(firestore);
-  
-      // 1. Update user balance
-      batch.update(userDocRef, { balance: increment(amount) });
-  
-      // 2. Add transaction record
-      const transactionDoc = doc(userTransactionsRef);
-      batch.set(transactionDoc, {
-        userId: selectedUser.id,
-        transactionDate: new Date().toISOString(),
-        amount: amount,
-        transactionType: 'إيداع مع إبلاغ',
-        notes: 'إيداع من الإدارة',
-      });
-  
-      // 3. Send in-app notification
-      const notificationDoc = doc(userNotificationsRef);
-      batch.set(notificationDoc, {
-        title: 'تمت إضافة رصيد إلى حسابك',
-        body: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حسابك من قبل الإدارة.`,
-        timestamp: new Date().toISOString(),
-      });
-  
-      await batch.commit();
-  
-      toast({
-        title: 'نجاح',
-        description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حساب ${selectedUser.displayName} وإبلاغه.`,
-      });
-  
-      setIsManualDepositOpen(false);
-      setTopUpAmount('');
-      setSelectedUser(null);
-  
+        const batch = writeBatch(firestore);
+
+        // 1. Update user balance
+        batch.update(userDocRef, { balance: increment(amount) });
+
+        // 2. Add transaction record
+        const transactionDoc = doc(userTransactionsRef);
+        batch.set(transactionDoc, {
+            userId: selectedUser.id,
+            transactionDate: new Date().toISOString(),
+            amount: amount,
+            transactionType: 'إيداع يدوي',
+            notes: 'إيداع من الإدارة',
+        });
+        
+        await batch.commit();
+
+        const newBalance = (selectedUser.balance ?? 0) + amount;
+        const depositDate = format(new Date(), 'd/M/yyyy h:mm a', { locale: ar });
+
+        const message = `📩 *عملية إيداع من تطبيق شبكات*
+        
+تم بنجاح إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال يمني في حسابك (${selectedUser.phoneNumber}) بتاريخ (${depositDate})
+يُرجى التحقق من الرصيد عبر تطبيق شبكات للتأكد من تفاصيل العملية 🔒
+
+هذه الرسالة صادرة تلقائيًا من تطبيق شبكات
+— دقة. أمان. ثقة
+
+*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال يمني*`;
+
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=967${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+
+        toast({
+            title: 'نجاح',
+            description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال في حساب ${selectedUser.displayName}.`,
+        });
+
+        setIsManualDepositOpen(false);
+        setTopUpAmount('');
+        setSelectedUser(null);
+
     } catch (e) {
-      console.error('Error during manual deposit:', e);
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تحديث الرصيد أو تسجيل العملية. الرجاء المحاولة مرة أخرى.',
-      });
+        console.error('Error during manual deposit:', e);
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'فشل تحديث الرصيد أو تسجيل العملية. الرجاء المحاولة مرة أخرى.',
+        });
     }
   };
 
@@ -368,7 +376,7 @@ export default function UsersPage() {
                           <DialogHeader>
                               <DialogTitle>إيداع مع إبلاغ</DialogTitle>
                               <DialogDescription>
-                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه.
+                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
                               </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">

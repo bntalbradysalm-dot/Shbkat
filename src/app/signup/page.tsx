@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -125,6 +126,7 @@ export default function SignupPage() {
           registrationDate: new Date().toISOString(),
           balance: 0,
           accountType: accountType,
+          photoURL: `https://i.postimg.cc/SNgTrrW2/default-avatar.jpg`
         });
         
         // 2. If network owner, create network document
@@ -315,3 +317,5 @@ export default function SignupPage() {
     </>
   );
 }
+
+    

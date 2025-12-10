@@ -54,6 +54,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -86,6 +87,7 @@ type UserProfile = {
   location?: string;
   phoneNumber?: string;
   balance?: number;
+  photoURL?: string;
 };
 
 type AppSettings = {
@@ -189,7 +191,12 @@ export default function AccountPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card className="overflow-hidden rounded-2xl shadow-lg bg-primary text-primary-foreground">
           <CardContent className="p-4 flex items-center gap-4">
-            <User className="h-10 w-10 shrink-0 text-primary-foreground/80" />
+             <Avatar className="h-14 w-14 border-2 border-primary-foreground/50">
+                <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName || 'User'} />
+                <AvatarFallback>
+                    <User className="h-8 w-8" />
+                </AvatarFallback>
+            </Avatar>
             <div className="flex-grow">
               <h2 className="text-sm font-bold">{userProfile?.displayName || 'مستخدم جديد'}</h2>
               <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
@@ -423,3 +430,5 @@ export default function AccountPage() {
     </>
   );
 }
+
+    

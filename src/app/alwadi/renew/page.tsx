@@ -152,8 +152,8 @@ function RenewPageComponent() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground">سيقوم المسؤول بمراجعة طلبك وتجديد اشتراكك قريبًا.</p>
+                    <h2 className="text-xl font-bold">تم إرسال طلب التجديد بنجاح</h2>
+                    <p className="text-sm text-muted-foreground">سيتم تجديد اشتراكك في أقرب وقت ممكن.</p>
                     
                     <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                        <div className="flex justify-between">

@@ -130,6 +130,10 @@ service cloud.firestore {
         allow create: if isSignedIn() && isRequestOwner();
         allow read, update, delete: if isAdmin();
     }
+    
+    match /yemen4gRequests {
+      allow list: if isAdmin();
+    }
 
     /**
      * @description Manages withdrawal requests from network owners.

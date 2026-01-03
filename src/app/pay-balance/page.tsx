@@ -39,6 +39,8 @@ const yemenForgeePackages = [
 
 type Package = typeof yemenForgeePackages[0];
 
+const COMMISSION_RATE = 0.10; // 10%
+
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -107,10 +109,12 @@ export default function PayBalancePage() {
     if (!selectedPackage || !user || !userProfile || !firestore || !userDocRef) return;
   
     setIsProcessing(true);
-    const numericPrice = selectedPackage.price;
+    
+    const commission = selectedPackage.price * COMMISSION_RATE;
+    const totalCost = selectedPackage.price + commission;
     const currentBalance = userProfile.balance ?? 0;
   
-    if (currentBalance < numericPrice) {
+    if (currentBalance < totalCost) {
       toast({
         variant: 'destructive',
         title: 'رصيد غير كاف',
@@ -125,14 +129,14 @@ export default function PayBalancePage() {
       const batch = writeBatch(firestore);
   
       // 1. Deduct balance from user
-      batch.update(userDocRef, { balance: increment(-numericPrice) });
+      batch.update(userDocRef, { balance: increment(-totalCost) });
   
       // 2. Create transaction record for the purchase
       const transactionCollectionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(transactionCollectionRef, {
         userId: user.uid,
         transactionDate: new Date().toISOString(),
-        amount: numericPrice,
+        amount: totalCost,
         transactionType: `سداد رصيد ${selectedPackage.name}`,
         notes: `إلى رقم: ${phoneNumber}`,
         recipientPhoneNumber: phoneNumber,
@@ -155,6 +159,8 @@ export default function PayBalancePage() {
 
 
   if (showSuccess) {
+    const commission = (selectedPackage?.price || 0) * COMMISSION_RATE;
+    const totalCost = (selectedPackage?.price || 0) + commission;
     return (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
@@ -170,8 +176,8 @@ export default function PayBalancePage() {
                                 <span className="font-semibold">{selectedPackage?.name}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">المبلغ:</span>
-                                <span className="font-semibold text-destructive">{selectedPackage?.price.toLocaleString('en-US')} ريال</span>
+                                <span className="text-muted-foreground">التكلفة الإجمالية:</span>
+                                <span className="font-semibold text-destructive">{totalCost.toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                         <div className="w-full grid grid-cols-2 gap-3 pt-4">
@@ -256,8 +262,26 @@ export default function PayBalancePage() {
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle className="text-center">تأكيد عملية السداد</AlertDialogTitle>
-                    <AlertDialogDescription className="text-center pt-2">
-                        هل أنت متأكد من رغبتك في سداد <span className="font-bold">{selectedPackage.name}</span> للرقم {phoneNumber}؟ سيتم خصم <span className="font-bold text-primary dark:text-primary-foreground">{selectedPackage.price.toLocaleString('en-US')} ريال</span> من رصيدك.
+                    <AlertDialogDescription asChild>
+                        <div className='space-y-3 text-center pt-2'>
+                             <p>
+                                هل أنت متأكد من رغبتك في سداد <span className="font-bold">{selectedPackage.name}</span> للرقم {phoneNumber}؟
+                            </p>
+                            <div className="text-sm bg-muted p-3 rounded-lg text-right space-y-2">
+                                <div className="flex justify-between">
+                                    <span className='text-muted-foreground'>المبلغ:</span>
+                                    <span className='font-semibold'>{selectedPackage.price.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className='text-muted-foreground'>العمولة (10%):</span>
+                                    <span className='font-semibold'>{(selectedPackage.price * COMMISSION_RATE).toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between border-t pt-2 mt-2">
+                                    <span className='text-muted-foreground'>التكلفة الإجمالية:</span>
+                                    <span className='font-bold text-primary dark:text-primary-foreground'>{(selectedPackage.price + selectedPackage.price * COMMISSION_RATE).toLocaleString('en-US')} ريال</span>
+                                </div>
+                            </div>
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

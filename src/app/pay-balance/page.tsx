@@ -87,7 +87,7 @@ export default function PayBalancePage() {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePhoneSubmit = () => {
-    if (phoneNumber.startsWith('10') && phoneNumber.length === 10) {
+    if (phoneNumber.startsWith('7') && phoneNumber.length === 9) {
       setShowPackages(true);
       toast({
         title: 'تم التحقق',
@@ -98,7 +98,7 @@ export default function PayBalancePage() {
       toast({
         variant: 'destructive',
         title: 'رقم غير صحيح',
-        description: 'يجب أن يبدأ الرقم بـ 10 وأن يتكون من 10 أرقام.',
+        description: 'يجب أن يبدأ الرقم بـ 7 وأن يتكون من 9 أرقام.',
       });
     }
   };
@@ -176,7 +176,12 @@ export default function PayBalancePage() {
                         </div>
                         <div className="w-full grid grid-cols-2 gap-3 pt-4">
                             <Button variant="outline" onClick={() => router.push('/')}>الرئيسية</Button>
-                            <Button onClick={() => setShowSuccess(false)} variant="default">سداد جديد</Button>
+                            <Button onClick={() => {
+                                setShowSuccess(false);
+                                setShowPackages(false);
+                                setPhoneNumber('');
+                                setSelectedPackage(null);
+                            }} variant="default">سداد جديد</Button>
                         </div>
                     </div>
                 </CardContent>
@@ -206,10 +211,10 @@ export default function PayBalancePage() {
                 <Input
                   id="phone-number"
                   type="tel"
-                  placeholder="10xxxxxxxx"
+                  placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  maxLength={10}
+                  maxLength={9}
                 />
               </div>
               <Button className="w-full" onClick={handlePhoneSubmit}>

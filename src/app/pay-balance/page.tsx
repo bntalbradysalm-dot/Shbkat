@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -10,8 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Wallet, Phone, Database, CheckCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { doc, writeBatch, increment } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ import { useRouter } from 'next/navigation';
 
 type UserProfile = {
   balance?: number;
+  displayName?: string;
+  phoneNumber?: string;
 };
 
 const yemenForgeePackages = [
@@ -106,7 +109,7 @@ export default function PayBalancePage() {
   };
   
   const handlePurchase = async () => {
-    if (!selectedPackage || !user || !userProfile || !firestore || !userDocRef) return;
+    if (!selectedPackage || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber) return;
   
     setIsProcessing(true);
     
@@ -131,15 +134,19 @@ export default function PayBalancePage() {
       // 1. Deduct balance from user
       batch.update(userDocRef, { balance: increment(-totalCost) });
   
-      // 2. Create transaction record for the purchase
-      const transactionCollectionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-      batch.set(transactionCollectionRef, {
+      // 2. Create a Yemen4G request document
+      const yemen4gRequestRef = doc(collection(firestore, 'yemen4gRequests'));
+      batch.set(yemen4gRequestRef, {
         userId: user.uid,
-        transactionDate: new Date().toISOString(),
-        amount: totalCost,
-        transactionType: `سداد رصيد ${selectedPackage.name}`,
-        notes: `إلى رقم: ${phoneNumber}`,
-        recipientPhoneNumber: phoneNumber,
+        userName: userProfile.displayName,
+        userPhoneNumber: userProfile.phoneNumber,
+        targetPhoneNumber: phoneNumber,
+        packageTitle: selectedPackage.name,
+        packagePrice: selectedPackage.price,
+        commission: commission,
+        totalCost: totalCost,
+        status: 'pending',
+        requestTimestamp: new Date().toISOString(),
       });
   
       await batch.commit();
@@ -148,7 +155,7 @@ export default function PayBalancePage() {
       console.error("Purchase failed:", error);
       toast({
         variant: 'destructive',
-        title: 'فشلت عملية السداد',
+        title: 'فشل إرسال الطلب',
         description: 'حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.',
       });
     } finally {
@@ -169,7 +176,8 @@ export default function PayBalancePage() {
                         <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
-                        <h2 className="text-xl font-bold">تم سداد الباقة بنجاح</h2>
+                        <h2 className="text-xl font-bold">تم إرسال طلب السداد</h2>
+                        <p className="text-sm text-muted-foreground">سيقوم المشرف بمعالجة طلبك في أقرب وقت.</p>
                         <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                            <div className="flex justify-between">
                                 <span className="text-muted-foreground">الباقة:</span>
@@ -287,7 +295,7 @@ export default function PayBalancePage() {
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     <AlertDialogAction onClick={handlePurchase} disabled={isProcessing}>
-                        {isProcessing ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري السداد...</> : 'تأكيد السداد'}
+                        {isProcessing ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الإرسال...</> : 'تأكيد وإرسال الطلب'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

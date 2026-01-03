@@ -279,6 +279,29 @@
         "subscriberName", "cardNumber", "status", "requestTimestamp"
       ]
     },
+    "Yemen4gRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Yemen4gRequest",
+      "type": "object",
+      "description": "Represents a user's request to top up a Yemen 4G number.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the request." },
+        "userId": { "type": "string", "description": "The ID of the user making the request." },
+        "userName": { "type": "string", "description": "The name of the user making the request." },
+        "userPhoneNumber": { "type": "string", "description": "The phone number of the user making the request." },
+        "targetPhoneNumber": { "type": "string", "description": "The Yemen 4G number to top up." },
+        "packageTitle": { "type": "string", "description": "The title of the selected package." },
+        "packagePrice": { "type": "number", "description": "The original price of the package." },
+        "commission": { "type": "number", "description": "The 10% commission amount." },
+        "totalCost": { "type": "number", "description": "The total cost (price + commission)." },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the request." },
+        "requestTimestamp": { "type": "string", "format": "date-time", "description": "The timestamp when the request was made." }
+      },
+      "required": [
+        "userId", "userName", "userPhoneNumber", "targetPhoneNumber", "packageTitle", 
+        "packagePrice", "commission", "totalCost", "status", "requestTimestamp"
+      ]
+    },
      "PaymentMethod": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PaymentMethod",
@@ -615,6 +638,17 @@
           ]
         }
       },
+      {
+        "path": "/yemen4gRequests/{requestId}",
+        "definition": {
+          "entityName": "Yemen4gRequest",
+          "schema": { "$ref": "#/backend/entities/Yemen4gRequest" },
+          "description": "Stores user requests to top up a Yemen 4G number. Users can create, admins can read and update status.",
+          "params": [
+            { "name": "requestId", "description": "The unique identifier for the Yemen 4G top-up request." }
+          ]
+        }
+      },
        {
         "path": "/withdrawalRequests/{requestId}",
         "definition": {
@@ -746,5 +780,3 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and related entities (Transactions and Favorites) are organized under user-specific paths to maintain clear ownership. A new subcollection for personal notifications (`/users/{userId}/notifications`) is added to store user-specific alerts, such as balance top-ups from admins. This keeps personal notifications private and separate from global ones. Authorization Independence is achieved by storing all data relevant to a user within their dedicated path (`/users/{userId}`). This structure avoids `get()` calls in security rules. Segregation is enforced by storing distinct types of data (users, transactions, favorites) in separate collections, simplifying security rules. The structure also avoids the use of custom claims and relies solely on `request.auth.uid` for authorization."
   }
 }
-
-    

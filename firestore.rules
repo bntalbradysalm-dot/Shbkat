@@ -123,6 +123,15 @@ service cloud.firestore {
     }
 
     /**
+     * @description Manages Yemen 4G top-up requests. Authenticated users can create
+     * their own requests. Admins can read all requests and update their status.
+     */
+    match /yemen4gRequests/{requestId} {
+        allow create: if isSignedIn() && isRequestOwner();
+        allow read, update, delete: if isAdmin();
+    }
+
+    /**
      * @description Manages withdrawal requests from network owners.
      */
     match /withdrawalRequests/{requestId} {

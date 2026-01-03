@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, ListChecks, User, Wifi, Repeat } from 'lucide-react';
+import { Home, Users, ListChecks, User, Wifi, Repeat, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';

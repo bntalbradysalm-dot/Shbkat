@@ -8,6 +8,7 @@ import {
   Heart,
   History,
   Wifi,
+  CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { PromotionalImage } from './promotional-image';
@@ -24,7 +25,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'المفضلة', icon: Heart, href: '/favorites' },
+  { name: 'سداد رصيد', icon: CreditCard, href: '/pay-balance' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

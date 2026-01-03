@@ -25,7 +25,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'يمن 4G', icon: 'https://i.postimg.cc/vmdxSn7v/unnamed.png', href: '/pay-balance' },
+  { name: 'يمن 4G', icon: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png', href: '/pay-balance' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

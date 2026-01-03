@@ -5,7 +5,6 @@ import {
   Wallet,
   SatelliteDish,
   Send,
-  Heart,
   History,
   Wifi,
   CreditCard,
@@ -13,10 +12,11 @@ import {
 import Link from 'next/link';
 import { PromotionalImage } from './promotional-image';
 import { RecentTransactions } from './recent-transactions';
+import Image from 'next/image';
 
 type Service = {
   name: string;
-  icon: LucideIcon;
+  icon: LucideIcon | string;
   href: string;
 };
 
@@ -25,7 +25,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'سداد رصيد', icon: CreditCard, href: '/pay-balance' },
+  { name: 'يمن 4G', icon: 'https://i.postimg.cc/vmdxSn7v/unnamed.png', href: '/pay-balance' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 
@@ -44,7 +44,11 @@ const ServiceItem = ({
     }}
   >
     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted transition-colors group-hover:bg-primary/10">
-      <Icon className="h-7 w-7 text-primary dark:text-primary-foreground transition-transform group-hover:scale-110" />
+      {typeof Icon === 'string' ? (
+        <Image src={Icon} alt={name} width={32} height={32} className="transition-transform group-hover:scale-110" />
+      ) : (
+        <Icon className="h-7 w-7 text-primary dark:text-primary-foreground transition-transform group-hover:scale-110" />
+      )}
     </div>
     <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
   </Link>

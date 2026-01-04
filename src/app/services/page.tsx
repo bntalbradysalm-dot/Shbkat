@@ -1,18 +1,18 @@
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Wifi, MapPin, Phone, Heart } from 'lucide-react';
+import { Search, Wifi, MapPin, Phone, Heart, AlertCircle } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, getDocs, doc } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-
 
 type Network = {
   id: string;
@@ -31,15 +31,33 @@ export default function ServicesPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch networks
-  const networksCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'networks') : null),
-    [firestore]
-  );
-  const { data: networks, isLoading } = useCollection<Network>(networksCollection);
+  useEffect(() => {
+    const fetchNetworks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/services/networks-api');
+        if (!response.ok) {
+          throw new Error('Failed to fetch networks');
+        }
+        const data = await response.json();
+        // Assuming the API returns an array of networks directly
+        setNetworks(data);
+      } catch (err) {
+        setError('لا يمكن تحميل قائمة الشبكات حاليًا. الرجاء المحاولة لاحقًا.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fetch user's favorites
+    fetchNetworks();
+  }, []);
+
   const favoritesQuery = useMemoFirebase(
     () =>
       user
@@ -58,7 +76,7 @@ export default function ServicesPage() {
     if (!networks) return [];
     return networks.filter(net => 
       net.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      net.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (net.location && net.location.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [networks, searchTerm]);
 
@@ -79,7 +97,6 @@ export default function ServicesPage() {
     const favoritesCollectionRef = collection(firestore, 'users', user.uid, 'favorites');
 
     if (isFavorited) {
-      // Find the favorite document to delete
       const favToDelete = favorites?.find(f => f.targetId === network.id);
       if (favToDelete) {
         const docRef = doc(firestore, 'users', user.uid, 'favorites', favToDelete.id);
@@ -90,7 +107,6 @@ export default function ServicesPage() {
         });
       }
     } else {
-      // Add to favorites
       const favoriteData = {
         userId: user.uid,
         targetId: network.id,
@@ -111,20 +127,32 @@ export default function ServicesPage() {
     if (isLoading) {
       return (
         <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="p-4 bg-primary rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg bg-white/30" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-32 bg-white/30" />
+                    <Skeleton className="h-4 w-40 bg-white/30" />
                   </div>
                 </div>
-                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full bg-white/30" />
               </div>
             </Card>
           ))}
+        </div>
+      );
+    }
+    
+    if (error) {
+       return (
+        <div className="flex flex-col items-center justify-center text-center h-64">
+          <AlertCircle className="h-16 w-16 text-destructive" />
+          <h3 className="mt-4 text-lg font-semibold">حدث خطأ</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {error}
+          </p>
         </div>
       );
     }
@@ -137,7 +165,7 @@ export default function ServicesPage() {
             {searchTerm ? 'لا توجد نتائج بحث' : 'لا توجد شبكات متاحة'}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            {searchTerm ? 'حاول البحث بكلمة أخرى.' : 'لم يقم المسؤول بإضافة أي شبكات بعد.'}
+            {searchTerm ? 'حاول البحث بكلمة أخرى.' : 'يبدو أنه لا توجد شبكات مضافة حالياً.'}
           </p>
         </div>
       );
@@ -161,10 +189,12 @@ export default function ServicesPage() {
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
-                            <MapPin className="h-3 w-3" />
-                            {network.location}
-                          </p>
+                          {network.location && (
+                             <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
+                              <MapPin className="h-3 w-3" />
+                              {network.location}
+                            </p>
+                          )}
                           {network.phoneNumber && (
                              <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
                               <Phone className="h-3 w-3" />

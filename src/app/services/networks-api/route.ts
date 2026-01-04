@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 
 const EXTERNAL_API_URL = 'https://apis.okamel.org/api/partner/networks';
-const API_KEY = '3613abd0-1510-45b3-a4a9-9a25028186a8';
+const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
 
 export async function GET() {
   try {
@@ -14,6 +14,8 @@ export async function GET() {
       },
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(`External API failed with status: ${response.status}`, errorBody);
@@ -22,11 +24,7 @@ export async function GET() {
         { status: response.status }
       );
     }
-
-    const data = await response.json();
     
-    // The external API returns an object with a 'data' property containing the array.
-    // We need to extract this array and return it.
     if (data && Array.isArray(data.data)) {
         return NextResponse.json(data.data);
     } else {

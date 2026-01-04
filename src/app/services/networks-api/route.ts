@@ -12,28 +12,23 @@ export async function GET() {
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
-      // Optional: Add caching strategy if needed
-      // next: { revalidate: 3600 }, // Revalidate every hour
     });
 
     if (!response.ok) {
-      // Log the error for debugging on the server
       const errorBody = await response.text();
       console.error(`External API failed with status: ${response.status}`, errorBody);
-      // Return a generic error to the client
       return NextResponse.json(
         { error: 'Failed to fetch data from external provider.' },
-        { status: 502 } // Bad Gateway
+        { status: response.status }
       );
     }
 
     const data = await response.json();
     
-    // According to the new documentation, the networks are in the 'data' property
-    if (data && data.data) {
+    // Correctly extract the array from the 'data' property of the response
+    if (data && Array.isArray(data.data)) {
         return NextResponse.json(data.data);
     } else {
-        // Handle cases where the structure is not as expected
         console.error('Unexpected data structure from external API:', data);
         return NextResponse.json(
             { error: 'Unexpected data structure from external API.' },

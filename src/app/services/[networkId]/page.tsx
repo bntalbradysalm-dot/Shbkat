@@ -59,6 +59,7 @@ export default function NetworkPurchasePage() {
   const networkName = searchParams.get('name') || 'شراء كروت';
   
   const { user } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const [categories, setCategories] = useState<CardCategory[]>([]);
@@ -94,11 +95,11 @@ export default function NetworkPurchasePage() {
   }, [networkId]);
 
 
-  const userDocRef = useMemoFirebase(() => (user ? doc(useFirestore(), 'users', user.uid) : null), [user]);
+  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [user, firestore]);
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !userProfile.phoneNumber) return;
+    if (!selectedCategory || !user || !userProfile || !userProfile.phoneNumber || !firestore || !userDocRef) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -116,7 +117,6 @@ export default function NetworkPurchasePage() {
     }
 
     try {
-        const firestore = useFirestore();
         const response = await fetch(`/services/networks-api/${networkId}/order`, {
             method: 'POST',
             headers: {

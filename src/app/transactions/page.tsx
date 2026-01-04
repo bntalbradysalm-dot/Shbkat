@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -45,6 +45,7 @@ type Transaction = {
   notes?: string;
   subscriberName?: string;
   cardNumber?: string;
+  cardPassword?: string;
   paymentMethodName?: string;
   recipientName?: string;
   accountNumber?: string;
@@ -131,6 +132,14 @@ export default function TransactionsPage() {
       
     setIsDeleteAllAlertOpen(false);
   };
+  
+   const handleCopy = (text: string, label: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: "تم النسخ",
+            description: `تم نسخ ${label} بنجاح.`,
+        });
+    };
 
 
   const renderContent = () => {
@@ -222,10 +231,10 @@ export default function TransactionsPage() {
                                 <span className="text-muted-foreground">الباقة:</span>
                                 <span className="font-semibold">{selectedTx.transactionType}</span>
                             </div>
-                            {selectedTx.notes && selectedTx.transactionType.startsWith('شراء كرت') && (
+                             {selectedTx.notes && (selectedTx.transactionType.startsWith('شراء كرت') || selectedTx.transactionType.startsWith('تجديد')) && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wifi className="h-4 w-4"/> الشبكة:</span>
-                                    <span className="font-semibold">{selectedTx.notes}</span>
+                                    <span className="font-semibold">{selectedTx.notes.replace('شبكة: ', '')}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
@@ -255,6 +264,31 @@ export default function TransactionsPage() {
                                     <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
+                            )}
+                            {selectedTx.cardPassword && (
+                                 <div className="pt-4 mt-2 border-t">
+                                     <h4 className="font-bold text-base mb-2">تفاصيل الكرت</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                                <span className="text-muted-foreground">رقم الكرت:</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono font-semibold">{selectedTx.cardNumber}</span>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardNumber!, 'رقم الكرت')}>
+                                                        <Copy className="h-4 w-4"/>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                             <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                                <span className="text-muted-foreground">كلمة المرور:</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono font-semibold">{selectedTx.cardPassword}</span>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardPassword!, 'كلمة المرور')}>
+                                                         <Copy className="h-4 w-4"/>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                 </div>
                             )}
                              {selectedTx.transactionType === 'سحب أرباح' && (
                                 <>

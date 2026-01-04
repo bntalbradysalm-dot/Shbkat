@@ -152,6 +152,8 @@ function NetworkPurchasePageComponent() {
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
+            cardNumber: cardData.cardID,
+            cardPassword: cardData.cardPass,
         });
         
         await batch.commit();

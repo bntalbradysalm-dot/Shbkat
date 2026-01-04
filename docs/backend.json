@@ -104,7 +104,11 @@
         },
         "cardNumber": {
           "type": "string",
-          "description": "The card number for a renewal."
+          "description": "The card number for a renewal or purchase."
+        },
+        "cardPassword": {
+          "type": "string",
+          "description": "The card password for a purchase."
         },
         "paymentMethodName": {
           "type": "string",

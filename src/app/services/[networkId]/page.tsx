@@ -1,15 +1,15 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tag, Calendar, Database, CheckCircle, Copy, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,24 +25,23 @@ import { Toaster } from '@/components/ui/toaster';
 import { Separator } from '@/components/ui/separator';
 
 type CardCategory = {
-    id: string;
+    id: number;
     name: string;
     price: number;
-    capacity?: string;
-    validity?: string;
-    networkId: string;
+    dataLimit?: string;
+    expirationDate?: string;
 };
 
 type NetworkCard = {
-    id: string;
-    cardNumber: string;
-    status: 'available' | 'sold';
-    categoryId: string;
+    cardID: string;
+    cardPass: string;
 };
 
-type Network = {
-    id: string;
-    ownerId: string;
+type OrderResponse = {
+    order: {
+        uuidOrder: string;
+        card: NetworkCard;
+    }
 };
 
 type UserProfile = {
@@ -51,33 +50,52 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
-const COMMISSION_RATE = 0.10; // 10%
-
 export default function NetworkPurchasePage({ params }: { params: { networkId: string } }) {
-  const { networkId } = React.use(params);
+  const { networkId } = params;
   const searchParams = useSearchParams();
   const networkName = searchParams.get('name') || 'شراء كروت';
   
-  const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
 
-  const [selectedCategory, setSelectedCategory] = React.useState<CardCategory | null>(null);
-  const [isConfirming, setIsConfirming] = React.useState(false);
-  const [isProcessing, setIsProcessing] = React.useState(false);
-  const [purchasedCard, setPurchasedCard] = React.useState<NetworkCard | null>(null);
+  const [categories, setCategories] = useState<CardCategory[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categoriesCollection = useMemoFirebase(() => (firestore ? collection(firestore, `networks/${networkId}/cardCategories`) : null), [firestore, networkId]);
-  const { data: categories, isLoading: isLoadingCategories } = useCollection<CardCategory>(categoriesCollection);
-  
-  const networkDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `networks`, networkId) : null), [firestore, networkId]);
-  const { data: networkData } = useDoc<Network>(networkDocRef);
+  const [selectedCategory, setSelectedCategory] = useState<CardCategory | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
 
-  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+  useEffect(() => {
+    const fetchCategories = async () => {
+        if (!networkId) return;
+        setIsLoadingCategories(true);
+        setError(null);
+        try {
+            const response = await fetch(`/services/networks-api/${networkId}/classes`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to fetch categories');
+            }
+            const data = await response.json();
+            setCategories(data);
+        } catch (err: any) {
+            setError(err.message || 'لا يمكن تحميل الفئات حالياً.');
+            console.error(err);
+        } finally {
+            setIsLoadingCategories(false);
+        }
+    };
+    fetchCategories();
+  }, [networkId]);
+
+
+  const userDocRef = useMemoFirebase(() => (user ? doc(useFirestore(), 'users', user.uid) : null), [user]);
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !firestore || !userDocRef || !userProfile || !networkData) return;
+    if (!selectedCategory || !user || !userProfile) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -95,91 +113,58 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
     }
 
     try {
-        const cardsRef = collection(firestore, `networks/${networkId}/cards`);
-        const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'));
-        const availableCardsSnapshot = await getDocs(q);
+        const firestore = useFirestore();
+        const response = await fetch(`/services/networks-api/${networkId}/order`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                classId: selectedCategory.id,
+                user: {
+                    identifier: userProfile.phoneNumber,
+                    // Note: Password is required by the external API, but we are not collecting it here.
+                    // This might need adjustment based on actual auth flow. For now, sending a placeholder.
+                    password: "password_placeholder" 
+                }
+            })
+        });
 
-        if (availableCardsSnapshot.empty) {
-            toast({
-                variant: "destructive",
-                title: "لا توجد كروت متاحة",
-                description: "عذرًا، لا توجد كروت متاحة حاليًا في هذه الفئة.",
-            });
-            setIsProcessing(false);
-            setIsConfirming(false);
-            return;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData?.error?.message?.ar || 'فشل إنشاء الطلب.');
         }
 
-        const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
-        const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard
-        const cardToPurchaseRef = doc(firestore, `networks/${networkId}/cards`, cardToPurchaseDoc.id);
-
+        const result: OrderResponse = await response.json();
+        const cardData = result.data.order.card;
+        
+        // Firestore batch write
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
 
-        // 1. Mark card as sold
-        batch.update(cardToPurchaseRef, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-        
-        // 2. Deduct balance from user
-        batch.update(userDocRef, { balance: increment(-categoryPrice) });
+        // 1. Deduct balance from user
+        batch.update(userDocRef!, { balance: increment(-categoryPrice) });
 
-        // 3. Create a transaction record for buyer
+        // 2. Create a transaction record for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
             transactionDate: now,
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
-            notes: `كرت: ${networkName}`,
+            notes: `شبكة: ${networkName}`,
         });
-
-        // 4. Calculate commission and payout, then update owner's balance
-        const commissionAmount = categoryPrice * COMMISSION_RATE;
-        const payoutAmount = categoryPrice - commissionAmount;
-
-        const ownerRef = doc(firestore, 'users', networkData.ownerId);
-        batch.update(ownerRef, { balance: increment(payoutAmount) });
-
-        // 5. Create a transaction record for network owner
-        const ownerTransactionRef = doc(collection(firestore, `users/${networkData.ownerId}/transactions`));
-        batch.set(ownerTransactionRef, {
-            userId: networkData.ownerId,
-            transactionDate: now,
-            amount: payoutAmount,
-            transactionType: `أرباح بيع كرت ${selectedCategory.name}`,
-            notes: `من المشتري: ${userProfile.displayName}`,
-        });
-
-        // 6. Create sold card record with commission calculation
-        const soldCardRef = doc(collection(firestore, 'soldCards'));
-        batch.set(soldCardRef, {
-            networkId: networkId,
-            ownerId: networkData.ownerId,
-            networkName: networkName,
-            categoryId: selectedCategory.id,
-            categoryName: selectedCategory.name,
-            cardId: cardToPurchaseData.id,
-            cardNumber: cardToPurchaseData.cardNumber,
-            price: selectedCategory.price,
-            commissionAmount: commissionAmount,
-            payoutAmount: payoutAmount,
-            buyerId: user.uid,
-            buyerName: userProfile.displayName,
-            buyerPhoneNumber: userProfile.phoneNumber,
-            soldTimestamp: now,
-            payoutStatus: 'completed',
-        })
         
         await batch.commit();
 
-        setPurchasedCard(cardToPurchaseData);
+        setPurchasedCard(cardData);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Purchase failed:", error);
         toast({
             variant: "destructive",
             title: "فشلت عملية الشراء",
-            description: "حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.",
+            description: error.message || "حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.",
         });
     } finally {
         setIsProcessing(false);
@@ -187,12 +172,13 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
     }
   };
 
-  const handleCopyCardNumber = () => {
+  const handleCopyCardDetails = () => {
     if (purchasedCard) {
-        navigator.clipboard.writeText(purchasedCard.cardNumber);
+        const cardDetails = `رقم الكرت: ${purchasedCard.cardID}\nكلمة المرور: ${purchasedCard.cardPass}`;
+        navigator.clipboard.writeText(cardDetails);
         toast({
             title: "تم النسخ",
-            description: "تم نسخ رقم الكرت بنجاح.",
+            description: "تم نسخ تفاصيل الكرت بنجاح.",
         });
     }
   };
@@ -207,15 +193,17 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
                         <h2 className="text-xl font-bold">تم الشراء بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">هذا هو رقم الكرت الخاص بك. يمكنك نسخه الآن.</p>
+                        <p className="text-sm text-muted-foreground">هذه هي تفاصيل الكرت الخاص بك. يمكنك نسخها الآن.</p>
                         
-                        <div className="w-full flex items-center justify-center bg-muted p-3 rounded-lg gap-2 mt-2">
-                            <Button variant="ghost" size="sm" onClick={handleCopyCardNumber}>
-                                <Copy className="ml-1 h-4 w-4" />
-                                نسخ
-                            </Button>
-                            <p className="text-xl font-mono tracking-widest text-primary dark:text-primary-foreground">{purchasedCard.cardNumber}</p>
+                        <div className="w-full text-right space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono">
+                           <p>ID: {purchasedCard.cardID}</p>
+                           <p>Pass: {purchasedCard.cardPass}</p>
                         </div>
+                        
+                         <Button className="w-full" onClick={handleCopyCardDetails}>
+                             <Copy className="ml-2 h-4 w-4" />
+                             نسخ التفاصيل
+                         </Button>
 
                         <div className="w-full pt-4">
                             <Button variant="outline" className="w-full" onClick={() => setPurchasedCard(null)}>إغلاق</Button>
@@ -231,7 +219,17 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
     if (isLoadingCategories) {
         return (
             <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+             <div className="flex flex-col items-center justify-center text-center h-64">
+                <AlertCircle className="h-16 w-16 text-destructive" />
+                <h3 className="mt-4 text-lg font-semibold">حدث خطأ</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
             </div>
         );
     }
@@ -255,14 +253,14 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                     <CardContent className="p-0 flex">
                         <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
                            <Database className="w-8 h-8 text-primary/80" />
-                           {category.capacity && (
-                                <span className="font-bold text-lg text-primary/80 mt-2">{category.capacity}</span>
+                           {category.dataLimit && (
+                                <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.dataLimit}</span>
                            )}
                         </div>
                         <div className="flex-grow p-3">
                              <div className='flex items-start justify-between gap-2'>
                                 <div className='space-y-1 text-right'>
-                                     <h3 className="font-bold text-lg">{category.name}</h3>
+                                     <h3 className="font-bold text-base">{category.name}</h3>
                                      <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
                                 </div>
                                 <Button 
@@ -278,8 +276,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
                              </div>
                              <Separator className="my-2" />
                              <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
-                                 {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
-                                 {category.capacity && <span className="flex items-center gap-1.5"><Database className="w-3 h-3" /> السعة: {category.capacity}</span>}
+                                 {category.expirationDate && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.expirationDate}</span>}
                              </div>
                         </div>
                     </CardContent>

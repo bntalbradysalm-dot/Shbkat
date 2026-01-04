@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 
-const EXTERNAL_API_URL = 'https://shabakat.vercel.app/api/partner/networks';
+const EXTERNAL_API_URL = 'https://apis.okamel.org/api/partner/networks';
 const API_KEY = '942a16cf-adfd-4770-803c-ab0d6f26091b';
 
 export async function GET() {
@@ -27,7 +27,17 @@ export async function GET() {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // According to the new documentation, the networks are in the 'data' property
+    if (data && data.data) {
+        return NextResponse.json(data.data);
+    } else {
+        // Handle cases where the structure is not as expected
+        return NextResponse.json(
+            { error: 'Unexpected data structure from external API.' },
+            { status: 500 }
+        );
+    }
 
   } catch (error) {
     console.error('Error fetching from external API:', error);

@@ -15,10 +15,11 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 type Network = {
-  id: string;
+  id: number; // The API returns number for id
   name: string;
-  location: string;
-  phoneNumber?: string;
+  desc: string; // Using `desc` for location as per API docs
+  logo?: string;
+  urlLogin?: string;
 };
 
 type Favorite = {
@@ -45,7 +46,6 @@ export default function ServicesPage() {
           throw new Error('Failed to fetch networks');
         }
         const data = await response.json();
-        // Assuming the API returns an array of networks directly
         setNetworks(data);
       } catch (err) {
         setError('لا يمكن تحميل قائمة الشبكات حاليًا. الرجاء المحاولة لاحقًا.');
@@ -76,7 +76,7 @@ export default function ServicesPage() {
     if (!networks) return [];
     return networks.filter(net => 
       net.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (net.location && net.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      (net.desc && net.desc.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [networks, searchTerm]);
 
@@ -93,11 +93,12 @@ export default function ServicesPage() {
       return;
     }
 
-    const isFavorited = favoriteNetworkIds.has(network.id);
+    const networkIdAsString = String(network.id);
+    const isFavorited = favoriteNetworkIds.has(networkIdAsString);
     const favoritesCollectionRef = collection(firestore, 'users', user.uid, 'favorites');
 
     if (isFavorited) {
-      const favToDelete = favorites?.find(f => f.targetId === network.id);
+      const favToDelete = favorites?.find(f => f.targetId === networkIdAsString);
       if (favToDelete) {
         const docRef = doc(firestore, 'users', user.uid, 'favorites', favToDelete.id);
         deleteDocumentNonBlocking(docRef);
@@ -109,10 +110,9 @@ export default function ServicesPage() {
     } else {
       const favoriteData = {
         userId: user.uid,
-        targetId: network.id,
+        targetId: networkIdAsString,
         name: network.name,
-        location: network.location,
-        phoneNumber: network.phoneNumber || '',
+        location: network.desc, // Using 'desc' as location
         favoriteType: 'Network',
       };
       addDocumentNonBlocking(favoritesCollectionRef, favoriteData);
@@ -174,9 +174,10 @@ export default function ServicesPage() {
     return (
       <div className="space-y-4">
         {filteredNetworks.map((network, index) => {
-          const isFavorited = favoriteNetworkIds.has(network.id);
+          const networkIdAsString = String(network.id);
+          const isFavorited = favoriteNetworkIds.has(networkIdAsString);
           return (
-             <Link href={`/services/${network.id}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
+             <Link href={`/services/${networkIdAsString}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
                 <Card 
                   className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
@@ -189,16 +190,10 @@ export default function ServicesPage() {
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          {network.location && (
+                          {network.desc && (
                              <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
                               <MapPin className="h-3 w-3" />
-                              {network.location}
-                            </p>
-                          )}
-                          {network.phoneNumber && (
-                             <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
-                              <Phone className="h-3 w-3" />
-                              {network.phoneNumber}
+                              {network.desc}
                             </p>
                           )}
                         </div>

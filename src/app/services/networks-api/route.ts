@@ -15,6 +15,7 @@ export async function GET() {
     });
 
     if (!response.ok) {
+      // If the external API call fails, log the error and return a server error status.
       const errorBody = await response.text();
       console.error(`External API failed with status: ${response.status}`, errorBody);
       return NextResponse.json(
@@ -25,10 +26,12 @@ export async function GET() {
 
     const data = await response.json();
     
-    // Correctly extract the array from the 'data' property of the response
+    // As per the documentation, the networks array is inside the 'data' property.
+    // Check if the structure is as expected before returning.
     if (data && Array.isArray(data.data)) {
         return NextResponse.json(data.data);
     } else {
+        // If the structure is not what we expect, log it and return an error.
         console.error('Unexpected data structure from external API:', data);
         return NextResponse.json(
             { error: 'Unexpected data structure from external API.' },

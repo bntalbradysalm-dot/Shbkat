@@ -1,10 +1,9 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    serverComponentsExternalPackages: ['@genkit-ai/google-genai'],
-  },
+  
   devIndicators: false,
   typescript: {
     ignoreBuildErrors: true,

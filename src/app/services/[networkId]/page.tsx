@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,9 +38,11 @@ type NetworkCard = {
 };
 
 type OrderResponse = {
-    order: {
-        uuidOrder: string;
-        card: NetworkCard;
+    data: {
+        order: {
+            uuidOrder: string;
+            card: NetworkCard;
+        }
     }
 };
 
@@ -50,8 +52,9 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
-export default function NetworkPurchasePage({ params }: { params: { networkId: string } }) {
-  const { networkId } = params;
+export default function NetworkPurchasePage() {
+  const params = useParams();
+  const networkId = params.networkId as string;
   const searchParams = useSearchParams();
   const networkName = searchParams.get('name') || 'شراء كروت';
   
@@ -95,7 +98,7 @@ export default function NetworkPurchasePage({ params }: { params: { networkId: s
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile) return;
+    if (!selectedCategory || !user || !userProfile || !userProfile.phoneNumber) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;

@@ -46,7 +46,7 @@ export default function ServicesPage() {
           throw new Error('Failed to fetch networks');
         }
         const data = await response.json();
-        setNetworks(data);
+        setNetworks(data); // The API route now returns the array directly
       } catch (err) {
         setError('لا يمكن تحميل قائمة الشبكات حاليًا. الرجاء المحاولة لاحقًا.');
         console.error(err);

@@ -18,7 +18,8 @@ export async function GET() {
 
     if (!response.ok) {
       // Log the error for debugging on the server
-      console.error(`External API failed with status: ${response.status}`);
+      const errorBody = await response.text();
+      console.error(`External API failed with status: ${response.status}`, errorBody);
       // Return a generic error to the client
       return NextResponse.json(
         { error: 'Failed to fetch data from external provider.' },
@@ -33,6 +34,7 @@ export async function GET() {
         return NextResponse.json(data.data);
     } else {
         // Handle cases where the structure is not as expected
+        console.error('Unexpected data structure from external API:', data);
         return NextResponse.json(
             { error: 'Unexpected data structure from external API.' },
             { status: 500 }

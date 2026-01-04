@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://apis.okamel.org/api/partner/networks';
+const API_BASE_URL = 'https://apis.baitynet.net/api/partner/networks';
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
 
 export async function GET(

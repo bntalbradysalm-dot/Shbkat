@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 
 const EXTERNAL_API_URL = 'https://apis.okamel.org/api/partner/networks';
-const API_KEY = '942a16cf-adfd-4770-803c-ab0d6f26091b';
+const API_KEY = '3613abd0-1510-45b3-a4a9-9a25028186a8';
 
 export async function GET() {
   try {
@@ -18,7 +18,7 @@ export async function GET() {
       const errorBody = await response.text();
       console.error(`External API failed with status: ${response.status}`, errorBody);
       return new NextResponse(
-        `External API failed with status: ${response.status}`,
+        `External API failed with status: ${response.status} ${errorBody}`,
         { status: response.status }
       );
     }

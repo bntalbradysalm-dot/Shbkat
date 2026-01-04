@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,7 +51,7 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
-export default function NetworkPurchasePage() {
+function NetworkPurchasePageComponent() {
   const params = useParams();
   const networkId = params.networkId as string;
   const searchParams = useSearchParams();
@@ -95,11 +94,14 @@ export default function NetworkPurchasePage() {
   }, [networkId]);
 
 
-  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [user, firestore]);
+  const userDocRef = useMemo(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !userProfile.phoneNumber || !firestore || !userDocRef) return;
+    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef) return;
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -117,25 +119,19 @@ export default function NetworkPurchasePage() {
     }
 
     try {
-        const response = await fetch(`/services/networks-api/${networkId}/order`, {
+        const response = await fetch(`/services/networks-api/order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 classId: selectedCategory.id,
-                user: {
-                    identifier: userProfile.phoneNumber,
-                    // Note: Password is required by the external API, but we are not collecting it here.
-                    // This might need adjustment based on actual auth flow. For now, sending a placeholder.
-                    password: "password_placeholder" 
-                }
             })
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData?.error?.message?.ar || 'فشل إنشاء الطلب.');
+            throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
         }
 
         const result: OrderResponse = await response.json();
@@ -317,4 +313,13 @@ export default function NetworkPurchasePage() {
         </AlertDialog>
     </>
   );
+}
+
+
+export default function NetworkPurchasePage() {
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <NetworkPurchasePageComponent />
+      </Suspense>
+    );
 }

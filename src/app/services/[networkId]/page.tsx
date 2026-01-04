@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useMemo } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, CheckCircle, Copy, AlertCircle, Database } from 'lucide-react';

@@ -25,6 +25,8 @@ export async function GET() {
 
     const data = await response.json();
     
+    // The external API returns an object with a 'data' property containing the array.
+    // We need to extract this array and return it.
     if (data && Array.isArray(data.data)) {
         return NextResponse.json(data.data);
     } else {

@@ -169,13 +169,13 @@ const PackageCard = ({
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
         <div onClick={() => onPackageSelect(packageInfo)}>
-            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
+             <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
                 <CardContent className="p-3 text-center flex flex-col h-full">
                     <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
                     <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
                         <span className="font-semibold text-muted-foreground">{paymentType}</span>
                     </div>
-                    <p className="my-1.5 text-2xl font-bold text-red-500">
+                    <p className="my-1.5 text-2xl font-bold text-destructive">
                         {price}
                     </p>
                     <div className="mt-auto grid grid-cols-4 divide-x-reverse divide-x border-t bg-muted/50 rtl:divide-x-reverse">
@@ -288,31 +288,6 @@ export default function PaymentCabinPage() {
         if (!checkPhoneNumber()) return;
         setSelectedPackage(pkg);
         setIsConfirmOpen(true);
-    };
-
-    const handleSelectContact = async () => {
-        if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
-          try {
-            const contacts = await (navigator as any).contacts.select(['tel'], { multiple: false });
-            if (contacts.length > 0 && contacts[0].tel.length > 0) {
-              let selectedPhone = contacts[0].tel[0];
-              // Normalize phone number
-              selectedPhone = selectedPhone.replace(/\s+/g, '').replace('+967', '');
-              setPhoneNumber(selectedPhone);
-            }
-          } catch (ex) {
-            toast({
-              variant: 'destructive',
-              title: 'خطأ',
-              description: 'فشل اختيار جهة الاتصال.',
-            });
-          }
-        } else {
-          toast({
-            title: 'غير مدعوم',
-            description: 'متصفحك لا يدعم الوصول إلى جهات الاتصال.',
-          });
-        }
     };
     
     const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
@@ -524,9 +499,9 @@ export default function PaymentCabinPage() {
                                 maxLength={currentMaxLength}
                             />
                         </div>
-                         <button onClick={handleSelectContact} className="p-2 bg-white rounded-lg shadow-sm cursor-pointer">
+                         <div className="p-2 bg-white rounded-lg shadow-sm">
                             <User className="h-5 w-5 text-muted-foreground" />
-                         </button>
+                         </div>
                     </CardContent>
                 </Card>
 
@@ -553,7 +528,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي للاشتراك</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>
@@ -612,36 +587,29 @@ export default function PaymentCabinPage() {
             )}
              <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 {selectedPackage && (
-                    <AlertDialogContent className="rounded-xl">
+                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
                         </AlertDialogHeader>
-                        <AlertDialogDescription asChild>
-                            <div className="pt-4 space-y-4 text-sm">
-                                <Card className="bg-muted p-3">
-                                    <div className="text-center">
-                                        <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
-                                        <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
-                                    </div>
-                                </Card>
-                                 <Card className="bg-muted p-3">
-                                    <div className="text-center">
-                                        <p className="text-muted-foreground">المبلغ</p>
-                                        <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
-                                        <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
-                                    </div>
-                                 </Card>
-                            </div>
-                        </AlertDialogDescription>
+                        <div className="pt-4 space-y-4">
+                            <Card className="bg-muted p-3 text-center">
+                                <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
+                                <p className="text-muted-foreground text-sm">للرقم: <span className="font-mono">{phoneNumber}</span></p>
+                            </Card>
+                            <Card className="bg-muted p-3 text-center">
+                                <p className="text-muted-foreground">المبلغ</p>
+                                <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
+                            </Card>
+                        </div>
                         <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">
-                            <AlertDialogAction className='flex-1' onClick={() => {
+                            <AlertDialogAction className='flex-1 w-full' onClick={() => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
                                 toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
                             }}>
                                 تأكيد
                             </AlertDialogAction>
-                            <AlertDialogCancel className='flex-1 mt-0'>إلغاء</AlertDialogCancel>
+                            <AlertDialogCancel className='flex-1 w-full mt-0'>إلغاء</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}
@@ -660,7 +628,6 @@ export default function PaymentCabinPage() {
                                 <div className="bg-muted p-3 rounded-lg text-center">
                                     <p className="text-muted-foreground">المبلغ</p>
                                     <p className="font-bold text-2xl text-destructive">{finalAmount.toLocaleString('en-US')} ريال</p>
-                                    <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
                                 </div>
                             </div>
                         </AlertDialogDescription>

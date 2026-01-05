@@ -5,6 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';

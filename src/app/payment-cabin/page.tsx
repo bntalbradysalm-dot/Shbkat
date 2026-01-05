@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet } from 'lucide-react';
+import { User, Phone, Wifi, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -33,6 +33,7 @@ import { doc, increment, collection, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
@@ -58,12 +59,12 @@ type Yemen4GPackageInfo = {
 
 
 const yemen4gPackages: Yemen4GPackageInfo[] = [
-    { packageName: "باقة 15 جيجا", data: "15 GB", price: 2400, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة" },
-    { packageName: "باقة 25 جيجا", data: "25 GB", price: 4000, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة + 50 دقيقة خارجها" },
-    { packageName: "باقة 60 جيجا", data: "60 GB", price: 8000, validity: "شهر", minutes: "اتصال مجاني + 50 دقيقة" },
-    { packageName: "باقة 130 جيجا", data: "130 GB", price: 16000, validity: "شهر", minutes: "اتصال مجاني 100 دقيقة اتصال" },
-    { packageName: "باقة 250 جيجا", data: "250 GB", price: 26000, validity: "شهر", minutes: "اتصال مجاني + 100 خارجها" },
-    { packageName: "باقة 500 جيجا", data: "500 GB", price: 46000, validity: "شهر", minutes: "اتصال مجاني + 50 خارجها" },
+    { packageName: "15 جيجا", data: "15 GB", price: 2400, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة" },
+    { packageName: "25 جيجا", data: "25 GB", price: 4000, validity: "شهر", minutes: "اتصال مجاني + 50 دقيقة خارجها" },
+    { packageName: "60 جيجا", data: "60 GB", price: 8000, validity: "شهر", minutes: "اتصال مجاني + 50 دقيقة" },
+    { packageName: "130 جيجا", data: "130 GB", price: 16000, validity: "شهر", minutes: "اتصال مجاني 100 دقيقة اتصال" },
+    { packageName: "250 جيجا", data: "250 GB", price: 26000, validity: "شهر", minutes: "اتصال مجاني + 100 خارجها" },
+    { packageName: "500 جيجا", data: "500 GB", price: 46000, validity: "شهر", minutes: "اتصال مجاني + 50 خارجها" },
 ];
 
 type SubscriptionInfo = {
@@ -136,7 +137,7 @@ const serviceConfig = {
     color: 'bg-blue-500',
     textColor: 'text-blue-500',
     ringColor: 'focus-visible:ring-blue-500',
-    destructiveColor: 'bg-blue-500 hover:bg-blue-600',
+    destructiveColor: 'bg-blue-500 hover:bg-blue-500',
   },
     'adsl': {
     name: 'ADSL',
@@ -179,7 +180,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [100, 200, 500, 1000, 2000];
+const predefinedAmounts = [2000, 1000, 500, 200, 100];
 
 const PackageCard = ({
     packageInfo,
@@ -227,17 +228,17 @@ const PackageCard = ({
 const Yemen4GPackageCard = ({ packageInfo, onPackageSelect }: { packageInfo: Yemen4GPackageInfo; onPackageSelect: (pkg: Yemen4GPackageInfo) => void; }) => {
     return (
         <Card onClick={() => onPackageSelect(packageInfo)} className="grid grid-cols-1 overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300">
-            <CardContent className="p-4 text-center flex flex-col h-full">
-                <h3 className="text-lg font-bold text-foreground">{packageInfo.packageName}</h3>
-                <div className="my-2">
-                    <p className="text-3xl font-bold text-primary dark:text-primary-foreground">
+            <CardContent className="p-2 text-center flex flex-col h-full">
+                <h3 className="text-sm font-bold text-foreground">{packageInfo.packageName}</h3>
+                <div className="my-1">
+                    <p className="text-lg font-bold text-primary dark:text-primary-foreground">
                         {packageInfo.price.toLocaleString('en-US')}
                     </p>
-                     <p className="text-xs text-muted-foreground">ريال يمني</p>
+                     <p className="text-xs text-muted-foreground -mt-1">ريال</p>
                 </div>
-                <div className="mt-auto space-y-2 text-sm text-muted-foreground border-t pt-3">
-                    <p className="flex items-center justify-center gap-2"><Wifi className="w-4 h-4 text-blue-500" /> {packageInfo.data}</p>
-                    <p><Phone className="w-4 h-4 inline ml-1 text-green-500" />{packageInfo.minutes}</p>
+                <div className="mt-auto space-y-1 text-xs text-muted-foreground border-t pt-2">
+                    <p className="flex items-center justify-center gap-1"><Wifi className="w-3 h-3 text-blue-500" /> {packageInfo.data}</p>
+                    <p><Phone className="w-3 h-3 inline ml-1 text-green-500" />{packageInfo.minutes}</p>
                 </div>
             </CardContent>
         </Card>
@@ -577,23 +578,22 @@ export default function PaymentCabinPage() {
     }
     
     const renderYemen4GPackages = () => (
-        <div className="space-y-4">
-             <div className="grid grid-cols-1 gap-4">
-                {yemen4gPackages.map((pkg, index) => (
-                    <Yemen4GPackageCard key={index} packageInfo={pkg} onPackageSelect={handlePackageSelect} />
-                ))}
-            </div>
-        </div>
-    );
-    
-     const renderYouPackages = () => (
-        <div className="space-y-4">
-             <div className="grid grid-cols-1 gap-4">
-                {yemen4gPackages.map((pkg, index) => (
-                    <Yemen4GPackageCard key={index} packageInfo={pkg} onPackageSelect={handlePackageSelect} />
-                ))}
-            </div>
-        </div>
+         <Tabs defaultValue="packages" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="packages">باقات يمن 4G</TabsTrigger>
+                <TabsTrigger value="inquiry">استعلام يمن 4G</TabsTrigger>
+            </TabsList>
+            <TabsContent value="packages" className="pt-4">
+                <div className="grid grid-cols-3 gap-2">
+                    {yemen4gPackages.map((pkg, index) => (
+                        <Yemen4GPackageCard key={index} packageInfo={pkg} onPackageSelect={handlePackageSelect} />
+                    ))}
+                </div>
+            </TabsContent>
+            <TabsContent value="inquiry" className="pt-4 text-center text-muted-foreground">
+                <p>سيتم إضافة خدمة الاستعلام قريباً.</p>
+            </TabsContent>
+        </Tabs>
     );
 
      if (showSuccess) {
@@ -738,7 +738,7 @@ export default function PaymentCabinPage() {
                 )}
                  {(provider === 'you' || provider === 'yemen-4g') && (
                     <div className="space-y-4 animate-in fade-in-0 duration-500">
-                        {renderYouPackages()}
+                        {renderYemen4GPackages()}
                     </div>
                  )}
             </div>
@@ -832,6 +832,8 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
+    
 
     
 

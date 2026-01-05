@@ -168,7 +168,7 @@ const PackageCard = ({
 }) => {
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
-        <div onClick={() => onPackageSelect(packageInfo)}>
+        <div onClick={() => onPackageSelect(packageInfo)} className="h-full">
              <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
                 <CardContent className="p-3 text-center flex flex-col h-full">
                     <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
@@ -416,7 +416,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                         </div>
@@ -430,7 +430,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                         <div className="grid grid-cols-2 gap-3">
+                         <div className="grid grid-cols-1 gap-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                          </div>
                     </AccordionContent>
@@ -517,7 +517,7 @@ export default function PaymentCabinPage() {
                 </Card>
 
                 {provider === 'yemen-mobile' && (
-                    <div className="space-y-4 animate-in fade-in-0 duration-500">
+                    <div className="space-y-4 animate-in fade-in-0 duration-500 p-4 rounded-2xl bg-gradient-to-b from-red-500/10 to-red-500/0">
                         <div className="grid grid-cols-2 bg-muted p-1 rounded-xl">
                             {['رصيد', 'باقات'].map((tab) => (
                                <button 
@@ -670,4 +670,5 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
 

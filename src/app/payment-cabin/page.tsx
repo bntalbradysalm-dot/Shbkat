@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, 'useState', 'useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -164,7 +164,7 @@ const PackageCard = ({
 export default function PaymentCabinPage() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [provider, setProvider] = useState<ServiceProvider>('unknown');
-    const [activeTab, setActiveTab] = useState('دفع مسبق');
+    const [activeTab, setActiveTab] = useState('رصيد');
     const [customAmount, setCustomAmount] = useState('');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
     const { toast } = useToast();
@@ -416,13 +416,13 @@ export default function PaymentCabinPage() {
 
                 {provider === 'yemen-mobile' && (
                     <div className="space-y-4 animate-in fade-in-0 duration-500">
-                        <div className="grid grid-cols-4 bg-muted p-1 rounded-xl">
-                            {['فوترة', 'دفع مسبق', 'باقات', 'سداد'].map((tab) => (
+                        <div className="grid grid-cols-2 bg-muted p-1 rounded-xl">
+                            {['رصيد', 'باقات'].map((tab) => (
                                <button 
                                 key={tab} 
                                 onClick={() => setActiveTab(tab)}
                                 className={cn(
-                                    "text-xs py-1.5 rounded-lg transition-colors",
+                                    "text-sm py-1.5 rounded-lg transition-colors font-semibold",
                                     activeTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
                                 )}
                                 >
@@ -433,7 +433,7 @@ export default function PaymentCabinPage() {
 
                          {activeTab === 'باقات' && renderYemenMobilePackages()}
 
-                         {activeTab === 'دفع مسبق' && (
+                         {activeTab === 'رصيد' && (
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
@@ -472,16 +472,11 @@ export default function PaymentCabinPage() {
                             </div>
                         )}
                         
-                        {(activeTab === 'سداد' || activeTab === 'فوترة') && (
-                            <div className="text-center text-muted-foreground py-10">
-                                <p>سيتم تفعيل هذه الميزة قريباً.</p>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
 
-            {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
+            {provider === 'yemen-mobile' && activeTab === 'رصيد' && (
                 <div className="p-4 bg-background border-t shadow-inner sticky bottom-0">
                     <Button 
                         onClick={() => {

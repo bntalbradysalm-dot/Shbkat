@@ -6,10 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft, Archive } from 'lucide-react';
+import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft, Archive, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
@@ -117,25 +123,116 @@ export default function PaymentCabinPage() {
     const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
     
     const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
+    
+    const renderYemenMobilePackages = () => (
+      <div className="space-y-4">
+        {/* Current Subscriptions Section */}
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
+          <h3 className="text-center font-bold text-destructive mb-3 bg-destructive text-white rounded-md py-1">الاشتراكات الحالية</h3>
+          <div className="space-y-3">
+            <Card className="p-3 bg-card/80">
+              <div className="flex items-center gap-3">
+                <div className="flex-none">
+                  <Button className="bg-destructive text-white hover:bg-destructive/90 w-16 h-16 flex flex-col items-center">
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="text-xs mt-1">تجديد</span>
+                  </Button>
+                </div>
+                <div className="flex-grow text-sm">
+                  <p className="font-bold">تفعيل خدمة الانترنت - شريحة (3G)</p>
+                  <div className="text-xs mt-1 text-muted-foreground">
+                    <p className="text-green-600">الإشتراك: 09:54:37 2023-06-20</p>
+                    <p className="text-red-600">الإنتهاء: 00:00:00 2037-01-01</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+             <Card className="p-3 bg-card/80">
+              <div className="flex items-center gap-3">
+                <div className="flex-none">
+                  <Button className="bg-destructive text-white hover:bg-destructive/90 w-16 h-16 flex flex-col items-center">
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="text-xs mt-1">تجديد</span>
+                  </Button>
+                </div>
+                <div className="flex-grow text-sm">
+                  <p className="font-bold">مزايا الشهريه - 350 دقيقه 150 رساله 250 ميجا</p>
+                  <div className="text-xs mt-1 text-muted-foreground">
+                    <p className="text-green-600">الإشتراك: 20:42:53 2025-12-08</p>
+                    <p className="text-red-600">الإنتهاء: 23:59:59 2026-01-06</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Packages Accordion */}
+         <Accordion type="single" collapsible className="w-full space-y-3">
+            <AccordionItem value="item-1" className="border-0">
+                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <div className="flex items-center justify-between w-full">
+                        <span>باقات مزايا</span>
+                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">3G</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-muted p-4 rounded-b-xl">
+                    سيتم عرض باقات مزايا هنا قريباً.
+                </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2" className="border-0">
+                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                     <div className="flex items-center justify-between w-full">
+                        <span>باقات فورجي</span>
+                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">4G</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-muted p-4 rounded-b-xl">
+                    سيتم عرض باقات فورجي هنا قريباً.
+                </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3" className="border-0">
+                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <div className="flex items-center justify-between w-full">
+                        <span>باقات فولتي VOLTE</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">4G</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-muted p-4 rounded-b-xl">
+                     سيتم عرض باقات فولتي هنا قريباً.
+                </AccordionContent>
+            </AccordionItem>
+             <AccordionItem value="item-4" className="border-0">
+                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <div className="flex items-center justify-between w-full">
+                        <span>باقات الإنترنت الشهرية</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">↑↓</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-muted p-4 rounded-b-xl">
+                     سيتم عرض باقات الإنترنت الشهرية هنا قريباً.
+                </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-5" className="border-0">
+                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <div className="flex items-center justify-between w-full">
+                        <span>باقات الإنترنت 10 ايام</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-xs font-bold p-0.5">10 MP</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-muted p-4 rounded-b-xl">
+                     سيتم عرض باقات الإنترنت 10 ايام هنا قريباً.
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+      </div>
+    );
 
 
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground">
-            {provider === 'unknown' ? (
-                 <SimpleHeader title="كبينة السداد" />
-            ) : (
-                <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
-                    <div className='flex items-center gap-2'>
-                        <Button variant="ghost" size="icon"><Heart className="h-6 w-6 text-muted-foreground" /></Button>
-                        <Button variant="ghost" size="icon"><HelpCircle className="h-6 w-6 text-muted-foreground" /></Button>
-                    </div>
-                    <h1 className="font-bold text-lg text-center">رصيد وباقات</h1>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                        <ArrowLeft className="h-6 w-6" />
-                    </Button>
-                </header>
-            )}
-
+            <SimpleHeader title="كبينة السداد" />
+            
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
                 <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
@@ -160,106 +257,88 @@ export default function PaymentCabinPage() {
                                 value={phoneNumber}
                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                                 className={cn(
-                                    "bg-transparent border-0 text-lg font-bold p-0 h-auto pr-10 text-right focus-visible:ring-0 shadow-none focus-visible:ring-offset-0",
+                                    "bg-transparent border-0 text-lg font-bold p-0 h-auto text-right focus-visible:ring-0 shadow-none focus-visible:ring-offset-0",
                                     provider !== 'unknown' ? serviceConfig[provider].ringColor : ''
                                 )}
                                 placeholder="أدخل رقم الجوال"
                                 maxLength={currentMaxLength}
                             />
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-white rounded-lg shadow-sm">
-                                <Users className="h-5 w-5 text-muted-foreground" />
-                            </div>
+                        </div>
+                         <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <Users className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </CardContent>
                 </Card>
 
                 {provider === 'yemen-mobile' && (
                     <div className="space-y-4 animate-in fade-in-0 duration-500">
-                        <Tabs defaultValue="دفع مسبق" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid w-full grid-cols-4 bg-primary/5 p-1 h-auto">
-                                <TabsTrigger value="سداد" className="text-xs">سداد</TabsTrigger>
-                                <TabsTrigger value="باقات" className="text-xs">باقات</TabsTrigger>
-                                <TabsTrigger value="دفع مسبق" className="text-xs">دفع مسبق</TabsTrigger>
-                                <TabsTrigger value="فوترة" className="text-xs">فوترة</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="باقات" className="mt-4">
-                                <div className="space-y-4">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="text-base text-center">الباقات المشترك بها</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-center text-muted-foreground py-4">
-                                                <Archive className="mx-auto h-8 w-8 mb-2" />
-                                                <p className="text-sm">سيتم عرض باقاتك الحالية هنا قريباً.</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                        <div className="grid grid-cols-4 bg-muted p-1 rounded-xl">
+                            {['سداد', 'باقات', 'دفع مسبق', 'فوترة'].map((tab) => (
+                               <button 
+                                key={tab} 
+                                onClick={() => setActiveTab(tab)}
+                                className={cn(
+                                    "text-xs py-1.5 rounded-lg transition-colors",
+                                    activeTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                                )}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
 
-                                    <Tabs defaultValue="mazaya-3g" className="w-full">
-                                        <TabsList className="grid w-full grid-cols-3 h-auto">
-                                            <TabsTrigger value="mazaya-3g" className="text-xs">مزايا 3G</TabsTrigger>
-                                            <TabsTrigger value="mazaya-4g" className="text-xs">مزايا 4G</TabsTrigger>
-                                            <TabsTrigger value="net-3g" className="text-xs">نت 3G</TabsTrigger>
-                                            <TabsTrigger value="net-4g" className="text-xs">نت 4G</TabsTrigger>
-                                            <TabsTrigger value="volte" className="text-xs">فولتي 10 ايام</TabsTrigger>
-                                        </TabsList>
-                                         <TabsContent value="mazaya-3g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات مزايا 3G هنا قريباً.</TabsContent>
-                                         <TabsContent value="mazaya-4g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات مزايا 4G هنا قريباً.</TabsContent>
-                                         <TabsContent value="net-3g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات نت 3G هنا قريباً.</TabsContent>
-                                         <TabsContent value="net-4g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات نت 4G هنا قريباً.</TabsContent>
-                                         <TabsContent value="volte" className="py-4 text-center text-muted-foreground">سيتم عرض باقات فولتي هنا قريباً.</TabsContent>
-                                    </Tabs>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="دفع مسبق">
-                                <div className="space-y-4">
-                                    <Card className="rounded-2xl shadow-lg border-2 border-destructive/20 bg-destructive/5 text-center">
-                                        <CardContent className="p-4">
-                                            <p className="text-sm text-destructive/80">الرصيد الحالي للإشتراك</p>
-                                            <p className="text-3xl font-bold text-destructive mt-1">0</p>
-                                        </CardContent>
-                                    </Card>
-                                    
-                                    <div className="grid grid-cols-5 gap-2">
-                                    {predefinedAmounts.map(amount => (
-                                        <Button 
-                                                key={amount} 
-                                                variant={selectedAmount === amount ? "default" : "outline"}
-                                                onClick={() => handleAmountButtonClick(amount)}
-                                                className={cn(
-                                                    "h-12 text-sm font-bold rounded-xl",
-                                                    selectedAmount === amount && `bg-destructive hover:bg-destructive/90 border-destructive text-white`
-                                                )}
-                                        >
-                                            {amount}
-                                        </Button>
-                                    ))}
-                                    </div>
+                         {activeTab === 'باقات' && renderYemenMobilePackages()}
 
-                                    <div>
-                                        <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
-                                        <Input 
-                                            id="customAmount"
-                                            type="number" 
-                                            placeholder="أدخل المبلغ"
-                                            value={customAmount}
-                                            onChange={handleCustomAmountChange}
-                                            className="h-14 text-lg text-center"
-                                        />
-                                    </div>
+                         {activeTab === 'دفع مسبق' && (
+                            <div className="space-y-4">
+                                <Card className="rounded-2xl shadow-lg border-2 border-destructive/20 bg-destructive/5 text-center">
+                                    <CardContent className="p-4">
+                                        <p className="text-sm text-destructive/80">الرصيد الحالي للإشتراك</p>
+                                        <p className="text-3xl font-bold text-destructive mt-1">0</p>
+                                    </CardContent>
+                                </Card>
+                                
+                                <div className="grid grid-cols-5 gap-2">
+                                {predefinedAmounts.map(amount => (
+                                    <Button 
+                                            key={amount} 
+                                            variant={selectedAmount === amount ? "default" : "outline"}
+                                            onClick={() => handleAmountButtonClick(amount)}
+                                            className={cn(
+                                                "h-12 text-sm font-bold rounded-xl",
+                                                selectedAmount === amount && `bg-destructive hover:bg-destructive/90 border-destructive text-white`
+                                            )}
+                                    >
+                                        {amount}
+                                    </Button>
+                                ))}
                                 </div>
-                            </TabsContent>
-                             {/* Placeholder for other tabs */}
-                            <TabsContent value="سداد" className="text-center text-muted-foreground py-10">سيتم تفعيل هذه الميزة قريباً.</TabsContent>
-                            <TabsContent value="فوترة" className="text-center text-muted-foreground py-10">سيتم تفعيل هذه الميزة قريباً.</TabsContent>
-                        </Tabs>
+
+                                <div>
+                                    <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
+                                    <Input 
+                                        id="customAmount"
+                                        type="number" 
+                                        placeholder="أدخل المبلغ"
+                                        value={customAmount}
+                                        onChange={handleCustomAmountChange}
+                                        className="h-14 text-lg text-center"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        
+                        {(activeTab === 'سداد' || activeTab === 'فوترة') && (
+                            <div className="text-center text-muted-foreground py-10">
+                                <p>سيتم تفعيل هذه الميزة قريباً.</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
             {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
-                <div className="p-4 bg-background border-t shadow-inner">
+                <div className="p-4 bg-background border-t shadow-inner sticky bottom-0">
                     <Button 
                         className="w-full h-12 text-lg font-bold bg-destructive hover:bg-destructive/90" 
                         disabled={finalAmount <= 0}

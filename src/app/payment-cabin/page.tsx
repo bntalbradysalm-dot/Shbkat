@@ -28,23 +28,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, writeBatch, increment, collection } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, writeBatch } from '@/firebase';
+import { doc, increment, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
+import { CheckCircle } from 'lucide-react';
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
 
 type PackageInfo = {
     packageName: string;
-    paymentType: string;
-    sliceType: string;
-    price: string;
+    paymentType?: string;
+    sliceType?: string;
+    price: number;
     validity: string;
     minutes: string;
-    messages: string;
+    messages?: string;
     data: string;
 };
+
+type Yemen4GPackageInfo = Omit<PackageInfo, 'paymentType'|'sliceType'|'messages'>;
+
+const yemen4gPackages: Yemen4GPackageInfo[] = [
+    { packageName: "باقة 15 جيجا", data: "15 GB", price: 2400, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة" },
+    { packageName: "باقة 25 جيجا", data: "25 GB", price: 4000, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة + 50 دقيقة خارجها" },
+    { packageName: "باقة 60 جيجا", data: "60 GB", price: 8000, validity: "شهر", minutes: "اتصال مجاني + 50 دقيقة" },
+    { packageName: "باقة 130 جيجا", data: "130 GB", price: 16000, validity: "شهر", minutes: "اتصال مجاني 100 دقيقة اتصال" },
+    { packageName: "باقة 250 جيجا", data: "250 GB", price: 26000, validity: "شهر", minutes: "اتصال مجاني + 100 خارجها" },
+    { packageName: "باقة 500 جيجا", data: "500 GB", price: 46000, validity: "شهر", minutes: "اتصال مجاني + 50 خارجها" },
+];
 
 type SubscriptionInfo = {
     name: string;
@@ -55,6 +68,8 @@ type SubscriptionInfo = {
 
 type UserProfile = {
   balance?: number;
+  displayName?: string;
+  phoneNumber?: string;
 };
 
 const BalanceDisplay = () => {
@@ -97,9 +112,9 @@ const serviceConfig = {
     destructiveColor: 'bg-red-500 hover:bg-red-600',
   },
    'you': {
-    name: 'YOU',
+    name: 'YOU (Yemen 4G)',
     logo: 'https://i.postimg.cc/TPyC1Prn/YOU-2.png',
-    prefix: '73',
+    prefix: '71',
     length: 9,
     color: 'bg-yellow-400',
     textColor: 'text-yellow-400',
@@ -150,14 +165,14 @@ const serviceConfig = {
 
 const getProviderFromPhone = (phone: string): ServiceProvider => {
     if (phone.startsWith('77')) return 'yemen-mobile';
-    if (phone.startsWith('73')) return 'you';
+    if (phone.startsWith('71')) return 'you';
     if (phone.startsWith('10')) return 'yemen-4g';
     if (phone.startsWith('05') && phone.length <= 8) return 'adsl';
     // Add more rules here
     return 'unknown';
 };
 
-const predefinedAmounts = [2000, 1000, 500, 200, 100];
+const predefinedAmounts = [100, 200, 500, 1000, 2000];
 
 const PackageCard = ({
     packageInfo,
@@ -202,6 +217,27 @@ const PackageCard = ({
     );
 };
 
+const Yemen4GPackageCard = ({ packageInfo, onPackageSelect }: { packageInfo: Yemen4GPackageInfo; onPackageSelect: (pkg: Yemen4GPackageInfo) => void; }) => {
+    return (
+        <Card onClick={() => onPackageSelect(packageInfo)} className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300">
+            <CardContent className="p-4 text-center flex flex-col h-full">
+                <h3 className="text-lg font-bold text-foreground">{packageInfo.packageName}</h3>
+                <div className="my-2">
+                    <p className="text-3xl font-bold text-primary dark:text-primary-foreground">
+                        {packageInfo.price.toLocaleString('en-US')}
+                    </p>
+                     <p className="text-xs text-muted-foreground">ريال يمني</p>
+                </div>
+                <div className="mt-auto space-y-2 text-sm text-muted-foreground border-t pt-3">
+                    <p className="flex items-center justify-center gap-2"><Wifi className="w-4 h-4 text-blue-500" /> {packageInfo.data}</p>
+                    <p><Phone className="w-4 h-4 inline ml-1 text-green-500" />{packageInfo.minutes}</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+
 const SubscriptionCard = ({
     subscriptionInfo,
     onRenewSelect
@@ -241,13 +277,16 @@ export default function PaymentCabinPage() {
     const [isDebtor, setIsDebtor] = useState(true); // Placeholder for debt status
     const [netAmount, setNetAmount] = useState('');
     
-    const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<PackageInfo | Yemen4GPackageInfo | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isConfirmBalanceOpen, setIsConfirmBalanceOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const { user } = useUser();
     const firestore = useFirestore();
+    const router = useRouter();
+
 
     const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [user, firestore]);
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -271,6 +310,14 @@ export default function PaymentCabinPage() {
     }, [finalAmount]);
 
     const checkPhoneNumber = () => {
+        if (phoneNumber.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'رقم الهاتف مطلوب',
+                description: 'الرجاء إدخال رقم الهاتف أولاً.',
+            });
+            return false;
+        }
         if (phoneNumber.length !== currentMaxLength) {
             toast({
                 variant: 'destructive',
@@ -296,10 +343,59 @@ export default function PaymentCabinPage() {
         }
     };
     
-     const handlePackageSelect = (pkg: PackageInfo) => {
+     const handlePackageSelect = (pkg: PackageInfo | Yemen4GPackageInfo) => {
         if (!checkPhoneNumber()) return;
         setSelectedPackage(pkg);
         setIsConfirmOpen(true);
+    };
+    
+    const handleYemen4GConfirmPurchase = async () => {
+        if (!user || !userDocRef || !firestore || !selectedPackage || !userProfile?.displayName || !userProfile?.phoneNumber) return;
+        
+        const commission = selectedPackage.price * 0.10;
+        const totalCost = selectedPackage.price + commission;
+
+        if ((userProfile?.balance ?? 0) < totalCost) {
+            toast({ variant: 'destructive', title: 'رصيد غير كاف', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+            setIsConfirmOpen(false);
+            return;
+        }
+        
+        setIsProcessing(true);
+
+        const requestData = {
+            userId: user.uid,
+            userName: userProfile.displayName,
+            userPhoneNumber: userProfile.phoneNumber,
+            targetPhoneNumber: phoneNumber,
+            packageTitle: selectedPackage.packageName,
+            packagePrice: selectedPackage.price,
+            commission: commission,
+            totalCost: totalCost,
+            status: 'pending',
+            requestTimestamp: new Date().toISOString(),
+        };
+
+        const batch = writeBatch(firestore);
+
+        // 1. Deduct total cost from user's balance
+        batch.update(userDocRef, { balance: increment(-totalCost) });
+        
+        // 2. Create the yemen4g request document
+        const requestsCollection = collection(firestore, 'yemen4gRequests');
+        const requestDocRef = doc(requestsCollection);
+        batch.set(requestDocRef, requestData);
+
+        try {
+            await batch.commit();
+            setShowSuccess(true);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'خطأ', description: 'فشل إرسال طلب السداد.' });
+        } finally {
+            setIsProcessing(false);
+            setIsConfirmOpen(false);
+        }
     };
     
 
@@ -347,7 +443,7 @@ export default function PaymentCabinPage() {
             packageName: "باقة مزايا فورجي الاسبوعية",
             paymentType: "دفع مسبق",
             sliceType: "شريحة",
-            price: "1500",
+            price: 1500,
             validity: "7 أيام",
             minutes: "200",
             messages: "300",
@@ -472,6 +568,38 @@ export default function PaymentCabinPage() {
           </div>
         );
     }
+    
+    const renderYemen4GPackages = () => (
+        <div className="space-y-4">
+             <div className="grid grid-cols-1 gap-4">
+                {yemen4gPackages.map((pkg, index) => (
+                    <Yemen4GPackageCard key={index} packageInfo={pkg} onPackageSelect={handlePackageSelect} />
+                ))}
+            </div>
+        </div>
+    );
+
+     if (showSuccess) {
+      return (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+          <Card className="w-full max-w-sm text-center shadow-2xl">
+              <CardContent className="p-6">
+                  <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
+                          <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                      </div>
+                      <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
+                      <p className="text-sm text-muted-foreground">ستتم معالجة طلب سداد الباقة في أقرب وقت ممكن.</p>
+                      <div className="w-full pt-4">
+                          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>العودة للرئيسية</Button>
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
 
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -482,7 +610,8 @@ export default function PaymentCabinPage() {
                 <BalanceDisplay />
                  <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
-                    provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' : 'border-border bg-card'
+                    provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' : 
+                    provider === 'you' ? 'border-yellow-400/20 bg-yellow-400/5' : 'border-border bg-card'
                  )}>
                     <CardContent className="p-4 flex items-center gap-3">
                          {provider !== 'unknown' && (
@@ -589,6 +718,11 @@ export default function PaymentCabinPage() {
                         
                     </div>
                 )}
+                 {provider === 'you' && (
+                    <div className="space-y-4 animate-in fade-in-0 duration-500">
+                        {renderYemen4GPackages()}
+                    </div>
+                 )}
             </div>
 
             {provider === 'yemen-mobile' && activeTab === 'رصيد' && (
@@ -629,17 +763,25 @@ export default function PaymentCabinPage() {
                                     <p className="text-muted-foreground">المبلغ</p>
                                     <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
                                 </div>
+                                {provider === 'you' && (
+                                     <div className="bg-muted p-3 rounded-lg text-center space-y-1">
+                                        <p className="flex justify-between"><span>سعر الباقة:</span> <span>{selectedPackage.price.toLocaleString('en-US')} ريال</span></p>
+                                        <p className="flex justify-between"><span>العمولة (10%):</span> <span>{(selectedPackage.price * 0.10).toLocaleString('en-US')} ريال</span></p>
+                                        <hr/>
+                                        <p className="flex justify-between pt-1 font-bold text-destructive text-base"><span>الإجمالي:</span> <span>{(selectedPackage.price * 1.10).toLocaleString('en-US')} ريال</span></p>
+                                    </div>
+                                )}
                             </div>
                         </AlertDialogDescription>
                         <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-2">
-                            <AlertDialogAction className='flex-1' onClick={() => {
+                            <AlertDialogAction className='flex-1' onClick={provider === 'you' ? handleYemen4GConfirmPurchase : () => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
                                 toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
-                            }}>
-                                تأكيد
+                            }} disabled={isProcessing}>
+                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'تأكيد'}
                             </AlertDialogAction>
-                            <AlertDialogCancel className='flex-1 mt-0'>إلغاء</AlertDialogCancel>
+                            <AlertDialogCancel className='flex-1 mt-0' disabled={isProcessing}>إلغاء</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}

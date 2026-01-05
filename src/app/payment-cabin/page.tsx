@@ -6,7 +6,6 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -19,9 +18,32 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
+
+type PackageInfo = {
+    packageName: string;
+    paymentType: string;
+    sliceType: string;
+    price: string;
+    validity: string;
+    minutes: string;
+    messages: string;
+    data: string;
+};
 
 const serviceConfig = {
   'yemen-mobile': {
@@ -98,55 +120,48 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
 const predefinedAmounts = [2000, 1000, 500, 200, 100];
 
 const PackageCard = ({
-    packageName,
-    paymentType,
-    sliceType,
-    price,
-    validity,
-    minutes,
-    messages,
-    data,
-}:{
-    packageName: string;
-    paymentType: string;
-    sliceType: string;
-    price: string;
-    validity: string;
-    minutes: string;
-    messages: string;
-    data: string;
-}) => (
-  <Card className="relative overflow-hidden rounded-xl border border-red-200/50 bg-red-50 shadow-md">
-    <CardContent className="p-4 pt-4 text-center">
-      <h3 className="text-base font-bold text-red-700">{packageName}</h3>
-      <div className="mt-1 flex justify-center items-center gap-2 text-xs">
-        <span className="font-semibold text-gray-700">{paymentType}</span>
-        <span className="text-gray-500">{sliceType}</span>
-      </div>
-      <p className="my-2 text-3xl font-bold text-gray-800">
-        {price}
-      </p>
-    </CardContent>
-    <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/30 rtl:divide-x-reverse">
-        <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Globe className="h-4 w-4 text-gray-600 mb-1" />
-            <span className="text-xs font-semibold">{data}</span>
+    packageInfo,
+    onPackageSelect,
+}: {
+    packageInfo: PackageInfo;
+    onPackageSelect: (pkg: PackageInfo) => void;
+}) => {
+    const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
+    return (
+        <div onClick={() => onPackageSelect(packageInfo)}>
+            <Card className="relative overflow-hidden rounded-xl border border-red-200/50 bg-red-50 shadow-md cursor-pointer hover:shadow-lg hover:border-red-300 transition-shadow">
+                <CardContent className="p-4 pt-4 text-center">
+                    <h3 className="text-base font-bold text-red-700">{packageName}</h3>
+                    <div className="mt-1 flex justify-center items-center gap-2 text-xs">
+                        <span className="font-semibold text-gray-700">{paymentType}</span>
+                        <span className="text-gray-500">{sliceType}</span>
+                    </div>
+                    <p className="my-2 text-3xl font-bold text-gray-800">
+                        {price}
+                    </p>
+                </CardContent>
+                <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/30 rtl:divide-x-reverse">
+                    <div className="flex flex-col items-center justify-center p-2 text-center">
+                        <Globe className="h-4 w-4 text-gray-600 mb-1" />
+                        <span className="text-xs font-semibold">{data}</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 text-center">
+                        <Mail className="h-4 w-4 text-gray-600 mb-1" />
+                        <span className="text-xs font-semibold">{messages}</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 text-center">
+                        <Phone className="h-4 w-4 text-gray-600 mb-1" />
+                        <span className="text-xs font-semibold">{minutes}</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 text-center">
+                        <Clock className="h-4 w-4 text-gray-600 mb-1" />
+                        <span className="text-xs font-semibold">{validity}</span>
+                    </div>
+                </div>
+            </Card>
         </div>
-        <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Mail className="h-4 w-4 text-gray-600 mb-1" />
-            <span className="text-xs font-semibold">{messages}</span>
-        </div>
-        <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Phone className="h-4 w-4 text-gray-600 mb-1" />
-            <span className="text-xs font-semibold">{minutes}</span>
-        </div>
-        <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Clock className="h-4 w-4 text-gray-600 mb-1" />
-            <span className="text-xs font-semibold">{validity}</span>
-        </div>
-    </div>
-  </Card>
-);
+    );
+};
 
 export default function PaymentCabinPage() {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -155,6 +170,9 @@ export default function PaymentCabinPage() {
     const [customAmount, setCustomAmount] = useState('');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
     const { toast } = useToast();
+    
+    const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     useEffect(() => {
         const detectedProvider = getProviderFromPhone(phoneNumber);
@@ -172,6 +190,11 @@ export default function PaymentCabinPage() {
         if (value !== '') {
             setSelectedAmount(null);
         }
+    };
+    
+     const handlePackageSelect = (pkg: PackageInfo) => {
+        setSelectedPackage(pkg);
+        setIsConfirmOpen(true);
     };
 
     const handleSelectContact = async () => {
@@ -204,7 +227,7 @@ export default function PaymentCabinPage() {
     const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
     
     const renderYemenMobilePackages = () => {
-        const examplePackage = {
+        const examplePackage: PackageInfo = {
             packageName: "باقة مزايا فورجي الاسبوعية",
             paymentType: "دفع مسبق",
             sliceType: "شريحة",
@@ -213,7 +236,6 @@ export default function PaymentCabinPage() {
             minutes: "200 دقيقة",
             messages: "300 رسالة",
             data: "2 جيجا",
-            logo: "https://i.postimg.cc/yNZxB8js/unnamed-(1).png"
         };
         return (
           <div className="space-y-4">
@@ -286,7 +308,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                        سيتم عرض باقات مزايا هنا قريباً.
+                         <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2" className="border-0">
@@ -297,7 +319,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                         <PackageCard {...examplePackage} />
+                        <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3" className="border-0">
@@ -457,6 +479,29 @@ export default function PaymentCabinPage() {
                     </Button>
                 </div>
             )}
+             <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                {selectedPackage && (
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                هل أنت متأكد من رغبتك في تفعيل باقة "{selectedPackage.packageName}" للرقم {phoneNumber}؟
+                                سيتم خصم مبلغ {selectedPackage.price} ريال من رصيدك.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => {
+                                // Add purchase logic here
+                                setIsConfirmOpen(false);
+                                toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
+                            }}>
+                                تأكيد
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                )}
+            </AlertDialog>
         </div>
     );
 }

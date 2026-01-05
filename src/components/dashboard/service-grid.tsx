@@ -8,6 +8,7 @@ import {
   History,
   Wifi,
   CreditCard,
+  Building,
 } from 'lucide-react';
 import Link from 'next/link';
 import { PromotionalImage } from './promotional-image';
@@ -25,7 +26,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'يمن 4G', icon: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png', href: '/pay-balance' },
+  { name: 'كبينة السداد', icon: Building, href: '/payment-cabin' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, increment, collection, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -119,7 +119,7 @@ const serviceConfig = {
     destructiveColor: 'bg-red-500 hover:bg-red-600',
   },
    'you': {
-    name: 'YOU (Yemen 4G)',
+    name: 'YOU',
     logo: 'https://i.postimg.cc/TPyC1Prn/YOU-2.png',
     prefix: '71',
     length: 9,
@@ -179,7 +179,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [100, 200, 500, 1000, 2000].reverse();
+const predefinedAmounts = [100, 200, 500, 1000, 2000];
 
 const PackageCard = ({
     packageInfo,
@@ -226,7 +226,7 @@ const PackageCard = ({
 
 const Yemen4GPackageCard = ({ packageInfo, onPackageSelect }: { packageInfo: Yemen4GPackageInfo; onPackageSelect: (pkg: Yemen4GPackageInfo) => void; }) => {
     return (
-        <Card onClick={() => onPackageSelect(packageInfo)} className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300">
+        <Card onClick={() => onPackageSelect(packageInfo)} className="grid grid-cols-1 overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-300">
             <CardContent className="p-4 text-center flex flex-col h-full">
                 <h3 className="text-lg font-bold text-foreground">{packageInfo.packageName}</h3>
                 <div className="my-2">
@@ -585,6 +585,16 @@ export default function PaymentCabinPage() {
             </div>
         </div>
     );
+    
+     const renderYouPackages = () => (
+        <div className="space-y-4">
+             <div className="grid grid-cols-1 gap-4">
+                {yemen4gPackages.map((pkg, index) => (
+                    <Yemen4GPackageCard key={index} packageInfo={pkg} onPackageSelect={handlePackageSelect} />
+                ))}
+            </div>
+        </div>
+    );
 
      if (showSuccess) {
       return (
@@ -618,7 +628,8 @@ export default function PaymentCabinPage() {
                  <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
                     provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' : 
-                    provider === 'you' ? 'border-yellow-400/20 bg-yellow-400/5' : 'border-border bg-card'
+                    provider === 'you' ? 'border-yellow-400/20 bg-yellow-400/5' :
+                    provider === 'yemen-4g' ? 'border-blue-500/20 bg-blue-500/5' : 'border-border bg-card'
                  )}>
                     <CardContent className="p-4 flex items-center gap-3">
                          {provider !== 'unknown' && (
@@ -725,9 +736,9 @@ export default function PaymentCabinPage() {
                         
                     </div>
                 )}
-                 {provider === 'you' && (
+                 {(provider === 'you' || provider === 'yemen-4g') && (
                     <div className="space-y-4 animate-in fade-in-0 duration-500">
-                        {renderYemen4GPackages()}
+                        {renderYouPackages()}
                     </div>
                  )}
             </div>
@@ -770,7 +781,7 @@ export default function PaymentCabinPage() {
                                     <p className="text-muted-foreground">المبلغ</p>
                                     <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
                                 </div>
-                                {provider === 'you' && (
+                                {(provider === 'you' || provider === 'yemen-4g') && (
                                      <div className="bg-muted p-3 rounded-lg text-center space-y-1">
                                         <p className="flex justify-between"><span>سعر الباقة:</span> <span>{selectedPackage.price.toLocaleString('en-US')} ريال</span></p>
                                         <p className="flex justify-between"><span>العمولة (10%):</span> <span>{(selectedPackage.price * 0.10).toLocaleString('en-US')} ريال</span></p>
@@ -781,7 +792,7 @@ export default function PaymentCabinPage() {
                             </div>
                         </AlertDialogDescription>
                         <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-2">
-                            <AlertDialogAction className='flex-1' onClick={provider === 'you' ? handleYemen4GConfirmPurchase : () => {
+                            <AlertDialogAction className='flex-1' onClick={(provider === 'you' || provider === 'yemen-4g') ? handleYemen4GConfirmPurchase : () => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
                                 toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
@@ -821,5 +832,7 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
+    
 
     

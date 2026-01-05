@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft } from 'lucide-react';
+import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft, Archive } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
 
@@ -18,49 +19,61 @@ const serviceConfig = {
     name: 'يمن موبايل',
     logo: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png',
     prefix: '77',
+    length: 9,
     color: 'bg-red-500',
     textColor: 'text-red-500',
     ringColor: 'focus-visible:ring-red-500',
+    destructiveColor: 'bg-destructive hover:bg-destructive/90',
   },
    'you': {
     name: 'YOU',
     logo: 'https://i.postimg.cc/TPyC1Prn/YOU-2.png',
     prefix: '73',
+    length: 9,
     color: 'bg-yellow-400',
     textColor: 'text-yellow-400',
     ringColor: 'focus-visible:ring-yellow-400',
+    destructiveColor: 'bg-yellow-500 hover:bg-yellow-600',
   },
   'yemen-4g': {
     name: 'يمن 4G',
     logo: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png',
-    prefix: '10', // Example prefix
+    prefix: '10',
+    length: 9,
     color: 'bg-blue-500',
     textColor: 'text-blue-500',
     ringColor: 'focus-visible:ring-blue-500',
+    destructiveColor: 'bg-blue-500 hover:bg-blue-600',
   },
     'adsl': {
     name: 'ADSL',
     logo: 'https://i.postimg.cc/tCFs01p9/ADSL.png',
-    prefix: '05', // Example prefix
+    prefix: '05',
+    length: 8,
     color: 'bg-blue-800',
     textColor: 'text-blue-800',
     ringColor: 'focus-visible:ring-blue-800',
+    destructiveColor: 'bg-blue-800 hover:bg-blue-900',
   },
   'landline': {
     name: 'الهاتف الثابت',
     logo: 'https://i.postimg.cc/q73b2z3W/landline.png',
-    prefix: '', // Example prefix
+    prefix: '', // No specific prefix, maybe handle by length
+    length: 7, // Assuming landline numbers are 7 digits
     color: 'bg-yellow-600',
     textColor: 'text-yellow-600',
     ringColor: 'focus-visible:ring-yellow-600',
+    destructiveColor: 'bg-yellow-600 hover:bg-yellow-700',
   },
   'unknown': {
       name: 'غير معروف',
       logo: '',
       prefix: '',
+      length: 9,
       color: 'bg-gray-400',
       textColor: 'text-gray-400',
       ringColor: 'focus-visible:ring-gray-400',
+      destructiveColor: 'bg-gray-500 hover:bg-gray-600',
   }
 };
 
@@ -68,7 +81,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     if (phone.startsWith('77')) return 'yemen-mobile';
     if (phone.startsWith('73')) return 'you';
     if (phone.startsWith('10')) return 'yemen-4g';
-    if (phone.startsWith('05')) return 'adsl';
+    if (phone.startsWith('05') && phone.length <= 8) return 'adsl';
     // Add more rules here
     return 'unknown';
 };
@@ -102,6 +115,9 @@ export default function PaymentCabinPage() {
     };
     
     const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
+    
+    const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
+
 
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -121,10 +137,13 @@ export default function PaymentCabinPage() {
             )}
 
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
-                <Card className="rounded-2xl shadow-lg border-2 border-primary/20 bg-primary/5">
+                <Card className={cn(
+                    "rounded-2xl shadow-lg border-2 transition-colors duration-500",
+                    provider !== 'unknown' ? 'border-primary/20 bg-primary/5' : 'border-border bg-card'
+                )}>
                     <CardContent className="p-4 flex items-center gap-3">
                          {provider !== 'unknown' && (
-                            <div className="p-1 bg-white rounded-lg shadow">
+                            <div className="p-1 bg-white rounded-lg shadow animate-in fade-in-0 zoom-in-75">
                                 <Image
                                     src={serviceConfig[provider].logo}
                                     alt={serviceConfig[provider].name}
@@ -145,7 +164,7 @@ export default function PaymentCabinPage() {
                                     provider !== 'unknown' ? serviceConfig[provider].ringColor : ''
                                 )}
                                 placeholder="أدخل رقم الجوال"
-                                maxLength={9}
+                                maxLength={currentMaxLength}
                             />
                             <div className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-white rounded-lg shadow-sm">
                                 <Users className="h-5 w-5 text-muted-foreground" />
@@ -163,47 +182,83 @@ export default function PaymentCabinPage() {
                                 <TabsTrigger value="دفع مسبق" className="text-xs">دفع مسبق</TabsTrigger>
                                 <TabsTrigger value="فوترة" className="text-xs">فوترة</TabsTrigger>
                             </TabsList>
-                        </Tabs>
-                        
-                        <Card className="rounded-2xl shadow-lg border-2 border-destructive/20 bg-destructive/5 text-center">
-                            <CardContent className="p-4">
-                                <p className="text-sm text-destructive/80">الرصيد الحالي للإشتراك</p>
-                                <p className="text-3xl font-bold text-destructive mt-1">0</p>
-                            </CardContent>
-                        </Card>
-                        
-                        <div className="grid grid-cols-5 gap-2">
-                           {predefinedAmounts.map(amount => (
-                               <Button 
-                                    key={amount} 
-                                    variant={selectedAmount === amount ? "default" : "outline"}
-                                    onClick={() => handleAmountButtonClick(amount)}
-                                    className={cn(
-                                        "h-12 text-sm font-bold rounded-xl",
-                                        selectedAmount === amount && `bg-destructive hover:bg-destructive/90 border-destructive text-white`
-                                    )}
-                               >
-                                   {amount}
-                               </Button>
-                           ))}
-                        </div>
+                            <TabsContent value="باقات" className="mt-4">
+                                <div className="space-y-4">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="text-base text-center">الباقات المشترك بها</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-center text-muted-foreground py-4">
+                                                <Archive className="mx-auto h-8 w-8 mb-2" />
+                                                <p className="text-sm">سيتم عرض باقاتك الحالية هنا قريباً.</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-                        <div>
-                            <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
-                            <Input 
-                                id="customAmount"
-                                type="number" 
-                                placeholder="أدخل المبلغ"
-                                value={customAmount}
-                                onChange={handleCustomAmountChange}
-                                className="h-14 text-lg text-center"
-                            />
-                        </div>
+                                    <Tabs defaultValue="mazaya-3g" className="w-full">
+                                        <TabsList className="grid w-full grid-cols-3 h-auto">
+                                            <TabsTrigger value="mazaya-3g" className="text-xs">مزايا 3G</TabsTrigger>
+                                            <TabsTrigger value="mazaya-4g" className="text-xs">مزايا 4G</TabsTrigger>
+                                            <TabsTrigger value="net-3g" className="text-xs">نت 3G</TabsTrigger>
+                                            <TabsTrigger value="net-4g" className="text-xs">نت 4G</TabsTrigger>
+                                            <TabsTrigger value="volte" className="text-xs">فولتي 10 ايام</TabsTrigger>
+                                        </TabsList>
+                                         <TabsContent value="mazaya-3g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات مزايا 3G هنا قريباً.</TabsContent>
+                                         <TabsContent value="mazaya-4g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات مزايا 4G هنا قريباً.</TabsContent>
+                                         <TabsContent value="net-3g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات نت 3G هنا قريباً.</TabsContent>
+                                         <TabsContent value="net-4g" className="py-4 text-center text-muted-foreground">سيتم عرض باقات نت 4G هنا قريباً.</TabsContent>
+                                         <TabsContent value="volte" className="py-4 text-center text-muted-foreground">سيتم عرض باقات فولتي هنا قريباً.</TabsContent>
+                                    </Tabs>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="دفع مسبق">
+                                <div className="space-y-4">
+                                    <Card className="rounded-2xl shadow-lg border-2 border-destructive/20 bg-destructive/5 text-center">
+                                        <CardContent className="p-4">
+                                            <p className="text-sm text-destructive/80">الرصيد الحالي للإشتراك</p>
+                                            <p className="text-3xl font-bold text-destructive mt-1">0</p>
+                                        </CardContent>
+                                    </Card>
+                                    
+                                    <div className="grid grid-cols-5 gap-2">
+                                    {predefinedAmounts.map(amount => (
+                                        <Button 
+                                                key={amount} 
+                                                variant={selectedAmount === amount ? "default" : "outline"}
+                                                onClick={() => handleAmountButtonClick(amount)}
+                                                className={cn(
+                                                    "h-12 text-sm font-bold rounded-xl",
+                                                    selectedAmount === amount && `bg-destructive hover:bg-destructive/90 border-destructive text-white`
+                                                )}
+                                        >
+                                            {amount}
+                                        </Button>
+                                    ))}
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
+                                        <Input 
+                                            id="customAmount"
+                                            type="number" 
+                                            placeholder="أدخل المبلغ"
+                                            value={customAmount}
+                                            onChange={handleCustomAmountChange}
+                                            className="h-14 text-lg text-center"
+                                        />
+                                    </div>
+                                </div>
+                            </TabsContent>
+                             {/* Placeholder for other tabs */}
+                            <TabsContent value="سداد" className="text-center text-muted-foreground py-10">سيتم تفعيل هذه الميزة قريباً.</TabsContent>
+                            <TabsContent value="فوترة" className="text-center text-muted-foreground py-10">سيتم تفعيل هذه الميزة قريباً.</TabsContent>
+                        </Tabs>
                     </div>
                 )}
             </div>
 
-            {provider === 'yemen-mobile' && (
+            {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
                 <div className="p-4 bg-background border-t shadow-inner">
                     <Button 
                         className="w-full h-12 text-lg font-bold bg-destructive hover:bg-destructive/90" 

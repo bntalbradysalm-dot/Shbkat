@@ -517,7 +517,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي للإشتراك</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>

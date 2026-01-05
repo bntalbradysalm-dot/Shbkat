@@ -22,11 +22,11 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'الشبكات', icon: Wifi, href: '/services' },
+  { name: 'كبينة السداد', icon: Building, href: '/payment-cabin' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'كبينة السداد', icon: Building, href: '/payment-cabin' },
+  { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

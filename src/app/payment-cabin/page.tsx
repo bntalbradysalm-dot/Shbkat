@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -105,7 +106,6 @@ const PackageCard = ({
     minutes,
     messages,
     data,
-    logo,
 }:{
     packageName: string;
     paymentType: string;
@@ -115,37 +115,33 @@ const PackageCard = ({
     minutes: string;
     messages: string;
     data: string;
-    logo: string;
 }) => (
   <Card className="relative overflow-hidden rounded-xl border border-red-200/50 bg-red-50 shadow-md">
-    <div className="absolute top-3 left-3 z-10 bg-white p-1.5 rounded-lg shadow-sm">
-      <Image src={logo} alt="Yemen Mobile" width={28} height={28} className="object-contain" />
-    </div>
-    <CardContent className="p-4 pt-8 text-center">
-      <h3 className="text-lg font-bold text-red-700">{packageName}</h3>
+    <CardContent className="p-4 pt-4 text-center">
+      <h3 className="text-base font-bold text-red-700">{packageName}</h3>
       <div className="mt-1 flex justify-center items-center gap-2 text-xs">
         <span className="font-semibold text-gray-700">{paymentType}</span>
         <span className="text-gray-500">{sliceType}</span>
       </div>
-      <p className="my-2 text-4xl font-bold text-gray-800">
+      <p className="my-2 text-3xl font-bold text-gray-800">
         {price}
       </p>
     </CardContent>
     <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/30 rtl:divide-x-reverse">
         <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Globe className="h-5 w-5 text-gray-600 mb-1" />
+            <Globe className="h-4 w-4 text-gray-600 mb-1" />
             <span className="text-xs font-semibold">{data}</span>
         </div>
         <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Mail className="h-5 w-5 text-gray-600 mb-1" />
+            <Mail className="h-4 w-4 text-gray-600 mb-1" />
             <span className="text-xs font-semibold">{messages}</span>
         </div>
         <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Phone className="h-5 w-5 text-gray-600 mb-1" />
+            <Phone className="h-4 w-4 text-gray-600 mb-1" />
             <span className="text-xs font-semibold">{minutes}</span>
         </div>
         <div className="flex flex-col items-center justify-center p-2 text-center">
-            <Clock className="h-5 w-5 text-gray-600 mb-1" />
+            <Clock className="h-4 w-4 text-gray-600 mb-1" />
             <span className="text-xs font-semibold">{validity}</span>
         </div>
     </div>
@@ -221,21 +217,21 @@ export default function PaymentCabinPage() {
         };
         return (
           <div className="space-y-4">
-             <Card className="p-3">
+             <Card className="p-2">
               <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
-                <div className="px-2">
-                  <p className="text-sm font-bold text-red-500">رصيد الرقم</p>
-                  <p className="font-bold text-lg text-blue-600 mt-1">77</p>
+                <div className="px-1">
+                  <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
+                  <p className="font-bold text-base text-blue-600 mt-1">77</p>
                 </div>
-                <div className="px-2">
-                  <p className="text-sm font-bold text-red-500">نوع الرقم</p>
-                  <p className="font-bold text-sm text-blue-600 mt-1">3G | دفع مسبق</p>
+                <div className="px-1">
+                  <p className="text-xs font-bold text-red-500">نوع الرقم</p>
+                  <p className="font-bold text-xs text-blue-600 mt-1">3G | دفع مسبق</p>
                 </div>
-                <div className="px-2">
-                  <p className="text-sm font-bold text-red-500 bg-red-100 rounded-md">فحص السلفة</p>
+                <div className="px-1">
+                  <p className="text-xs font-bold text-red-500 bg-red-100 rounded-md">فحص السلفة</p>
                   <div className="flex items-center justify-center gap-1 mt-1">
-                     <Smile className="h-5 w-5 text-green-600" />
-                     <p className="font-bold text-sm text-green-600">غير متسلف</p>
+                     <Smile className="h-4 w-4 text-green-600" />
+                     <p className="font-bold text-xs text-green-600">غير متسلف</p>
                   </div>
                 </div>
               </div>

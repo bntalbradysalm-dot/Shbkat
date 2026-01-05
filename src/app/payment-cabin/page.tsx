@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, Heart, HelpCircle, Users, ArrowLeft, Archive, RefreshCw } from 'lucide-react';
+import { User, Phone, Wifi, Building, ArrowLeft, Archive, RefreshCw, Smile } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -126,14 +126,34 @@ export default function PaymentCabinPage() {
     
     const renderYemenMobilePackages = () => (
       <div className="space-y-4">
+         <Card className="p-3">
+          <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
+            <div className="px-2">
+              <p className="text-sm font-bold text-red-600">رصيد الرقم</p>
+              <p className="font-bold text-lg text-blue-600 mt-1">77</p>
+            </div>
+            <div className="px-2">
+              <p className="text-sm font-bold text-red-600">نوع الرقم</p>
+              <p className="font-bold text-sm text-blue-600 mt-1">3G | دفع مسبق</p>
+            </div>
+            <div className="px-2">
+              <p className="text-sm font-bold text-red-600 bg-orange-200 rounded-md">فحص السلفة</p>
+              <div className="flex items-center justify-center gap-1 mt-1">
+                 <Smile className="h-5 w-5 text-green-600" />
+                 <p className="font-bold text-sm text-green-600">غير متسلف</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* Current Subscriptions Section */}
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
-          <h3 className="text-center font-bold text-destructive mb-3 bg-destructive text-white rounded-md py-1">الاشتراكات الحالية</h3>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+          <h3 className="text-center font-bold text-red-600 mb-3 bg-red-600 text-white rounded-md py-1">الاشتراكات الحالية</h3>
           <div className="space-y-3">
             <Card className="p-3 bg-card/80">
               <div className="flex items-center gap-3">
                 <div className="flex-none">
-                  <Button className="bg-destructive text-white hover:bg-destructive/90 w-16 h-16 flex flex-col items-center">
+                  <Button className="bg-red-600 text-white hover:bg-red-600/90 w-16 h-16 flex flex-col items-center">
                     <RefreshCw className="h-5 w-5" />
                     <span className="text-xs mt-1">تجديد</span>
                   </Button>
@@ -150,7 +170,7 @@ export default function PaymentCabinPage() {
              <Card className="p-3 bg-card/80">
               <div className="flex items-center gap-3">
                 <div className="flex-none">
-                  <Button className="bg-destructive text-white hover:bg-destructive/90 w-16 h-16 flex flex-col items-center">
+                  <Button className="bg-red-600 text-white hover:bg-red-600/90 w-16 h-16 flex flex-col items-center">
                     <RefreshCw className="h-5 w-5" />
                     <span className="text-xs mt-1">تجديد</span>
                   </Button>
@@ -170,10 +190,10 @@ export default function PaymentCabinPage() {
         {/* Packages Accordion */}
          <Accordion type="single" collapsible className="w-full space-y-3">
             <AccordionItem value="item-1" className="border-0">
-                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
                     <div className="flex items-center justify-between w-full">
                         <span>باقات مزايا</span>
-                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">3G</span>
+                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">3G</span>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -181,10 +201,10 @@ export default function PaymentCabinPage() {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2" className="border-0">
-                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
                      <div className="flex items-center justify-between w-full">
                         <span>باقات فورجي</span>
-                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">4G</span>
+                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">4G</span>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -192,10 +212,10 @@ export default function PaymentCabinPage() {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3" className="border-0">
-                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
                     <div className="flex items-center justify-between w-full">
                         <span>باقات فولتي VOLTE</span>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">4G</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">4G</span>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -203,10 +223,10 @@ export default function PaymentCabinPage() {
                 </AccordionContent>
             </AccordionItem>
              <AccordionItem value="item-4" className="border-0">
-                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
                     <div className="flex items-center justify-between w-full">
                         <span>باقات الإنترنت الشهرية</span>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-sm font-bold">↑↓</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">↑↓</span>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -214,10 +234,10 @@ export default function PaymentCabinPage() {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-5" className="border-0">
-                <AccordionTrigger className="bg-destructive text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-destructive/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
                     <div className="flex items-center justify-between w-full">
                         <span>باقات الإنترنت 10 ايام</span>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-destructive text-xs font-bold p-0.5">10 MP</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-xs font-bold p-0.5">10 MP</span>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -265,7 +285,7 @@ export default function PaymentCabinPage() {
                             />
                         </div>
                          <div className="p-2 bg-white rounded-lg shadow-sm">
-                            <Users className="h-5 w-5 text-muted-foreground" />
+                            <User className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </CardContent>
                 </Card>
@@ -273,7 +293,7 @@ export default function PaymentCabinPage() {
                 {provider === 'yemen-mobile' && (
                     <div className="space-y-4 animate-in fade-in-0 duration-500">
                         <div className="grid grid-cols-4 bg-muted p-1 rounded-xl">
-                            {['سداد', 'باقات', 'دفع مسبق', 'فوترة'].map((tab) => (
+                            {['فوترة', 'دفع مسبق', 'باقات', 'سداد'].map((tab) => (
                                <button 
                                 key={tab} 
                                 onClick={() => setActiveTab(tab)}
@@ -291,10 +311,10 @@ export default function PaymentCabinPage() {
 
                          {activeTab === 'دفع مسبق' && (
                             <div className="space-y-4">
-                                <Card className="rounded-2xl shadow-lg border-2 border-destructive/20 bg-destructive/5 text-center">
+                                <Card className="rounded-2xl shadow-lg border-2 border-red-500/20 bg-red-500/5 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-destructive/80">الرصيد الحالي للإشتراك</p>
-                                        <p className="text-3xl font-bold text-destructive mt-1">0</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي للإشتراك</p>
+                                        <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>
                                 
@@ -306,7 +326,7 @@ export default function PaymentCabinPage() {
                                             onClick={() => handleAmountButtonClick(amount)}
                                             className={cn(
                                                 "h-12 text-sm font-bold rounded-xl",
-                                                selectedAmount === amount && `bg-destructive hover:bg-destructive/90 border-destructive text-white`
+                                                selectedAmount === amount && `bg-red-500 hover:bg-red-500/90 border-red-500 text-white`
                                             )}
                                     >
                                         {amount}
@@ -340,7 +360,7 @@ export default function PaymentCabinPage() {
             {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
                 <div className="p-4 bg-background border-t shadow-inner sticky bottom-0">
                     <Button 
-                        className="w-full h-12 text-lg font-bold bg-destructive hover:bg-destructive/90" 
+                        className={cn("w-full h-12 text-lg font-bold", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
                         disabled={finalAmount <= 0}
                     >
                         سداد

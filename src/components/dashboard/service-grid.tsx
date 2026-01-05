@@ -27,7 +27,6 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'كبينة السداد', icon: Building, href: '/payment-cabin' },
-  { name: 'يمن 4G', icon: CreditCard, href: '/yemen-4g' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

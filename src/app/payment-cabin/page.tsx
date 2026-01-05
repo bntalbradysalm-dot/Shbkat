@@ -96,7 +96,6 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
 
 const predefinedAmounts = [2000, 1000, 500, 200, 100];
 
-
 const PackageCard = ({
     packageName,
     paymentType,
@@ -118,36 +117,36 @@ const PackageCard = ({
     data: string;
     logo: string;
 }) => (
-  <Card className="relative overflow-hidden rounded-2xl border-2 border-red-200/50 bg-orange-50/50 shadow-lg">
-    <div className="absolute top-4 left-4 z-10 bg-white p-2 rounded-xl shadow-md">
-      <Image src={logo} alt="Yemen Mobile" width={40} height={40} className="object-contain" />
+  <Card className="relative overflow-hidden rounded-xl border border-red-200/50 bg-red-50 shadow-md">
+    <div className="absolute top-3 left-3 z-10 bg-white p-1.5 rounded-lg shadow-sm">
+      <Image src={logo} alt="Yemen Mobile" width={28} height={28} className="object-contain" />
     </div>
-    <CardContent className="p-6 pt-12 text-center">
-      <h3 className="text-xl font-bold text-red-700">{packageName}</h3>
-      <div className="mt-2 flex justify-center items-center gap-4">
-        <span className="font-semibold text-gray-800">{paymentType}</span>
+    <CardContent className="p-4 pt-8 text-center">
+      <h3 className="text-lg font-bold text-red-700">{packageName}</h3>
+      <div className="mt-1 flex justify-center items-center gap-2 text-xs">
+        <span className="font-semibold text-gray-700">{paymentType}</span>
         <span className="text-gray-500">{sliceType}</span>
       </div>
-      <p className="my-4 text-5xl font-bold text-gray-800" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+      <p className="my-2 text-4xl font-bold text-gray-800">
         {price}
       </p>
     </CardContent>
-    <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/50 rtl:divide-x-reverse">
-        <div className="flex flex-col items-center justify-center p-3 text-center">
-            <Globe className="h-6 w-6 text-gray-600 mb-1" />
-            <span className="text-sm font-semibold">{data}</span>
+    <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/30 rtl:divide-x-reverse">
+        <div className="flex flex-col items-center justify-center p-2 text-center">
+            <Globe className="h-5 w-5 text-gray-600 mb-1" />
+            <span className="text-xs font-semibold">{data}</span>
         </div>
-        <div className="flex flex-col items-center justify-center p-3 text-center">
-            <Mail className="h-6 w-6 text-gray-600 mb-1" />
-            <span className="text-sm font-semibold">{messages}</span>
+        <div className="flex flex-col items-center justify-center p-2 text-center">
+            <Mail className="h-5 w-5 text-gray-600 mb-1" />
+            <span className="text-xs font-semibold">{messages}</span>
         </div>
-        <div className="flex flex-col items-center justify-center p-3 text-center">
-            <Phone className="h-6 w-6 text-gray-600 mb-1" />
-            <span className="text-sm font-semibold">{minutes}</span>
+        <div className="flex flex-col items-center justify-center p-2 text-center">
+            <Phone className="h-5 w-5 text-gray-600 mb-1" />
+            <span className="text-xs font-semibold">{minutes}</span>
         </div>
-        <div className="flex flex-col items-center justify-center p-3 text-center">
-            <Clock className="h-6 w-6 text-gray-600 mb-1" />
-            <span className="text-sm font-semibold">{validity}</span>
+        <div className="flex flex-col items-center justify-center p-2 text-center">
+            <Clock className="h-5 w-5 text-gray-600 mb-1" />
+            <span className="text-xs font-semibold">{validity}</span>
         </div>
     </div>
   </Card>
@@ -225,15 +224,15 @@ export default function PaymentCabinPage() {
              <Card className="p-3">
               <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
                 <div className="px-2">
-                  <p className="text-sm font-bold text-red-600">رصيد الرقم</p>
+                  <p className="text-sm font-bold text-red-500">رصيد الرقم</p>
                   <p className="font-bold text-lg text-blue-600 mt-1">77</p>
                 </div>
                 <div className="px-2">
-                  <p className="text-sm font-bold text-red-600">نوع الرقم</p>
+                  <p className="text-sm font-bold text-red-500">نوع الرقم</p>
                   <p className="font-bold text-sm text-blue-600 mt-1">3G | دفع مسبق</p>
                 </div>
                 <div className="px-2">
-                  <p className="text-sm font-bold text-red-600 bg-orange-200 rounded-md">فحص السلفة</p>
+                  <p className="text-sm font-bold text-red-500 bg-red-100 rounded-md">فحص السلفة</p>
                   <div className="flex items-center justify-center gap-1 mt-1">
                      <Smile className="h-5 w-5 text-green-600" />
                      <p className="font-bold text-sm text-green-600">غير متسلف</p>
@@ -242,13 +241,13 @@ export default function PaymentCabinPage() {
               </div>
             </Card>
     
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-              <h3 className="text-center font-bold text-red-600 mb-3 bg-red-600 text-white rounded-md py-1">الاشتراكات الحالية</h3>
+            <div className="bg-red-100/50 border border-red-200/50 rounded-xl p-3">
+              <h3 className="text-center font-bold text-red-600 mb-3 bg-gradient-to-r from-red-500 to-red-400 text-white rounded-md py-1 shadow">الاشتراكات الحالية</h3>
               <div className="space-y-3">
                 <Card className="p-3 bg-card/80">
                   <div className="flex items-center gap-3">
                     <div className="flex-none">
-                      <Button className="bg-red-600 text-white hover:bg-red-600/90 w-16 h-16 flex flex-col items-center">
+                      <Button className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
                         <RefreshCw className="h-5 w-5" />
                         <span className="text-xs mt-1">تجديد</span>
                       </Button>
@@ -257,7 +256,7 @@ export default function PaymentCabinPage() {
                       <p className="font-bold">تفعيل خدمة الانترنت - شريحة (3G)</p>
                       <div className="text-xs mt-1 text-muted-foreground">
                         <p className="text-green-600">الإشتراك: 09:54:37 2023-06-20</p>
-                        <p className="text-red-600">الإنتهاء: 00:00:00 2037-01-01</p>
+                        <p className="text-red-500">الإنتهاء: 00:00:00 2037-01-01</p>
                       </div>
                     </div>
                   </div>
@@ -265,7 +264,7 @@ export default function PaymentCabinPage() {
                  <Card className="p-3 bg-card/80">
                   <div className="flex items-center gap-3">
                     <div className="flex-none">
-                      <Button className="bg-red-600 text-white hover:bg-red-600/90 w-16 h-16 flex flex-col items-center">
+                      <Button className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
                         <RefreshCw className="h-5 w-5" />
                         <span className="text-xs mt-1">تجديد</span>
                       </Button>
@@ -274,7 +273,7 @@ export default function PaymentCabinPage() {
                       <p className="font-bold">مزايا الشهريه - 350 دقيقه 150 رساله 250 ميجا</p>
                       <div className="text-xs mt-1 text-muted-foreground">
                         <p className="text-green-600">الإشتراك: 20:42:53 2025-12-08</p>
-                        <p className="text-red-600">الإنتهاء: 23:59:59 2026-01-06</p>
+                        <p className="text-red-500">الإنتهاء: 23:59:59 2026-01-06</p>
                       </div>
                     </div>
                   </div>
@@ -284,10 +283,10 @@ export default function PaymentCabinPage() {
     
              <Accordion type="single" collapsible className="w-full space-y-3">
                 <AccordionItem value="item-1" className="border-0">
-                    <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات مزايا</span>
-                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">3G</span>
+                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">3G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -295,10 +294,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2" className="border-0">
-                    <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                          <div className="flex items-center justify-between w-full">
                             <span>باقات فورجي</span>
-                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">4G</span>
+                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">4G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -306,10 +305,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3" className="border-0">
-                    <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات فولتي VOLTE</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">4G</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">4G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -317,10 +316,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="item-4" className="border-0">
-                    <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات الإنترنت الشهرية</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-sm font-bold">↑↓</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">↑↓</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -328,10 +327,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-5" className="border-0">
-                    <AccordionTrigger className="bg-red-600 text-white rounded-xl px-4 py-3 text-base font-bold hover:bg-red-600/90 hover:no-underline [&[data-state=open]]:rounded-b-none">
+                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات الإنترنت 10 ايام</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 text-xs font-bold p-0.5">10 MP</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-xs font-bold p-0.5">10 MP</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -406,7 +405,7 @@ export default function PaymentCabinPage() {
 
                          {activeTab === 'دفع مسبق' && (
                             <div className="space-y-4">
-                                <Card className="rounded-2xl shadow-lg border-2 border-red-500/20 bg-red-500/5 text-center">
+                                <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
                                         <p className="text-sm text-red-500/80">الرصيد الحالي للإشتراك</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
@@ -455,7 +454,7 @@ export default function PaymentCabinPage() {
             {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
                 <div className="p-4 bg-background border-t shadow-inner sticky bottom-0">
                     <Button 
-                        className={cn("w-full h-12 text-lg font-bold", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
+                        className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-red-500 to-red-600 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
                         disabled={finalAmount <= 0}
                     >
                         سداد

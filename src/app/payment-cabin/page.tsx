@@ -157,7 +157,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [2000, 1000, 500, 200, 100];
+const predefinedAmounts = [100, 200, 500, 1000, 2000];
 
 const PackageCard = ({
     packageInfo,
@@ -602,10 +602,10 @@ export default function PaymentCabinPage() {
                             }
                             setIsConfirmBalanceOpen(true);
                         }}
-                        className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-primary to-primary/80 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
+                        className="w-full h-12 text-lg font-bold"
                         disabled={finalAmount <= 0}
                     >
-                        سداد
+                        تسديد
                     </Button>
                 </div>
             )}
@@ -615,20 +615,22 @@ export default function PaymentCabinPage() {
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
                         </AlertDialogHeader>
-                        <div className="pt-4 space-y-4 text-sm">
-                            <div className="bg-muted p-3 rounded-lg text-center">
-                                <p className="text-muted-foreground">الباقة</p>
-                                <p className="font-bold text-lg text-primary dark:text-primary-foreground">{selectedPackage.packageName}</p>
+                        <AlertDialogDescription asChild>
+                            <div className="pt-4 space-y-4 text-sm">
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">الباقة</p>
+                                    <p className="font-bold text-lg text-primary dark:text-primary-foreground">{selectedPackage.packageName}</p>
+                                </div>
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">رقم الهاتف</p>
+                                    <p className="font-semibold font-mono text-lg">{phoneNumber}</p>
+                                </div>
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">المبلغ</p>
+                                    <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
+                                </div>
                             </div>
-                            <div className="bg-muted p-3 rounded-lg text-center">
-                                <p className="text-muted-foreground">رقم الهاتف</p>
-                                <p className="font-semibold font-mono text-lg">{phoneNumber}</p>
-                            </div>
-                            <div className="bg-muted p-3 rounded-lg text-center">
-                                <p className="text-muted-foreground">المبلغ</p>
-                                <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
-                            </div>
-                        </div>
+                        </AlertDialogDescription>
                         <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-2">
                             <AlertDialogAction className='flex-1' onClick={() => {
                                 // Add purchase logic here
@@ -670,5 +672,6 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
 
 

@@ -70,16 +70,16 @@ const BalanceDisplay = () => {
 
     return (
         <Card className="shadow-lg">
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-3 flex items-center justify-between">
                 <div>
-                    <p className="font-medium text-muted-foreground">الرصيد الحالي</p>
+                    <p className="font-medium text-muted-foreground text-sm">الرصيد الحالي</p>
                     {isLoading ? (
-                        <Skeleton className="h-8 w-32 mt-2" />
+                        <Skeleton className="h-7 w-28 mt-1" />
                     ) : (
-                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                        <p className="text-xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-sm">ريال</span></p>
                     )}
                 </div>
-                <Wallet className="h-8 w-8 text-primary" />
+                <Wallet className="h-7 w-7 text-primary" />
             </CardContent>
         </Card>
     );
@@ -157,7 +157,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [100, 200, 500, 1000, 2000];
+const predefinedAmounts = [100, 200, 500, 1000, 2000].reverse();
 
 const PackageCard = ({
     packageInfo,
@@ -263,8 +263,8 @@ export default function PaymentCabinPage() {
 
     useEffect(() => {
         if (finalAmount > 0) {
-            const calculatedNet = finalAmount * 0.826; // 100% - 17.4% = 82.6%
-            setNetAmount(calculatedNet.toFixed(2)); // toFixed(2) for two decimal places
+            const calculatedNet = finalAmount * (1 - 0.174);
+            setNetAmount(calculatedNet.toFixed(2));
         } else {
             setNetAmount('');
         }
@@ -611,7 +611,7 @@ export default function PaymentCabinPage() {
             )}
              <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 {selectedPackage && (
-                     <AlertDialogContent className="rounded-xl">
+                     <AlertDialogContent className="rounded-xl max-w-sm">
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
                         </AlertDialogHeader>
@@ -645,7 +645,7 @@ export default function PaymentCabinPage() {
                 )}
             </AlertDialog>
             <AlertDialog open={isConfirmBalanceOpen} onOpenChange={setIsConfirmBalanceOpen}>
-                    <AlertDialogContent className="rounded-xl">
+                    <AlertDialogContent className="rounded-xl max-w-sm">
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد سداد الرصيد</AlertDialogTitle>
                         </AlertDialogHeader>
@@ -672,6 +672,7 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
 
 
 

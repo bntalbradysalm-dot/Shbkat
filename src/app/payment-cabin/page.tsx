@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -430,7 +430,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                         </div>
@@ -444,7 +444,7 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                         <div className="grid grid-cols-2 gap-3">
+                         <div className="space-y-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                          </div>
                     </AccordionContent>
@@ -553,7 +553,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي للاشتراك</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>

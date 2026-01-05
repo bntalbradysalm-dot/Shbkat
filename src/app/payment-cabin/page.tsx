@@ -169,7 +169,7 @@ const PackageCard = ({
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
         <div onClick={() => onPackageSelect(packageInfo)}>
-             <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
+            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
                 <CardContent className="p-3 text-center flex flex-col h-full">
                     <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
                     <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
@@ -471,6 +471,7 @@ export default function PaymentCabinPage() {
                 <BalanceDisplay />
                 <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
+                    provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' :
                     provider !== 'unknown' ? 'border-primary/20 bg-primary/5' : 'border-border bg-card'
                 )}>
                     <CardContent className="p-4 flex items-center gap-3">
@@ -587,14 +588,20 @@ export default function PaymentCabinPage() {
             )}
              <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 {selectedPackage && (
-                     <AlertDialogContent>
+                     <AlertDialogContent className="rounded-xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
                         </AlertDialogHeader>
-                        <div className="pt-4 space-y-4">
-                            <Card className="bg-muted p-3 text-center">
-                                <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
-                                <p className="text-muted-foreground text-sm">للرقم: <span className="font-mono">{phoneNumber}</span></p>
+                        <div className="pt-4 space-y-4 text-sm">
+                            <Card className="bg-muted p-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground">الباقة:</span>
+                                    <span className="font-bold text-primary">{selectedPackage.packageName}</span>
+                                </div>
+                                 <div className="flex justify-between items-center mt-2">
+                                    <span className="text-muted-foreground">الرقم:</span>
+                                    <span className="font-semibold font-mono">{phoneNumber}</span>
+                                </div>
                             </Card>
                             <Card className="bg-muted p-3 text-center">
                                 <p className="text-muted-foreground">المبلغ</p>

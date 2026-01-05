@@ -6,7 +6,8 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -18,7 +19,6 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 
@@ -129,32 +128,31 @@ const PackageCard = ({
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
         <div onClick={() => onPackageSelect(packageInfo)}>
-            <Card className="relative overflow-hidden rounded-xl border border-red-200/50 bg-red-50 shadow-md cursor-pointer hover:shadow-lg hover:border-red-300 transition-shadow">
-                <CardContent className="p-4 pt-4 text-center">
-                    <h3 className="text-base font-bold text-red-700">{packageName}</h3>
-                    <div className="mt-1 flex justify-center items-center gap-2 text-xs">
-                        <span className="font-semibold text-gray-700">{paymentType}</span>
-                        <span className="text-gray-500">{sliceType}</span>
+            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow">
+                <CardContent className="p-3 text-center">
+                    <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
+                    <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
+                        <span className="font-semibold text-muted-foreground">{paymentType}</span>
                     </div>
-                    <p className="my-2 text-3xl font-bold text-gray-800">
+                    <p className="my-1.5 text-2xl font-bold text-primary dark:text-primary-foreground">
                         {price}
                     </p>
                 </CardContent>
-                <div className="grid grid-cols-4 divide-x-reverse divide-x border-t border-red-200/50 bg-white/30 rtl:divide-x-reverse">
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                        <Globe className="h-4 w-4 text-gray-600 mb-1" />
+                <div className="grid grid-cols-4 divide-x-reverse divide-x border-t bg-muted/50 rtl:divide-x-reverse">
+                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                        <Globe className="h-4 w-4 text-muted-foreground mb-1" />
                         <span className="text-xs font-semibold">{data}</span>
                     </div>
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                        <Mail className="h-4 w-4 text-gray-600 mb-1" />
+                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                        <Mail className="h-4 w-4 text-muted-foreground mb-1" />
                         <span className="text-xs font-semibold">{messages}</span>
                     </div>
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                        <Phone className="h-4 w-4 text-gray-600 mb-1" />
+                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                        <Phone className="h-4 w-4 text-muted-foreground mb-1" />
                         <span className="text-xs font-semibold">{minutes}</span>
                     </div>
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                        <Clock className="h-4 w-4 text-gray-600 mb-1" />
+                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                        <Clock className="h-4 w-4 text-muted-foreground mb-1" />
                         <span className="text-xs font-semibold">{validity}</span>
                     </div>
                 </div>
@@ -173,13 +171,28 @@ export default function PaymentCabinPage() {
     
     const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    
+    const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
 
     useEffect(() => {
         const detectedProvider = getProviderFromPhone(phoneNumber);
         setProvider(detectedProvider);
     }, [phoneNumber]);
 
+    const checkPhoneNumber = () => {
+        if (phoneNumber.length !== currentMaxLength) {
+            toast({
+                variant: 'destructive',
+                title: 'رقم غير صحيح',
+                description: `الرجاء إدخال رقم هاتف صحيح مكون من ${currentMaxLength} أرقام.`,
+            });
+            return false;
+        }
+        return true;
+    };
+
     const handleAmountButtonClick = (amount: number) => {
+        if (!checkPhoneNumber()) return;
         setSelectedAmount(amount);
         setCustomAmount('');
     };
@@ -193,6 +206,7 @@ export default function PaymentCabinPage() {
     };
     
      const handlePackageSelect = (pkg: PackageInfo) => {
+        if (!checkPhoneNumber()) return;
         setSelectedPackage(pkg);
         setIsConfirmOpen(true);
     };
@@ -224,8 +238,6 @@ export default function PaymentCabinPage() {
     
     const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
     
-    const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
-    
     const renderYemenMobilePackages = () => {
         const examplePackage: PackageInfo = {
             packageName: "باقة مزايا فورجي الاسبوعية",
@@ -233,9 +245,9 @@ export default function PaymentCabinPage() {
             sliceType: "شريحة",
             price: "1500",
             validity: "7 أيام",
-            minutes: "200 دقيقة",
-            messages: "300 رسالة",
-            data: "2 جيجا",
+            minutes: "200",
+            messages: "300",
+            data: "2 GB",
         };
         return (
           <div className="space-y-4">
@@ -243,7 +255,7 @@ export default function PaymentCabinPage() {
               <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
                 <div className="px-1">
                   <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
-                  <p className="font-bold text-base text-blue-600 mt-1">77</p>
+                  <p className="font-bold text-sm text-blue-600 mt-1">77</p>
                 </div>
                 <div className="px-1">
                   <p className="text-xs font-bold text-red-500">نوع الرقم</p>
@@ -472,6 +484,11 @@ export default function PaymentCabinPage() {
             {provider === 'yemen-mobile' && activeTab === 'دفع مسبق' && (
                 <div className="p-4 bg-background border-t shadow-inner sticky bottom-0">
                     <Button 
+                        onClick={() => {
+                            if (!checkPhoneNumber()) return;
+                            // Add payment logic here
+                            toast({ title: 'جاري السداد...', description: `سيتم سداد مبلغ ${finalAmount.toLocaleString('en-US')} ريال.`})
+                        }}
                         className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-red-500 to-red-600 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
                         disabled={finalAmount <= 0}
                     >
@@ -481,16 +498,24 @@ export default function PaymentCabinPage() {
             )}
              <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 {selectedPackage && (
-                    <AlertDialogContent>
+                    <AlertDialogContent className="rounded-xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                هل أنت متأكد من رغبتك في تفعيل باقة "{selectedPackage.packageName}" للرقم {phoneNumber}؟
-                                سيتم خصم مبلغ {selectedPackage.price} ريال من رصيدك.
+                            <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
+                            <AlertDialogDescription asChild>
+                                <div className="pt-4 space-y-4 text-sm">
+                                    <div className="bg-muted p-3 rounded-lg text-center">
+                                        <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
+                                        <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
+                                    </div>
+                                    <div className="bg-muted p-3 rounded-lg text-center">
+                                        <p className="text-muted-foreground">سيتم خصم مبلغ</p>
+                                        <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
+                                        <p className="text-muted-foreground">من رصيدك.</p>
+                                    </div>
+                                </div>
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">
                             <AlertDialogAction onClick={() => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
@@ -498,6 +523,7 @@ export default function PaymentCabinPage() {
                             }}>
                                 تأكيد
                             </AlertDialogAction>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}

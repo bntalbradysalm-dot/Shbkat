@@ -88,7 +88,7 @@ const BalanceDisplay = () => {
 const serviceConfig = {
   'yemen-mobile': {
     name: 'يمن موبايل',
-    logo: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png',
+    logo: 'https://i.postimg.cc/k4c1bV9M/images.png',
     prefix: '77',
     length: 9,
     color: 'bg-red-500',
@@ -157,7 +157,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [100, 200, 500, 1000, 2000].reverse();
+const predefinedAmounts = [2000, 1000, 500, 200, 100];
 
 const PackageCard = ({
     packageInfo,
@@ -672,6 +672,7 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
+
 
 
 

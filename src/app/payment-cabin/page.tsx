@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet, Contact } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -28,8 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUser, useFirestore, useDoc, useMemoFirebase, writeBatch } from '@/firebase';
-import { doc, increment, collection } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, increment, collection, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
@@ -48,7 +48,14 @@ type PackageInfo = {
     data: string;
 };
 
-type Yemen4GPackageInfo = Omit<PackageInfo, 'paymentType'|'sliceType'|'messages'>;
+type Yemen4GPackageInfo = {
+    packageName: string;
+    data: string;
+    price: number;
+    validity: string;
+    minutes: string;
+};
+
 
 const yemen4gPackages: Yemen4GPackageInfo[] = [
     { packageName: "باقة 15 جيجا", data: "15 GB", price: 2400, validity: "شهر", minutes: "اتصال مجاني داخل الشبكة" },
@@ -172,7 +179,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [100, 200, 500, 1000, 2000];
+const predefinedAmounts = [100, 200, 500, 1000, 2000].reverse();
 
 const PackageCard = ({
     packageInfo,

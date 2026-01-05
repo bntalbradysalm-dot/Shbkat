@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -27,6 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
@@ -47,7 +49,11 @@ type SubscriptionInfo = {
     activationDate: string;
     expiryDate: string;
     packageDetails: PackageInfo;
-}
+};
+
+type UserProfile = {
+  balance?: number;
+};
 
 const serviceConfig = {
   'yemen-mobile': {
@@ -174,7 +180,7 @@ const SubscriptionCard = ({
     onRenewSelect: (pkg: PackageInfo) => void;
 }) => {
     return (
-        <Card className="p-3 bg-card/80" onClick={() => onRenewSelect(subscriptionInfo.packageDetails)}>
+        <Card className="p-3 bg-card/80 cursor-pointer" onClick={() => onRenewSelect(subscriptionInfo.packageDetails)}>
             <div className="flex items-center gap-3">
                 <div className="flex-none">
                     <Button 
@@ -206,6 +212,14 @@ export default function PaymentCabinPage() {
     
     const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isConfirmBalanceOpen, setIsConfirmBalanceOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [user, firestore]);
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
     
     const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
 
@@ -272,6 +286,45 @@ export default function PaymentCabinPage() {
     };
     
     const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
+
+    const handlePayBalance = async () => {
+        if (!user || !userDocRef || !firestore || finalAmount <= 0) return;
+
+        if ((userProfile?.balance ?? 0) < finalAmount) {
+            toast({ variant: 'destructive', title: 'رصيد غير كاف', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+            setIsConfirmBalanceOpen(false);
+            return;
+        }
+        
+        setIsProcessing(true);
+        const batch = writeBatch(firestore);
+
+        // 1. Deduct from user's balance
+        batch.update(userDocRef, { balance: increment(-finalAmount) });
+
+        // 2. Create transaction record
+        const transactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+        batch.set(transactionRef, {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: finalAmount,
+            transactionType: 'سداد رصيد يمن موبايل',
+            notes: `سداد إلى الرقم: ${phoneNumber}`
+        });
+
+        try {
+            await batch.commit();
+            toast({ title: 'نجاح', description: 'تم سداد الرصيد بنجاح.' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'فشل سداد الرصيد.' });
+            console.error(error);
+        } finally {
+            setIsProcessing(false);
+            setIsConfirmBalanceOpen(false);
+            setCustomAmount('');
+            setSelectedAmount(null);
+        }
+    };
     
     const renderYemenMobilePackages = () => {
         const examplePackage: PackageInfo = {
@@ -508,8 +561,11 @@ export default function PaymentCabinPage() {
                     <Button 
                         onClick={() => {
                             if (!checkPhoneNumber()) return;
-                            // Add payment logic here
-                            toast({ title: 'جاري السداد...', description: `سيتم سداد مبلغ ${finalAmount.toLocaleString('en-US')} ريال.`})
+                             if (finalAmount <= 0) {
+                                toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء تحديد مبلغ للسداد.' });
+                                return;
+                            }
+                            setIsConfirmBalanceOpen(true);
                         }}
                         className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-red-500 to-red-600 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
                         disabled={finalAmount <= 0}
@@ -549,6 +605,32 @@ export default function PaymentCabinPage() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}
+            </AlertDialog>
+            <AlertDialog open={isConfirmBalanceOpen} onOpenChange={setIsConfirmBalanceOpen}>
+                    <AlertDialogContent className="rounded-xl">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className='text-center'>تأكيد سداد الرصيد</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogDescription asChild>
+                            <div className="pt-4 space-y-4 text-sm">
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">سداد إلى الرقم</p>
+                                    <p className="font-bold text-lg font-mono text-primary">{phoneNumber}</p>
+                                </div>
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">المبلغ</p>
+                                    <p className="font-bold text-2xl text-destructive">{finalAmount.toLocaleString('en-US')} ريال</p>
+                                    <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                        <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">
+                            <AlertDialogAction className='flex-1' onClick={handlePayBalance} disabled={isProcessing}>
+                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'تأكيد'}
+                            </AlertDialogAction>
+                            <AlertDialogCancel className='flex-1 mt-0' disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
             </AlertDialog>
         </div>
     );

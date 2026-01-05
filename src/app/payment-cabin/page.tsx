@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2 } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
@@ -55,6 +56,34 @@ type UserProfile = {
   balance?: number;
 };
 
+const BalanceDisplay = () => {
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(
+        () => (user ? doc(firestore, 'users', user.uid) : null),
+        [firestore, user]
+    );
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+    const isLoading = isUserLoading || isProfileLoading;
+
+    return (
+        <Card className="shadow-lg">
+            <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
+                    {isLoading ? (
+                        <Skeleton className="h-8 w-32 mt-2" />
+                    ) : (
+                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                    )}
+                </div>
+                <Wallet className="h-8 w-8 text-primary" />
+            </CardContent>
+        </Card>
+    );
+}
+
 const serviceConfig = {
   'yemen-mobile': {
     name: 'يمن موبايل',
@@ -64,7 +93,7 @@ const serviceConfig = {
     color: 'bg-red-500',
     textColor: 'text-red-500',
     ringColor: 'focus-visible:ring-red-500',
-    destructiveColor: 'bg-destructive hover:bg-destructive/90',
+    destructiveColor: 'bg-red-500 hover:bg-red-600',
   },
    'you': {
     name: 'YOU',
@@ -139,8 +168,8 @@ const PackageCard = ({
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
         <div onClick={() => onPackageSelect(packageInfo)}>
-            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow">
-                <CardContent className="p-3 text-center">
+            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
+                <CardContent className="p-3 text-center flex flex-col h-full">
                     <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
                     <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
                         <span className="font-semibold text-muted-foreground">{paymentType}</span>
@@ -148,25 +177,25 @@ const PackageCard = ({
                     <p className="my-1.5 text-2xl font-bold text-red-500">
                         {price}
                     </p>
+                    <div className="mt-auto grid grid-cols-4 divide-x-reverse divide-x border-t bg-muted/50 rtl:divide-x-reverse">
+                        <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                            <Globe className="h-4 w-4 text-muted-foreground mb-1" />
+                            <span className="text-xs font-semibold">{data}</span>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                            <Mail className="h-4 w-4 text-muted-foreground mb-1" />
+                            <span className="text-xs font-semibold">{messages}</span>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                            <Phone className="h-4 w-4 text-muted-foreground mb-1" />
+                            <span className="text-xs font-semibold">{minutes}</span>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-1.5 text-center">
+                            <Clock className="h-4 w-4 text-muted-foreground mb-1" />
+                            <span className="text-xs font-semibold">{validity}</span>
+                        </div>
+                    </div>
                 </CardContent>
-                <div className="grid grid-cols-4 divide-x-reverse divide-x border-t bg-muted/50 rtl:divide-x-reverse">
-                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
-                        <Globe className="h-4 w-4 text-muted-foreground mb-1" />
-                        <span className="text-xs font-semibold">{data}</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
-                        <Mail className="h-4 w-4 text-muted-foreground mb-1" />
-                        <span className="text-xs font-semibold">{messages}</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
-                        <Phone className="h-4 w-4 text-muted-foreground mb-1" />
-                        <span className="text-xs font-semibold">{minutes}</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-1.5 text-center">
-                        <Clock className="h-4 w-4 text-muted-foreground mb-1" />
-                        <span className="text-xs font-semibold">{validity}</span>
-                    </div>
-                </div>
             </Card>
         </div>
     );
@@ -400,7 +429,10 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                         <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
+                        <div className="grid grid-cols-2 gap-3">
+                            <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
+                            <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2" className="border-0">
@@ -411,7 +443,9 @@ export default function PaymentCabinPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                        <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
+                         <div className="grid grid-cols-2 gap-3">
+                            <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
+                         </div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3" className="border-0">
@@ -458,6 +492,7 @@ export default function PaymentCabinPage() {
             <Toaster />
             
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+                <BalanceDisplay />
                 <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
                     provider !== 'unknown' ? 'border-primary/20 bg-primary/5' : 'border-border bg-card'
@@ -517,7 +552,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي للاشتراك</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>
@@ -582,15 +617,19 @@ export default function PaymentCabinPage() {
                         </AlertDialogHeader>
                         <AlertDialogDescription asChild>
                             <div className="pt-4 space-y-4 text-sm">
-                                <div className="bg-muted p-3 rounded-lg text-center">
-                                    <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
-                                    <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
-                                </div>
-                                <div className="bg-muted p-3 rounded-lg text-center">
-                                    <p className="text-muted-foreground">المبلغ</p>
-                                    <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
-                                    <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
-                                </div>
+                                <Card className="bg-muted p-3">
+                                    <div className="text-center">
+                                        <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
+                                        <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
+                                    </div>
+                                </Card>
+                                 <Card className="bg-muted p-3">
+                                    <div className="text-center">
+                                        <p className="text-muted-foreground">المبلغ</p>
+                                        <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
+                                        <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
+                                    </div>
+                                 </Card>
                             </div>
                         </AlertDialogDescription>
                         <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">

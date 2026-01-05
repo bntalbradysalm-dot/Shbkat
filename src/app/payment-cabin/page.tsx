@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ const BalanceDisplay = () => {
         <Card className="shadow-lg">
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
+                    <p className="font-medium text-muted-foreground">الرصيد الحالي</p>
                     {isLoading ? (
                         <Skeleton className="h-8 w-32 mt-2" />
                     ) : (
@@ -387,15 +388,15 @@ export default function PaymentCabinPage() {
              <Card className="p-2">
                 <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
                     <div className="px-1">
-                        <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
+                        <p className="text-xs font-bold text-destructive">رصيد الرقم</p>
                         <p className="font-bold text-sm text-foreground mt-1">77</p>
                     </div>
                     <div className="px-1">
-                        <p className="text-xs font-bold text-red-500">نوع الرقم</p>
+                        <p className="text-xs font-bold text-destructive">نوع الرقم</p>
                         <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
                     </div>
                     <div className="px-1">
-                        <p className="text-xs font-bold text-red-500 rounded-md">فحص السلفة</p>
+                        <p className="text-xs font-bold text-destructive">فحص السلفة</p>
                         {isDebtor ? (
                             <div className="flex items-center justify-center gap-1 mt-1">
                                 <Frown className="h-4 w-4 text-destructive" />
@@ -552,7 +553,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي للاشتراك</p>
+                                        <p className="text-sm text-red-500/80">الرصيد الحالي</p>
                                         <p className="text-3xl font-bold text-red-500 mt-1">0</p>
                                     </CardContent>
                                 </Card>

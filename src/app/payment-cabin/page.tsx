@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown, Loader2, Wallet, Contact } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -169,13 +169,13 @@ const PackageCard = ({
     const { packageName, paymentType, sliceType, price, validity, minutes, messages, data } = packageInfo;
     return (
         <div onClick={() => onPackageSelect(packageInfo)}>
-            <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
+             <Card className="relative overflow-hidden rounded-xl bg-card shadow-md cursor-pointer hover:shadow-lg hover:border-border transition-shadow h-full">
                 <CardContent className="p-3 text-center flex flex-col h-full">
                     <h3 className="text-sm font-bold text-foreground">{packageName}</h3>
                     <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
                         <span className="font-semibold text-muted-foreground">{paymentType}</span>
                     </div>
-                    <p className="my-1.5 text-2xl font-bold text-destructive">
+                    <p className="my-1.5 text-2xl font-bold text-primary dark:text-primary-foreground">
                         {price}
                     </p>
                     <div className="mt-auto grid grid-cols-4 divide-x-reverse divide-x border-t bg-muted/50 rtl:divide-x-reverse">
@@ -214,7 +214,7 @@ const SubscriptionCard = ({
             <div className="flex items-center gap-3">
                 <div className="flex-none">
                     <Button 
-                        className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
+                        className="bg-gradient-to-br from-primary to-primary/80 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
                         <RefreshCw className="h-5 w-5" />
                         <span className="text-xs mt-1">تجديد</span>
                     </Button>
@@ -239,6 +239,7 @@ export default function PaymentCabinPage() {
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
     const { toast } = useToast();
     const [isDebtor, setIsDebtor] = useState(true); // Placeholder for debt status
+    const [netAmount, setNetAmount] = useState('');
     
     const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -252,11 +253,22 @@ export default function PaymentCabinPage() {
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
     
     const currentMaxLength = provider !== 'unknown' ? serviceConfig[provider].length : 9;
+    
+    const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
 
     useEffect(() => {
         const detectedProvider = getProviderFromPhone(phoneNumber);
         setProvider(detectedProvider);
     }, [phoneNumber]);
+
+    useEffect(() => {
+        if (finalAmount > 0) {
+            const calculatedNet = finalAmount * 0.826; // 100% - 17.4% = 82.6%
+            setNetAmount(calculatedNet.toFixed(2)); // toFixed(2) for two decimal places
+        } else {
+            setNetAmount('');
+        }
+    }, [finalAmount]);
 
     const checkPhoneNumber = () => {
         if (phoneNumber.length !== currentMaxLength) {
@@ -273,7 +285,7 @@ export default function PaymentCabinPage() {
     const handleAmountButtonClick = (amount: number) => {
         if (!checkPhoneNumber()) return;
         setSelectedAmount(amount);
-        setCustomAmount('');
+        setCustomAmount(String(amount));
     };
 
     const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,7 +302,6 @@ export default function PaymentCabinPage() {
         setIsConfirmOpen(true);
     };
     
-    const finalAmount = selectedAmount !== null ? selectedAmount : (customAmount ? parseFloat(customAmount) : 0);
 
     const handlePayBalance = async () => {
         if (!user || !userDocRef || !firestore || finalAmount <= 0) return;
@@ -370,7 +381,7 @@ export default function PaymentCabinPage() {
                         <p className="text-xs font-bold text-destructive">نوع الرقم</p>
                         <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
                     </div>
-                    <div className="px-1">
+                     <div className="px-1">
                         <p className="text-xs font-bold text-destructive">فحص السلفة</p>
                         {isDebtor ? (
                             <div className="flex items-center justify-center gap-1 mt-1">
@@ -388,7 +399,7 @@ export default function PaymentCabinPage() {
             </Card>
     
             <div className="bg-red-100/50 border border-red-200/50 rounded-xl p-3">
-              <h3 className="text-center font-bold text-red-600 mb-3 bg-gradient-to-r from-red-500 to-red-400 text-white rounded-md py-1 shadow">الاشتراكات الحالية</h3>
+              <h3 className="text-center font-bold text-primary dark:text-primary-foreground mb-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-md py-1 shadow">الاشتراكات الحالية</h3>
               <div className="space-y-3">
                  {exampleSubscriptions.map((sub, index) => (
                     <SubscriptionCard key={index} subscriptionInfo={sub} onRenewSelect={handlePackageSelect} />
@@ -398,37 +409,37 @@ export default function PaymentCabinPage() {
     
              <Accordion type="single" collapsible className="w-full space-y-3">
                 <AccordionItem value="item-1" className="border-0">
-                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات مزايا</span>
-                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">3G</span>
+                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary text-sm font-bold">3G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                        <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                         </div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2" className="border-0">
-                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                          <div className="flex items-center justify-between w-full">
                             <span>باقات فورجي</span>
-                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">4G</span>
+                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary text-sm font-bold">4G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
-                         <div className="space-y-3">
+                         <div className="grid grid-cols-2 gap-3">
                             <PackageCard packageInfo={examplePackage} onPackageSelect={handlePackageSelect} />
                          </div>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3" className="border-0">
-                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات فولتي VOLTE</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">4G</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary text-sm font-bold">4G</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -436,10 +447,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="item-4" className="border-0">
-                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات الإنترنت الشهرية</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-sm font-bold">↑↓</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary text-sm font-bold">↑↓</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -447,10 +458,10 @@ export default function PaymentCabinPage() {
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-5" className="border-0">
-                    <AccordionTrigger className="bg-gradient-to-r from-red-500 to-red-400 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl px-4 py-3 text-base font-bold hover:opacity-90 hover:no-underline [&[data-state=open]]:rounded-b-none shadow-lg">
                         <div className="flex items-center justify-between w-full">
                             <span>باقات الإنترنت 10 ايام</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-500 text-xs font-bold p-0.5">10 MP</span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary text-xs font-bold p-0.5">10 MP</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="bg-muted p-4 rounded-b-xl">
@@ -469,11 +480,10 @@ export default function PaymentCabinPage() {
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 <BalanceDisplay />
-                <Card className={cn(
+                 <Card className={cn(
                     "rounded-2xl shadow-lg border-2 transition-colors duration-500",
-                    provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' :
-                    provider !== 'unknown' ? 'border-primary/20 bg-primary/5' : 'border-border bg-card'
-                )}>
+                    provider === 'yemen-mobile' ? 'border-red-500/20 bg-red-500/5' : 'border-border bg-card'
+                 )}>
                     <CardContent className="p-4 flex items-center gap-3">
                          {provider !== 'unknown' && (
                             <div className="p-1 bg-white rounded-lg shadow animate-in fade-in-0 zoom-in-75">
@@ -527,10 +537,10 @@ export default function PaymentCabinPage() {
 
                          {activeTab === 'رصيد' && (
                             <div className="space-y-4">
-                                <Card className="rounded-2xl shadow-lg border-2 border-red-200/50 bg-red-50/50 text-center">
+                                <Card className="rounded-2xl shadow-lg border-2 border-primary/20 bg-primary/5 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-red-500/80">الرصيد الحالي للاشتراك</p>
-                                        <p className="text-3xl font-bold text-red-500 mt-1">0</p>
+                                        <p className="text-sm text-primary/80 dark:text-primary-foreground/80">الرصيد الحالي</p>
+                                        <p className="text-3xl font-bold text-primary dark:text-primary-foreground mt-1">0</p>
                                     </CardContent>
                                 </Card>
                                 
@@ -542,7 +552,7 @@ export default function PaymentCabinPage() {
                                             onClick={() => handleAmountButtonClick(amount)}
                                             className={cn(
                                                 "h-12 text-sm font-bold rounded-xl",
-                                                selectedAmount === amount && `bg-red-500 hover:bg-red-500/90 border-red-500 text-white`
+                                                selectedAmount === amount && `bg-primary hover:bg-primary/90 border-primary text-white`
                                             )}
                                     >
                                         {amount}
@@ -550,16 +560,29 @@ export default function PaymentCabinPage() {
                                 ))}
                                 </div>
 
-                                <div>
-                                    <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
-                                    <Input 
-                                        id="customAmount"
-                                        type="number" 
-                                        placeholder="أدخل المبلغ"
-                                        value={customAmount}
-                                        onChange={handleCustomAmountChange}
-                                        className="h-14 text-lg text-center"
-                                    />
+                                <div className='space-y-3'>
+                                    <div>
+                                        <Label htmlFor="customAmount" className="text-muted-foreground mb-1 block text-right">مبلغ</Label>
+                                        <Input 
+                                            id="customAmount"
+                                            type="number" 
+                                            placeholder="أدخل المبلغ"
+                                            value={customAmount}
+                                            onChange={handleCustomAmountChange}
+                                            className="h-14 text-lg text-center"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="netAmount" className="text-muted-foreground mb-1 block text-right">صافي الرصيد بعد خصم الضريبة</Label>
+                                        <Input 
+                                            id="netAmount"
+                                            type="text" 
+                                            placeholder="0.00"
+                                            value={netAmount}
+                                            readOnly
+                                            className="h-14 text-lg text-center bg-muted/70 text-primary dark:text-primary-foreground font-bold"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -579,7 +602,7 @@ export default function PaymentCabinPage() {
                             }
                             setIsConfirmBalanceOpen(true);
                         }}
-                        className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-red-500 to-red-600 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
+                        className={cn("w-full h-12 text-lg font-bold bg-gradient-to-b from-primary to-primary/80 text-white", serviceConfig[provider]?.destructiveColor || 'bg-destructive')}
                         disabled={finalAmount <= 0}
                     >
                         سداد
@@ -593,30 +616,28 @@ export default function PaymentCabinPage() {
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
                         </AlertDialogHeader>
                         <div className="pt-4 space-y-4 text-sm">
-                            <Card className="bg-muted p-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground">الباقة:</span>
-                                    <span className="font-bold text-primary">{selectedPackage.packageName}</span>
-                                </div>
-                                 <div className="flex justify-between items-center mt-2">
-                                    <span className="text-muted-foreground">الرقم:</span>
-                                    <span className="font-semibold font-mono">{phoneNumber}</span>
-                                </div>
-                            </Card>
-                            <Card className="bg-muted p-3 text-center">
+                            <div className="bg-muted p-3 rounded-lg text-center">
+                                <p className="text-muted-foreground">الباقة</p>
+                                <p className="font-bold text-lg text-primary dark:text-primary-foreground">{selectedPackage.packageName}</p>
+                            </div>
+                            <div className="bg-muted p-3 rounded-lg text-center">
+                                <p className="text-muted-foreground">رقم الهاتف</p>
+                                <p className="font-semibold font-mono text-lg">{phoneNumber}</p>
+                            </div>
+                            <div className="bg-muted p-3 rounded-lg text-center">
                                 <p className="text-muted-foreground">المبلغ</p>
                                 <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
-                            </Card>
+                            </div>
                         </div>
-                        <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">
-                            <AlertDialogAction className='flex-1 w-full' onClick={() => {
+                        <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-2">
+                            <AlertDialogAction className='flex-1' onClick={() => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
                                 toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
                             }}>
                                 تأكيد
                             </AlertDialogAction>
-                            <AlertDialogCancel className='flex-1 w-full mt-0'>إلغاء</AlertDialogCancel>
+                            <AlertDialogCancel className='flex-1 mt-0'>إلغاء</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}
@@ -630,7 +651,7 @@ export default function PaymentCabinPage() {
                             <div className="pt-4 space-y-4 text-sm">
                                 <div className="bg-muted p-3 rounded-lg text-center">
                                     <p className="text-muted-foreground">سداد إلى الرقم</p>
-                                    <p className="font-bold text-lg font-mono text-primary">{phoneNumber}</p>
+                                    <p className="font-bold text-lg font-mono text-primary dark:text-primary-foreground">{phoneNumber}</p>
                                 </div>
                                 <div className="bg-muted p-3 rounded-lg text-center">
                                     <p className="text-muted-foreground">المبلغ</p>

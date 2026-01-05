@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
 import {
   Accordion,
   AccordionContent,
@@ -43,6 +41,13 @@ type PackageInfo = {
     messages: string;
     data: string;
 };
+
+type SubscriptionInfo = {
+    name: string;
+    activationDate: string;
+    expiryDate: string;
+    packageDetails: PackageInfo;
+}
 
 const serviceConfig = {
   'yemen-mobile': {
@@ -134,7 +139,7 @@ const PackageCard = ({
                     <div className="mt-1 flex justify-center items-baseline gap-2 text-xs">
                         <span className="font-semibold text-muted-foreground">{paymentType}</span>
                     </div>
-                    <p className="my-1.5 text-2xl font-bold text-primary dark:text-primary-foreground">
+                    <p className="my-1.5 text-2xl font-bold text-red-500">
                         {price}
                     </p>
                 </CardContent>
@@ -160,6 +165,36 @@ const PackageCard = ({
         </div>
     );
 };
+
+const SubscriptionCard = ({
+    subscriptionInfo,
+    onRenewSelect
+}: {
+    subscriptionInfo: SubscriptionInfo;
+    onRenewSelect: (pkg: PackageInfo) => void;
+}) => {
+    return (
+        <Card className="p-3 bg-card/80">
+            <div className="flex items-center gap-3">
+                <div className="flex-none">
+                    <Button 
+                        onClick={() => onRenewSelect(subscriptionInfo.packageDetails)}
+                        className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
+                        <RefreshCw className="h-5 w-5" />
+                        <span className="text-xs mt-1">تجديد</span>
+                    </Button>
+                </div>
+                <div className="flex-grow text-sm">
+                    <p className="font-bold">{subscriptionInfo.name}</p>
+                    <div className="text-xs mt-1 text-muted-foreground">
+                        <p className="text-green-600">الإشتراك: {subscriptionInfo.activationDate}</p>
+                        <p className="text-red-500">الإنتهاء: {subscriptionInfo.expiryDate}</p>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    );
+}
 
 export default function PaymentCabinPage() {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -249,17 +284,33 @@ export default function PaymentCabinPage() {
             messages: "300",
             data: "2 GB",
         };
+
+        const exampleSubscriptions: SubscriptionInfo[] = [
+            {
+                name: "تفعيل خدمة الانترنت - شريحة (3G)",
+                activationDate: "09:54:37 2023-06-20",
+                expiryDate: "00:00:00 2037-01-01",
+                packageDetails: examplePackage // Using example package for renewal
+            },
+            {
+                name: "مزايا الشهريه - 350 دقيقه 150 رساله 250 ميجا",
+                activationDate: "20:42:53 2025-12-08",
+                expiryDate: "23:59:59 2026-01-06",
+                packageDetails: examplePackage // Using example package for renewal
+            }
+        ];
+
         return (
           <div className="space-y-4">
              <Card className="p-2">
               <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
                 <div className="px-1">
                   <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
-                  <p className="font-bold text-sm text-blue-600 mt-1">77</p>
+                  <p className="font-bold text-sm text-foreground mt-1">77</p>
                 </div>
                 <div className="px-1">
                   <p className="text-xs font-bold text-red-500">نوع الرقم</p>
-                  <p className="font-bold text-xs text-blue-600 mt-1">3G | دفع مسبق</p>
+                  <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
                 </div>
                 <div className="px-1">
                   <p className="text-xs font-bold text-red-500 bg-red-100 rounded-md">فحص السلفة</p>
@@ -274,40 +325,9 @@ export default function PaymentCabinPage() {
             <div className="bg-red-100/50 border border-red-200/50 rounded-xl p-3">
               <h3 className="text-center font-bold text-red-600 mb-3 bg-gradient-to-r from-red-500 to-red-400 text-white rounded-md py-1 shadow">الاشتراكات الحالية</h3>
               <div className="space-y-3">
-                <Card className="p-3 bg-card/80">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-none">
-                      <Button className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
-                        <RefreshCw className="h-5 w-5" />
-                        <span className="text-xs mt-1">تجديد</span>
-                      </Button>
-                    </div>
-                    <div className="flex-grow text-sm">
-                      <p className="font-bold">تفعيل خدمة الانترنت - شريحة (3G)</p>
-                      <div className="text-xs mt-1 text-muted-foreground">
-                        <p className="text-green-600">الإشتراك: 09:54:37 2023-06-20</p>
-                        <p className="text-red-500">الإنتهاء: 00:00:00 2037-01-01</p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-                 <Card className="p-3 bg-card/80">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-none">
-                      <Button className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
-                        <RefreshCw className="h-5 w-5" />
-                        <span className="text-xs mt-1">تجديد</span>
-                      </Button>
-                    </div>
-                    <div className="flex-grow text-sm">
-                      <p className="font-bold">مزايا الشهريه - 350 دقيقه 150 رساله 250 ميجا</p>
-                      <div className="text-xs mt-1 text-muted-foreground">
-                        <p className="text-green-600">الإشتراك: 20:42:53 2025-12-08</p>
-                        <p className="text-red-500">الإنتهاء: 23:59:59 2026-01-06</p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                 {exampleSubscriptions.map((sub, index) => (
+                    <SubscriptionCard key={index} subscriptionInfo={sub} onRenewSelect={handlePackageSelect} />
+                 ))}
               </div>
             </div>
     
@@ -496,29 +516,29 @@ export default function PaymentCabinPage() {
                     <AlertDialogContent className="rounded-xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className='text-center'>تأكيد تفعيل الباقة</AlertDialogTitle>
-                            <AlertDialogDescription asChild>
-                                <div className="pt-4 space-y-4 text-sm">
-                                    <div className="bg-muted p-3 rounded-lg text-center">
-                                        <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
-                                        <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
-                                    </div>
-                                    <div className="bg-muted p-3 rounded-lg text-center">
-                                        <p className="text-muted-foreground">سيتم خصم مبلغ</p>
-                                        <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
-                                        <p className="text-muted-foreground">من رصيدك.</p>
-                                    </div>
-                                </div>
-                            </AlertDialogDescription>
                         </AlertDialogHeader>
+                        <AlertDialogDescription asChild>
+                            <div className="pt-4 space-y-4 text-sm">
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="font-bold text-lg text-primary">{selectedPackage.packageName}</p>
+                                    <p className="text-muted-foreground">للرقم: <span className="font-mono">{phoneNumber}</span></p>
+                                </div>
+                                <div className="bg-muted p-3 rounded-lg text-center">
+                                    <p className="text-muted-foreground">المبلغ</p>
+                                    <p className="font-bold text-2xl text-destructive">{Number(selectedPackage.price).toLocaleString('en-US')} ريال</p>
+                                    <p className="text-muted-foreground text-xs mt-1">سيتم خصم المبلغ من رصيدك.</p>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
                         <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2">
-                            <AlertDialogAction onClick={() => {
+                            <AlertDialogAction className='flex-1' onClick={() => {
                                 // Add purchase logic here
                                 setIsConfirmOpen(false);
                                 toast({ title: "جاري تفعيل الباقة...", description: "سيتم إشعارك عند اكتمال العملية." });
                             }}>
                                 تأكيد
                             </AlertDialogAction>
-                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogCancel className='flex-1 mt-0'>إلغاء</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 )}

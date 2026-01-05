@@ -157,7 +157,7 @@ const getProviderFromPhone = (phone: string): ServiceProvider => {
     return 'unknown';
 };
 
-const predefinedAmounts = [2000, 1000, 500, 200, 100];
+const predefinedAmounts = [100, 200, 500, 1000, 2000];
 
 const PackageCard = ({
     packageInfo,
@@ -539,7 +539,7 @@ export default function PaymentCabinPage() {
                             <div className="space-y-4">
                                 <Card className="rounded-2xl shadow-lg border-2 border-primary/20 bg-primary/5 text-center">
                                     <CardContent className="p-4">
-                                        <p className="text-sm text-primary/80 dark:text-primary-foreground/80">الرصيد الحالي</p>
+                                        <p className="text-sm text-primary/80 dark:text-primary-foreground/80">الرصيد الحالي للاشتراك</p>
                                         <p className="text-3xl font-bold text-primary dark:text-primary-foreground mt-1">0</p>
                                     </CardContent>
                                 </Card>
@@ -672,8 +672,3 @@ export default function PaymentCabinPage() {
         </div>
     );
 }
-
-
-
-
-

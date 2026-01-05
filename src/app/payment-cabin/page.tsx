@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile, Clock, Mail, Globe, AlertTriangle, Frown } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -174,11 +174,10 @@ const SubscriptionCard = ({
     onRenewSelect: (pkg: PackageInfo) => void;
 }) => {
     return (
-        <Card className="p-3 bg-card/80">
+        <Card className="p-3 bg-card/80" onClick={() => onRenewSelect(subscriptionInfo.packageDetails)}>
             <div className="flex items-center gap-3">
                 <div className="flex-none">
                     <Button 
-                        onClick={() => onRenewSelect(subscriptionInfo.packageDetails)}
                         className="bg-gradient-to-br from-red-500 to-red-400 text-white hover:opacity-90 w-16 h-16 flex flex-col items-center shadow-md">
                         <RefreshCw className="h-5 w-5" />
                         <span className="text-xs mt-1">تجديد</span>
@@ -203,6 +202,7 @@ export default function PaymentCabinPage() {
     const [customAmount, setCustomAmount] = useState('');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
     const { toast } = useToast();
+    const [isDebtor, setIsDebtor] = useState(true); // Placeholder for debt status
     
     const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -305,19 +305,26 @@ export default function PaymentCabinPage() {
              <Card className="p-2">
               <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
                 <div className="px-1">
-                  <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
+                  <p className="text-xs font-bold">رصيد الرقم</p>
                   <p className="font-bold text-sm text-foreground mt-1">77</p>
                 </div>
                 <div className="px-1">
-                  <p className="text-xs font-bold text-red-500">نوع الرقم</p>
+                  <p className="text-xs font-bold">نوع الرقم</p>
                   <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
                 </div>
                 <div className="px-1">
-                  <p className="text-xs font-bold text-red-500 bg-red-100 rounded-md">فحص السلفة</p>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                     <Smile className="h-4 w-4 text-green-600" />
-                     <p className="font-bold text-xs text-green-600">غير متسلف</p>
-                  </div>
+                  <p className="text-xs font-bold bg-red-100 rounded-md">فحص السلفة</p>
+                  {isDebtor ? (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                        <Frown className="h-4 w-4 text-destructive" />
+                        <p className="font-bold text-xs text-destructive">متسلف</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                        <Smile className="h-4 w-4 text-green-600" />
+                        <p className="font-bold text-xs text-green-600">غير متسلف</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>

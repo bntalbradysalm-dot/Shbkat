@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Building, ArrowLeft, Archive, RefreshCw, Smile } from 'lucide-react';
+import { User, Phone, Wifi, Building, RefreshCw, Smile } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -16,6 +16,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 
 type ServiceProvider = 'yemen-mobile' | 'you' | 'saba-fon' | 'yemen-4g' | 'adsl' | 'landline' | 'unknown';
@@ -64,8 +66,8 @@ const serviceConfig = {
   'landline': {
     name: 'الهاتف الثابت',
     logo: 'https://i.postimg.cc/q73b2z3W/landline.png',
-    prefix: '', // No specific prefix, maybe handle by length
-    length: 7, // Assuming landline numbers are 7 digits
+    prefix: '',
+    length: 7,
     color: 'bg-yellow-600',
     textColor: 'text-yellow-600',
     ringColor: 'focus-visible:ring-yellow-600',
@@ -101,6 +103,7 @@ export default function PaymentCabinPage() {
     const [activeTab, setActiveTab] = useState('دفع مسبق');
     const [customAmount, setCustomAmount] = useState('');
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+    const { toast } = useToast();
 
     useEffect(() => {
         const detectedProvider = getProviderFromPhone(phoneNumber);
@@ -117,6 +120,31 @@ export default function PaymentCabinPage() {
         setCustomAmount(value);
         if (value !== '') {
             setSelectedAmount(null);
+        }
+    };
+
+    const handleSelectContact = async () => {
+        if ('contacts' in navigator && 'select' in (navigator as any).contacts) {
+          try {
+            const contacts = await (navigator as any).contacts.select(['tel'], { multiple: false });
+            if (contacts.length > 0 && contacts[0].tel.length > 0) {
+              let selectedPhone = contacts[0].tel[0];
+              // Normalize phone number
+              selectedPhone = selectedPhone.replace(/\s+/g, '').replace('+967', '');
+              setPhoneNumber(selectedPhone);
+            }
+          } catch (ex) {
+            toast({
+              variant: 'destructive',
+              title: 'خطأ',
+              description: 'فشل اختيار جهة الاتصال.',
+            });
+          }
+        } else {
+          toast({
+            title: 'غير مدعوم',
+            description: 'متصفحك لا يدعم الوصول إلى جهات الاتصال.',
+          });
         }
     };
     
@@ -252,6 +280,7 @@ export default function PaymentCabinPage() {
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground">
             <SimpleHeader title="كبينة السداد" />
+            <Toaster />
             
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
                 <Card className={cn(
@@ -284,9 +313,9 @@ export default function PaymentCabinPage() {
                                 maxLength={currentMaxLength}
                             />
                         </div>
-                         <div className="p-2 bg-white rounded-lg shadow-sm">
+                         <button onClick={handleSelectContact} className="p-2 bg-white rounded-lg shadow-sm cursor-pointer">
                             <User className="h-5 w-5 text-muted-foreground" />
-                        </div>
+                         </button>
                     </CardContent>
                 </Card>
 

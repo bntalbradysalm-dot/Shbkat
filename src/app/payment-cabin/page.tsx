@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Wifi, Landline } from 'lucide-react';
+import { User, Phone, Wifi, Building } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -156,7 +156,7 @@ export default function PaymentCabinPage() {
                 <div className="flex items-center justify-between">
                     <Label htmlFor="service-toggle" className="flex items-center gap-3">
                         <div className={cn("p-2 rounded-full", isLandline ? 'bg-yellow-500' : 'bg-blue-800')}>
-                            {isLandline ? <Landline className="h-5 w-5 text-white" /> : <Wifi className="h-5 w-5 text-white" />}
+                            {isLandline ? <Building className="h-5 w-5 text-white" /> : <Wifi className="h-5 w-5 text-white" />}
                         </div>
                         <span className="font-semibold">{isLandline ? 'الهاتف الثابت' : 'الإنترنت ADSL'}</span>
                     </Label>

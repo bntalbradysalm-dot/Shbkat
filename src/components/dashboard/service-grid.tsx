@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -26,7 +27,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'الشبكات', icon: Wifi, href: '/services' },
+  { name: 'باقات يمن 4G', icon: Wifi, href: '/yemen-4g' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

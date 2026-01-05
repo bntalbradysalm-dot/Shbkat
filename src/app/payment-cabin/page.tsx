@@ -356,30 +356,30 @@ export default function PaymentCabinPage() {
         return (
           <div className="space-y-4">
              <Card className="p-2">
-              <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
-                <div className="px-1">
-                  <p className="text-xs font-bold">رصيد الرقم</p>
-                  <p className="font-bold text-sm text-foreground mt-1">77</p>
-                </div>
-                <div className="px-1">
-                  <p className="text-xs font-bold">نوع الرقم</p>
-                  <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
-                </div>
-                <div className="px-1">
-                  <p className="text-xs font-bold bg-red-100 rounded-md">فحص السلفة</p>
-                  {isDebtor ? (
-                    <div className="flex items-center justify-center gap-1 mt-1">
-                        <Frown className="h-4 w-4 text-destructive" />
-                        <p className="font-bold text-xs text-destructive">متسلف</p>
+                <div className="grid grid-cols-3 divide-x-reverse divide-x text-center rtl:divide-x-reverse">
+                    <div className="px-1">
+                        <p className="text-xs font-bold text-red-500">رصيد الرقم</p>
+                        <p className="font-bold text-sm text-foreground mt-1">77</p>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-1 mt-1">
-                        <Smile className="h-4 w-4 text-green-600" />
-                        <p className="font-bold text-xs text-green-600">غير متسلف</p>
+                    <div className="px-1">
+                        <p className="text-xs font-bold text-red-500">نوع الرقم</p>
+                        <p className="font-bold text-xs text-foreground mt-1">3G | دفع مسبق</p>
                     </div>
-                  )}
+                    <div className="px-1">
+                        <p className="text-xs font-bold text-red-500 rounded-md">فحص السلفة</p>
+                        {isDebtor ? (
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                                <Frown className="h-4 w-4 text-destructive" />
+                                <p className="font-bold text-xs text-destructive">متسلف</p>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                                <Smile className="h-4 w-4 text-green-600" />
+                                <p className="font-bold text-xs text-green-600">غير متسلف</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-              </div>
             </Card>
     
             <div className="bg-red-100/50 border border-red-200/50 rounded-xl p-3">

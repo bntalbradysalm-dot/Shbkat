@@ -9,7 +9,7 @@ import {
   History,
   Wifi,
   CreditCard,
-  Building,
+  Phone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { PromotionalImage } from './promotional-image';
@@ -23,7 +23,7 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'كبينة السداد', icon: Building, href: '/payment-cabin' },
+  { name: 'كبينة السداد', icon: Phone, href: '/payment-cabin' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },

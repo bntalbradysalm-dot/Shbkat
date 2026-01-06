@@ -213,7 +213,7 @@ export default function ServicesPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-white/20 rounded-lg">
-                          {network.source === 'baity' ? <Building className="h-6 w-6 text-white" /> : <Wifi className="h-6 w-6 text-white" />}
+                          <Wifi className="h-6 w-6 text-white" />
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
@@ -223,7 +223,6 @@ export default function ServicesPage() {
                               {network.location}
                             </p>
                           )}
-                           <Badge variant="secondary" className="bg-white/20 text-white text-xs mt-1">{network.source === 'baity' ? 'بيتي نت' : 'شبكة محلية'}</Badge>
                         </div>
                       </div>
                       <button 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -8,7 +7,7 @@ import {
   Send,
   History,
   Wifi,
-  CreditCard,
+  Smartphone,
   Phone,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -23,7 +22,7 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'كبينة السداد', icon: CreditCard, href: '/payment-cabin' },
+  { name: 'كبينة السداد', icon: Smartphone, href: '/payment-cabin' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },

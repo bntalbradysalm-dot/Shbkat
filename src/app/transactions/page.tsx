@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -7,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy, Smartphone } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -53,6 +52,9 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
+    if (type.includes('سداد')) {
+        return <Smartphone className="h-6 w-6 text-blue-500" />;
+    }
     if (type.startsWith('استرجاع')) {
         return <Undo2 className="h-6 w-6 text-orange-500" />;
     }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -52,6 +53,18 @@ export default function FavoritesPage() {
       description: `تمت إزالة "${networkName}" من المفضلة.`,
     });
   };
+  
+  const getNetworkLink = (fav: Favorite) => {
+    // Assuming API networks have numeric IDs and Firestore networks have string IDs
+    const isApiNetwork = /^\d+$/.test(fav.targetId);
+    const encodedName = encodeURIComponent(fav.name);
+    
+    if (isApiNetwork) {
+      return `/services/${fav.targetId}?name=${encodedName}`;
+    } else {
+      return `/network-cards/${fav.targetId}?name=${encodedName}`;
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -90,7 +103,7 @@ export default function FavoritesPage() {
     return (
       <div className="space-y-4">
         {favorites.map((fav, index) => (
-           <Link href={`/services/${fav.targetId}?name=${encodeURIComponent(fav.name)}`} key={fav.id} className="block">
+           <Link href={getNetworkLink(fav)} key={fav.id} className="block">
               <Card 
                 className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
                 style={{ animationDelay: `${index * 50}ms` }}

@@ -62,6 +62,7 @@ const managementLinks = [
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات يمن 4G', icon: CreditCard, href: '/yemen-4g-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
+  { title: 'تقارير مبيعات الكروت', icon: BarChart3, href: '/card-sales-reports' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
   { title: 'تقارير منظومة الوادي', icon: BarChart3, href: '/alwadi-reports' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },

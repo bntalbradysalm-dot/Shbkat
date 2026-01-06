@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, CreditCard, Wallet } from "lucide-react";
+import { Eye, EyeOff, CreditCard, Wallet, Heart } from "lucide-react";
 import React from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -71,10 +71,10 @@ export function BalanceCard() {
                     تغذية الحساب
                 </Button>
             </Link>
-            <Link href="/alwadi" className="w-full">
+            <Link href="/favorites" className="w-full">
               <Button variant="secondary" className="flex items-center justify-center bg-white/20 hover:bg-white/30 text-primary-foreground font-bold rounded-lg w-full">
-                <CreditCard className="h-4 w-4 relative bottom-px" />
-                تجديد الكرت
+                <Heart className="h-4 w-4 relative bottom-px" />
+                المفضلة
               </Button>
             </Link>
           </div>

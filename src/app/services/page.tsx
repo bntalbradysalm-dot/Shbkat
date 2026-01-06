@@ -7,20 +7,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Wifi, MapPin, Heart, AlertCircle } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { collection, query, where, doc, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-type Network = {
-  id: number; // The API returns number for id
+// Type for networks from BaityNet API
+type ApiNetwork = {
+  id: number;
   name: string;
-  desc: string; // Using `desc` for location as per API docs
+  desc: string; 
   logo?: string;
   urlLogin?: string;
+  source: 'api';
 };
+
+// Type for networks from Firestore
+type FirestoreNetwork = {
+  id: string;
+  name: string;
+  location: string;
+  phoneNumber?: string;
+  source: 'firestore';
+};
+
+// Union type for combined list
+type CombinedNetwork = ApiNetwork | FirestoreNetwork;
+
 
 type Favorite = {
     id: string;
@@ -32,32 +47,44 @@ export default function ServicesPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [networks, setNetworks] = useState<Network[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  const [apiNetworks, setApiNetworks] = useState<ApiNetwork[]>([]);
+  const [isLoadingApi, setIsLoadingApi] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
 
+  // 1. Fetch BaityNet networks from API
   useEffect(() => {
-    const fetchNetworks = async () => {
-      setIsLoading(true);
-      setError(null);
+    const fetchApiNetworks = async () => {
+      setIsLoadingApi(true);
+      setApiError(null);
       try {
         const response = await fetch('/services/networks-api');
         if (!response.ok) {
           throw new Error('Failed to fetch networks');
         }
         const data = await response.json();
-        setNetworks(data); // The API route now returns the array directly
+        const networksWithSource = data.map((net: any) => ({ ...net, source: 'api' }));
+        setApiNetworks(networksWithSource);
       } catch (err) {
-        setError('لا يمكن تحميل قائمة الشبكات حاليًا. الرجاء المحاولة لاحقًا.');
+        setApiError('لا يمكن تحميل قائمة شبكات بيتي نت حاليًا.');
         console.error(err);
       } finally {
-        setIsLoading(false);
+        setIsLoadingApi(false);
       }
     };
-
-    fetchNetworks();
+    fetchApiNetworks();
   }, []);
 
+  // 2. Fetch Firestore networks
+  const firestoreNetworksQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'networks'), orderBy('name')) : null, [firestore]);
+  const { data: firestoreNetworksData, isLoading: isLoadingFirestore } = useCollection<Omit<FirestoreNetwork, 'source'>>(firestoreNetworksQuery);
+
+  const firestoreNetworks: FirestoreNetwork[] = useMemo(() => 
+    firestoreNetworksData?.map(net => ({ ...net, source: 'firestore' })) || [], 
+  [firestoreNetworksData]);
+
+
+  // 3. Fetch user's favorites
   const favoritesQuery = useMemoFirebase(
     () =>
       user
@@ -69,61 +96,66 @@ export default function ServicesPage() {
     [firestore, user]
   );
   const { data: favorites } = useCollection<Favorite>(favoritesQuery);
-
   const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
-
+  
+  // 4. Combine and filter networks
   const filteredNetworks = useMemo(() => {
-    if (!networks) return [];
-    return networks.filter(net => 
-      net.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (net.desc && net.desc.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [networks, searchTerm]);
+    const combined: CombinedNetwork[] = [...apiNetworks, ...firestoreNetworks];
+    if (!combined) return [];
+    return combined.filter(net => {
+        const name = net.name.toLowerCase();
+        const location = net.source === 'api' ? net.desc?.toLowerCase() : net.location?.toLowerCase();
+        const term = searchTerm.toLowerCase();
+        return name.includes(term) || (location && location.includes(term));
+    });
+  }, [apiNetworks, firestoreNetworks, searchTerm]);
 
-  const handleFavoriteClick = async (e: React.MouseEvent, network: Network) => {
+  const handleFavoriteClick = async (e: React.MouseEvent, network: CombinedNetwork) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!user || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'يجب تسجيل الدخول لاستخدام المفضلة.',
-      });
+      toast({ variant: 'destructive', title: 'خطأ', description: 'يجب تسجيل الدخول لاستخدام المفضلة.' });
       return;
     }
 
-    const networkIdAsString = String(network.id);
-    const isFavorited = favoriteNetworkIds.has(networkIdAsString);
+    const networkId = String(network.id);
+    const isFavorited = favoriteNetworkIds.has(networkId);
     const favoritesCollectionRef = collection(firestore, 'users', user.uid, 'favorites');
 
     if (isFavorited) {
-      const favToDelete = favorites?.find(f => f.targetId === networkIdAsString);
+      const favToDelete = favorites?.find(f => f.targetId === networkId);
       if (favToDelete) {
         const docRef = doc(firestore, 'users', user.uid, 'favorites', favToDelete.id);
         deleteDocumentNonBlocking(docRef);
-        toast({
-          title: 'تمت الإزالة',
-          description: `تمت إزالة "${network.name}" من المفضلة.`,
-        });
+        toast({ title: 'تمت الإزالة', description: `تمت إزالة "${network.name}" من المفضلة.` });
       }
     } else {
       const favoriteData = {
         userId: user.uid,
-        targetId: networkIdAsString,
+        targetId: networkId,
         name: network.name,
-        location: network.desc, // Using 'desc' as location
+        location: network.source === 'api' ? network.desc : network.location,
+        phoneNumber: network.source === 'firestore' ? network.phoneNumber : undefined,
         favoriteType: 'Network',
       };
       addDocumentNonBlocking(favoritesCollectionRef, favoriteData);
-      toast({
-        title: 'تمت الإضافة',
-        description: `تمت إضافة "${network.name}" إلى المفضلة.`,
-      });
+      toast({ title: 'تمت الإضافة', description: `تمت إضافة "${network.name}" إلى المفضلة.` });
+    }
+  };
+  
+  const getNetworkLink = (network: CombinedNetwork) => {
+    const networkId = String(network.id);
+    const encodedName = encodeURIComponent(network.name);
+    if (network.source === 'api') {
+      return `/services/${networkId}?name=${encodedName}`;
+    } else {
+      return `/network-cards/${networkId}?name=${encodedName}`;
     }
   };
 
   const renderContent = () => {
+    const isLoading = isLoadingApi || isLoadingFirestore;
     if (isLoading) {
       return (
         <div className="space-y-4">
@@ -145,14 +177,12 @@ export default function ServicesPage() {
       );
     }
     
-    if (error) {
+    if (apiError) {
        return (
         <div className="flex flex-col items-center justify-center text-center h-64">
           <AlertCircle className="h-16 w-16 text-destructive" />
           <h3 className="mt-4 text-lg font-semibold">حدث خطأ</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {error}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{apiError}</p>
         </div>
       );
     }
@@ -161,12 +191,8 @@ export default function ServicesPage() {
       return (
         <div className="text-center py-16">
           <Wifi className="mx-auto h-16 w-16 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">
-            {searchTerm ? 'لا توجد نتائج بحث' : 'لا توجد شبكات متاحة'}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {searchTerm ? 'حاول البحث بكلمة أخرى.' : 'يبدو أنه لا توجد شبكات مضافة حالياً.'}
-          </p>
+          <h3 className="mt-4 text-lg font-semibold">{searchTerm ? 'لا توجد نتائج بحث' : 'لا توجد شبكات متاحة'}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{searchTerm ? 'حاول البحث بكلمة أخرى.' : 'يبدو أنه لا توجد شبكات مضافة حالياً.'}</p>
         </div>
       );
     }
@@ -176,8 +202,11 @@ export default function ServicesPage() {
         {filteredNetworks.map((network, index) => {
           const networkIdAsString = String(network.id);
           const isFavorited = favoriteNetworkIds.has(networkIdAsString);
+          const location = network.source === 'api' ? network.desc : network.location;
+          const link = getNetworkLink(network);
+
           return (
-             <Link href={`/services/${networkIdAsString}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
+             <Link href={link} key={`${network.source}-${network.id}`} className="block">
                 <Card 
                   className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
@@ -190,10 +219,10 @@ export default function ServicesPage() {
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          {network.desc && (
+                          {location && (
                              <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
                               <MapPin className="h-3 w-3" />
-                              {network.desc}
+                              {location}
                             </p>
                           )}
                         </div>

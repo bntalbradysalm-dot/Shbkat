@@ -18,7 +18,7 @@ import Link from 'next/link';
 type ApiNetwork = {
   id: number;
   name: string;
-  desc: string; 
+  desc?: string; 
   logo?: string;
   urlLogin?: string;
   source: 'api';
@@ -135,7 +135,7 @@ export default function ServicesPage() {
         userId: user.uid,
         targetId: networkId,
         name: network.name,
-        location: network.source === 'api' ? network.desc : network.location,
+        location: (network.source === 'api' ? network.desc : network.location) || 'غير محدد',
         phoneNumber: network.source === 'firestore' ? network.phoneNumber : undefined,
         favoriteType: 'Network',
       };
@@ -177,7 +177,7 @@ export default function ServicesPage() {
       );
     }
     
-    if (apiError) {
+    if (apiError && firestoreNetworks.length === 0) {
        return (
         <div className="flex flex-col items-center justify-center text-center h-64">
           <AlertCircle className="h-16 w-16 text-destructive" />

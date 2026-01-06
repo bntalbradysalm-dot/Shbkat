@@ -474,6 +474,13 @@ export default function UsersPage() {
               <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
             </SelectContent>
           </Select>
+
+          <Card>
+            <CardContent className="p-3 text-center">
+                <p className="text-sm font-semibold">إجمالي المستخدمين: <span className="font-bold text-primary">{users?.length || 0}</span></p>
+            </CardContent>
+          </Card>
+
           {renderContent()}
         </div>
       </div>

@@ -23,7 +23,7 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'كبينة السداد', icon: Phone, href: '/payment-cabin' },
+  { name: 'كبينة السداد', icon: CreditCard, href: '/payment-cabin' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },

@@ -1,0 +1,62 @@
+
+import { NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+// These should be set in your .env.local file
+const USERID = process.env.ECHENTELLY_USERID;
+const USERNAME = process.env.ECHENTELLY_USERNAME;
+const PASSWORD = process.env.ECHENTELLY_PASSWORD;
+const DOMAIN = process.env.ECHENTELLY_DOMAIN;
+
+function md5(str: string): string {
+    return crypto.createHash('md5').update(str).digest('hex');
+}
+
+function generateToken(transid: string, mobile: string): string {
+    if (!PASSWORD || !USERNAME) {
+        throw new Error("Missing username or password for token generation.");
+    }
+    const hashPassword = md5(PASSWORD);
+    const token = md5(hashPassword + transid + USERNAME + mobile);
+    return token;
+}
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+    const mobile = searchParams.get('mobile');
+
+    if (!action || !mobile) {
+        return new NextResponse(JSON.stringify({ message: 'Action and mobile number are required' }), { status: 400 });
+    }
+
+    if (!USERID || !USERNAME || !PASSWORD || !DOMAIN) {
+        return new NextResponse(JSON.stringify({ message: 'Server is not configured for echehanly API' }), { status: 500 });
+    }
+    
+    const transid = Date.now().toString();
+    const token = generateToken(transid, mobile);
+
+    const apiUrl = `https://${DOMAIN}/yem?action=${action}&userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
+
+    try {
+        const apiResponse = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await apiResponse.json();
+
+        if (!apiResponse.ok || data.resultCode !== "0") {
+             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'Failed to query echehanly API' }), { status: apiResponse.status });
+        }
+
+        return NextResponse.json(data);
+
+    } catch (error) {
+        console.error("Echehanly API request failed:", error);
+        return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500 });
+    }
+}

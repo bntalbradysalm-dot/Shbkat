@@ -1,7 +1,7 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,13 @@ import Image from 'next/image';
 
 type UserProfile = {
   balance?: number;
+};
+
+type YemenMobileBalance = {
+    mobileType: string;
+    availableCredit: string;
+    balance: string;
+    resultDesc: string;
 };
 
 const BalanceDisplay = () => {
@@ -46,7 +53,8 @@ const BalanceDisplay = () => {
     );
 }
 
-const YemenMobileUI = () => (
+const YemenMobileUI = ({ balanceData, isLoadingBalance }: { balanceData: YemenMobileBalance | null, isLoadingBalance: boolean }) => {
+    return (
     <div className="space-y-4 animate-in fade-in-0 duration-500">
         <Card>
             <CardHeader className="flex-row items-center justify-between p-3">
@@ -54,11 +62,17 @@ const YemenMobileUI = () => (
                 <CardTitle className="text-sm">رصيد</CardTitle>
             </CardHeader>
             <CardContent className="p-3 pt-0">
-                <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
-                    <p>فحص السلفة</p>
-                    <p>نوع الرقم: <strong>دفع مسبق</strong></p>
-                    <p>رصيد البولار: <strong>77</strong></p>
-                </div>
+                {isLoadingBalance ? (
+                    <Skeleton className="h-10 w-full" />
+                ) : balanceData ? (
+                    <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
+                        <p>الرصيد: <strong>{balanceData.balance}</strong></p>
+                        <p>نوع الرقم: <strong>{balanceData.mobileType === "0" ? 'دفع مسبق' : 'فاتورة'}</strong></p>
+                        <p>رصيد البولار: <strong>{balanceData.availableCredit}</strong></p>
+                    </div>
+                ) : (
+                    <p className="text-center text-xs text-destructive">لم يتم العثور على بيانات الرصيد.</p>
+                )}
             </CardContent>
         </Card>
 
@@ -96,26 +110,17 @@ const YemenMobileUI = () => (
         </div>
     </div>
 );
+}
 
 
 export default function TelecomServicesPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [detectedOperator, setDetectedOperator] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const operator = getOperator(phoneNumber);
-    if (operator) {
-        setIsSearching(true);
-        // Simulate API call
-        setTimeout(() => {
-            setDetectedOperator(operator);
-            setIsSearching(false);
-        }, 500);
-    } else {
-        setDetectedOperator(null);
-    }
-  }, [phoneNumber]);
+  const [balanceData, setBalanceData] = useState<YemenMobileBalance | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
   const getOperator = (phone: string) => {
     if (phone.startsWith('77')) return 'Yemen Mobile';
@@ -134,15 +139,47 @@ export default function TelecomServicesPage() {
           default: return null;
       }
   }
+  
+  const fetchBalance = useCallback(async (phone: string) => {
+      if (getOperator(phone) !== 'Yemen Mobile') return;
+
+      setIsLoadingBalance(true);
+      setBalanceData(null);
+      try {
+          const response = await fetch(`/api/echehanly?action=query&mobile=${phone}`);
+          const data = await response.json();
+          if (!response.ok) {
+              throw new Error(data.message || 'Failed to fetch balance');
+          }
+          setBalanceData(data);
+      } catch (error: any) {
+          console.error("Balance fetch error:", error);
+          toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+      } finally {
+          setIsLoadingBalance(false);
+      }
+  }, [toast]);
+
+  useEffect(() => {
+    const operator = getOperator(phoneNumber);
+    if(operator !== detectedOperator) {
+        setDetectedOperator(operator);
+        setBalanceData(null); // Clear old data when operator changes
+    }
+
+    if (phoneNumber.length === 9) {
+      if (operator === 'Yemen Mobile') {
+        fetchBalance(phoneNumber);
+      } else if (operator) {
+        toast({ title: "قريباً", description: `خدمات ${operator} قيد التطوير.`});
+      }
+    }
+  }, [phoneNumber, detectedOperator, fetchBalance, toast]);
 
   const renderOperatorUI = () => {
     switch (detectedOperator) {
       case 'Yemen Mobile':
-        return <YemenMobileUI />;
-      case 'SabaFon':
-      case 'YOU':
-      case 'Way':
-        return <p className="text-center text-muted-foreground mt-8">واجهة {detectedOperator} قيد التطوير.</p>;
+        return <YemenMobileUI balanceData={balanceData} isLoadingBalance={isLoadingBalance}/>;
       default:
         return null;
     }
@@ -175,7 +212,7 @@ export default function TelecomServicesPage() {
                 type="tel"
                 placeholder="7X XXX XXXX"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
                 className="text-2xl text-center h-16 tracking-widest"
               />

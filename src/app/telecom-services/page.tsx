@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -27,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type UserProfile = {
   balance?: number;
@@ -279,56 +279,66 @@ const Yemen4GUI = ({
                 </CardContent>
             </Card>
 
-             <Card>
-                <CardHeader className="p-3">
-                    <CardTitle className="text-base">تسديد رصيد</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-3">
-                    <div>
-                      <Label htmlFor="y4g-bill-amount" className="sr-only">المبلغ</Label>
-                      <Input 
-                        id="y4g-bill-amount"
-                        type="number"
-                        placeholder="أدخل مبلغ الرصيد..."
-                        value={billAmount}
-                        onChange={(e) => setBillAmount(e.target.value)}
-                      />
-                    </div>
-                    <Button 
-                        className="w-full" 
-                        onClick={() => onBillPay(Number(billAmount), 'balance')} 
-                        disabled={!billAmount || Number(billAmount) <= 0}
-                    >
-                        <CreditCard className="ml-2 h-4 w-4" />
-                        تسديد رصيد
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="p-3">
-                    <CardTitle className="text-base">شراء باقة</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-3">
-                    <div>
-                      <Label htmlFor="y4g-package-amount" className="sr-only">المبلغ</Label>
-                      <Input 
-                        id="y4g-package-amount"
-                        type="number"
-                        placeholder="أدخل مبلغ الباقة..."
-                        value={packageAmount}
-                        onChange={(e) => setPackageAmount(e.target.value)}
-                      />
-                    </div>
-                    <Button 
-                        className="w-full" 
-                        onClick={() => onBillPay(Number(packageAmount), 'package')} 
-                        disabled={!packageAmount || Number(packageAmount) <= 0}
-                    >
-                        <CreditCard className="ml-2 h-4 w-4" />
-                        شراء باقة
-                    </Button>
-                </CardContent>
-            </Card>
+            <Tabs defaultValue="balance">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="balance">الرصيد</TabsTrigger>
+                    <TabsTrigger value="packages">الباقات</TabsTrigger>
+                </TabsList>
+                <TabsContent value="balance" className="pt-4">
+                    <Card>
+                        <CardHeader className="p-3">
+                            <CardTitle className="text-base">تسديد رصيد</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 space-y-3">
+                            <div>
+                              <Label htmlFor="y4g-bill-amount" className="sr-only">المبلغ</Label>
+                              <Input 
+                                id="y4g-bill-amount"
+                                type="number"
+                                placeholder="أدخل مبلغ الرصيد..."
+                                value={billAmount}
+                                onChange={(e) => setBillAmount(e.target.value)}
+                              />
+                            </div>
+                            <Button 
+                                className="w-full" 
+                                onClick={() => onBillPay(Number(billAmount), 'balance')} 
+                                disabled={!billAmount || Number(billAmount) <= 0}
+                            >
+                                <CreditCard className="ml-2 h-4 w-4" />
+                                تسديد رصيد
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="packages" className="pt-4">
+                    <Card>
+                        <CardHeader className="p-3">
+                            <CardTitle className="text-base">شراء باقة</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 space-y-3">
+                            <div>
+                              <Label htmlFor="y4g-package-amount" className="sr-only">المبلغ</Label>
+                              <Input 
+                                id="y4g-package-amount"
+                                type="number"
+                                placeholder="أدخل مبلغ الباقة..."
+                                value={packageAmount}
+                                onChange={(e) => setPackageAmount(e.target.value)}
+                              />
+                            </div>
+                            <Button 
+                                className="w-full" 
+                                onClick={() => onBillPay(Number(packageAmount), 'package')} 
+                                disabled={!packageAmount || Number(packageAmount) <= 0}
+                            >
+                                <CreditCard className="ml-2 h-4 w-4" />
+                                شراء باقة
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
@@ -730,4 +740,3 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-

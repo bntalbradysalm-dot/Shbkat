@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -224,11 +223,10 @@ export default function TelecomServicesPage() {
       setBalanceData(null);
       try {
           const response = await fetch(`/api/echehanly?action=query&mobile=${phone}`);
+          const data = await response.json();
           if (!response.ok) {
-              const data = await response.json();
               throw new Error(data.message || 'Failed to fetch balance');
           }
-          const data = await response.json();
           setBalanceData(data);
       } catch (error: any) {
           console.error("Balance fetch error:", error);
@@ -245,11 +243,10 @@ export default function TelecomServicesPage() {
     setOffers(null);
     try {
         const response = await fetch(`/api/echehanly?action=queryoffer&mobile=${phone}`);
+        const data = await response.json();
         if (!response.ok) {
-            const data = await response.json();
             throw new Error(data.message || 'Failed to fetch offers');
         }
-        const data = await response.json();
         setOffers(data.offers);
     } catch (error: any) {
         console.error("Offers fetch error:", error);
@@ -279,7 +276,7 @@ export default function TelecomServicesPage() {
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, toast]);
   
   const handlePurchase = async () => {
-    if (!selectedPackage || !selectedPackage.price || !userProfile || !firestore || !userDocRef) {
+    if (!selectedPackage || !selectedPackage.price || !userProfile || !firestore || !userDocRef || !user) {
         toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
         return;
     }
@@ -292,7 +289,7 @@ export default function TelecomServicesPage() {
 
     setIsProcessing(true);
     try {
-        const response = await fetch(`/api/echehanly?action=bill&mobile=${phoneNumber}&amount=${selectedPackage.price}`);
+        const response = await fetch(`/api/echehanly?action=billoffer&mobile=${phoneNumber}&offerid=${selectedPackage.offerId}&method=New`);
         if (!response.ok) {
             const data = await response.json();
             throw new Error(data.message || 'فشلت عملية الشراء.');
@@ -301,14 +298,14 @@ export default function TelecomServicesPage() {
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-selectedPackage.price) });
         const requestData = {
-          userId: user!.uid,
+          userId: user.uid,
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
           company: 'Yemen Mobile',
-          serviceType: 'دفع مسبق', // Assume prepaid for packages
+          serviceType: 'شراء باقة',
           targetPhoneNumber: phoneNumber,
           amount: selectedPackage.price,
-          commission: 0, // No commission for now
+          commission: 0, 
           totalCost: selectedPackage.price,
           status: 'approved',
           requestTimestamp: new Date().toISOString()

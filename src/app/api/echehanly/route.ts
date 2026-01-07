@@ -25,7 +25,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
     const mobile = searchParams.get('mobile');
-    const amount = searchParams.get('amount'); // For 'bill' action
+    const amount = searchParams.get('amount');
+    const offerid = searchParams.get('offerid');
+    const method = searchParams.get('method');
+
 
     if (!action || !mobile) {
         return new NextResponse(JSON.stringify({ message: 'Action and mobile number are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -33,6 +36,10 @@ export async function GET(request: Request) {
 
     if (action === 'bill' && !amount) {
         return new NextResponse(JSON.stringify({ message: 'Amount is required for bill action' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+    
+    if (action === 'billoffer' && (!offerid || !method)) {
+      return new NextResponse(JSON.stringify({ message: 'Offer ID and method are required for billoffer action' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     if (!USERID || !USERNAME || !PASSWORD || !DOMAIN) {
@@ -43,8 +50,13 @@ export async function GET(request: Request) {
     const token = generateToken(transid, mobile);
 
     let apiUrl = `https://${DOMAIN}/yem?action=${action}&userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
+    
     if (action === 'bill' && amount) {
         apiUrl += `&amount=${amount}`;
+    }
+
+    if (action === 'billoffer' && offerid && method) {
+        apiUrl += `&offerid=${offerid}&method=${method}`;
     }
 
     try {
@@ -55,17 +67,10 @@ export async function GET(request: Request) {
             },
         });
 
-        if (!apiResponse.ok) {
-            // If the external API itself fails (e.g., 500), this will be caught here.
-            return new NextResponse(JSON.stringify({ message: `External API request failed with status ${apiResponse.status}` }), { status: apiResponse.status, headers: { 'Content-Type': 'application/json' } });
-        }
-
         const data = await apiResponse.json();
-        
-        // Echehanly API uses `resultCode` to indicate success/failure in the response body.
-        if (data.resultCode !== "0") {
-             // Forward the error from the external API's response body.
-             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'Failed to process request on echehanly API' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+        if (!apiResponse.ok || data.resultCode !== "0") {
+             return new NextResponse(JSON.stringify({ message: data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}` }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
 
         return NextResponse.json(data);

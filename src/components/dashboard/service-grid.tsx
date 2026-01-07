@@ -9,6 +9,7 @@ import {
   Wifi,
   CreditCard,
   Smartphone,
+  Gamepad2,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,7 +26,7 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'العمليات', icon: History, href: '/transactions' },
+  { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
 ];
 
 const ServiceItem = ({

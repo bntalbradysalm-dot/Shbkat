@@ -26,6 +26,7 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
+  { name: 'ببجي موبايل', icon: 'https://i.postimg.cc/7ZZvJb3z/pubg-icon.png', href: '/pubg' },
   { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
 ];
 
@@ -57,7 +58,7 @@ const ServiceItem = ({
 export function ServiceGrid() {
   return (
     <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
-      <div className="grid grid-cols-3 gap-3 px-4">
+      <div className="grid grid-cols-4 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem key={service.name} {...service} index={index} />
         ))}

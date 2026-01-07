@@ -72,6 +72,38 @@ type YemenPostQuery = {
     resultDesc: string;
 };
 
+const GenericOperatorUI = ({ operatorName, onBillPay }: { operatorName: string, onBillPay: (amount: number) => void }) => {
+    const [amount, setAmount] = useState('');
+    return (
+        <Card className="animate-in fade-in-0 duration-500">
+            <CardHeader>
+                <CardTitle className="text-center">تسديد رصيد {operatorName}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div>
+                    <Label htmlFor="generic-amount">المبلغ</Label>
+                    <Input 
+                        id="generic-amount"
+                        type="number"
+                        placeholder="أدخل المبلغ..."
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                    />
+                </div>
+                <Button 
+                    className="w-full"
+                    onClick={() => onBillPay(Number(amount))}
+                    disabled={!amount || Number(amount) <= 0}
+                >
+                    <CreditCard className="ml-2 h-4 w-4" />
+                    دفع
+                </Button>
+            </CardContent>
+        </Card>
+    );
+};
+
+
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -704,8 +736,6 @@ export default function TelecomServicesPage() {
         fetchYemen4GQuery(phoneNumber);
     } else if (isYemenPost) {
         // Don't auto-query for post, wait for user action
-    } else if (operator && !isYemenMobile && !isYemen4G && !isYemenPost) {
-        toast({ title: "قريباً", description: `خدمات ${operator} قيد التطوير.`});
     }
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery, toast]);
   
@@ -715,12 +745,13 @@ export default function TelecomServicesPage() {
     const isYemenPost = detectedOperator === 'Yemen Post';
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
 
-    if (isYemen4G || isYemenPost) {
+    if (isYemen4G || isYemenPost || !isPackage) {
         amountToPay = billAmount;
     }
     
     if (!amountToPay || amountToPay <= 0) {
         toast({ variant: 'destructive', title: "خطأ", description: "المبلغ غير صالح." });
+        setIsConfirming(false);
         return;
     }
     
@@ -743,11 +774,11 @@ export default function TelecomServicesPage() {
     let transid = Date.now().toString();
     try {
         let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}`;
-        let serviceName: string = detectedOperator || 'خدمة';
+        let serviceNameForDb: string = detectedOperator || 'خدمة';
         let serviceType: string;
 
         if (isYemen4G) {
-            serviceName = 'Yemen 4G';
+            serviceNameForDb = 'Yemen 4G';
             apiUrl += `&service=yem4g&action=bill&amount=${amountToPay}`;
             if(yemen4GType === 'package') {
                 apiUrl += '&type=1';
@@ -757,15 +788,24 @@ export default function TelecomServicesPage() {
                  serviceType = 'تسديد رصيد 4G';
             }
         } else if (isYemenPost) {
-            serviceName = 'بريد اليمن';
+            serviceNameForDb = 'بريد اليمن';
             apiUrl += `&service=post&action=bill&amount=${amountToPay}&type=${yemenPostType}`;
             serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
-        } else { // Yemen Mobile
-            if (isPackage) {
+        } else { // Yemen Mobile or other generic operators
+            if (isPackage) { // Only for Yemen Mobile
                 apiUrl += `&service=yem&action=billoffer&offerid=${selectedPackage!.offerId}&method=New`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
-            } else {
-                apiUrl += `&service=yem&action=bill&amount=${amountToPay}`;
+            } else { // Generic bill payment for all others
+                 const serviceMap: { [key: string]: string } = {
+                    'Yemen Mobile': 'yem',
+                    'SabaFon': 'sab',
+                    'YOU': 'mtn',
+                    'Way': 'way',
+                 };
+                const service = serviceMap[detectedOperator || ''];
+                if (!service) throw new Error('مشغل خدمة غير مدعوم.');
+                
+                apiUrl += `&service=${service}&action=bill&amount=${amountToPay}`;
                 serviceType = 'تسديد رصيد';
             }
         }
@@ -784,7 +824,7 @@ export default function TelecomServicesPage() {
           userId: user.uid,
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
-          company: serviceName,
+          company: serviceNameForDb,
           serviceType: serviceType,
           targetPhoneNumber: phoneNumber,
           amount: amountToPay,
@@ -834,7 +874,7 @@ export default function TelecomServicesPage() {
   }
 
   const renderOperatorUI = () => {
-    if (!detectedOperator || phoneNumber.length < 9 && detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post') {
+    if (!detectedOperator || (phoneNumber.length < 9 && detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post')) {
         return (
             <div className="text-center text-muted-foreground p-8 space-y-4">
                 <Info className="mx-auto h-12 w-12" />
@@ -855,10 +895,12 @@ export default function TelecomServicesPage() {
                 isLoadingOffers={isLoadingOffers}
                 onPackageSelect={(pkg) => {
                     setSelectedPackage(pkg);
+                    setBillAmount(null);
                     setIsConfirming(true);
                 }}
                 onBillPay={(amount) => {
                     setBillAmount(amount);
+                    setSelectedPackage(null);
                     setIsConfirming(true);
                 }}
                 refreshBalanceAndSolfa={() => {
@@ -871,6 +913,7 @@ export default function TelecomServicesPage() {
                 onBillPay={(amount, type) => {
                     setBillAmount(amount);
                     setYemen4GType(type);
+                    setSelectedPackage(null);
                     setIsConfirming(true);
                 }}
                 queryData={yemen4gQueryData}
@@ -882,20 +925,22 @@ export default function TelecomServicesPage() {
                 onBillPay={(amount, type) => {
                     setBillAmount(amount);
                     setYemenPostType(type);
+                    setSelectedPackage(null);
                     setIsConfirming(true);
                 }}
                 onQuery={handleYemenPostQuery}
                 queryData={yemenPostQueryData}
                 isLoadingQuery={isLoadingYemenPostQuery}
-            />
+            />;
         default:
-            return (
-                 <div className="text-center text-muted-foreground p-8 space-y-4">
-                    <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
-                    <p className="font-semibold">خدمات {detectedOperator} قيد التطوير</p>
-                    <p className="text-sm">نعمل على إضافة خدمات هذا المشغل قريباً.</p>
-                </div>
-            )
+            return <GenericOperatorUI 
+                operatorName={detectedOperator}
+                onBillPay={(amount) => {
+                    setBillAmount(amount);
+                    setSelectedPackage(null);
+                    setIsConfirming(true);
+                }}
+            />
     }
   }
   

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -60,7 +59,7 @@ const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
-  { title: 'طلبات يمن 4G', icon: CreditCard, href: '/yemen-4g-requests' },
+  { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
   { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
   { title: 'تقارير منظومة الوادي', icon: BarChart3, href: '/alwadi-reports' },

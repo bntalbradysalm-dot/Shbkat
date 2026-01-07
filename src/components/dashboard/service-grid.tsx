@@ -26,7 +26,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'كبينة السداد', icon: Smartphone, href: '/pay-balance' },
+  { name: 'يمن موبايل', icon: 'https://i.postimg.cc/90FqYx0x/yemen-mobile.png', href: '/yemen-mobile' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 
@@ -66,5 +66,3 @@ export function ServiceGrid() {
     </div>
   );
 }
-
-    

@@ -252,7 +252,7 @@ export default function ServicesPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                         <button 
+                        <button 
                           onClick={(e) => handleFavoriteClick(e, network)}
                           className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
                           aria-label={`إضافة ${network.name} إلى المفضلة`}

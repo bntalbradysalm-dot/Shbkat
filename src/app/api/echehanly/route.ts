@@ -60,8 +60,16 @@ export async function GET(request: Request) {
 
         const data = await apiResponse.json();
 
+        // Check for specific error messages or non-zero resultCode
         if (!apiResponse.ok || (data.resultCode && data.resultCode !== "0")) {
-             return new NextResponse(JSON.stringify({ message: data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}` }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
+            const description = data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}`;
+            
+            // Check for specific known error phrases from the provider
+            if (description.includes('لا يوجد رصيد') || description.includes('غير متاحة')) {
+                return new NextResponse(JSON.stringify({ message: description }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+            }
+            
+            return new NextResponse(JSON.stringify({ message: description }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
         }
 
         return NextResponse.json(data);
@@ -71,5 +79,6 @@ export async function GET(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
+
 
 

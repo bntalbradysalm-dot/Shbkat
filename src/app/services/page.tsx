@@ -93,8 +93,8 @@ export default function ServicesPage() {
         setError('لا يمكن تحميل قائمة الشبكات الخارجية حاليًا.');
       }
       
-      // Show local networks first
-      setCombinedNetworks([...local, ...external]);
+      // Show external networks first, then local ones
+      setCombinedNetworks([...external, ...local]);
       setIsLoading(false);
     };
 
@@ -192,16 +192,16 @@ export default function ServicesPage() {
       return (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="p-4">
+            <Card key={i} className="p-4 bg-primary">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-10 w-10 rounded-lg bg-white/20" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-32 bg-white/20" />
+                    <Skeleton className="h-4 w-40 bg-white/20" />
                   </div>
                 </div>
-                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full bg-white/20" />
               </div>
             </Card>
           ))}
@@ -247,27 +247,27 @@ export default function ServicesPage() {
           return (
              <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 transition-colors rounded-2xl"
+                  className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 transition-colors rounded-2xl animate-in fade-in-0"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                        <button 
-                          onClick={(e) => handleFavoriteClick(e, network)}
-                          className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
-                          aria-label={`إضافة ${network.name} إلى المفضلة`}
-                        >
-                          <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
-                        </button>
-                        <div className="flex-1 text-right mr-4 space-y-1">
-                          <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-primary-foreground/80 text-right">
-                            {network.location}
-                          </p>
-                        </div>
-                         <div className="p-3 bg-white/20 rounded-lg">
-                           <Wifi className="h-6 w-6 text-white" />
-                        </div>
+                      <div className="p-3 bg-white/20 rounded-lg">
+                        <Wifi className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 text-right mx-4 space-y-1">
+                        <h4 className="font-bold">{network.name}</h4>
+                        <p className="text-xs text-right text-primary-foreground/80">
+                          {network.location}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={(e) => handleFavoriteClick(e, network)}
+                        className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
+                        aria-label={`إضافة ${network.name} إلى المفضلة`}
+                      >
+                        <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
+                      </button>
                     </div>
                   </CardContent>
                 </Card>

@@ -138,9 +138,6 @@ const YemenMobileUI = ({
 
     const categorizedOffers = useMemo(() => {
         if (!offers) return { available: {}, active: [] };
-
-        const available: Record<string, OfferWithPrice[]> = {};
-        const active: OfferWithPrice[] = [];
         
         const initializedCategories: Record<string, OfferWithPrice[]> = {
             'باقات مزايا': [],
@@ -151,6 +148,7 @@ const YemenMobileUI = ({
             'تواصل اجتماعي': [],
             'باقات أخرى': []
         };
+        const active: OfferWithPrice[] = [];
 
         offers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
@@ -170,21 +168,18 @@ const YemenMobileUI = ({
                 const allKeywordsMatch = keywords.every(keyword => correctedName.includes(keyword));
 
                 if (allKeywordsMatch) {
-                    if (!initializedCategories[category]) initializedCategories[category] = [];
                     initializedCategories[category].push(offerWithDetails);
                     assigned = true;
                     break; 
                 }
             }
             if (!assigned) {
-                if (!initializedCategories['باقات أخرى']) initializedCategories['باقات أخرى'] = [];
                 initializedCategories['باقات أخرى'].push(offerWithDetails);
             }
         });
         
         setActiveSubscriptions(active);
 
-        // Filter out empty categories
         const finalCategories: Record<string, OfferWithPrice[]> = {};
         for(const category in initializedCategories) {
             if(initializedCategories[category].length > 0) {
@@ -258,7 +253,7 @@ const YemenMobileUI = ({
             </Card>
         )}
 
-        <Accordion type="single" collapsible className="w-full space-y-3">
+        <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
              {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
                  <AccordionItem value={category} key={category} className="border-none">
                      <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
@@ -786,5 +781,3 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-    

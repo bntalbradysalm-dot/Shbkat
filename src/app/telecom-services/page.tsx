@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -235,6 +236,66 @@ const YemenMobileUI = ({
 );
 }
 
+const Yemen4GUI = ({ onBillPay }: { onBillPay: (amount: number, type: 'balance' | 'package') => void }) => {
+    const [billAmount, setBillAmount] = useState('');
+    const [packageAmount, setPackageAmount] = useState('');
+    
+    return (
+        <div className="space-y-4 animate-in fade-in-0 duration-500">
+             <Card>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-base">تسديد رصيد</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
+                    <div>
+                      <Label htmlFor="y4g-bill-amount" className="sr-only">المبلغ</Label>
+                      <Input 
+                        id="y4g-bill-amount"
+                        type="number"
+                        placeholder="أدخل مبلغ الرصيد..."
+                        value={billAmount}
+                        onChange={(e) => setBillAmount(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                        className="w-full" 
+                        onClick={() => onBillPay(Number(billAmount), 'balance')} 
+                        disabled={!billAmount || Number(billAmount) <= 0}
+                    >
+                        <CreditCard className="ml-2 h-4 w-4" />
+                        تسديد رصيد
+                    </Button>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-base">شراء باقة</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-3">
+                    <div>
+                      <Label htmlFor="y4g-package-amount" className="sr-only">المبلغ</Label>
+                      <Input 
+                        id="y4g-package-amount"
+                        type="number"
+                        placeholder="أدخل مبلغ الباقة..."
+                        value={packageAmount}
+                        onChange={(e) => setPackageAmount(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                        className="w-full" 
+                        onClick={() => onBillPay(Number(packageAmount), 'package')} 
+                        disabled={!packageAmount || Number(packageAmount) <= 0}
+                    >
+                        <CreditCard className="ml-2 h-4 w-4" />
+                        شراء باقة
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 
 export default function TelecomServicesPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -253,6 +314,7 @@ export default function TelecomServicesPage() {
   
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
   const [billAmount, setBillAmount] = useState<number | null>(null);
+  const [yemen4GType, setYemen4GType] = useState<'balance' | 'package' | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -270,6 +332,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
+    if (phone.startsWith('10')) return 'Yemen 4G';
     return null;
   };
   
@@ -279,6 +342,7 @@ export default function TelecomServicesPage() {
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';
+          case 'Yemen 4G': return 'https://i.postimg.cc/pT2x5nFB/yemen4g.png';
           default: return null;
       }
   }
@@ -289,7 +353,7 @@ export default function TelecomServicesPage() {
       setIsLoadingBalance(true);
       setBalanceData(null);
       try {
-          const response = await fetch(`/api/echehanly?action=query&mobile=${phone}`);
+          const response = await fetch(`/api/echehanly?service=yem&action=query&mobile=${phone}`);
           const data = await response.json();
           if (!response.ok) {
               throw new Error(data.message || 'Failed to fetch balance');
@@ -309,7 +373,7 @@ export default function TelecomServicesPage() {
     setIsLoadingOffers(true);
     setOffers(null);
     try {
-        const response = await fetch(`/api/echehanly?action=queryoffer&mobile=${phone}`);
+        const response = await fetch(`/api/echehanly?service=yem&action=queryoffer&mobile=${phone}`);
         const data = await response.json();
         if (!response.ok) {
             throw new Error(data.message || 'Failed to fetch offers');
@@ -329,7 +393,7 @@ export default function TelecomServicesPage() {
     setIsLoadingSolfa(true);
     setSolfaData(null);
     try {
-        const response = await fetch(`/api/echehanly?action=solfa&mobile=${phone}`);
+        const response = await fetch(`/api/echehanly?service=yem&action=solfa&mobile=${phone}`);
         const data = await response.json();
         if (!response.ok) {
             throw new Error(data.message || 'Failed to fetch loan status');
@@ -358,7 +422,7 @@ export default function TelecomServicesPage() {
         fetchBalance(phoneNumber);
         fetchOffers(phoneNumber);
         fetchSolfa(phoneNumber);
-      } else if (operator) {
+      } else if (operator && operator !== 'Yemen 4G') {
         toast({ title: "قريباً", description: `خدمات ${operator} قيد التطوير.`});
       }
     }
@@ -366,7 +430,12 @@ export default function TelecomServicesPage() {
   
   const handlePurchase = async () => {
     const isPackage = !!selectedPackage;
-    const amountToPay = isPackage ? selectedPackage?.price : billAmount;
+    const isYemen4G = detectedOperator === 'Yemen 4G';
+    let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
+
+    if (isYemen4G) {
+        amountToPay = billAmount;
+    }
     
     if (!amountToPay || amountToPay <= 0 || !userProfile || !firestore || !userDocRef || !user) {
         toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
@@ -382,10 +451,27 @@ export default function TelecomServicesPage() {
     setIsProcessing(true);
     try {
         let apiUrl = `/api/echehanly?mobile=${phoneNumber}`;
-        if (isPackage) {
-            apiUrl += `&action=billoffer&offerid=${selectedPackage!.offerId}&method=New`;
-        } else {
-            apiUrl += `&action=bill&amount=${amountToPay}`;
+        let serviceName: string = 'Yemen Mobile';
+        let serviceType: string;
+
+        if (isYemen4G) {
+            serviceName = 'Yemen 4G';
+            apiUrl += `&service=yem4g&action=bill&amount=${amountToPay}`;
+            if(yemen4GType === 'package') {
+                apiUrl += '&type=1';
+                serviceType = 'شراء باقة 4G';
+            } else {
+                 apiUrl += '&type=2';
+                 serviceType = 'تسديد رصيد 4G';
+            }
+        } else { // Yemen Mobile
+            if (isPackage) {
+                apiUrl += `&service=yem&action=billoffer&offerid=${selectedPackage!.offerId}&method=New`;
+                serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
+            } else {
+                apiUrl += `&service=yem&action=bill&amount=${amountToPay}`;
+                serviceType = 'تسديد رصيد';
+            }
         }
         
         const response = await fetch(apiUrl);
@@ -401,8 +487,8 @@ export default function TelecomServicesPage() {
           userId: user.uid,
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
-          company: 'Yemen Mobile',
-          serviceType: isPackage ? `شراء باقة: ${selectedPackage?.offerName}` : 'تسديد رصيد',
+          company: serviceName,
+          serviceType: serviceType,
           targetPhoneNumber: phoneNumber,
           amount: amountToPay,
           commission: 0, 
@@ -443,6 +529,7 @@ export default function TelecomServicesPage() {
                 }
                 setSelectedPackage(pkg);
                 setBillAmount(null);
+                setYemen4GType(null);
                 setIsConfirming(true);
             }}
              onBillPay={(amount) => {
@@ -452,6 +539,7 @@ export default function TelecomServicesPage() {
                 }
                 setBillAmount(amount);
                 setSelectedPackage(null);
+                setYemen4GType(null);
                 setIsConfirming(true);
             }}
             refreshBalanceAndSolfa={() => {
@@ -459,10 +547,34 @@ export default function TelecomServicesPage() {
                 fetchSolfa(phoneNumber);
             }}
         />;
+      case 'Yemen 4G':
+        return <Yemen4GUI 
+            onBillPay={(amount, type) => {
+                if(amount <= 0) {
+                    toast({variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.'});
+                    return;
+                }
+                setBillAmount(amount);
+                setSelectedPackage(null);
+                setYemen4GType(type);
+                setIsConfirming(true);
+            }}
+        />;
       default:
         return null;
     }
   };
+  
+  const getConfirmationMessage = () => {
+    if (detectedOperator === 'Yemen 4G') {
+        const actionText = yemen4GType === 'package' ? 'شراء باقة' : 'تسديد رصيد';
+        return `هل تريد بالتأكيد ${actionText} بمبلغ ${billAmount?.toLocaleString('en-US')} ريال للرقم ${phoneNumber}؟`;
+    }
+    if (selectedPackage) {
+        return `هل تريد بالتأكيد شراء باقة "${selectedPackage.offerName}" بسعر ${selectedPackage.price?.toLocaleString('en-US')} ريال؟`;
+    }
+    return `هل تريد بالتأكيد تسديد مبلغ ${billAmount?.toLocaleString('en-US')} ريال إلى الرقم ${phoneNumber}؟`;
+  }
 
   if (showSuccess) {
     return (
@@ -480,6 +592,7 @@ export default function TelecomServicesPage() {
                             setShowSuccess(false);
                             setSelectedPackage(null);
                             setBillAmount(null);
+                            setYemen4GType(null);
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
@@ -536,9 +649,7 @@ export default function TelecomServicesPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>تأكيد العملية</AlertDialogTitle>
                     <AlertDialogDescription>
-                       {selectedPackage ? `هل تريد بالتأكيد شراء باقة "${selectedPackage.offerName}" بسعر ${selectedPackage.price?.toLocaleString('en-US')} ريال؟`
-                        : `هل تريد بالتأكيد تسديد مبلغ ${billAmount?.toLocaleString('en-US')} ريال إلى الرقم ${phoneNumber}؟`
-                       }
+                       {getConfirmationMessage()}
                        {' '}سيتم خصم المبلغ من رصيدك.
                     </AlertDialogDescription>
                 </AlertDialogHeader>

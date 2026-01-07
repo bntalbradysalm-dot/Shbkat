@@ -96,12 +96,15 @@ export default function PubgPage() {
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to fetch PUBG offers');
             }
-            // Add price to offers, parsing it from the name
-            const offersWithPrice: PubgOffer[] = data.offers.map((offer: any) => ({
-                ...offer,
-                price: parseFloat(offer.offerName.match(/(\d+(\.\d+)?)/)?.[0] || '0')
-            }));
-            setOffers(offersWithPrice);
+            if (data && Array.isArray(data.offers)) {
+                const offersWithPrice: PubgOffer[] = data.offers.map((offer: any) => ({
+                    ...offer,
+                    price: parseFloat(offer.offerName.match(/(\d+(\.\d+)?)/)?.[0] || '0')
+                }));
+                setOffers(offersWithPrice);
+            } else {
+                setOffers([]);
+            }
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ', description: `لا يمكن تحميل باقات ببجي حالياً. ${error.message}` });
         } finally {

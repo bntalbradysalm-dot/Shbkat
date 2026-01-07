@@ -10,6 +10,7 @@ import {
   CreditCard,
   Smartphone,
   Gamepad2,
+  Bolt,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,6 +29,7 @@ const services: Service[] = [
   { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
   { name: 'ببجي موبايل', icon: 'https://i.postimg.cc/7ZZvJb3z/pubg-icon.png', href: '/pubg' },
   { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
+  { name: 'المدفوعات', icon: Bolt, href: '/payments' },
 ];
 
 const ServiceItem = ({

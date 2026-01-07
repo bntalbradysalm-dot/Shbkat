@@ -121,19 +121,20 @@ service cloud.firestore {
       allow create: if isSignedIn() && isRequestOwner();
       allow read, update, delete: if isAdmin();
     }
-
-    /**
-     * @description Manages Yemen 4G top-up requests. Authenticated users can create
+    
+     /**
+     * @description Manages bill payment requests. Authenticated users can create
      * their own requests. Admins can read all requests and update their status.
      */
-    match /yemen4gRequests/{requestId} {
+    match /billPaymentRequests/{requestId} {
         allow create: if isSignedIn() && isRequestOwner();
         allow read, update, delete: if isAdmin();
     }
     
-    match /yemen4gRequests {
-      allow list: if isAdmin();
+    match /billPaymentRequests {
+        allow list: if isAdmin();
     }
+
 
     /**
      * @description Manages withdrawal requests from network owners.
@@ -273,4 +274,5 @@ service cloud.firestore {
     }
   }
 }
+    
     

@@ -6,7 +6,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
-
+import { format, parseISO } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 type UserProfile = {
   balance?: number;
@@ -57,6 +58,11 @@ type Offer = {
 
 type OfferWithPrice = Offer & { price?: number };
 
+type Yemen4GQuery = {
+    balance: string;
+    exp_date: string;
+    resultDesc: string;
+};
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -236,12 +242,43 @@ const YemenMobileUI = ({
 );
 }
 
-const Yemen4GUI = ({ onBillPay }: { onBillPay: (amount: number, type: 'balance' | 'package') => void }) => {
+const Yemen4GUI = ({ 
+    onBillPay, 
+    queryData, 
+    isLoadingQuery, 
+    refreshQuery 
+}: { 
+    onBillPay: (amount: number, type: 'balance' | 'package') => void,
+    queryData: Yemen4GQuery | null,
+    isLoadingQuery: boolean,
+    refreshQuery: () => void
+}) => {
     const [billAmount, setBillAmount] = useState('');
     const [packageAmount, setPackageAmount] = useState('');
     
     return (
         <div className="space-y-4 animate-in fade-in-0 duration-500">
+            <Card>
+                <CardHeader className="flex-row items-center justify-between p-3">
+                    <CardTitle className="text-sm">بيانات الرقم (يمن فورجي)</CardTitle>
+                     <Button variant="ghost" size="icon" onClick={refreshQuery} disabled={isLoadingQuery}>
+                        <RefreshCw className={`h-4 w-4 ${isLoadingQuery ? 'animate-spin' : ''}`} />
+                    </Button>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2">
+                    {isLoadingQuery ? (
+                         <Skeleton className="h-8 w-full" />
+                    ) : queryData ? (
+                        <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
+                           <p>الرصيد: <strong>{queryData.balance}</strong></p>
+                           {queryData.exp_date && <p className="flex items-center gap-1">الصلاحية: <strong>{format(parseISO(queryData.exp_date), 'd/M/yyyy', {locale: ar})}</strong></p>}
+                        </div>
+                    ) : (
+                        <p className="text-center text-xs text-muted-foreground py-2">لا توجد بيانات لعرضها.</p>
+                    )}
+                </CardContent>
+            </Card>
+
              <Card>
                 <CardHeader className="p-3">
                     <CardTitle className="text-base">تسديد رصيد</CardTitle>
@@ -311,6 +348,9 @@ export default function TelecomServicesPage() {
   const [isLoadingSolfa, setIsLoadingSolfa] = useState(false);
   const [offers, setOffers] = useState<Offer[] | null>(null);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
+  
+  const [yemen4gQueryData, setYemen4gQueryData] = useState<Yemen4GQuery | null>(null);
+  const [isLoadingYemen4gQuery, setIsLoadingYemen4gQuery] = useState(false);
   
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
   const [billAmount, setBillAmount] = useState<number | null>(null);
@@ -408,6 +448,26 @@ export default function TelecomServicesPage() {
     }
   }, [toast]);
 
+  const fetchYemen4GQuery = useCallback(async (phone: string) => {
+    if (getOperator(phone) !== 'Yemen 4G') return;
+    setIsLoadingYemen4gQuery(true);
+    setYemen4gQueryData(null);
+    try {
+        const response = await fetch(`/api/echehanly?service=yem4g&action=query&mobile=${phone}`);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch Yemen 4G data');
+        }
+        setYemen4gQueryData(data);
+    } catch (error: any) {
+        console.error("Yemen 4G query error:", error);
+        toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+        setYemen4gQueryData(null);
+    } finally {
+        setIsLoadingYemen4gQuery(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     const operator = getOperator(phoneNumber);
     if (operator !== detectedOperator) {
@@ -415,18 +475,21 @@ export default function TelecomServicesPage() {
         setBalanceData(null);
         setOffers(null);
         setSolfaData(null);
+        setYemen4gQueryData(null);
     }
 
-    if (phoneNumber.length === 9) {
+    if (phoneNumber.length === 9 || (operator === 'Yemen 4G' && phoneNumber.length > 0)) {
       if (operator === 'Yemen Mobile') {
         fetchBalance(phoneNumber);
         fetchOffers(phoneNumber);
         fetchSolfa(phoneNumber);
-      } else if (operator && operator !== 'Yemen 4G') {
+      } else if (operator === 'Yemen 4G') {
+        fetchYemen4GQuery(phoneNumber);
+      } else if (operator) {
         toast({ title: "قريباً", description: `خدمات ${operator} قيد التطوير.`});
       }
     }
-  }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, toast]);
+  }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery, toast]);
   
   const handlePurchase = async () => {
     const isPackage = !!selectedPackage;
@@ -559,6 +622,9 @@ export default function TelecomServicesPage() {
                 setYemen4GType(type);
                 setIsConfirming(true);
             }}
+            queryData={yemen4gQueryData}
+            isLoadingQuery={isLoadingYemen4gQuery}
+            refreshQuery={() => fetchYemen4GQuery(phoneNumber)}
         />;
       default:
         return null;
@@ -617,7 +683,7 @@ export default function TelecomServicesPage() {
           <CardContent>
             <div className="relative">
                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
-                    {(isLoadingBalance || isLoadingOffers || isLoadingSolfa) ? (
+                    {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery) ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                     ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
                         <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>
@@ -664,3 +730,4 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+

@@ -71,3 +71,4 @@ export async function GET(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
+

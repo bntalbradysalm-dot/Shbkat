@@ -247,12 +247,20 @@ export default function ServicesPage() {
           return (
              <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
+                  className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-white/20 rounded-lg">
+                           <Wifi className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 text-right mr-4 space-y-1">
+                          <h4 className="font-bold">{network.name}</h4>
+                          <p className="text-xs text-primary-foreground/80 flex items-center justify-end gap-1.5">
+                            {network.location}
+                          </p>
+                        </div>
                         <button 
                           onClick={(e) => handleFavoriteClick(e, network)}
                           className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
@@ -260,16 +268,6 @@ export default function ServicesPage() {
                         >
                           <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
                         </button>
-                        <div className="space-y-1">
-                          <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
-                            {network.location}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-white/20 rounded-lg">
-                           <Wifi className="h-6 w-6 text-white" />
-                      </div>
                     </div>
                   </CardContent>
                 </Card>

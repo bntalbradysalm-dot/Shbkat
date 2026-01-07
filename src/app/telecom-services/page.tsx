@@ -129,7 +129,9 @@ const YemenMobileUI = ({
     const offerCategories = {
         'باقات مزايا': ['مزايا'],
         'باقات فورجي': ['4G', 'فورجي'],
-        'باقات الانترنت': ['نت'],
+        'باقات VoLTE': ['VoLTE'],
+        'باقات الانترنت الشهرية': ['نت', 'شهري'],
+        'باقات انترنت 10 أيام': ['نت', '10 أيّام'],
         'تواصل اجتماعي': ['تواصل'],
         'باقات أخرى': []
     };
@@ -139,13 +141,23 @@ const YemenMobileUI = ({
 
         const available: Record<string, OfferWithPrice[]> = {};
         const active: OfferWithPrice[] = [];
+        
+        const initializedCategories: Record<string, OfferWithPrice[]> = {
+            'باقات مزايا': [],
+            'باقات فورجي': [],
+            'باقات VoLTE': [],
+            'باقات الانترنت الشهرية': [],
+            'باقات انترنت 10 أيام': [],
+            'تواصل اجتماعي': [],
+            'باقات أخرى': []
+        };
 
         offers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
             const price = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
             const offerWithDetails = { ...offer, offerName: correctedName, price };
 
-            if (offer.offerId.startsWith('A')) { // Assuming 'A' prefix means active
+            if (offer.offerId.startsWith('A')) { 
                 active.push(offerWithDetails);
                 return;
             }
@@ -153,21 +165,34 @@ const YemenMobileUI = ({
             let assigned = false;
             for (const category in offerCategories) {
                 if (category === 'باقات أخرى') continue;
-                if ((offerCategories as any)[category].some((keyword: string) => correctedName.includes(keyword))) {
-                    if (!available[category]) available[category] = [];
-                    available[category].push(offerWithDetails);
+                const keywords = (offerCategories as any)[category] as string[];
+                
+                const allKeywordsMatch = keywords.every(keyword => correctedName.includes(keyword));
+
+                if (allKeywordsMatch) {
+                    if (!initializedCategories[category]) initializedCategories[category] = [];
+                    initializedCategories[category].push(offerWithDetails);
                     assigned = true;
-                    break;
+                    break; 
                 }
             }
             if (!assigned) {
-                if (!available['باقات أخرى']) available['باقات أخرى'] = [];
-                available['باقات أخرى'].push(offerWithDetails);
+                if (!initializedCategories['باقات أخرى']) initializedCategories['باقات أخرى'] = [];
+                initializedCategories['باقات أخرى'].push(offerWithDetails);
             }
         });
         
         setActiveSubscriptions(active);
-        return { available, active };
+
+        // Filter out empty categories
+        const finalCategories: Record<string, OfferWithPrice[]> = {};
+        for(const category in initializedCategories) {
+            if(initializedCategories[category].length > 0) {
+                finalCategories[category] = initializedCategories[category];
+            }
+        }
+
+        return { available: finalCategories, active };
 
     }, [offers]);
 

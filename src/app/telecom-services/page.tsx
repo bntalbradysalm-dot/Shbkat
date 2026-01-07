@@ -133,11 +133,15 @@ const BalanceDisplay = () => {
     );
 }
 
-const manualPrices: Record<string, number> = {
-    'باقة مزايا الشهرية': 1300,
-    'باقة مزايا الاسبوعية': 485,
-    'باقة مزايا الشهرية دفع مسبق': 1300,
-};
+const manualPackages: { name: string; id: string; price: number }[] = [
+    { name: 'هدايا - الشهرية', id: 'A68329', price: 1500 },
+    { name: 'مزايا الاسبوعية', id: 'A64329', price: 479 },
+    { name: 'مزايا الشهريه - دفع مسبق', id: 'A38394', price: 1196 },
+    { name: 'هدايا - فوترة الاسبوعيه', id: 'A44330', price: 600 },
+    { name: 'هدايا توفير 250', id: 'A66328', price: 250 },
+    { name: 'مزايا ماكس الشهريه', id: 'A75328', price: 2000 },
+];
+
 
 const YemenMobileUI = ({ 
     balanceData, 
@@ -190,38 +194,31 @@ const YemenMobileUI = ({
         initializedCategories['باقات أخرى'] = [];
         const active: OfferWithPrice[] = [];
         
-        const allOffers = [...offers];
+        let allOffers = [...offers];
         
-        if (!allOffers.some(o => o.offerId === 'A38394')) {
-            allOffers.push({
-                offerId: 'A38394',
-                offerName: 'باقة مزايا الشهرية دفع مسبق',
-                price: 1300,
-                offerStartDate: '',
-                offerEndDate: '',
-            });
-        }
-        if (!allOffers.some(o => o.offerId === 'A64329')) {
-            allOffers.push({
-                offerId: 'A64329',
-                offerName: 'باقة مزايا الاسبوعية',
-                price: 485,
-                offerStartDate: '',
-                offerEndDate: '',
-            });
-        }
+        manualPackages.forEach(manualPkg => {
+            if (!allOffers.some(o => o.offerId === manualPkg.id)) {
+                allOffers.push({
+                    offerId: manualPkg.id,
+                    offerName: manualPkg.name,
+                    price: manualPkg.price,
+                    offerStartDate: '',
+                    offerEndDate: '',
+                });
+            }
+        });
 
 
         allOffers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
             
-            const manualPrice = manualPrices[correctedName];
+            const manualPkg = manualPackages.find(p => p.id === offer.offerId);
             const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
-            const price = offer.price || manualPrice || priceFromName;
+            const price = offer.price || manualPkg?.price || priceFromName;
 
             const offerWithDetails = { ...offer, offerName: correctedName, price };
 
-            if (offer.offerId.startsWith('A') && offer.offerId !== 'A38394' && offer.offerId !== 'A64329') { 
+            if (offer.offerId.startsWith('A') && !manualPackages.some(p => p.id === offer.offerId)) { 
                 active.push(offerWithDetails);
                 return;
             }
@@ -268,57 +265,6 @@ const YemenMobileUI = ({
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
         
-        <Card>
-            <CardContent className="p-3 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
-                <div className='p-2 rounded-lg bg-muted'>
-                    <p className="text-muted-foreground mb-1">رصيد الرقم</p>
-                    {isLoadingBalance ? <Skeleton className="h-4 w-10 mx-auto"/> : <p>{balanceData?.balance ?? 'تعذر الجلب'}</p>}
-                </div>
-                 <div className='p-2 rounded-lg bg-muted'>
-                    <p className="text-muted-foreground mb-1">نوع الرقم</p>
-                    {isLoadingBalance ? <Skeleton className="h-4 w-14 mx-auto"/> : <p>{balanceData?.mobileType === '0' ? 'دفع مسبق' : 'فاتورة'}</p>}
-                </div>
-                 <div className='p-2 rounded-lg bg-muted'>
-                    <p className="text-muted-foreground mb-1">حالة السلفة</p>
-                    {isLoadingSolfa ? <Skeleton className="h-4 w-12 mx-auto"/> : (
-                        <div className={cn("flex items-center justify-center gap-1", isLoanActive ? 'text-destructive' : 'text-green-600')}>
-                           {isLoanActive ? <ThumbsDown className="h-3 w-3"/> : <Smile className="h-3 w-3"/>}
-                           <span>{isLoanActive ? 'متسلف' : 'غير متسلف'}</span>
-                        </div>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
-
-        {activeSubscriptions.length > 0 && (
-            <Card>
-                <CardHeader className="p-3">
-                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-2">
-                    {activeSubscriptions.map(sub => (
-                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
-                            <div className="flex justify-between items-start">
-                                <div className='flex-1'>
-                                    <p className="font-bold text-sm">{sub.offerName}</p>
-                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
-                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-2 bg-primary/10 rounded-full">
-                                        <RefreshCw className="h-5 w-5 text-primary"/>
-                                    </div>
-                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )}
-
         <Tabs defaultValue="packages" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
@@ -385,6 +331,35 @@ const YemenMobileUI = ({
                 </Card>
             </TabsContent>
         </Tabs>
+        
+        {activeSubscriptions.length > 0 && (
+            <Card>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2">
+                    {activeSubscriptions.map(sub => (
+                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                            <div className="flex justify-between items-start">
+                                <div className='flex-1'>
+                                    <p className="font-bold text-sm">{sub.offerName}</p>
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
+                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <RefreshCw className="h-5 w-5 text-primary"/>
+                                    </div>
+                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        )}
     </div>
 );
 }

@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from 'next/navigation';
+import { Label } from '@/components/ui/label';
 
 
 type UserProfile = {
@@ -82,6 +83,7 @@ const YemenMobileUI = ({
     offers, 
     isLoadingOffers, 
     onPackageSelect,
+    onBillPay,
     refreshBalance 
 }: { 
     balanceData: YemenMobileBalance | null, 
@@ -89,8 +91,11 @@ const YemenMobileUI = ({
     offers: OfferWithPrice[] | null,
     isLoadingOffers: boolean,
     onPackageSelect: (pkg: OfferWithPrice) => void,
+    onBillPay: (amount: number) => void,
     refreshBalance: () => void
 }) => {
+    
+    const [billAmount, setBillAmount] = useState('');
     
     // Reverse arabic names
     const reverseText = (text: string) => text.split('').reverse().join('');
@@ -146,6 +151,32 @@ const YemenMobileUI = ({
                 )}
             </CardContent>
         </Card>
+        
+        <Card>
+            <CardHeader className="p-3">
+                <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0 space-y-3">
+                <div>
+                  <Label htmlFor="bill-amount" className="sr-only">المبلغ</Label>
+                  <Input 
+                    id="bill-amount"
+                    type="number"
+                    placeholder="أدخل المبلغ..."
+                    value={billAmount}
+                    onChange={(e) => setBillAmount(e.target.value)}
+                  />
+                </div>
+                <Button 
+                    className="w-full" 
+                    onClick={() => onBillPay(Number(billAmount))} 
+                    disabled={!billAmount || Number(billAmount) <= 0}
+                >
+                    <CreditCard className="ml-2 h-4 w-4" />
+                    تسديد المبلغ
+                </Button>
+            </CardContent>
+        </Card>
 
         {isLoadingOffers ? (
             <Skeleton className="h-48 w-full"/>
@@ -187,9 +218,11 @@ export default function TelecomServicesPage() {
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
   
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
+  const [billAmount, setBillAmount] = useState<number | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -276,37 +309,48 @@ export default function TelecomServicesPage() {
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, toast]);
   
   const handlePurchase = async () => {
-    if (!selectedPackage || !selectedPackage.price || !userProfile || !firestore || !userDocRef || !user) {
+    const isPackage = !!selectedPackage;
+    const amountToPay = isPackage ? selectedPackage?.price : billAmount;
+    
+    if (!amountToPay || amountToPay <= 0 || !userProfile || !firestore || !userDocRef || !user) {
         toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
         return;
     }
     
-    if ((userProfile.balance ?? 0) < selectedPackage.price) {
-        toast({ variant: "destructive", title: "رصيد غير كاف", description: "رصيدك الحالي لا يكفي لشراء هذه الباقة." });
+    if ((userProfile.balance ?? 0) < amountToPay) {
+        toast({ variant: "destructive", title: "رصيد غير كاف", description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'}.` });
         setIsConfirming(false);
         return;
     }
 
     setIsProcessing(true);
     try {
-        const response = await fetch(`/api/echehanly?action=billoffer&mobile=${phoneNumber}&offerid=${selectedPackage.offerId}&method=New`);
+        let apiUrl = `/api/echehanly?mobile=${phoneNumber}`;
+        if (isPackage) {
+            apiUrl += `&action=billoffer&offerid=${selectedPackage!.offerId}&method=New`;
+        } else {
+            apiUrl += `&action=bill&amount=${amountToPay}`;
+        }
+        
+        const response = await fetch(apiUrl);
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.message || 'فشلت عملية الشراء.');
+            throw new Error(data.message || 'فشلت عملية الدفع.');
         }
 
         const batch = writeBatch(firestore);
-        batch.update(userDocRef, { balance: increment(-selectedPackage.price) });
+        batch.update(userDocRef, { balance: increment(-amountToPay) });
+        
         const requestData = {
           userId: user.uid,
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
           company: 'Yemen Mobile',
-          serviceType: 'شراء باقة',
+          serviceType: isPackage ? `شراء باقة: ${selectedPackage?.offerName}` : 'تسديد رصيد',
           targetPhoneNumber: phoneNumber,
-          amount: selectedPackage.price,
+          amount: amountToPay,
           commission: 0, 
-          totalCost: selectedPackage.price,
+          totalCost: amountToPay,
           status: 'approved',
           requestTimestamp: new Date().toISOString()
         };
@@ -314,11 +358,12 @@ export default function TelecomServicesPage() {
         batch.set(doc(requestsCollection), requestData);
 
         await batch.commit();
-
+        
+        setSuccessMessage(isPackage ? `تم تفعيل باقة "${selectedPackage?.offerName}" بنجاح.` : `تم تسديد مبلغ ${amountToPay.toLocaleString('en-US')} ريال بنجاح.`);
         setShowSuccess(true);
 
     } catch(error: any) {
-        toast({ variant: 'destructive', title: 'فشل الشراء', description: error.message });
+        toast({ variant: 'destructive', title: 'فشل الدفع', description: error.message });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -339,6 +384,16 @@ export default function TelecomServicesPage() {
                     return;
                 }
                 setSelectedPackage(pkg);
+                setBillAmount(null);
+                setIsConfirming(true);
+            }}
+             onBillPay={(amount) => {
+                if(amount <= 0) {
+                    toast({variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.'});
+                    return;
+                }
+                setBillAmount(amount);
+                setSelectedPackage(null);
                 setIsConfirming(true);
             }}
             refreshBalance={() => fetchBalance(phoneNumber)}
@@ -357,12 +412,13 @@ export default function TelecomServicesPage() {
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-bold">تم الشراء بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">تم تفعيل باقة "{selectedPackage?.offerName}" بنجاح.</p>
+                    <h2 className="text-2xl font-bold">تمت العملية بنجاح</h2>
+                     <p className="text-sm text-muted-foreground">{successMessage}</p>
                     <div className="w-full pt-4">
                          <Button variant="outline" className="w-full" onClick={() => {
                             setShowSuccess(false);
                             setSelectedPackage(null);
+                            setBillAmount(null);
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
@@ -415,22 +471,23 @@ export default function TelecomServicesPage() {
     <Toaster />
     
      <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        {selectedPackage && (
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>تأكيد الشراء</AlertDialogTitle>
+                    <AlertDialogTitle>تأكيد العملية</AlertDialogTitle>
                     <AlertDialogDescription>
-                        هل تريد بالتأكيد شراء باقة "{selectedPackage.offerName}" بسعر {selectedPackage.price?.toLocaleString('en-US')} ريال؟ سيتم خصم المبلغ من رصيدك.
+                       {selectedPackage ? `هل تريد بالتأكيد شراء باقة "${selectedPackage.offerName}" بسعر ${selectedPackage.price?.toLocaleString('en-US')} ريال؟`
+                        : `هل تريد بالتأكيد تسديد مبلغ ${billAmount?.toLocaleString('en-US')} ريال إلى الرقم ${phoneNumber}؟`
+                       }
+                       {' '}سيتم خصم المبلغ من رصيدك.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     <AlertDialogAction onClick={handlePurchase} disabled={isProcessing}>
-                        {isProcessing ? 'جاري الشراء...' : 'تأكيد'}
+                        {isProcessing ? 'جاري التنفيذ...' : 'تأكيد'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
-        )}
     </AlertDialog>
     </>
   );

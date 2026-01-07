@@ -833,6 +833,72 @@ export default function TelecomServicesPage() {
     return { baseAmount, commission, totalCost, message };
   }
 
+  const renderOperatorUI = () => {
+    if (!detectedOperator || phoneNumber.length < 9 && detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post') {
+        return (
+            <div className="text-center text-muted-foreground p-8 space-y-4">
+                <Info className="mx-auto h-12 w-12" />
+                <p className="font-semibold">أدخل رقم هاتف صالح (9 أرقام)</p>
+                <p className="text-sm">سيتم عرض الخدمات المتاحة للرقم تلقائياً.</p>
+            </div>
+        );
+    }
+
+    switch (detectedOperator) {
+        case 'Yemen Mobile':
+            return <YemenMobileUI 
+                balanceData={balanceData} 
+                isLoadingBalance={isLoadingBalance}
+                solfaData={solfaData}
+                isLoadingSolfa={isLoadingSolfa}
+                offers={offers as OfferWithPrice[] | null} 
+                isLoadingOffers={isLoadingOffers}
+                onPackageSelect={(pkg) => {
+                    setSelectedPackage(pkg);
+                    setIsConfirming(true);
+                }}
+                onBillPay={(amount) => {
+                    setBillAmount(amount);
+                    setIsConfirming(true);
+                }}
+                refreshBalanceAndSolfa={() => {
+                    fetchBalance(phoneNumber);
+                    fetchSolfa(phoneNumber);
+                }}
+            />;
+        case 'Yemen 4G':
+            return <Yemen4GUI 
+                onBillPay={(amount, type) => {
+                    setBillAmount(amount);
+                    setYemen4GType(type);
+                    setIsConfirming(true);
+                }}
+                queryData={yemen4gQueryData}
+                isLoadingQuery={isLoadingYemen4gQuery}
+                refreshQuery={() => fetchYemen4GQuery(phoneNumber)}
+            />;
+        case 'Yemen Post':
+            return <YemenPostUI 
+                onBillPay={(amount, type) => {
+                    setBillAmount(amount);
+                    setYemenPostType(type);
+                    setIsConfirming(true);
+                }}
+                onQuery={handleYemenPostQuery}
+                queryData={yemenPostQueryData}
+                isLoadingQuery={isLoadingYemenPostQuery}
+            />
+        default:
+            return (
+                 <div className="text-center text-muted-foreground p-8 space-y-4">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
+                    <p className="font-semibold">خدمات {detectedOperator} قيد التطوير</p>
+                    <p className="text-sm">نعمل على إضافة خدمات هذا المشغل قريباً.</p>
+                </div>
+            )
+    }
+  }
+  
   if (showSuccess) {
     return (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">

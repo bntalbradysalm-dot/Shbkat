@@ -682,6 +682,7 @@ export default function TelecomServicesPage() {
     const isYemen4G = detectedOperator === 'Yemen 4G';
     const isYemenPost = detectedOperator === 'Yemen Post';
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
+    let transid = Date.now().toString();
 
     if (isYemen4G || isYemenPost) {
         amountToPay = billAmount;
@@ -701,7 +702,7 @@ export default function TelecomServicesPage() {
 
     setIsProcessing(true);
     try {
-        let apiUrl = `/api/echehanly?mobile=${phoneNumber}`;
+        let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}`;
         let serviceName: string = detectedOperator || 'خدمة';
         let serviceType: string;
 
@@ -750,7 +751,8 @@ export default function TelecomServicesPage() {
           commission: 0, 
           totalCost: amountToPay,
           status: 'approved',
-          requestTimestamp: new Date().toISOString()
+          requestTimestamp: new Date().toISOString(),
+          transid: transid,
         };
         const requestsCollection = collection(firestore, 'billPaymentRequests');
         batch.set(doc(requestsCollection), requestData);

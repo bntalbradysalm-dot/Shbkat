@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle, Building } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle, Building, HelpCircle, Loader2 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -51,6 +51,13 @@ type BillPaymentRequest = {
   totalCost: number;
   status: 'pending' | 'approved' | 'rejected';
   requestTimestamp: string;
+  transid?: string;
+};
+
+type OperationStatus = {
+    isDone: string; // "1" or "0"
+    isBan: string; // "1" or "0"
+    reason: string;
 };
 
 const StatusBadge = ({ status }: { status: BillPaymentRequest['status'] }) => {
@@ -77,6 +84,8 @@ export default function BillPaymentRequestsPage() {
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [rejectionNote, setRejectionNote] = useState('');
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
 
   const requestsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'billPaymentRequests'), orderBy('requestTimestamp', 'desc')) : null),
@@ -165,6 +174,50 @@ export default function BillPaymentRequestsPage() {
         setRejectionNote('');
     }
   };
+
+  const handleCheckStatus = useCallback(async () => {
+    if (!selectedRequest?.transid || !selectedRequest?.targetPhoneNumber) {
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'لا يوجد رقم معاملة (transid) للتحقق منه.'
+        });
+        return;
+    }
+    setIsCheckingStatus(true);
+    try {
+        const response = await fetch(`/api/echehanly?service=info&action=status&mobile=${selectedRequest.targetPhoneNumber}&transid=${selectedRequest.transid}`);
+        const data: OperationStatus = await response.json();
+
+        if (!response.ok) {
+            throw new Error((data as any).message || 'فشل التحقق من الحالة.');
+        }
+
+        let statusDescription = 'الحالة غير معروفة.';
+        if (data.isDone === '1' && data.isBan === '0') {
+            statusDescription = `✅ نجحت العملية: ${data.reason}`;
+        } else if (data.isDone === '0' && data.isBan === '0') {
+            statusDescription = `⏳ لا تزال قيد التنفيذ: ${data.reason}`;
+        } else if (data.isBan === '1') {
+            statusDescription = `❌ محظورة/مرفوضة: ${data.reason}`;
+        }
+
+        toast({
+            title: 'نتيجة التحقق من العملية',
+            description: statusDescription,
+            duration: 9000,
+        });
+
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'فشل التحقق',
+            description: error.message,
+        });
+    } finally {
+        setIsCheckingStatus(false);
+    }
+}, [selectedRequest, toast]);
 
   const handleDelete = () => {
     if (!selectedRequest || !firestore) return;
@@ -331,6 +384,12 @@ export default function BillPaymentRequestsPage() {
                     <>
                         <Button variant="destructive" onClick={() => setActionToConfirm('reject')}><X className="ml-2"/> رفض</Button>
                         <Button onClick={() => handleAction('approve')}><Check className="ml-2"/> قبول</Button>
+                        {selectedRequest.transid && (
+                            <Button variant="outline" className="col-span-2" onClick={handleCheckStatus} disabled={isCheckingStatus}>
+                                {isCheckingStatus ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : <HelpCircle className="ml-2 h-4 w-4" />}
+                                {isCheckingStatus ? 'جاري التحقق...' : 'التحقق من حالة العملية'}
+                            </Button>
+                        )}
                     </>
                     )}
                      {selectedRequest.status !== 'pending' && (

@@ -23,26 +23,30 @@ function generateToken(transid: string, mobile: string): string {
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const service = searchParams.get('service'); // e.g., 'yem', 'yem4g', 'post'
+    const service = searchParams.get('service');
     const action = searchParams.get('action');
     const mobile = searchParams.get('mobile');
     const amount = searchParams.get('amount');
     const offerid = searchParams.get('offerid');
     const method = searchParams.get('method');
     const type = searchParams.get('type');
+    const transidFromRequest = searchParams.get('transid');
 
-    if (!service || !action || !mobile) {
-        return new NextResponse(JSON.stringify({ message: 'Service, action, and mobile number are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+    if (!service || !action) {
+        return new NextResponse(JSON.stringify({ message: 'Service and action are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
     
     if (!USERID || !USERNAME || !PASSWORD || !DOMAIN) {
         return new NextResponse(JSON.stringify({ message: 'Server is not configured for echehanly API' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
     
-    const transid = Date.now().toString();
-    const token = generateToken(transid, mobile);
+    const transid = transidFromRequest || Date.now().toString();
+    // For 'info' service, 'mobile' can be any number, using a default if not provided.
+    const effectiveMobile = mobile || '777777777';
+    const token = generateToken(transid, effectiveMobile);
 
-    let apiUrl = `https://${DOMAIN}/api/yr/${service}?action=${action}&userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
+    let apiUrl = `https://${DOMAIN}/api/yr/${service}?action=${action}&userid=${USERID}&mobile=${effectiveMobile}&transid=${transid}&token=${token}`;
     
     if (amount) apiUrl += `&amount=${amount}`;
     if (offerid) apiUrl += `&offerid=${offerid}`;
@@ -76,6 +80,6 @@ export async function GET(request: Request) {
 
     } catch (error) {
         console.error("Echehanly API request failed:", error);
-        return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        return new NextResponse(JSON.stringify({ message: 'An internal server error occurred.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }

@@ -69,7 +69,7 @@ export async function GET(request: Request) {
 
         const data = await apiResponse.json();
 
-        if (!apiResponse.ok || data.resultCode !== "0") {
+        if (!apiResponse.ok || (data.resultCode && data.resultCode !== "0")) {
              return new NextResponse(JSON.stringify({ message: data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}` }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
 

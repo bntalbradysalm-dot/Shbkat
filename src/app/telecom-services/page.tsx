@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,6 +37,14 @@ type YemenMobileBalance = {
     availableCredit: string;
     balance: string;
     resultDesc: string;
+};
+
+type YemenMobileSolfa = {
+    resultCode: string;
+    message: string;
+    status: string; // "1" for loan, "0" for no loan
+    loan_amount: string;
+    loan_time: string;
 };
 
 type Offer = {
@@ -79,28 +87,29 @@ const BalanceDisplay = () => {
 
 const YemenMobileUI = ({ 
     balanceData, 
-    isLoadingBalance, 
+    isLoadingBalance,
+    solfaData,
+    isLoadingSolfa,
     offers, 
     isLoadingOffers, 
     onPackageSelect,
     onBillPay,
-    refreshBalance 
+    refreshBalanceAndSolfa 
 }: { 
     balanceData: YemenMobileBalance | null, 
     isLoadingBalance: boolean,
+    solfaData: YemenMobileSolfa | null,
+    isLoadingSolfa: boolean,
     offers: OfferWithPrice[] | null,
     isLoadingOffers: boolean,
     onPackageSelect: (pkg: OfferWithPrice) => void,
     onBillPay: (amount: number) => void,
-    refreshBalance: () => void
+    refreshBalanceAndSolfa: () => void
 }) => {
     
     const [billAmount, setBillAmount] = useState('');
     
-    // Function to reverse Arabic text which is sometimes displayed backwards
     const reverseText = (text: string) => {
-        // A simple check to see if the text is likely reversed Arabic
-        // (starts with a non-Arabic character or space, while containing Arabic letters)
         if (text && /[\u0600-\u06FF]/.test(text) && !/^[ \u0600-\u06FF]/.test(text)) {
            return text.split('').reverse().join('');
         }
@@ -136,25 +145,41 @@ const YemenMobileUI = ({
         return categories;
     }, [offers]);
 
+    const isLoanActive = solfaData?.status === "1";
+
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500">
         <Card>
             <CardHeader className="flex-row items-center justify-between p-3">
                 <CardTitle className="text-sm">بيانات الرقم</CardTitle>
-                <Button variant="ghost" size="icon" onClick={refreshBalance} disabled={isLoadingBalance}>
-                    <RefreshCw className={`h-4 w-4 ${isLoadingBalance ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
+                    <RefreshCw className={`h-4 w-4 ${isLoadingBalance || isLoadingSolfa ? 'animate-spin' : ''}`} />
                 </Button>
             </CardHeader>
-            <CardContent className="p-3 pt-0">
-                {isLoadingBalance ? (
-                    <Skeleton className="h-10 w-full" />
-                ) : balanceData ? (
-                    <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
-                        <p>الرصيد: <strong>{balanceData.balance}</strong></p>
-                        <p>نوع الرقم: <strong>{balanceData.mobileType === "0" ? 'دفع مسبق' : 'فاتورة'}</strong></p>
+            <CardContent className="p-3 pt-0 space-y-2">
+                {isLoadingBalance || isLoadingSolfa ? (
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
                     </div>
                 ) : (
-                    <p className="text-center text-xs text-destructive">لم يتم العثور على بيانات الرصيد.</p>
+                    <>
+                     {balanceData && (
+                        <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
+                           <p>الرصيد: <strong>{balanceData.balance}</strong></p>
+                           <p>نوع الرقم: <strong>{balanceData.mobileType === "0" ? 'دفع مسبق' : 'فاتورة'}</strong></p>
+                        </div>
+                     )}
+                     {solfaData && (
+                         <div className={`flex justify-between items-center text-xs p-2 rounded-lg ${isLoanActive ? 'bg-destructive/10 text-destructive' : 'bg-green-500/10 text-green-700 dark:text-green-400'}`}>
+                            <p className="flex items-center gap-2 font-bold">
+                               <AlertTriangle className="h-4 w-4" />
+                               حالة السلفة:
+                            </p>
+                            <strong>{isLoanActive ? `متسلف (${solfaData.loan_amount} ريال)` : 'غير متسلف'}</strong>
+                         </div>
+                     )}
+                    </>
                 )}
             </CardContent>
         </Card>
@@ -221,6 +246,8 @@ export default function TelecomServicesPage() {
 
   const [balanceData, setBalanceData] = useState<YemenMobileBalance | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [solfaData, setSolfaData] = useState<YemenMobileSolfa | null>(null);
+  const [isLoadingSolfa, setIsLoadingSolfa] = useState(false);
   const [offers, setOffers] = useState<Offer[] | null>(null);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
   
@@ -296,6 +323,26 @@ export default function TelecomServicesPage() {
         setIsLoadingOffers(false);
     }
   }, [toast]);
+  
+  const fetchSolfa = useCallback(async (phone: string) => {
+    if (getOperator(phone) !== 'Yemen Mobile') return;
+    setIsLoadingSolfa(true);
+    setSolfaData(null);
+    try {
+        const response = await fetch(`/api/echehanly?action=solfa&mobile=${phone}`);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch loan status');
+        }
+        setSolfaData(data);
+    } catch (error: any) {
+        console.error("Solfa fetch error:", error);
+        toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+        setSolfaData(null);
+    } finally {
+        setIsLoadingSolfa(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     const operator = getOperator(phoneNumber);
@@ -303,17 +350,19 @@ export default function TelecomServicesPage() {
         setDetectedOperator(operator);
         setBalanceData(null);
         setOffers(null);
+        setSolfaData(null);
     }
 
     if (phoneNumber.length === 9) {
       if (operator === 'Yemen Mobile') {
         fetchBalance(phoneNumber);
         fetchOffers(phoneNumber);
+        fetchSolfa(phoneNumber);
       } else if (operator) {
         toast({ title: "قريباً", description: `خدمات ${operator} قيد التطوير.`});
       }
     }
-  }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, toast]);
+  }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, toast]);
   
   const handlePurchase = async () => {
     const isPackage = !!selectedPackage;
@@ -382,7 +431,9 @@ export default function TelecomServicesPage() {
       case 'Yemen Mobile':
         return <YemenMobileUI 
             balanceData={balanceData} 
-            isLoadingBalance={isLoadingBalance} 
+            isLoadingBalance={isLoadingBalance}
+            solfaData={solfaData}
+            isLoadingSolfa={isLoadingSolfa}
             offers={offers}
             isLoadingOffers={isLoadingOffers}
             onPackageSelect={(pkg) => {
@@ -403,7 +454,10 @@ export default function TelecomServicesPage() {
                 setSelectedPackage(null);
                 setIsConfirming(true);
             }}
-            refreshBalance={() => fetchBalance(phoneNumber)}
+            refreshBalanceAndSolfa={() => {
+                fetchBalance(phoneNumber);
+                fetchSolfa(phoneNumber);
+            }}
         />;
       default:
         return null;
@@ -450,7 +504,7 @@ export default function TelecomServicesPage() {
           <CardContent>
             <div className="relative">
                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
-                    {(isLoadingBalance || isLoadingOffers) ? (
+                    {(isLoadingBalance || isLoadingOffers || isLoadingSolfa) ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                     ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
                         <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>

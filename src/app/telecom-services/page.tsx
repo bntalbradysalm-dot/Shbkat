@@ -118,6 +118,7 @@ const YemenMobileUI = ({
 }) => {
     const [billAmount, setBillAmount] = useState('');
     const [activeSubscriptions, setActiveSubscriptions] = useState<OfferWithPrice[]>([]);
+    const isAmountInvalid = Number(billAmount) < 21 && billAmount !== '';
 
     const reverseText = (text: string) => {
         if (text && /[\u0600-\u06FF]/.test(text) && !/^[ \u0600-\u06FF]/.test(text)) {
@@ -133,21 +134,15 @@ const YemenMobileUI = ({
         'باقات الانترنت الشهرية': ['نت', 'شهري'],
         'باقات انترنت 10 أيام': ['نت', '10 أيّام'],
         'تواصل اجتماعي': ['تواصل'],
-        'باقات أخرى': []
     };
 
     const categorizedOffers = useMemo(() => {
         if (!offers) return { available: {}, active: [] };
         
-        const initializedCategories: Record<string, OfferWithPrice[]> = {
-            'باقات مزايا': [],
-            'باقات فورجي': [],
-            'باقات VoLTE': [],
-            'باقات الانترنت الشهرية': [],
-            'باقات انترنت 10 أيام': [],
-            'تواصل اجتماعي': [],
-            'باقات أخرى': []
-        };
+        const initializedCategories: Record<string, OfferWithPrice[]> = Object.fromEntries(
+          Object.keys(offerCategories).map(key => [key, []])
+        );
+        initializedCategories['باقات أخرى'] = [];
         const active: OfferWithPrice[] = [];
 
         offers.forEach(offer => {
@@ -162,9 +157,7 @@ const YemenMobileUI = ({
 
             let assigned = false;
             for (const category in offerCategories) {
-                if (category === 'باقات أخرى') continue;
                 const keywords = (offerCategories as any)[category] as string[];
-                
                 const allKeywordsMatch = keywords.every(keyword => correctedName.includes(keyword));
 
                 if (allKeywordsMatch) {
@@ -302,11 +295,16 @@ const YemenMobileUI = ({
                                 value={billAmount}
                                 onChange={(e) => setBillAmount(e.target.value)}
                             />
+                             {isAmountInvalid && (
+                                <p className="text-destructive text-xs mt-2">
+                                    أقل مبلغ للسداد هو 21 ريال.
+                                </p>
+                            )}
                         </div>
                         <Button 
                             className="w-full" 
                             onClick={() => onBillPay(Number(billAmount))} 
-                            disabled={!billAmount || Number(billAmount) <= 0}
+                            disabled={!billAmount || Number(billAmount) <= 0 || isAmountInvalid}
                         >
                             <CreditCard className="ml-2 h-4 w-4" />
                             دفع
@@ -684,8 +682,8 @@ export default function TelecomServicesPage() {
                 setIsConfirming(true);
             }}
              onBillPay={(amount) => {
-                if(amount <= 0) {
-                    toast({variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.'});
+                if(amount < 21) {
+                    toast({variant: 'destructive', title: 'خطأ', description: 'أقل مبلغ للسداد هو 21 ريال.'});
                     return;
                 }
                 setBillAmount(amount);

@@ -93,6 +93,10 @@ export default function OwnerNetworkManagePage() {
   const [isProcessingCards, setIsProcessingCards] = React.useState(false);
   const [selectedCategoryForView, setSelectedCategoryForView] = useState<string>('');
 
+  const [editingCard, setEditingCard] = useState<NetworkCard | null>(null);
+  const [editingCardNumber, setEditingCardNumber] = useState('');
+  const [cardToDelete, setCardToDelete] = useState<NetworkCard | null>(null);
+
 
   useEffect(() => {
     if (categories && categories.length > 0 && !selectedCategoryForView) {
@@ -213,6 +217,31 @@ export default function OwnerNetworkManagePage() {
         setIsProcessingCards(false);
     });
   };
+
+  const handleEditCardClick = (card: NetworkCard) => {
+    setEditingCard(card);
+    setEditingCardNumber(card.cardNumber);
+  };
+  
+  const handleSaveCard = () => {
+    if (!firestore || !networkId || !editingCard || !editingCardNumber) {
+        toast({ title: "خطأ", description: "بيانات الكرت غير صالحة.", variant: "destructive"});
+        return;
+    }
+    const cardDocRef = doc(firestore, `networks/${networkId}/cards`, editingCard.id);
+    updateDocumentNonBlocking(cardDocRef, { cardNumber: editingCardNumber });
+    toast({ title: "تم الحفظ", description: "تم تحديث رقم الكرت بنجاح."});
+    setEditingCard(null);
+    setEditingCardNumber('');
+  };
+  
+  const handleDeleteCard = () => {
+    if (!firestore || !networkId || !cardToDelete) return;
+    const cardDocRef = doc(firestore, `networks/${networkId}/cards`, cardToDelete.id);
+    deleteDocumentNonBlocking(cardDocRef);
+    toast({ title: "تم الحذف", description: "تم حذف الكرت بنجاح.", variant: "destructive"});
+    setCardToDelete(null);
+  }
 
 
   const renderCategories = () => {
@@ -352,13 +381,25 @@ export default function OwnerNetworkManagePage() {
                   <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
                     {currentCards.map(card => (
                       <div key={card.id} className='p-2 bg-background border rounded-md flex justify-between items-center'>
-                        <p className='font-mono text-sm'>{card.cardNumber}</p>
-                        <Badge className={cn(
-                          card.status === 'sold' ? 'bg-red-500' : 'bg-green-500',
-                          'text-white'
-                        )}>
-                          {card.status === 'sold' ? 'مباع' : 'متاح'}
-                        </Badge>
+                        <p className='font-mono text-sm font-semibold'>{card.cardNumber}</p>
+                        <div className="flex items-center gap-2">
+                            <Badge className={cn(
+                                card.status === 'sold' ? 'bg-red-500' : 'bg-green-500',
+                                'text-white'
+                            )}>
+                                {card.status === 'sold' ? 'مباع' : 'متاح'}
+                            </Badge>
+                            {card.status === 'available' && (
+                                <>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCardClick(card)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setCardToDelete(card)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -455,11 +496,41 @@ export default function OwnerNetworkManagePage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={!!editingCard} onOpenChange={(open) => !open && setEditingCard(null)}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>تعديل رقم الكرت</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+                <Label htmlFor="edit-card-number">رقم الكرت</Label>
+                <Input
+                    id="edit-card-number"
+                    value={editingCardNumber}
+                    onChange={(e) => setEditingCardNumber(e.target.value)}
+                />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleSaveCard}>حفظ التغييرات</Button>
+                <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!cardToDelete} onOpenChange={(open) => !open && setCardToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                <AlertDialogDescription>
+                    هل أنت متأكد من حذف الكرت رقم "{cardToDelete?.cardNumber}"؟
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteCard} className="bg-destructive hover:bg-destructive/90">حذف</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
-
-    
-
-    
-

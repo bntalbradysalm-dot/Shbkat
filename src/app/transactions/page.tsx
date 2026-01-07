@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy, Smartphone } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -63,6 +63,9 @@ const getTransactionIcon = (type: string) => {
     }
     if (type.startsWith('شراء كرت')) {
         return <CreditCard className="h-6 w-6 text-primary" />;
+    }
+    if (type.startsWith('سداد')) {
+        return <Smartphone className="h-6 w-6 text-primary" />;
     }
     if (type.startsWith('تجديد')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
@@ -134,6 +137,7 @@ export default function TransactionsPage() {
   };
   
    const handleCopy = (text: string, label: string) => {
+        if (!text) return;
         navigator.clipboard.writeText(text);
         toast({
             title: "تم النسخ",
@@ -265,19 +269,22 @@ export default function TransactionsPage() {
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
                             )}
-                            {selectedTx.cardPassword && (
+                            {(selectedTx.cardNumber || selectedTx.cardPassword) && (
                                  <div className="pt-4 mt-2 border-t">
                                      <h4 className="font-bold text-base mb-2">تفاصيل الكرت</h4>
                                         <div className="space-y-2">
-                                            <div className="flex justify-between items-center bg-muted p-2 rounded-md">
-                                                <span className="text-muted-foreground">رقم الكرت:</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-semibold">{selectedTx.cardNumber}</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardNumber!, 'رقم الكرت')}>
-                                                        <Copy className="h-4 w-4"/>
-                                                    </Button>
+                                            {selectedTx.cardNumber &&
+                                                <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                                    <span className="text-muted-foreground">رقم الكرت:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono font-semibold">{selectedTx.cardNumber}</span>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardNumber!, 'رقم الكرت')}>
+                                                            <Copy className="h-4 w-4"/>
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            }
+                                            {selectedTx.cardPassword &&
                                              <div className="flex justify-between items-center bg-muted p-2 rounded-md">
                                                 <span className="text-muted-foreground">كلمة المرور:</span>
                                                 <div className="flex items-center gap-2">
@@ -287,6 +294,7 @@ export default function TransactionsPage() {
                                                     </Button>
                                                 </div>
                                             </div>
+                                            }
                                         </div>
                                  </div>
                             )}

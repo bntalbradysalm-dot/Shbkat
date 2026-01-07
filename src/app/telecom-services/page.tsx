@@ -589,6 +589,7 @@ export default function TelecomServicesPage() {
     
     if (!amountToPay || amountToPay <= 0 || !userProfile || !firestore || !userDocRef || !user) {
         toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
+        setIsConfirming(false);
         return;
     }
     
@@ -627,7 +628,7 @@ export default function TelecomServicesPage() {
         const response = await fetch(apiUrl);
         if (!response.ok) {
             const data = await response.json();
-            throw new Error(data.message || 'فشلت عملية الدفع.');
+            throw new Error(data.message || 'فشلت عملية الدفع لدى مزود الخدمة.');
         }
 
         const batch = writeBatch(firestore);

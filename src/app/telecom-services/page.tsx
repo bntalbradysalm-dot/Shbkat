@@ -731,11 +731,25 @@ export default function TelecomServicesPage() {
         }
         
         const response = await fetch(apiUrl);
-        const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'فشلت عملية الدفع لدى مزود الخدمة.');
+            // Try to parse the JSON error body
+            try {
+                const data = await response.json();
+                throw new Error(data.message || `فشلت عملية الدفع لدى مزود الخدمة. (${response.status})`);
+            } catch (jsonError) {
+                // If parsing fails, use the status text
+                throw new Error(`فشلت عملية الدفع لدى مزود الخدمة. ${response.statusText}`);
+            }
         }
+
+        const data = await response.json();
+
+        // Additional check for logical errors from the API even if status is 200 OK
+        if (data.resultCode && data.resultCode !== "0") {
+             throw new Error(data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة. رمز الخطأ: ${data.resultCode}`);
+        }
+
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-amountToPay) });
@@ -771,6 +785,8 @@ export default function TelecomServicesPage() {
   }
 
   const renderOperatorUI = () => {
+    if (!detectedOperator || phoneNumber.length < 1) return null;
+    
     switch (detectedOperator) {
       case 'Yemen Mobile':
         return <YemenMobileUI 
@@ -838,6 +854,8 @@ export default function TelecomServicesPage() {
             isLoadingQuery={isLoadingYemenPostQuery}
         />;
       default:
+        // This case handles operators that are detected but not yet supported, like SabaFon, YOU, Way.
+        // The toast in useEffect will have already been shown.
         return null;
     }
   };

@@ -93,6 +93,7 @@ export default function ServicesPage() {
         setError('لا يمكن تحميل قائمة الشبكات الخارجية حاليًا.');
       }
       
+      // Show local networks first
       setCombinedNetworks([...local, ...external]);
       setIsLoading(false);
     };
@@ -173,8 +174,7 @@ export default function ServicesPage() {
         favoriteType: 'Network',
       };
       
-      // Only add phoneNumber if it exists
-      if (network.phoneNumber) {
+      if (network.isLocal && network.phoneNumber) {
         favoriteData.phoneNumber = network.phoneNumber;
       }
       
@@ -247,7 +247,7 @@ export default function ServicesPage() {
           return (
              <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-card text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
+                  className="cursor-pointer bg-muted/30 text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">

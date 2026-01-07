@@ -108,11 +108,11 @@ function NetworkPurchasePageComponent() {
         cardToPurchaseData.id = cardToPurchaseDoc.id;
 
         const networkDocRef = doc(firestore, 'networks', networkId);
-        const networkDoc = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', networkId)));
-        if (networkDoc.empty) {
+        const networkDocSnapshot = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', networkId)));
+        if (networkDocSnapshot.empty) {
             throw new Error('لم يتم العثور على الشبكة.');
         }
-        const networkData = networkDoc.docs[0].data();
+        const networkData = networkDocSnapshot.docs[0].data();
         const ownerId = networkData.ownerId;
         const ownerDocRef = doc(firestore, 'users', ownerId);
 
@@ -335,7 +335,7 @@ function NetworkPurchasePageComponent() {
 
 export default function NetworkCardsPage() {
     return (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="flex items-center justify-center h-full">Loading...</div>}>
         <NetworkPurchasePageComponent />
       </Suspense>
     );

@@ -93,6 +93,7 @@ export default function ServicesPage() {
         setError('لا يمكن تحميل قائمة الشبكات الخارجية حاليًا.');
       }
       
+      // Show local networks first
       setCombinedNetworks([...local, ...external]);
       setIsLoading(false);
     };
@@ -173,8 +174,7 @@ export default function ServicesPage() {
         favoriteType: 'Network',
       };
       
-      // Only add phoneNumber if it exists
-      if (network.phoneNumber) {
+      if (network.isLocal && network.phoneNumber) {
         favoriteData.phoneNumber = network.phoneNumber;
       }
       
@@ -247,29 +247,27 @@ export default function ServicesPage() {
           return (
              <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-card text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
+                  className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 transition-colors rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-primary/10 rounded-lg">
-                           <Wifi className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
+                        <button 
+                          onClick={(e) => handleFavoriteClick(e, network)}
+                          className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
+                          aria-label={`إضافة ${network.name} إلى المفضلة`}
+                        >
+                          <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
+                        </button>
+                        <div className="flex-1 text-right mr-4 space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <p className="text-xs text-primary-foreground/80 text-right">
                             {network.location}
                           </p>
                         </div>
-                      </div>
-                      <button 
-                        onClick={(e) => handleFavoriteClick(e, network)}
-                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
-                        aria-label={`إضافة ${network.name} إلى المفضلة`}
-                      >
-                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-400 text-red-500')} />
-                      </button>
+                         <div className="p-3 bg-white/20 rounded-lg">
+                           <Wifi className="h-6 w-6 text-white" />
+                        </div>
                     </div>
                   </CardContent>
                 </Card>

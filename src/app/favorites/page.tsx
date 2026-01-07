@@ -47,7 +47,6 @@ export default function FavoritesPage() {
     const docRef = doc(firestore, 'users', user.uid, 'favorites', favoriteId);
     deleteDocumentNonBlocking(docRef);
     toast({
-      variant: 'destructive',
       title: 'تمت الإزالة',
       description: `تمت إزالة "${networkName}" من المفضلة.`,
     });
@@ -58,16 +57,16 @@ export default function FavoritesPage() {
       return (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4 bg-primary rounded-2xl">
+            <Card key={i} className="p-4 bg-card rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg bg-white/30" />
+                  <Skeleton className="h-10 w-10 rounded-lg bg-muted" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-32 bg-white/30" />
-                    <Skeleton className="h-4 w-40 bg-white/30" />
+                    <Skeleton className="h-4 w-32 bg-muted" />
+                    <Skeleton className="h-4 w-40 bg-muted" />
                   </div>
                 </div>
-                <Skeleton className="h-6 w-6 rounded-full bg-white/30" />
+                <Skeleton className="h-6 w-6 rounded-full bg-muted" />
               </div>
             </Card>
           ))}
@@ -92,23 +91,23 @@ export default function FavoritesPage() {
         {favorites.map((fav, index) => (
            <Link href={`/services/${fav.targetId}?name=${encodeURIComponent(fav.name)}`} key={fav.id} className="block">
               <Card 
-                className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
+                className="cursor-pointer bg-card text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-white/20 rounded-lg">
-                        <Wifi className="h-6 w-6 text-white" />
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <Wifi className="h-6 w-6 text-primary" />
                       </div>
                       <div className="space-y-1">
                         <h4 className="font-bold">{fav.name}</h4>
-                        <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <MapPin className="h-3 w-3" />
                           {fav.location}
                         </p>
                         {fav.phoneNumber && (
-                           <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
+                           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                             <Phone className="h-3 w-3" />
                             {fav.phoneNumber}
                           </p>
@@ -117,10 +116,10 @@ export default function FavoritesPage() {
                     </div>
                     <button 
                       onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                      className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
+                      className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                       aria-label={`إزالة ${fav.name} من المفضلة`}
                     >
-                      <Heart className={cn("h-5 w-5 fill-red-400 text-red-400")} />
+                      <Heart className={cn("h-5 w-5 fill-red-400 text-red-500")} />
                     </button>
                   </div>
                 </CardContent>

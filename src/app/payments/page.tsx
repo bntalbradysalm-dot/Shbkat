@@ -3,7 +3,7 @@
 import React from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Bolt, ChevronLeft } from 'lucide-react';
+import { Bolt, ChevronLeft, Droplets } from 'lucide-react';
 import Link from 'next/link';
 
 const paymentServices = [
@@ -14,7 +14,13 @@ const paymentServices = [
         href: '/payments/electricity',
         theme: 'bg-yellow-400/10 text-yellow-500'
     },
-    // Add other payment services here in the future
+    {
+        title: 'فواتير المياه',
+        description: 'استعلم وادفع فواتير المياه.',
+        icon: Droplets,
+        href: '/payments/water',
+        theme: 'bg-blue-400/10 text-blue-500'
+    }
 ];
 
 export default function PaymentsPage() {

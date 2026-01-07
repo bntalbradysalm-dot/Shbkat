@@ -97,8 +97,15 @@ const YemenMobileUI = ({
     
     const [billAmount, setBillAmount] = useState('');
     
-    // Reverse arabic names
-    const reverseText = (text: string) => text.split('').reverse().join('');
+    // Function to reverse Arabic text which is sometimes displayed backwards
+    const reverseText = (text: string) => {
+        // A simple check to see if the text is likely reversed Arabic
+        // (starts with a non-Arabic character or space, while containing Arabic letters)
+        if (text && /[\u0600-\u06FF]/.test(text) && !/^[ \u0600-\u06FF]/.test(text)) {
+           return text.split('').reverse().join('');
+        }
+        return text;
+    };
     
     const offerCategories = {
         'باقات مزايا': ['مزايا'],
@@ -111,19 +118,19 @@ const YemenMobileUI = ({
         if (!offers) return {};
         const categories: Record<string, OfferWithPrice[]> = {};
         offers.forEach(offer => {
-            const reversedName = reverseText(offer.offerName);
+            const correctedName = reverseText(offer.offerName);
             let assigned = false;
             for (const category in offerCategories) {
-                if (offerCategories[category as keyof typeof offerCategories].some(keyword => reversedName.includes(keyword))) {
+                if (offerCategories[category as keyof typeof offerCategories].some(keyword => correctedName.includes(keyword))) {
                     if (!categories[category]) categories[category] = [];
-                    categories[category].push({ ...offer, offerName: reversedName, price: Number(reversedName.match(/\d+/)?.[0]) || undefined });
+                    categories[category].push({ ...offer, offerName: correctedName, price: Number(correctedName.match(/\d+/g)?.join('')) || undefined });
                     assigned = true;
                     break;
                 }
             }
             if (!assigned) {
                 if (!categories['باقات أخرى']) categories['باقات أخرى'] = [];
-                categories['باقات أخرى'].push({ ...offer, offerName: reversedName, price: Number(reversedName.match(/\d+/)?.[0]) || undefined });
+                categories['باقات أخرى'].push({ ...offer, offerName: correctedName, price: Number(correctedName.match(/\d+/g)?.join('')) || undefined });
             }
         });
         return categories;

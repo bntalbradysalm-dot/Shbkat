@@ -180,7 +180,7 @@ const YemenMobileUI = ({
     }
 
     return (
-    <div className="space-y-4 animate-in fade-in-0 duration-500">
+    <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
         
         <Card>
             <CardContent className="p-3 grid grid-cols-3 gap-2 text-center text-xs font-semibold">

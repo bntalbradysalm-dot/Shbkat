@@ -63,6 +63,16 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
     --radius: 0.5rem;
   }
+
+  [data-theme="yemen-mobile"] {
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  .dark [data-theme="yemen-mobile"] {
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {

@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     const transid = Date.now().toString();
     const token = generateToken(transid, mobile);
 
-    let apiUrl = `https://${DOMAIN}/yem?action=${action}&userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
+    let apiUrl = `https://echehanly.yrbso.net/api/yr/yem?action=${action}&userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
     
     if (action === 'bill' && amount) {
         apiUrl += `&amount=${amount}`;

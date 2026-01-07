@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Wifi, MapPin, Heart, AlertCircle } from 'lucide-react';
+import { Search, Wifi, Heart, AlertCircle } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,12 +13,28 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
+// From BaityNet API
 type Network = {
-  id: number; // The API returns number for id
+  id: number;
   name: string;
-  desc: string; // Using `desc` for location as per API docs
-  logo?: string;
-  urlLogin?: string;
+  desc: string; 
+};
+
+// From local Firestore
+type LocalNetwork = {
+    id: string;
+    name: string;
+    location: string;
+    phoneNumber?: string;
+    ownerId: string;
+};
+
+type CombinedNetwork = {
+    id: string;
+    name: string;
+    location: string;
+    phoneNumber?: string;
+    isLocal: boolean;
 };
 
 type Favorite = {
@@ -32,31 +47,60 @@ export default function ServicesPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [networks, setNetworks] = useState<Network[]>([]);
+  
+  // State for combined networks
+  const [combinedNetworks, setCombinedNetworks] = useState<CombinedNetwork[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch local networks from Firestore
+  const localNetworksQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'networks') : null),
+    [firestore]
+  );
+  const { data: localNetworks, isLoading: isLoadingLocal } = useCollection<LocalNetwork>(localNetworksQuery);
+
   useEffect(() => {
-    const fetchNetworks = async () => {
+    const fetchAndCombineNetworks = async () => {
       setIsLoading(true);
       setError(null);
+      
+      const local: CombinedNetwork[] = (localNetworks || []).map(n => ({
+        id: n.id,
+        name: n.name,
+        location: n.location,
+        phoneNumber: n.phoneNumber,
+        isLocal: true,
+      }));
+
+      let external: CombinedNetwork[] = [];
       try {
         const response = await fetch('/services/networks-api');
         if (!response.ok) {
-          throw new Error('Failed to fetch networks');
+          // Don't throw, just log and continue with local networks
+          console.error('Failed to fetch external networks');
+        } else {
+          const data: Network[] = await response.json();
+          external = data.map(n => ({
+            id: String(n.id),
+            name: n.name,
+            location: n.desc || 'غير محدد',
+            isLocal: false,
+          }));
         }
-        const data = await response.json();
-        setNetworks(data); // The API route now returns the array directly
       } catch (err) {
-        setError('لا يمكن تحميل قائمة الشبكات حاليًا. الرجاء المحاولة لاحقًا.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching external networks:', err);
+        setError('لا يمكن تحميل قائمة الشبكات الخارجية حاليًا.');
       }
+      
+      setCombinedNetworks([...local, ...external]);
+      setIsLoading(false);
     };
 
-    fetchNetworks();
-  }, []);
+    if (!isLoadingLocal) {
+        fetchAndCombineNetworks();
+    }
+  }, [localNetworks, isLoadingLocal]);
 
   const favoritesQuery = useMemoFirebase(
     () =>
@@ -73,14 +117,16 @@ export default function ServicesPage() {
   const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
 
   const filteredNetworks = useMemo(() => {
-    if (!networks) return [];
-    return networks.filter(net => 
+    return combinedNetworks.filter(net => 
       net.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (net.desc && net.desc.toLowerCase().includes(searchTerm.toLowerCase()))
+      net.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [networks, searchTerm]);
+  }, [combinedNetworks, searchTerm]);
 
-  const handleFavoriteClick = async (e: React.MouseEvent, network: Network) => {
+  const handleFavoriteClick = async (
+    e: React.MouseEvent,
+    network: CombinedNetwork
+  ) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -95,12 +141,23 @@ export default function ServicesPage() {
 
     const networkIdAsString = String(network.id);
     const isFavorited = favoriteNetworkIds.has(networkIdAsString);
-    const favoritesCollectionRef = collection(firestore, 'users', user.uid, 'favorites');
+    const favoritesCollectionRef = collection(
+      firestore,
+      'users',
+      user.uid,
+      'favorites'
+    );
 
     if (isFavorited) {
       const favToDelete = favorites?.find(f => f.targetId === networkIdAsString);
       if (favToDelete) {
-        const docRef = doc(firestore, 'users', user.uid, 'favorites', favToDelete.id);
+        const docRef = doc(
+          firestore,
+          'users',
+          user.uid,
+          'favorites',
+          favToDelete.id
+        );
         deleteDocumentNonBlocking(docRef);
         toast({
           title: 'تمت الإزالة',
@@ -108,13 +165,19 @@ export default function ServicesPage() {
         });
       }
     } else {
-      const favoriteData = {
+      const favoriteData: any = {
         userId: user.uid,
         targetId: networkIdAsString,
         name: network.name,
-        location: network.desc, // Using 'desc' as location
+        location: network.location || 'غير محدد',
         favoriteType: 'Network',
       };
+      
+      // Only add phoneNumber if it exists
+      if (network.phoneNumber) {
+        favoriteData.phoneNumber = network.phoneNumber;
+      }
+      
       addDocumentNonBlocking(favoritesCollectionRef, favoriteData);
       toast({
         title: 'تمت الإضافة',
@@ -123,21 +186,22 @@ export default function ServicesPage() {
     }
   };
 
+
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="p-4 bg-primary rounded-2xl">
+            <Card key={i} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg bg-white/30" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-32 bg-white/30" />
-                    <Skeleton className="h-4 w-40 bg-white/30" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
                   </div>
                 </div>
-                <Skeleton className="h-6 w-6 rounded-full bg-white/30" />
+                <Skeleton className="h-6 w-6 rounded-full" />
               </div>
             </Card>
           ))}
@@ -145,7 +209,7 @@ export default function ServicesPage() {
       );
     }
     
-    if (error) {
+    if (error && filteredNetworks.length === 0) {
        return (
         <div className="flex flex-col items-center justify-center text-center h-64">
           <AlertCircle className="h-16 w-16 text-destructive" />
@@ -176,34 +240,35 @@ export default function ServicesPage() {
         {filteredNetworks.map((network, index) => {
           const networkIdAsString = String(network.id);
           const isFavorited = favoriteNetworkIds.has(networkIdAsString);
+          const linkHref = network.isLocal 
+            ? `/network-cards/${networkIdAsString}?name=${encodeURIComponent(network.name)}` 
+            : `/services/${networkIdAsString}?name=${encodeURIComponent(network.name)}`;
+
           return (
-             <Link href={`/services/${networkIdAsString}?name=${encodeURIComponent(network.name)}`} key={network.id} className="block">
+             <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-in fade-in-0 rounded-2xl"
+                  className="cursor-pointer bg-card text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white/20 rounded-lg">
-                          <Wifi className="h-6 w-6 text-white" />
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                           <Wifi className="h-6 w-6 text-primary" />
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
-                          {network.desc && (
-                             <p className="text-xs text-primary-foreground/80 flex items-center gap-1.5">
-                              <MapPin className="h-3 w-3" />
-                              {network.desc}
-                            </p>
-                          )}
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            {network.location}
+                          </p>
                         </div>
                       </div>
                       <button 
                         onClick={(e) => handleFavoriteClick(e, network)}
-                        className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
+                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                         aria-label={`إضافة ${network.name} إلى المفضلة`}
                       >
-                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-400 text-red-400')} />
+                        <Heart className={cn("h-5 w-5", isFavorited && 'fill-red-400 text-red-500')} />
                       </button>
                     </div>
                   </CardContent>

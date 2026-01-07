@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 
 type UserProfile = {
   balance?: number;
@@ -111,7 +112,7 @@ const YemenMobileUI = ({
     isLoadingOffers: boolean,
     onPackageSelect: (pkg: OfferWithPrice) => void,
     onBillPay: (amount: number) => void,
-    refreshBalanceAndSolfa: () => void
+    refreshBalanceAndSolfa: () => void 
 }) => {
     
     const [billAmount, setBillAmount] = useState('');
@@ -191,14 +192,22 @@ const YemenMobileUI = ({
             </CardContent>
         </Card>
         
-        <Card>
-            <CardHeader className="p-3">
+        <Tabs defaultValue="balance">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="balance">الرصيد</TabsTrigger>
+            <TabsTrigger value="packages">الباقات</TabsTrigger>
+          </TabsList>
+          <TabsContent value="balance" className="pt-4">
+            <Card>
+              <CardHeader className="p-3">
                 <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-3">
+              </CardHeader>
+              <CardContent className="p-3 pt-0 space-y-3">
                 <div>
-                  <Label htmlFor="bill-amount" className="sr-only">المبلغ</Label>
-                  <Input 
+                  <Label htmlFor="bill-amount" className="sr-only">
+                    المبلغ
+                  </Label>
+                  <Input
                     id="bill-amount"
                     type="number"
                     placeholder="أدخل المبلغ..."
@@ -206,38 +215,65 @@ const YemenMobileUI = ({
                     onChange={(e) => setBillAmount(e.target.value)}
                   />
                 </div>
-                <Button 
-                    className="w-full" 
-                    onClick={() => onBillPay(Number(billAmount))} 
-                    disabled={!billAmount || Number(billAmount) <= 0}
+                <Button
+                  className="w-full"
+                  onClick={() => onBillPay(Number(billAmount))}
+                  disabled={!billAmount || Number(billAmount) <= 0}
                 >
-                    <CreditCard className="ml-2 h-4 w-4" />
-                    تسديد المبلغ
+                  <CreditCard className="ml-2 h-4 w-4" />
+                  تسديد المبلغ
                 </Button>
-            </CardContent>
-        </Card>
-
-        {isLoadingOffers ? (
-            <Skeleton className="h-48 w-full"/>
-        ) : Object.keys(categorizedOffers).length > 0 ? (
-            Object.entries(categorizedOffers).map(([category, pkgs]) => (
-                <Card key={category}>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="packages" className="pt-4">
+            {isLoadingOffers ? (
+              <Skeleton className="h-48 w-full" />
+            ) : Object.keys(categorizedOffers).length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(categorizedOffers).map(([category, pkgs]) => (
+                  <Card key={category}>
                     <CardHeader className="p-3">
-                        <CardTitle className="text-base">{category}</CardTitle>
+                      <CardTitle className="text-base">{category}</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-3 p-3 pt-0">
-                        {pkgs.map(pkg => (
-                            <div key={pkg.offerId} onClick={() => onPackageSelect(pkg)} className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-                                <p className="font-semibold text-sm">{pkg.offerName}</p>
-                                {pkg.price && <p className="text-xs text-primary font-bold">{pkg.price.toLocaleString('en-US')} ريال</p>}
-                            </div>
+                    <CardContent className="p-3 pt-0 space-y-3">
+                        {pkgs.map((pkg) => (
+                           <Card key={pkg.offerId} className="overflow-hidden">
+                                <CardContent className="p-0 flex">
+                                    <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-2 text-accent-foreground">
+                                        <Database className="w-6 h-6 text-primary/80" />
+                                    </div>
+                                    <div className="flex-grow p-3">
+                                        <div className='flex items-start justify-between gap-2'>
+                                            <div className='space-y-1 text-right'>
+                                                <h3 className="font-bold text-sm">{pkg.offerName}</h3>
+                                                {pkg.price && <p className="font-semibold text-primary dark:text-primary-foreground">{pkg.price.toLocaleString('en-US')} ريال</p>}
+                                            </div>
+                                            <Button 
+                                                size="sm" 
+                                                className="h-auto py-1.5 px-4 text-xs font-bold rounded-lg"
+                                                onClick={() => onPackageSelect(pkg)}
+                                                disabled={!pkg.price}
+                                            >
+                                                شراء
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                           </Card>
                         ))}
                     </CardContent>
-                </Card>
-            ))
-        ) : (
-             <p className="text-center text-muted-foreground py-4">لا توجد باقات متاحة لهذا الرقم.</p>
-        )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                لا توجد باقات متاحة لهذا الرقم.
+              </p>
+            )}
+          </TabsContent>
+        </Tabs>
+
     </div>
 );
 }

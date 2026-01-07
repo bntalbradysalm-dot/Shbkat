@@ -252,22 +252,22 @@ export default function ServicesPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
-                        <button 
-                          onClick={(e) => handleFavoriteClick(e, network)}
-                          className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
-                          aria-label={`إضافة ${network.name} إلى المفضلة`}
-                        >
-                          <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
-                        </button>
-                        <div className="flex-1 text-right mx-4 space-y-1">
-                          <h4 className="font-bold">{network.name}</h4>
-                          <p className="text-xs text-primary-foreground/80 text-right">
-                            {network.location}
-                          </p>
-                        </div>
-                        <div className="p-3 bg-white/20 rounded-lg">
-                           <Wifi className="h-6 w-6 text-white" />
-                        </div>
+                      <div className="p-3 bg-white/20 rounded-lg">
+                        <Wifi className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 text-right mx-4 space-y-1">
+                        <h4 className="font-bold">{network.name}</h4>
+                        <p className="text-xs text-right text-primary-foreground/80">
+                          {network.location}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={(e) => handleFavoriteClick(e, network)}
+                        className="p-2 text-primary-foreground/80 hover:text-white transition-colors"
+                        aria-label={`إضافة ${network.name} إلى المفضلة`}
+                      >
+                        <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
+                      </button>
                     </div>
                   </CardContent>
                 </Card>

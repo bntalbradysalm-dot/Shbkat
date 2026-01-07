@@ -23,7 +23,7 @@ function generateToken(transid: string, mobile: string): string {
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const service = searchParams.get('service'); // e.g., 'yem', 'yem4g'
+    const service = searchParams.get('service'); // e.g., 'yem', 'yem4g', 'post'
     const action = searchParams.get('action');
     const mobile = searchParams.get('mobile');
     const amount = searchParams.get('amount');
@@ -79,6 +79,3 @@ export async function GET(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
-
-
-

@@ -247,7 +247,7 @@ export default function ServicesPage() {
           return (
              <Link href={linkHref} key={network.id} className="block">
                 <Card 
-                  className="cursor-pointer bg-muted/30 text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
+                  className="cursor-pointer bg-accent text-card-foreground hover:bg-accent/80 transition-colors animate-in fade-in-0 rounded-2xl"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardContent className="p-4">

@@ -11,8 +11,6 @@ import {
   Smartphone,
 } from 'lucide-react';
 import Link from 'next/link';
-import { PromotionalImage } from './promotional-image';
-import { RecentTransactions } from './recent-transactions';
 import Image from 'next/image';
 
 type Service = {
@@ -26,7 +24,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'يمن موبايل', icon: 'https://i.postimg.cc/90FqYx0x/yemen-mobile.png', href: '/yemen-mobile' },
+  { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
   { name: 'العمليات', icon: History, href: '/transactions' },
 ];
 

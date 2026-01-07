@@ -91,18 +91,17 @@ export default function PubgPage() {
     const fetchOffers = async () => {
         setIsLoadingOffers(true);
         try {
-            // Using a dummy player ID '1' to fetch the offers list as per some API designs
             const response = await fetch('/api/pubg?action=query&mobile=1');
             const data = await response.json();
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to fetch PUBG offers');
             }
-            // Add price to offers, assuming it's in the name
-            const offersWithPrice = data.offers.map((offer: any) => ({
+            // Add price to offers, parsing it from the name
+            const offersWithPrice: PubgOffer[] = data.offers.map((offer: any) => ({
                 ...offer,
-                price: parseInt(offer.offerName.match(/(\d+)/)?.[0] || '0', 10) * 2 // Example logic
+                price: parseFloat(offer.offerName.match(/(\d+(\.\d+)?)/)?.[0] || '0')
             }));
-            setOffers(data.offers);
+            setOffers(offersWithPrice);
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ', description: `لا يمكن تحميل باقات ببجي حالياً. ${error.message}` });
         } finally {

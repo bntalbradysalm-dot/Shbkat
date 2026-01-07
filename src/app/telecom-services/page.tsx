@@ -196,6 +196,7 @@ const YemenMobileUI = ({
     const renderOfferIcon = (category: string) => {
         if (category.includes('فورجي') || category.includes('VoLTE')) return '4G';
         if (category.includes('مزايا') || category.includes('انترنت')) return '3G';
+        if (category.includes('تواصل')) return <Smartphone className="w-4 h-4"/>;
         return <Database className="w-5 h-5"/>;
     }
 

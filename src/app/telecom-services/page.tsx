@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -132,13 +132,14 @@ const YemenMobileUI = ({
         return text;
     };
     
-    const offerCategories = {
+    const offerCategories: Record<string, string[]> = {
         'باقات مزايا': ['مزايا'],
         'باقات فورجي': ['فورجي'],
         'باقات VoLTE': ['VoLTE'],
+        'باقات هدايا': ['هدايا'],
         'باقات الانترنت الشهرية': ['نت', 'شهري'],
         'باقات انترنت 10 أيام': ['نت', '10 أيّام'],
-        'تواصل اجتماعي': ['تواصل'],
+        'باقات تواصل اجتماعي': ['تواصل'],
     };
 
     const categorizedOffers = useMemo(() => {
@@ -161,16 +162,21 @@ const YemenMobileUI = ({
             }
 
             let assigned = false;
-            for (const category in offerCategories) {
-                const keywords = (offerCategories as any)[category] as string[];
-                const allKeywordsMatch = keywords.every(keyword => correctedName.includes(keyword));
-
-                if (allKeywordsMatch) {
-                    initializedCategories[category].push(offerWithDetails);
-                    assigned = true;
-                    break; 
-                }
+            // Prioritize more specific categories
+            const categoryPriority = ['فورجي', 'VoLTE', 'هدايا', 'مزايا', 'تواصل', 'انترنت'];
+            
+            for (const categoryKeyword of categoryPriority) {
+                 for (const category in offerCategories) {
+                    const keywords = (offerCategories as any)[category] as string[];
+                    if(keywords.includes(categoryKeyword) && keywords.every(kw => correctedName.includes(kw))) {
+                       initializedCategories[category].push(offerWithDetails);
+                       assigned = true;
+                       break;
+                    }
+                 }
+                 if(assigned) break;
             }
+
             if (!assigned) {
                 initializedCategories['باقات أخرى'].push(offerWithDetails);
             }
@@ -181,7 +187,8 @@ const YemenMobileUI = ({
         const finalCategories: Record<string, OfferWithPrice[]> = {};
         for(const category in initializedCategories) {
             if(initializedCategories[category].length > 0) {
-                finalCategories[category] = initializedCategories[category];
+                // Sort packages within the category by price if available
+                finalCategories[category] = initializedCategories[category].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
             }
         }
 
@@ -192,10 +199,12 @@ const YemenMobileUI = ({
     const isLoanActive = solfaData?.status === "1";
     
     const renderOfferIcon = (category: string) => {
-        if (category.includes('فورجي') || category.includes('VoLTE')) return '4G';
-        if (category.includes('مزايا') || category.includes('انترنت')) return '3G';
-        if (category.includes('تواصل')) return <Smartphone className="w-4 h-4"/>;
-        return <Database className="w-5 h-5"/>;
+        if (category.includes('فورجي') || category.includes('VoLTE')) return <Wifi className="w-5 h-5"/>;
+        if (category.includes('مزايا')) return <Smile className="w-5 h-5"/>;
+        if (category.includes('هدايا')) return <History className="w-5 h-5"/>;
+        if (category.includes('انترنت')) return <Database className="w-5 h-5"/>;
+        if (category.includes('تواصل')) return <Send className="w-5 h-5"/>;
+        return <CreditCard className="w-5 h-5"/>;
     }
 
     return (
@@ -854,8 +863,6 @@ export default function TelecomServicesPage() {
             isLoadingQuery={isLoadingYemenPostQuery}
         />;
       default:
-        // This case handles operators that are detected but not yet supported, like SabaFon, YOU, Way.
-        // The toast in useEffect will have already been shown.
         return null;
     }
   };

@@ -259,7 +259,7 @@ export default function ServicesPage() {
                         >
                           <Heart className={cn("h-6 w-6", isFavorited && 'fill-white text-white')} />
                         </button>
-                        <div className="flex-1 text-right mr-4 space-y-1">
+                        <div className="flex-1 text-right mx-4 space-y-1">
                           <h4 className="font-bold">{network.name}</h4>
                           <p className="text-xs text-primary-foreground/80 text-right">
                             {network.location}

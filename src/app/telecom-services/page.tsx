@@ -135,6 +135,7 @@ const BalanceDisplay = () => {
 const manualPrices: Record<string, number> = {
     'باقة مزايا الشهرية': 2500,
     'باقة مزايا الاسبوعية': 700,
+    'باقة مزايا الشهرية دفع مسبق': 1300,
 };
 
 const YemenMobileUI = ({ 
@@ -187,17 +188,31 @@ const YemenMobileUI = ({
         );
         initializedCategories['باقات أخرى'] = [];
         const active: OfferWithPrice[] = [];
+        
+        const allOffers = [...offers];
+        
+        // Manually add the special package if it's not already in the list
+        if (!allOffers.some(o => o.offerId === 'A38394')) {
+            allOffers.push({
+                offerId: 'A38394',
+                offerName: 'باقة مزايا الشهرية دفع مسبق',
+                price: 1300,
+                offerStartDate: '',
+                offerEndDate: '',
+            });
+        }
 
-        offers.forEach(offer => {
+
+        allOffers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
             
             const manualPrice = manualPrices[correctedName];
             const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
-            const price = manualPrice || priceFromName;
+            const price = offer.price || manualPrice || priceFromName;
 
             const offerWithDetails = { ...offer, offerName: correctedName, price };
 
-            if (offer.offerId.startsWith('A')) { 
+            if (offer.offerId.startsWith('A') && offer.offerId !== 'A38394') { // A38394 is a purchasable package, not an active subscription indicator
                 active.push(offerWithDetails);
                 return;
             }

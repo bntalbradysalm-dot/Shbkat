@@ -265,35 +265,6 @@ const YemenMobileUI = ({
                 </div>
             </CardContent>
         </Card>
-        
-        {activeSubscriptions.length > 0 && (
-            <Card>
-                <CardHeader className="p-3">
-                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-2">
-                    {activeSubscriptions.map(sub => (
-                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
-                            <div className="flex justify-between items-start">
-                                <div className='flex-1'>
-                                    <p className="font-bold text-sm">{sub.offerName}</p>
-                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
-                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-2 bg-primary/10 rounded-full">
-                                        <RefreshCw className="h-5 w-5 text-primary"/>
-                                    </div>
-                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )}
 
         <Tabs defaultValue="packages" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -361,6 +332,35 @@ const YemenMobileUI = ({
                 </Card>
             </TabsContent>
         </Tabs>
+        
+        {activeSubscriptions.length > 0 && (
+            <Card>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2">
+                    {activeSubscriptions.map(sub => (
+                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                            <div className="flex justify-between items-start">
+                                <div className='flex-1'>
+                                    <p className="font-bold text-sm">{sub.offerName}</p>
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
+                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <RefreshCw className="h-5 w-5 text-primary"/>
+                                    </div>
+                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        )}
     </div>
 );
 }

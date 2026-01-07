@@ -254,32 +254,67 @@ const YemenMobileUI = ({
             </Card>
         )}
 
-        <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
-             {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
-                 <AccordionItem value={category} key={category} className="border-none">
-                     <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
-                         <div className='flex items-center gap-2'>
-                            <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
-                                {renderOfferIcon(category)}
-                            </div>
-                            <span>{category}</span>
-                         </div>
-                     </AccordionTrigger>
-                     <AccordionContent className="pt-2">
-                         <div className="space-y-2">
-                         {pkgs.map(pkg => (
-                            <Card key={pkg.offerId} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
-                                <CardContent className="p-3 flex justify-between items-center">
-                                    <p className="font-semibold text-sm">{pkg.offerName}</p>
-                                    {pkg.price && <p className="text-sm font-bold text-primary">{pkg.price.toLocaleString('en-US')} ريال</p>}
-                                </CardContent>
-                            </Card>
-                         ))}
-                         </div>
-                     </AccordionContent>
-                 </AccordionItem>
-             ))}
-        </Accordion>
+        <Tabs defaultValue="packages">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="packages">الباقات</TabsTrigger>
+                <TabsTrigger value="balance">الرصيد</TabsTrigger>
+            </TabsList>
+            <TabsContent value="packages" className="pt-4">
+                 <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
+                    {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
+                        <AccordionItem value={category} key={category} className="border-none">
+                            <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
+                                <div className='flex items-center gap-2'>
+                                    <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
+                                        {renderOfferIcon(category)}
+                                    </div>
+                                    <span>{category}</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-2">
+                                <div className="space-y-2">
+                                {pkgs.map(pkg => (
+                                    <Card key={pkg.offerId} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
+                                        <CardContent className="p-3 flex justify-between items-center">
+                                            <p className="font-semibold text-sm">{pkg.offerName}</p>
+                                            {pkg.price && <p className="text-sm font-bold text-primary">{pkg.price.toLocaleString('en-US')} ريال</p>}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </TabsContent>
+            <TabsContent value="balance" className="pt-4">
+                <Card>
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 space-y-3">
+                        <div>
+                            <Label htmlFor="bill-amount" className="sr-only">المبلغ</Label>
+                            <Input 
+                                id="bill-amount"
+                                type="number"
+                                placeholder="أدخل المبلغ..."
+                                value={billAmount}
+                                onChange={(e) => setBillAmount(e.target.value)}
+                            />
+                        </div>
+                        <Button 
+                            className="w-full" 
+                            onClick={() => onBillPay(Number(billAmount))} 
+                            disabled={!billAmount || Number(billAmount) <= 0}
+                        >
+                            <CreditCard className="ml-2 h-4 w-4" />
+                            دفع
+                        </Button>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
     </div>
 );
 }

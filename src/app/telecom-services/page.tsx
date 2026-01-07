@@ -185,7 +185,7 @@ const YemenMobileUI = ({
         const initializedCategories: Record<string, OfferWithPrice[]> = Object.fromEntries(
           Object.keys(offerCategories).map(key => [key, []])
         );
-        initializedCategories['باقات أخرى'] = [];
+        initializedCategories['باقات مزايا'] = initializedCategories['باقات مزايا'] || [];
         const active: OfferWithPrice[] = [];
 
         offers.forEach(offer => {
@@ -213,7 +213,7 @@ const YemenMobileUI = ({
             }
 
             if (!assigned) {
-                initializedCategories['باقات أخرى'].push(offerWithDetails);
+                initializedCategories['باقات مزايا'].push(offerWithDetails);
             }
         });
         

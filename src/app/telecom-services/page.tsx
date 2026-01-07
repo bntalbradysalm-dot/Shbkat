@@ -334,11 +334,12 @@ const YemenMobileUI = ({
 }
 
 const yemen4gPackages = [
-    { name: "باقة 10 جيجا", price: 2300 },
-    { name: "باقة 20 جيجا", price: 3800 },
-    { name: "باقة 30 جيجا", price: 4750 },
-    { name: "باقة 50 جيجا", price: 7600 },
-    { name: "باقة 80 جيجا", price: 11400 },
+    { name: "باقة 15 جيجا", price: 2400 },
+    { name: "باقة 25 جيجا", price: 4000 },
+    { name: "باقة 60 جيجا", price: 8000 },
+    { name: "باقة 130 جيجا", price: 16000 },
+    { name: "باقة 250 جيجا", price: 26000 },
+    { name: "باقة 500 جيجا", price: 46000 },
 ];
 
 const Yemen4GUI = ({ 
@@ -350,7 +351,7 @@ const Yemen4GUI = ({
     onBillPay: (amount: number, type: 'balance' | 'package') => void,
     queryData: Yemen4GQuery | null,
     isLoadingQuery: boolean,
-    refreshQuery: () => void
+    refreshQuery: () => void 
 }) => {
     const [billAmount, setBillAmount] = useState('');
     const [packageAmount, setPackageAmount] = useState('');
@@ -545,6 +546,8 @@ export default function TelecomServicesPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  const COMMISSION_RATE = 0.05; // 5%
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -711,25 +714,33 @@ export default function TelecomServicesPage() {
     const isYemen4G = detectedOperator === 'Yemen 4G';
     const isYemenPost = detectedOperator === 'Yemen Post';
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
-    let transid = Date.now().toString();
 
     if (isYemen4G || isYemenPost) {
         amountToPay = billAmount;
     }
     
-    if (!amountToPay || amountToPay <= 0 || !userProfile || !firestore || !userDocRef || !user) {
+    if (!amountToPay || amountToPay <= 0) {
+        toast({ variant: 'destructive', title: "خطأ", description: "المبلغ غير صالح." });
+        return;
+    }
+    
+    const commission = detectedOperator === 'Yemen 4G' ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
+    const totalCost = amountToPay + commission;
+    
+    if (!userProfile || !firestore || !userDocRef || !user) {
         toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
         setIsConfirming(false);
         return;
     }
     
-    if ((userProfile.balance ?? 0) < amountToPay) {
-        toast({ variant: "destructive", title: "رصيد غير كاف", description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'}.` });
+    if ((userProfile.balance ?? 0) < totalCost) {
+        toast({ variant: "destructive", title: "رصيد غير كاف", description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'} (التكلفة الإجمالية ${totalCost} ريال).` });
         setIsConfirming(false);
         return;
     }
 
     setIsProcessing(true);
+    let transid = Date.now().toString();
     try {
         let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}`;
         let serviceName: string = detectedOperator || 'خدمة';
@@ -767,7 +778,7 @@ export default function TelecomServicesPage() {
         }
 
         const batch = writeBatch(firestore);
-        batch.update(userDocRef, { balance: increment(-amountToPay) });
+        batch.update(userDocRef, { balance: increment(-totalCost) });
         
         const requestData = {
           userId: user.uid,
@@ -777,8 +788,8 @@ export default function TelecomServicesPage() {
           serviceType: serviceType,
           targetPhoneNumber: phoneNumber,
           amount: amountToPay,
-          commission: 0, 
-          totalCost: amountToPay,
+          commission: commission, 
+          totalCost: totalCost,
           status: 'approved',
           requestTimestamp: new Date().toISOString(),
           transid: transid,
@@ -788,7 +799,7 @@ export default function TelecomServicesPage() {
 
         await batch.commit();
         
-        setSuccessMessage(isPackage ? `تم تفعيل باقة "${selectedPackage?.offerName}" بنجاح.` : `تم تسديد مبلغ ${amountToPay.toLocaleString('en-US')} ريال بنجاح.`);
+        setSuccessMessage(isPackage ? `تم تفعيل باقة "${selectedPackage?.offerName}" بنجاح.` : `تم تسديد مبلغ ${totalCost.toLocaleString('en-US')} ريال بنجاح.`);
         setShowSuccess(true);
 
     } catch(error: any) {
@@ -799,96 +810,27 @@ export default function TelecomServicesPage() {
     }
   }
 
-  const renderOperatorUI = () => {
-    if (!detectedOperator || phoneNumber.length < 1) return null;
-    
-    // Only render UI for Yemen Mobile when phone number is complete
-    if (detectedOperator === 'Yemen Mobile' && phoneNumber.length !== 9) return null;
-    
-    switch (detectedOperator) {
-      case 'Yemen Mobile':
-        return <YemenMobileUI 
-            balanceData={balanceData} 
-            isLoadingBalance={isLoadingBalance}
-            solfaData={solfaData}
-            isLoadingSolfa={isLoadingSolfa}
-            offers={offers}
-            isLoadingOffers={isLoadingOffers}
-            onPackageSelect={(pkg) => {
-                if(!pkg.price) {
-                    toast({variant: 'destructive', title: 'خطأ', description: 'هذه الباقة ليس لها سعر محدد ولا يمكن شراؤها.'});
-                    return;
-                }
-                setSelectedPackage(pkg);
-                setBillAmount(null);
-                setYemen4GType(null);
-                setIsConfirming(true);
-            }}
-             onBillPay={(amount) => {
-                if(amount < 21) {
-                    toast({variant: 'destructive', title: 'خطأ', description: 'أقل مبلغ للسداد هو 21 ريال.'});
-                    return;
-                }
-                setBillAmount(amount);
-                setSelectedPackage(null);
-                setYemen4GType(null);
-                setIsConfirming(true);
-            }}
-            refreshBalanceAndSolfa={() => {
-                fetchBalance(phoneNumber);
-                fetchSolfa(phoneNumber);
-            }}
-        />;
-      case 'Yemen 4G':
-        return <Yemen4GUI 
-            onBillPay={(amount, type) => {
-                if(amount <= 0) {
-                    toast({variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.'});
-                    return;
-                }
-                setBillAmount(amount);
-                setSelectedPackage(null);
-                setYemen4GType(type);
-                setIsConfirming(true);
-            }}
-            queryData={yemen4gQueryData}
-            isLoadingQuery={isLoadingYemen4gQuery}
-            refreshQuery={() => fetchYemen4GQuery(phoneNumber)}
-        />;
-      case 'Yemen Post':
-        return <YemenPostUI 
-            onBillPay={(amount, type) => {
-                 if(amount <= 0) {
-                    toast({variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.'});
-                    return;
-                }
-                setBillAmount(amount);
-                setSelectedPackage(null);
-                setYemenPostType(type);
-                setIsConfirming(true);
-            }}
-            onQuery={handleYemenPostQuery}
-            queryData={yemenPostQueryData}
-            isLoadingQuery={isLoadingYemenPostQuery}
-        />;
-      default:
-        return null;
-    }
-  };
-  
-  const getConfirmationMessage = () => {
+  const getConfirmationDetails = () => {
+    let baseAmount = billAmount ?? selectedPackage?.price ?? 0;
+    if (!baseAmount) return { baseAmount: 0, commission: 0, totalCost: 0, message: '' };
+
+    const commission = detectedOperator === 'Yemen 4G' ? Math.ceil(baseAmount * COMMISSION_RATE) : 0;
+    const totalCost = baseAmount + commission;
+    let message = '';
+
     if (detectedOperator === 'Yemen 4G') {
         const actionText = yemen4GType === 'package' ? 'شراء باقة' : 'تسديد رصيد';
-        return `هل تريد بالتأكيد ${actionText} بمبلغ ${billAmount?.toLocaleString('en-US')} ريال للرقم ${phoneNumber}؟`;
-    }
-    if (detectedOperator === 'Yemen Post') {
+        message = `هل تريد بالتأكيد ${actionText} للرقم ${phoneNumber}؟`;
+    } else if (detectedOperator === 'Yemen Post') {
         const actionText = yemenPostType === 'adsl' ? 'فاتورة ADSL' : 'فاتورة هاتف';
-        return `هل تريد بالتأكيد دفع ${actionText} بمبلغ ${billAmount?.toLocaleString('en-US')} ريال للرقم ${phoneNumber}؟`;
+        message = `هل تريد بالتأكيد دفع ${actionText} للرقم ${phoneNumber}؟`;
+    } else if (selectedPackage) {
+        message = `هل تريد بالتأكيد شراء باقة "${selectedPackage.offerName}"؟`;
+    } else {
+        message = `هل تريد بالتأكيد تسديد مبلغ للرقم ${phoneNumber}؟`;
     }
-    if (selectedPackage) {
-        return `هل تريد بالتأكيد شراء باقة "${selectedPackage.offerName}" بسعر ${selectedPackage.price?.toLocaleString('en-US')} ريال؟`;
-    }
-    return `هل تريد بالتأكيد تسديد مبلغ ${billAmount?.toLocaleString('en-US')} ريال إلى الرقم ${phoneNumber}؟`;
+
+    return { baseAmount, commission, totalCost, message };
   }
 
   if (showSuccess) {
@@ -918,6 +860,8 @@ export default function TelecomServicesPage() {
       </div>
     )
   }
+
+  const { baseAmount, commission, totalCost, message } = getConfirmationDetails();
 
   return (
     <>
@@ -964,10 +908,26 @@ export default function TelecomServicesPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>تأكيد العملية</AlertDialogTitle>
                     <AlertDialogDescription>
-                       {getConfirmationMessage()}
-                       {' '}سيتم خصم المبلغ من رصيدك.
+                       {message} سيتم خصم المبلغ الإجمالي من رصيدك.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+                 <div className="space-y-2 py-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">المبلغ الأساسي:</span>
+                        <span>{baseAmount.toLocaleString('en-US')} ريال</span>
+                    </div>
+                    {commission > 0 && (
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">عمولة (5%):</span>
+                            <span>{commission.toLocaleString('en-US')} ريال</span>
+                        </div>
+                    )}
+                    <Separator/>
+                    <div className="flex justify-between font-bold text-base">
+                        <span className="text-primary">التكلفة الإجمالية:</span>
+                        <span className="text-primary">{totalCost.toLocaleString('en-US')} ريال</span>
+                    </div>
+                </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     <AlertDialogAction onClick={handlePurchase} disabled={isProcessing}>

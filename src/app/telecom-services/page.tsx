@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +28,8 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 type UserProfile = {
   balance?: number;
@@ -114,9 +116,9 @@ const YemenMobileUI = ({
     onBillPay: (amount: number) => void,
     refreshBalanceAndSolfa: () => void 
 }) => {
-    
     const [billAmount, setBillAmount] = useState('');
-    
+    const [activeSubscriptions, setActiveSubscriptions] = useState<OfferWithPrice[]>([]);
+
     const reverseText = (text: string) => {
         if (text && /[\u0600-\u06FF]/.test(text) && !/^[ \u0600-\u06FF]/.test(text)) {
            return text.split('').reverse().join('');
@@ -128,152 +130,135 @@ const YemenMobileUI = ({
         'باقات مزايا': ['مزايا'],
         'باقات فورجي': ['4G', 'فورجي'],
         'باقات الانترنت': ['نت'],
-        'تواصل اجتماعي': ['تواصل']
+        'تواصل اجتماعي': ['تواصل'],
+        'باقات أخرى': []
     };
 
     const categorizedOffers = useMemo(() => {
-        if (!offers) return {};
-        const categories: Record<string, OfferWithPrice[]> = {};
+        if (!offers) return { available: {}, active: [] };
+
+        const available: Record<string, OfferWithPrice[]> = {};
+        const active: OfferWithPrice[] = [];
+
         offers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
+            const price = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
+            const offerWithDetails = { ...offer, offerName: correctedName, price };
+
+            if (offer.offerId.startsWith('A')) { // Assuming 'A' prefix means active
+                active.push(offerWithDetails);
+                return;
+            }
+
             let assigned = false;
             for (const category in offerCategories) {
-                if (offerCategories[category as keyof typeof offerCategories].some(keyword => correctedName.includes(keyword))) {
-                    if (!categories[category]) categories[category] = [];
-                    categories[category].push({ ...offer, offerName: correctedName, price: Number(correctedName.match(/\d+/g)?.join('')) || undefined });
+                if (category === 'باقات أخرى') continue;
+                if ((offerCategories as any)[category].some((keyword: string) => correctedName.includes(keyword))) {
+                    if (!available[category]) available[category] = [];
+                    available[category].push(offerWithDetails);
                     assigned = true;
                     break;
                 }
             }
             if (!assigned) {
-                if (!categories['باقات أخرى']) categories['باقات أخرى'] = [];
-                categories['باقات أخرى'].push({ ...offer, offerName: correctedName, price: Number(correctedName.match(/\d+/g)?.join('')) || undefined });
+                if (!available['باقات أخرى']) available['باقات أخرى'] = [];
+                available['باقات أخرى'].push(offerWithDetails);
             }
         });
-        return categories;
+        
+        setActiveSubscriptions(active);
+        return { available, active };
+
     }, [offers]);
 
     const isLoanActive = solfaData?.status === "1";
+    
+    const renderOfferIcon = (category: string) => {
+        if (category.includes('فورجي') || category.includes('VoLTE')) return '4G';
+        if (category.includes('مزايا') || category.includes('انترنت')) return '3G';
+        return <Database className="w-5 h-5"/>;
+    }
 
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500">
+        
         <Card>
-            <CardHeader className="flex-row items-center justify-between p-3">
-                <CardTitle className="text-sm">بيانات الرقم</CardTitle>
-                <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
-                    <RefreshCw className={`h-4 w-4 ${isLoadingBalance || isLoadingSolfa ? 'animate-spin' : ''}`} />
-                </Button>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-2">
-                {isLoadingBalance || isLoadingSolfa ? (
-                    <div className="space-y-2">
-                        <Skeleton className="h-8 w-full" />
-                        <Skeleton className="h-8 w-full" />
-                    </div>
-                ) : (
-                    <>
-                     {balanceData && (
-                        <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
-                           <p>الرصيد: <strong>{balanceData.balance}</strong></p>
-                           <p>نوع الرقم: <strong>{balanceData.mobileType === "0" ? 'دفع مسبق' : 'فاتورة'}</strong></p>
+            <CardContent className="p-3 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+                <div className='p-2 rounded-lg bg-muted'>
+                    <p className="text-muted-foreground mb-1">رصيد الرقم</p>
+                    {isLoadingBalance ? <Skeleton className="h-4 w-10 mx-auto"/> : <p>{balanceData?.balance || '...'}</p>}
+                </div>
+                 <div className='p-2 rounded-lg bg-muted'>
+                    <p className="text-muted-foreground mb-1">نوع الرقم</p>
+                    {isLoadingBalance ? <Skeleton className="h-4 w-14 mx-auto"/> : <p>{balanceData?.mobileType === '0' ? 'دفع مسبق' : 'فاتورة'}</p>}
+                </div>
+                 <div className='p-2 rounded-lg bg-muted'>
+                    <p className="text-muted-foreground mb-1">حالة السلفة</p>
+                    {isLoadingSolfa ? <Skeleton className="h-4 w-12 mx-auto"/> : (
+                        <div className={cn("flex items-center justify-center gap-1", isLoanActive ? 'text-destructive' : 'text-green-600')}>
+                           {isLoanActive ? <ThumbsDown className="h-3 w-3"/> : <Smile className="h-3 w-3"/>}
+                           <span>{isLoanActive ? 'متسلف' : 'غير متسلف'}</span>
                         </div>
-                     )}
-                     {solfaData && (
-                         <div className={`flex justify-between items-center text-xs p-2 rounded-lg ${isLoanActive ? 'bg-destructive/10 text-destructive' : 'bg-green-500/10 text-green-700 dark:text-green-400'}`}>
-                            <p className="flex items-center gap-2 font-bold">
-                               <AlertTriangle className="h-4 w-4" />
-                               حالة السلفة:
-                            </p>
-                            <strong>{isLoanActive ? `متسلف (${solfaData.loan_amount} ريال)` : 'غير متسلف'}</strong>
-                         </div>
-                     )}
-                    </>
-                )}
+                    )}
+                </div>
             </CardContent>
         </Card>
         
-        <Tabs defaultValue="balance">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="balance">الرصيد</TabsTrigger>
-            <TabsTrigger value="packages">الباقات</TabsTrigger>
-          </TabsList>
-          <TabsContent value="balance" className="pt-4">
+        {activeSubscriptions.length > 0 && (
             <Card>
-              <CardHeader className="p-3">
-                <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 space-y-3">
-                <div>
-                  <Label htmlFor="bill-amount" className="sr-only">
-                    المبلغ
-                  </Label>
-                  <Input
-                    id="bill-amount"
-                    type="number"
-                    placeholder="أدخل المبلغ..."
-                    value={billAmount}
-                    onChange={(e) => setBillAmount(e.target.value)}
-                  />
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => onBillPay(Number(billAmount))}
-                  disabled={!billAmount || Number(billAmount) <= 0}
-                >
-                  <CreditCard className="ml-2 h-4 w-4" />
-                  تسديد المبلغ
-                </Button>
-              </CardContent>
+                <CardHeader className="p-3">
+                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2">
+                    {activeSubscriptions.map(sub => (
+                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                            <div className="flex justify-between items-start">
+                                <div className='flex-1'>
+                                    <p className="font-bold text-sm">{sub.offerName}</p>
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
+                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <RefreshCw className="h-5 w-5 text-primary"/>
+                                    </div>
+                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
             </Card>
-          </TabsContent>
-          <TabsContent value="packages" className="pt-4">
-            {isLoadingOffers ? (
-              <Skeleton className="h-48 w-full" />
-            ) : Object.keys(categorizedOffers).length > 0 ? (
-              <div className="space-y-4">
-                {Object.entries(categorizedOffers).map(([category, pkgs]) => (
-                  <Card key={category}>
-                    <CardHeader className="p-3">
-                      <CardTitle className="text-base">{category}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 space-y-3">
-                        {pkgs.map((pkg) => (
-                           <Card key={pkg.offerId} className="overflow-hidden">
-                                <CardContent className="p-0 flex">
-                                    <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-2 text-accent-foreground">
-                                        <Database className="w-6 h-6 text-primary/80" />
-                                    </div>
-                                    <div className="flex-grow p-3">
-                                        <div className='flex items-start justify-between gap-2'>
-                                            <div className='space-y-1 text-right'>
-                                                <h3 className="font-bold text-sm">{pkg.offerName}</h3>
-                                                {pkg.price && <p className="font-semibold text-primary dark:text-primary-foreground">{pkg.price.toLocaleString('en-US')} ريال</p>}
-                                            </div>
-                                            <Button 
-                                                size="sm" 
-                                                className="h-auto py-1.5 px-4 text-xs font-bold rounded-lg"
-                                                onClick={() => onPackageSelect(pkg)}
-                                                disabled={!pkg.price}
-                                            >
-                                                شراء
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                           </Card>
-                        ))}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-4">
-                لا توجد باقات متاحة لهذا الرقم.
-              </p>
-            )}
-          </TabsContent>
-        </Tabs>
+        )}
 
+        <Accordion type="single" collapsible className="w-full space-y-3">
+             {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
+                 <AccordionItem value={category} key={category} className="border-none">
+                     <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
+                         <div className='flex items-center gap-2'>
+                            <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
+                                {renderOfferIcon(category)}
+                            </div>
+                            <span>{category}</span>
+                         </div>
+                     </AccordionTrigger>
+                     <AccordionContent className="pt-2">
+                         <div className="space-y-2">
+                         {pkgs.map(pkg => (
+                            <Card key={pkg.offerId} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
+                                <CardContent className="p-3 flex justify-between items-center">
+                                    <p className="font-semibold text-sm">{pkg.offerName}</p>
+                                    {pkg.price && <p className="text-sm font-bold text-primary">{pkg.price.toLocaleString('en-US')} ريال</p>}
+                                </CardContent>
+                            </Card>
+                         ))}
+                         </div>
+                     </AccordionContent>
+                 </AccordionItem>
+             ))}
+        </Accordion>
     </div>
 );
 }
@@ -460,10 +445,11 @@ export default function TelecomServicesPage() {
     setOffers(null);
     try {
         const response = await fetch(`/api/echehanly?service=yem&action=queryoffer&mobile=${phone}`);
-        const data = await response.json();
         if (!response.ok) {
+            const data = await response.json();
             throw new Error(data.message || 'Failed to fetch offers');
         }
+        const data = await response.json();
         setOffers(data.offers);
     } catch (error: any) {
         console.error("Offers fetch error:", error);

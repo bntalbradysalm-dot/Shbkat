@@ -149,6 +149,7 @@ export default function TelecomServicesPage() {
           const response = await fetch(`/api/echehanly?action=query&mobile=${phone}`);
           const data = await response.json();
           if (!response.ok) {
+              // The API route now consistently returns a JSON object with a 'message' property
               throw new Error(data.message || 'Failed to fetch balance');
           }
           setBalanceData(data);

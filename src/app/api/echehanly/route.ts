@@ -27,11 +27,11 @@ export async function GET(request: Request) {
     const mobile = searchParams.get('mobile');
 
     if (!action || !mobile) {
-        return new NextResponse(JSON.stringify({ message: 'Action and mobile number are required' }), { status: 400 });
+        return new NextResponse(JSON.stringify({ message: 'Action and mobile number are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     if (!USERID || !USERNAME || !PASSWORD || !DOMAIN) {
-        return new NextResponse(JSON.stringify({ message: 'Server is not configured for echehanly API' }), { status: 500 });
+        return new NextResponse(JSON.stringify({ message: 'Server is not configured for echehanly API' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
     
     const transid = Date.now().toString();
@@ -50,13 +50,13 @@ export async function GET(request: Request) {
         const data = await apiResponse.json();
 
         if (!apiResponse.ok || data.resultCode !== "0") {
-             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'Failed to query echehanly API' }), { status: apiResponse.status });
+             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'Failed to query echehanly API' }), { status: apiResponse.status, headers: { 'Content-Type': 'application/json' } });
         }
 
         return NextResponse.json(data);
 
     } catch (error) {
         console.error("Echehanly API request failed:", error);
-        return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500 });
+        return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }

@@ -798,7 +798,7 @@ export default function TelecomServicesPage() {
             serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
         } else { // Yemen Mobile or other generic operators
             if (isPackage) { // Only for Yemen Mobile
-                apiUrl += `&service=yem&action=billoffer&offerid=${selectedPackage!.offerId}&method=New`;
+                apiUrl += `&service=yem&action=bill&offerid=${selectedPackage!.offerId}`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else { // Generic bill payment for all others
                  const serviceMap: { [key: string]: string } = {
@@ -909,7 +909,7 @@ export default function TelecomServicesPage() {
                 isLoadingOffers={isLoadingOffers}
                 onPackageSelect={(pkg) => {
                     setSelectedPackage(pkg);
-                    setBillAmount(null);
+                    setBillAmount(pkg.price || null);
                     setIsConfirming(true);
                 }}
                 onBillPay={(amount) => {

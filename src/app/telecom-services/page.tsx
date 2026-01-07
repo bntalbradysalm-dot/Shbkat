@@ -207,7 +207,7 @@ const YemenMobileUI = ({
             <CardContent className="p-3 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
                 <div className='p-2 rounded-lg bg-muted'>
                     <p className="text-muted-foreground mb-1">رصيد الرقم</p>
-                    {isLoadingBalance ? <Skeleton className="h-4 w-10 mx-auto"/> : <p>{balanceData?.balance || '...'}</p>}
+                    {isLoadingBalance ? <Skeleton className="h-4 w-10 mx-auto"/> : <p>{balanceData?.balance ?? 'تعذر الجلب'}</p>}
                 </div>
                  <div className='p-2 rounded-lg bg-muted'>
                     <p className="text-muted-foreground mb-1">نوع الرقم</p>
@@ -254,7 +254,7 @@ const YemenMobileUI = ({
             </Card>
         )}
 
-        <Tabs defaultValue="packages">
+        <Tabs defaultValue="packages" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
                 <TabsTrigger value="balance">الرصيد</TabsTrigger>
@@ -356,7 +356,7 @@ const Yemen4GUI = ({
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="balance">
+            <Tabs defaultValue="balance" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="balance">الرصيد</TabsTrigger>
                     <TabsTrigger value="packages">الباقات</TabsTrigger>

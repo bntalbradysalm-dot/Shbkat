@@ -128,7 +128,7 @@ const YemenMobileUI = ({
     
     const offerCategories = {
         'باقات مزايا': ['مزايا'],
-        'باقات فورجي': ['4G', 'فورجي'],
+        'باقات فورجي': ['فورجي'],
         'باقات VoLTE': ['VoLTE'],
         'باقات الانترنت الشهرية': ['نت', 'شهري'],
         'باقات انترنت 10 أيام': ['نت', '10 أيّام'],
@@ -470,11 +470,10 @@ export default function TelecomServicesPage() {
     setOffers(null);
     try {
         const response = await fetch(`/api/echehanly?service=yem&action=queryoffer&mobile=${phone}`);
+        const data = await response.json();
         if (!response.ok) {
-            const data = await response.json();
             throw new Error(data.message || 'Failed to fetch offers');
         }
-        const data = await response.json();
         setOffers(data.offers);
     } catch (error: any) {
         console.error("Offers fetch error:", error);
@@ -787,3 +786,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
+    

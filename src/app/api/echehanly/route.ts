@@ -61,7 +61,7 @@ export async function GET(request: Request) {
         const data = await apiResponse.json();
 
         if (!apiResponse.ok || (data.resultCode && data.resultCode !== "0")) {
-             return new NextResponse(JSON.stringify({ message: data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}` }), { status: apiResponse.status, headers: { 'Content-Type': 'application/json' } });
+             return new NextResponse(JSON.stringify({ message: data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}` }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
         }
 
         return NextResponse.json(data);
@@ -71,4 +71,5 @@ export async function GET(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
+
 

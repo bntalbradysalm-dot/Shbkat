@@ -139,7 +139,7 @@ const YemenMobileUI = ({
     
     const offerCategories: Record<string, string[]> = {
         'باقات مزايا': ['مزايا'],
-        'باقات فورجي': ['فورجي'],
+        'باقات فورجي': ['فورجي', '4G'],
         'باقات VoLTE': ['VoLTE'],
         'باقات هدايا': ['هدايا'],
         'باقات الانترنت الشهرية': ['نت', 'شهري'],
@@ -159,7 +159,6 @@ const YemenMobileUI = ({
         offers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
             
-            // Try to get price from manual list first, then from name
             const manualPrice = manualPrices[correctedName];
             const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
             const price = manualPrice || priceFromName;
@@ -172,19 +171,13 @@ const YemenMobileUI = ({
             }
 
             let assigned = false;
-            // Prioritize more specific categories
-            const categoryPriority = ['فورجي', 'VoLTE', 'هدايا', 'مزايا', 'تواصل', 'انترنت'];
-            
-            for (const categoryKeyword of categoryPriority) {
-                 for (const category in offerCategories) {
-                    const keywords = (offerCategories as any)[category] as string[];
-                    if(keywords.includes(categoryKeyword) && keywords.every(kw => correctedName.includes(kw))) {
-                       initializedCategories[category].push(offerWithDetails);
-                       assigned = true;
-                       break;
-                    }
-                 }
-                 if(assigned) break;
+            for (const category in offerCategories) {
+                const keywords = offerCategories[category];
+                if (keywords.some(kw => correctedName.includes(kw))) {
+                    initializedCategories[category].push(offerWithDetails);
+                    assigned = true;
+                    break;
+                }
             }
 
             if (!assigned) {
@@ -197,7 +190,6 @@ const YemenMobileUI = ({
         const finalCategories: Record<string, OfferWithPrice[]> = {};
         for(const category in initializedCategories) {
             if(initializedCategories[category].length > 0) {
-                // Sort packages within the category by price if available
                 finalCategories[category] = initializedCategories[category].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
             }
         }
@@ -341,6 +333,14 @@ const YemenMobileUI = ({
 );
 }
 
+const yemen4gPackages = [
+    { name: "باقة 10 جيجا", price: 2300 },
+    { name: "باقة 20 جيجا", price: 3800 },
+    { name: "باقة 30 جيجا", price: 4750 },
+    { name: "باقة 50 جيجا", price: 7600 },
+    { name: "باقة 80 جيجا", price: 11400 },
+];
+
 const Yemen4GUI = ({ 
     onBillPay, 
     queryData, 
@@ -378,11 +378,48 @@ const Yemen4GUI = ({
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="balance" className="w-full">
+            <Tabs defaultValue="packages" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="balance">الرصيد</TabsTrigger>
                     <TabsTrigger value="packages">الباقات</TabsTrigger>
+                    <TabsTrigger value="balance">الرصيد</TabsTrigger>
                 </TabsList>
+                <TabsContent value="packages" className="pt-4">
+                    <Card>
+                         <CardHeader className="p-3">
+                            <CardTitle className="text-base">شراء باقة</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                {yemen4gPackages.map(pkg => (
+                                    <Button key={pkg.name} variant="outline" onClick={() => {
+                                        setPackageAmount(String(pkg.price));
+                                    }}>
+                                        {pkg.name}
+                                    </Button>
+                                ))}
+                            </div>
+                            <Separator />
+                            <div>
+                                <Label htmlFor="y4g-package-amount" className="sr-only">مبلغ الباقة</Label>
+                                <Input 
+                                    id="y4g-package-amount"
+                                    type="number"
+                                    placeholder="أو أدخل مبلغ الباقة"
+                                    value={packageAmount}
+                                    onChange={(e) => setPackageAmount(e.target.value)}
+                                />
+                            </div>
+                            <Button 
+                                className="w-full" 
+                                onClick={() => onBillPay(Number(packageAmount), 'package')} 
+                                disabled={!packageAmount || Number(packageAmount) <= 0}
+                            >
+                                <CreditCard className="ml-2 h-4 w-4" />
+                                شراء باقة
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
                 <TabsContent value="balance" className="pt-4">
                     <Card>
                         <CardHeader className="p-3">
@@ -406,33 +443,6 @@ const Yemen4GUI = ({
                             >
                                 <CreditCard className="ml-2 h-4 w-4" />
                                 تسديد رصيد
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="packages" className="pt-4">
-                    <Card>
-                        <CardHeader className="p-3">
-                            <CardTitle className="text-base">شراء باقة</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0 space-y-3">
-                            <div>
-                              <Label htmlFor="y4g-package-amount" className="sr-only">المبلغ</Label>
-                              <Input 
-                                id="y4g-package-amount"
-                                type="number"
-                                placeholder="أدخل مبلغ الباقة..."
-                                value={packageAmount}
-                                onChange={(e) => setPackageAmount(e.target.value)}
-                              />
-                            </div>
-                            <Button 
-                                className="w-full" 
-                                onClick={() => onBillPay(Number(packageAmount), 'package')} 
-                                disabled={!packageAmount || Number(packageAmount) <= 0}
-                            >
-                                <CreditCard className="ml-2 h-4 w-4" />
-                                شراء باقة
                             </Button>
                         </CardContent>
                     </Card>
@@ -750,25 +760,11 @@ export default function TelecomServicesPage() {
         }
         
         const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-            // Try to parse the JSON error body
-            try {
-                const data = await response.json();
-                throw new Error(data.message || `فشلت عملية الدفع لدى مزود الخدمة. (${response.status})`);
-            } catch (jsonError) {
-                // If parsing fails, use the status text
-                throw new Error(`فشلت عملية الدفع لدى مزود الخدمة. ${response.statusText}`);
-            }
-        }
-
         const data = await response.json();
-
-        // Additional check for logical errors from the API even if status is 200 OK
-        if (data.resultCode && data.resultCode !== "0") {
-             throw new Error(data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة. رمز الخطأ: ${data.resultCode}`);
+        
+        if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
+            throw new Error(data.message || data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة. (${response.status})`);
         }
-
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-amountToPay) });
@@ -805,6 +801,9 @@ export default function TelecomServicesPage() {
 
   const renderOperatorUI = () => {
     if (!detectedOperator || phoneNumber.length < 1) return null;
+    
+    // Only render UI for Yemen Mobile when phone number is complete
+    if (detectedOperator === 'Yemen Mobile' && phoneNumber.length !== 9) return null;
     
     switch (detectedOperator) {
       case 'Yemen Mobile':

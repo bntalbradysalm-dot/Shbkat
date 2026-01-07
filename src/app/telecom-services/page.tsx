@@ -133,7 +133,7 @@ const BalanceDisplay = () => {
 }
 
 const manualPrices: Record<string, number> = {
-    'باقة مزايا الشهرية': 2500,
+    'باقة مزايا الشهرية': 1300,
     'باقة مزايا الاسبوعية': 700,
     'باقة مزايا الشهرية دفع مسبق': 1300,
 };
@@ -889,7 +889,7 @@ export default function TelecomServicesPage() {
   }
 
   const renderOperatorUI = () => {
-    if (!detectedOperator || (phoneNumber.length < 9 && detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post')) {
+    if (!detectedOperator) {
         return (
             <div className="text-center text-muted-foreground p-8 space-y-4">
                 <Info className="mx-auto h-12 w-12" />
@@ -897,6 +897,15 @@ export default function TelecomServicesPage() {
                 <p className="text-sm">سيتم عرض الخدمات المتاحة للرقم تلقائياً.</p>
             </div>
         );
+    }
+    
+    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 6 : 9) && detectedOperator !== 'Yemen 4G') {
+        return (
+            <div className="text-center text-muted-foreground p-8 space-y-4">
+                <Info className="mx-auto h-12 w-12" />
+                <p className="font-semibold">أكمل إدخال الرقم</p>
+            </div>
+        )
     }
 
     switch (detectedOperator) {

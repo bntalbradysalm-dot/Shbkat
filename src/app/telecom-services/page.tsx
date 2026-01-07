@@ -455,7 +455,7 @@ export default function TelecomServicesPage() {
 
 
   const getOperator = (phone: string) => {
-    if (phone.startsWith('77')) return 'Yemen Mobile';
+    if (phone.startsWith('77') || phone.startsWith('78')) return 'Yemen Mobile';
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';

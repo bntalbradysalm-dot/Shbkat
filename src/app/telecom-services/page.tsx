@@ -134,7 +134,7 @@ const BalanceDisplay = () => {
 
 const manualPrices: Record<string, number> = {
     'باقة مزايا الشهرية': 1300,
-    'باقة مزايا الاسبوعية': 700,
+    'باقة مزايا الاسبوعية': 485,
     'باقة مزايا الشهرية دفع مسبق': 1300,
 };
 
@@ -153,7 +153,7 @@ const YemenMobileUI = ({
     isLoadingBalance: boolean,
     solfaData: YemenMobileSolfa | null,
     isLoadingSolfa: boolean,
-    offers: OfferWithPrice[] | null,
+    offers: OfferWithPrice[] | null, 
     isLoadingOffers: boolean,
     onPackageSelect: (pkg: OfferWithPrice) => void,
     onBillPay: (amount: number) => void,
@@ -191,12 +191,20 @@ const YemenMobileUI = ({
         
         const allOffers = [...offers];
         
-        // Manually add the special package if it's not already in the list
         if (!allOffers.some(o => o.offerId === 'A38394')) {
             allOffers.push({
                 offerId: 'A38394',
                 offerName: 'باقة مزايا الشهرية دفع مسبق',
                 price: 1300,
+                offerStartDate: '',
+                offerEndDate: '',
+            });
+        }
+        if (!allOffers.some(o => o.offerId === 'A64329')) {
+            allOffers.push({
+                offerId: 'A64329',
+                offerName: 'باقة مزايا الاسبوعية',
+                price: 485,
                 offerStartDate: '',
                 offerEndDate: '',
             });
@@ -212,7 +220,7 @@ const YemenMobileUI = ({
 
             const offerWithDetails = { ...offer, offerName: correctedName, price };
 
-            if (offer.offerId.startsWith('A') && offer.offerId !== 'A38394') { // A38394 is a purchasable package, not an active subscription indicator
+            if (offer.offerId.startsWith('A') && offer.offerId !== 'A38394' && offer.offerId !== 'A64329') { 
                 active.push(offerWithDetails);
                 return;
             }

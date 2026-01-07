@@ -100,6 +100,11 @@ const BalanceDisplay = () => {
     );
 }
 
+const manualPrices: Record<string, number> = {
+    'باقة مزايا الشهرية': 2500,
+    'باقة مزايا الاسبوعية': 700,
+};
+
 const YemenMobileUI = ({ 
     balanceData, 
     isLoadingBalance,
@@ -153,7 +158,12 @@ const YemenMobileUI = ({
 
         offers.forEach(offer => {
             const correctedName = reverseText(offer.offerName);
-            const price = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
+            
+            // Try to get price from manual list first, then from name
+            const manualPrice = manualPrices[correctedName];
+            const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
+            const price = manualPrice || priceFromName;
+
             const offerWithDetails = { ...offer, offerName: correctedName, price };
 
             if (offer.offerId.startsWith('A')) { 
@@ -272,7 +282,7 @@ const YemenMobileUI = ({
                         <AccordionItem value={category} key={category} className="border-none">
                             <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
                                 <div className='flex items-center gap-2'>
-                                    <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
+                                    <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center">
                                         {renderOfferIcon(category)}
                                     </div>
                                     <span>{category}</span>

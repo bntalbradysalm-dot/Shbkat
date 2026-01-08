@@ -541,20 +541,16 @@ const YemenPostUI = ({
   onQuery,
   queryData,
   isLoadingQuery,
+  activeQuery,
 }: {
   onBillPay: (amount: number, type: 'adsl' | 'line') => void;
   onQuery: (type: 'adsl' | 'line') => void;
   queryData: YemenPostQuery | null;
   isLoadingQuery: boolean;
+  activeQuery: 'adsl' | 'line' | null;
 }) => {
   const [billAmount, setBillAmount] = useState('');
   const [billType, setBillType] = useState<'adsl' | 'line'>('line');
-  const [activeQuery, setActiveQuery] = useState<'adsl' | 'line' | null>(null);
-
-  const handleQuery = (type: 'adsl' | 'line') => {
-    setActiveQuery(type);
-    onQuery(type);
-  }
 
   return (
     <div className="space-y-4 animate-in fade-in-0 duration-500">
@@ -564,8 +560,8 @@ const YemenPostUI = ({
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-3">
             <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => handleQuery('line')} disabled={isLoadingQuery}>استعلام هاتف</Button>
-                <Button variant="outline" onClick={() => handleQuery('adsl')} disabled={isLoadingQuery}>استعلام ADSL</Button>
+                <Button variant="outline" onClick={() => onQuery('line')} disabled={isLoadingQuery}>استعلام هاتف</Button>
+                <Button variant="outline" onClick={() => onQuery('adsl')} disabled={isLoadingQuery}>استعلام ADSL</Button>
             </div>
              {isLoadingQuery ? (
                 <div className="flex justify-center items-center p-4">
@@ -655,6 +651,7 @@ export default function TelecomServicesPage() {
 
   const [yemenPostQueryData, setYemenPostQueryData] = useState<YemenPostQuery | null>(null);
   const [isLoadingYemenPostQuery, setIsLoadingYemenPostQuery] = useState(false);
+  const [activeYemenPostQuery, setActiveYemenPostQuery] = useState<'adsl' | 'line' | null>(null);
   
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
   const [billAmount, setBillAmount] = useState<number | null>(null);
@@ -782,6 +779,7 @@ export default function TelecomServicesPage() {
     if (getOperator(phoneNumber) !== 'Yemen Post') return;
     setIsLoadingYemenPostQuery(true);
     setYemenPostQueryData(null);
+    setActiveYemenPostQuery(type); // Set active query type immediately
     try {
         const response = await fetch(`/api/echehanly?service=post&action=query&mobile=${phoneNumber}&type=${type}`);
         const data = await response.json();
@@ -811,6 +809,7 @@ export default function TelecomServicesPage() {
         setSolfaData(null);
         setYemen4gQueryData(null);
         setYemenPostQueryData(null);
+        setActiveYemenPostQuery(null);
     }
     const phoneLength = phoneNumber.length;
     
@@ -1029,6 +1028,7 @@ export default function TelecomServicesPage() {
                 onQuery={handleYemenPostQuery}
                 queryData={yemenPostQueryData}
                 isLoadingQuery={isLoadingYemenPostQuery}
+                activeQuery={activeYemenPostQuery}
             />;
         default:
             return <GenericOperatorUI 

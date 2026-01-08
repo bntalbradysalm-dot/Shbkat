@@ -793,9 +793,18 @@ export default function TelecomServicesPage() {
     const isYemenPost = detectedOperator === 'Yemen Post';
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
 
-    let apiAmount = isPackage ? selectedPackage?.offerId || selectedPackage?.id : amountToPay;
+    let apiAmount: string | number | undefined | null;
 
-    if (isYemen4G || isYemenPost || !isPackage) {
+    if (isYemen4G) {
+        amountToPay = billAmount;
+        apiAmount = billAmount;
+    } else if (isYemenPost) {
+        amountToPay = billAmount;
+        apiAmount = billAmount;
+    } else if (isPackage) {
+        amountToPay = selectedPackage?.price;
+        apiAmount = selectedPackage?.offerId || selectedPackage?.id;
+    } else {
         amountToPay = billAmount;
         apiAmount = billAmount;
     }
@@ -937,13 +946,11 @@ export default function TelecomServicesPage() {
         );
     }
     
-    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 8 : (detectedOperator === 'Yemen Mobile' ? 9 : 0))) {
-        if(detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post') { // yemen 4g can be any length, post is 8
-             return null;
-        }
-        if(detectedOperator === 'Yemen Post' && phoneNumber.length < 7) {
-            return null;
-        }
+    const phoneLength = phoneNumber.length;
+    const expectedLength = detectedOperator === 'Yemen Post' ? 8 : 9;
+
+    if (detectedOperator !== 'Yemen 4G' && phoneLength < expectedLength) {
+        return null;
     }
 
 
@@ -1065,7 +1072,7 @@ export default function TelecomServicesPage() {
                 placeholder="7X XXX XXXX"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                maxLength={detectedOperator === 'Yemen Post' ? 8 : 9}
+                maxLength={9}
                 className="text-2xl text-center h-16 tracking-widest"
               />
             </div>
@@ -1114,6 +1121,7 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 
 

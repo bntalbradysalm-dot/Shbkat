@@ -78,6 +78,10 @@ export async function GET(request: Request) {
             mobileType: String(data.mobileType)
           });
         }
+
+        if (service === 'post' && action === 'query' && type === 'adsl') {
+            return NextResponse.json(data);
+        }
         
         return NextResponse.json(data);
 

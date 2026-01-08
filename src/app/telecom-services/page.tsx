@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History, CircleDollarSign } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History, CircleDollarSign, Router, Zap } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 type UserProfile = {
   balance?: number;
@@ -70,6 +71,12 @@ type Yemen4GQuery = {
 type YemenPostQuery = {
     balance: string;
     resultDesc: string;
+    'Gigabyte(s)': string;
+    'Package Price': string;
+    'Minimum Amount': string;
+    'Package Size': string;
+    'Speed': string;
+    'Expire Date': string;
 };
 
 const GenericOperatorUI = ({ operatorName, onBillPay }: { operatorName: string, onBillPay: (amount: number) => void }) => {
@@ -209,6 +216,8 @@ const YemenMobileUI = ({
     
         uniqueOffers.forEach(offer => {
             const offerId = offer.offerId || offer.id;
+            if (!offerId) return;
+
             const correctedName = offer.offerName || offer.name;
             
             const manualPkg = manualPackages.find(p => p.id === offerId);
@@ -540,6 +549,12 @@ const YemenPostUI = ({
 }) => {
   const [billAmount, setBillAmount] = useState('');
   const [billType, setBillType] = useState<'adsl' | 'line'>('line');
+  const [activeQuery, setActiveQuery] = useState<'adsl' | 'line' | null>(null);
+
+  const handleQuery = (type: 'adsl' | 'line') => {
+    setActiveQuery(type);
+    onQuery(type);
+  }
 
   return (
     <div className="space-y-4 animate-in fade-in-0 duration-500">
@@ -549,16 +564,45 @@ const YemenPostUI = ({
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-3">
             <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => onQuery('line')} disabled={isLoadingQuery}>استعلام هاتف</Button>
-                <Button variant="outline" onClick={() => onQuery('adsl')} disabled={isLoadingQuery}>استعلام ADSL</Button>
+                <Button variant="outline" onClick={() => handleQuery('line')} disabled={isLoadingQuery}>استعلام هاتف</Button>
+                <Button variant="outline" onClick={() => handleQuery('adsl')} disabled={isLoadingQuery}>استعلام ADSL</Button>
             </div>
              {isLoadingQuery ? (
-                <Skeleton className="h-8 w-full" />
-            ) : queryData && (
+                <div className="flex justify-center items-center p-4">
+                  <Loader2 className="h-6 w-6 animate-spin"/>
+                </div>
+            ) : queryData && activeQuery === 'line' ? (
                  <div className="text-center p-2 rounded-lg bg-muted text-sm">
                     <p>الرصيد الحالي للفاتورة: <strong className="text-primary">{queryData.balance} ريال</strong></p>
                  </div>
-            )}
+            ) : queryData && activeQuery === 'adsl' ? (
+                <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell className="font-semibold bg-muted">الرصيد</TableCell>
+                                <TableCell className="text-left font-mono">Gigabyte(s) {queryData['Gigabyte(s)']}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold bg-muted">قيمة الباقة</TableCell>
+                                <TableCell className="text-left font-mono">{queryData['Package Price']}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold bg-muted">أقل مبلغ للسداد</TableCell>
+                                <TableCell className="text-left font-mono">{queryData['Minimum Amount']}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold bg-muted">الحجم | السرعة</TableCell>
+                                <TableCell className="text-left font-mono">{queryData['Package Size']} | {queryData['Speed']}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold bg-muted">تاريخ الإنتهاء</TableCell>
+                                <TableCell className="text-left font-mono">{queryData['Expire Date']}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+            ) : null}
             <Separator />
             <div>
                  <Label htmlFor="post-bill-amount">المبلغ</Label>
@@ -745,7 +789,9 @@ export default function TelecomServicesPage() {
             throw new Error(data.message || 'فشل الاستعلام عن فاتورة بريد اليمن.');
         }
         setYemenPostQueryData(data);
-        toast({ title: 'نجاح الاستعلام', description: `الرصيد الحالي للفاتورة: ${data.balance} ريال` });
+        if (type === 'line') {
+          toast({ title: 'نجاح الاستعلام', description: `الرصيد الحالي للفاتورة: ${data.balance} ريال` });
+        }
     } catch (error: any) {
         console.error("Yemen Post query error:", error);
         toast({ variant: 'destructive', title: 'خطأ', description: error.message });
@@ -820,7 +866,8 @@ export default function TelecomServicesPage() {
                 if (!offerId) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                finalAmountForApi = offerId;
+                const numericOfferId = offerId.replace(/\D/g, '');
+                finalAmountForApi = numericOfferId;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else {
                 finalAmountForApi = String(amountToPay);
@@ -1017,7 +1064,7 @@ export default function TelecomServicesPage() {
                          }}>العودة للرئيسية</Button>
                     </div>
                 </div>
-            </CardContent>
+                </CardContent>
         </Card>
       </div>
     )

@@ -173,13 +173,6 @@ const YemenMobileUI = ({
     const [activeSubscriptions, setActiveSubscriptions] = useState<OfferWithPrice[]>([]);
     const isAmountInvalid = Number(billAmount) < 21 && billAmount !== '';
 
-    const reverseText = (text: string) => {
-        if (text && /[\u0600-\u06FF]/.test(text) && !/^[ \u0600-\u06FF]/.test(text)) {
-           return text.split('').reverse().join('');
-        }
-        return text;
-    };
-    
     const formatApiDate = (dateString: string) => {
         if (!dateString || dateString.length < 14) return dateString; // YYYYMMDDHHMMSS
         const year = dateString.substring(0, 4);
@@ -214,7 +207,7 @@ const YemenMobileUI = ({
     
         uniqueOffers.forEach(offer => {
             const offerId = offer.offerId || offer.id;
-            const correctedName = reverseText(offer.offerName || offer.name);
+            const correctedName = offer.offerName || offer.name;
             
             const manualPkg = manualPackages.find(p => p.id === offerId);
             const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
@@ -1012,7 +1005,8 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </CardContent>
+                </div>
+            </CardContent>
         </Card>
       </div>
     )

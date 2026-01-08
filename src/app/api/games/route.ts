@@ -48,11 +48,7 @@ export async function GET(request: Request) {
             return new NextResponse(JSON.stringify({ message: description }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
         }
 
-        if (data && Array.isArray(data.games)) {
-            return NextResponse.json(data.games);
-        }
-
-        return NextResponse.json([]);
+        return NextResponse.json(data);
 
     } catch (error) {
         console.error("Games API request failed:", error);

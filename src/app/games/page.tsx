@@ -27,6 +27,10 @@ type Game = {
   cards: GameCard[];
 };
 
+type ApiResponse = {
+    games: Game[];
+};
+
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,11 +42,11 @@ export default function GamesPage() {
       setError(null);
       try {
         const response = await fetch('/api/games');
-        const data = await response.json();
+        const data: ApiResponse = await response.json();
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to fetch games data');
+          throw new Error((data as any).message || 'Failed to fetch games data');
         }
-        setGames(data);
+        setGames(data.games || []);
       } catch (err: any) {
         setError(err.message);
       } finally {

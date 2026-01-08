@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -563,7 +564,7 @@ const YemenPostUI = ({
                 <Button variant="outline" onClick={() => onQuery('line')} disabled={isLoadingQuery}>استعلام هاتف</Button>
                 <Button variant="outline" onClick={() => onQuery('adsl')} disabled={isLoadingQuery}>استعلام ADSL</Button>
             </div>
-             {isLoadingQuery ? (
+             {isLoadingQuery && activeQuery ? (
                 <div className="flex justify-center items-center p-4">
                   <Loader2 className="h-6 w-6 animate-spin"/>
                 </div>
@@ -676,7 +677,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
-    if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G'; // simplified yemen 4g check
+    if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G';
     if (phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
@@ -796,6 +797,7 @@ export default function TelecomServicesPage() {
         setYemenPostQueryData(null);
     } finally {
         setIsLoadingYemenPostQuery(false);
+        setActiveYemenPostQuery(type);
     }
   }, [phoneNumber, toast]);
 
@@ -861,39 +863,34 @@ export default function TelecomServicesPage() {
         try {
             let serviceNameForDb: string = detectedOperator || 'خدمة';
             let serviceType: string;
-            let finalAmountForApi: string;
-    
-            if (detectedOperator === 'Yemen Mobile' && isPackage) {
-                const offerId = selectedPackage?.offerId || selectedPackage?.id;
-                if (!offerId) {
-                    throw new Error('معرف الباقة غير صالح.');
-                }
-                finalAmountForApi = offerId;
-                serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
-            } else {
-                finalAmountForApi = String(amountToPay);
-                if (detectedOperator === 'Yemen 4G') {
-                    serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
-                } else if (detectedOperator === 'Yemen Post') {
-                    serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
-                } else {
-                    serviceType = 'تسديد رصيد';
-                }
-            }
-    
-            let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&amount=${finalAmountForApi}`;
+            
+            let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}`;
             const serviceMap: { [key: string]: string } = {
                 'Yemen Mobile': 'yem', 'SabaFon': 'sab', 'YOU': 'mtn', 'Way': 'way', 'Yemen 4G': 'yem4g', 'Yemen Post': 'post',
             };
             const service = serviceMap[detectedOperator || ''];
             if (!service) throw new Error('مشغل خدمة غير مدعوم.');
+            
             apiUrl += `&service=${service}&action=bill`;
-    
-            if (detectedOperator === 'Yemen 4G' && yemen4GType) {
-                apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
-            }
-            if (detectedOperator === 'Yemen Post' && yemenPostType) {
-                apiUrl += `&type=${yemenPostType}`;
+
+            if (detectedOperator === 'Yemen Mobile' && isPackage) {
+                const offerId = selectedPackage?.offerId || selectedPackage?.id;
+                if (!offerId) {
+                    throw new Error('معرف الباقة غير صالح.');
+                }
+                apiUrl += `&offerid=${offerId}&amount=${amountToPay}`;
+                serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
+            } else {
+                apiUrl += `&amount=${amountToPay}`;
+                if (detectedOperator === 'Yemen 4G') {
+                    serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
+                    apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
+                } else if (detectedOperator === 'Yemen Post') {
+                    serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
+                    apiUrl += `&type=${yemenPostType}`;
+                } else {
+                    serviceType = 'تسديد رصيد';
+                }
             }
     
             const response = await fetch(apiUrl);
@@ -1172,4 +1169,3 @@ export default function TelecomServicesPage() {
 
 
 
-    

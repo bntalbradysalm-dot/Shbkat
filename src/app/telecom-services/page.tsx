@@ -676,7 +676,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
-    if (phone.length > 1 && phone.startsWith('1')) return 'Yemen 4G'; // simplified yemen 4g check
+    if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G'; // simplified yemen 4g check
     if (phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
@@ -868,7 +868,7 @@ export default function TelecomServicesPage() {
                 if (!offerId) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                finalAmountForApi = offerId.replace(/\D/g, ''); // Ensure only numbers are sent
+                finalAmountForApi = offerId;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else {
                 finalAmountForApi = String(amountToPay);
@@ -1071,7 +1071,7 @@ export default function TelecomServicesPage() {
             </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   const { baseAmount, commission, totalCost, message } = getConfirmationDetails();
@@ -1107,9 +1107,9 @@ export default function TelecomServicesPage() {
                     const operator = getOperator(e.target.value);
                     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
                     const isYemen4G = operator === 'Yemen 4G';
-                    let maxLength = 9; // Default for most
+                    let maxLength = 9;
                     if (!isMobile && !isYemen4G) {
-                        maxLength = 9; // Fallback for landlines etc.
+                        maxLength = 9;
                     } else if (isYemen4G) {
                         maxLength = 9;
                     }

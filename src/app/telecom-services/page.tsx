@@ -333,7 +333,7 @@ const YemenMobileUI = ({
                             <AccordionContent className="pt-2">
                                 <div className="space-y-2">
                                 {pkgs.map(pkg => (
-                                    <Card key={pkg.offerId} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
+                                    <Card key={pkg.offerId || pkg.id} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
                                         <CardContent className="p-3 flex justify-between items-center">
                                             <p className="font-semibold text-sm">{pkg.offerName}</p>
                                             {pkg.price && <p className="text-sm font-bold text-primary">{pkg.price.toLocaleString('en-US')} ريال</p>}
@@ -793,8 +793,11 @@ export default function TelecomServicesPage() {
     const isYemenPost = detectedOperator === 'Yemen Post';
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
 
+    let apiAmount = isPackage ? selectedPackage?.offerId || selectedPackage?.id : amountToPay;
+
     if (isYemen4G || isYemenPost || !isPackage) {
         amountToPay = billAmount;
+        apiAmount = billAmount;
     }
     
     if (!amountToPay || amountToPay <= 0) {
@@ -827,7 +830,7 @@ export default function TelecomServicesPage() {
 
         if (isYemen4G) {
             serviceNameForDb = 'Yemen 4G';
-            apiUrl += `&service=yem4g&action=bill&amount=${amountToPay}`;
+            apiUrl += `&service=yem4g&action=bill&amount=${apiAmount}`;
             if(yemen4GType === 'package') {
                 apiUrl += '&type=1';
                 serviceType = 'شراء باقة 4G';
@@ -837,11 +840,11 @@ export default function TelecomServicesPage() {
             }
         } else if (isYemenPost) {
             serviceNameForDb = 'بريد اليمن';
-            apiUrl += `&service=post&action=bill&amount=${amountToPay}&type=${yemenPostType}`;
+            apiUrl += `&service=post&action=bill&amount=${apiAmount}&type=${yemenPostType}`;
             serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
         } else { // Yemen Mobile or other generic operators
             if (isPackage) { // Only for Yemen Mobile
-                apiUrl += `&service=yem&action=bill&amount=${selectedPackage!.offerId}`;
+                apiUrl += `&service=yem&action=bill&amount=${apiAmount}`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else { // Generic bill payment for all others
                  const serviceMap: { [key: string]: string } = {
@@ -853,7 +856,7 @@ export default function TelecomServicesPage() {
                 const service = serviceMap[detectedOperator || ''];
                 if (!service) throw new Error('مشغل خدمة غير مدعوم.');
                 
-                apiUrl += `&service=${service}&action=bill&amount=${amountToPay}`;
+                apiUrl += `&service=${service}&action=bill&amount=${apiAmount}`;
                 serviceType = 'تسديد رصيد';
             }
         }
@@ -1111,6 +1114,7 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 
 

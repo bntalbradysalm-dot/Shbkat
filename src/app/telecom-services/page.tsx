@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -688,10 +687,14 @@ export default function TelecomServicesPage() {
         if (!response.ok) {
             throw new Error(data.message || 'Failed to fetch offers');
         }
-        setOffers(data.offers);
+        if (data && Array.isArray(data.offers)) {
+            setOffers(data.offers);
+        } else {
+            setOffers([]);
+        }
     } catch (error: any) {
         console.error("Offers fetch error:", error);
-        setOffers(null);
+        setOffers([]);
     } finally {
         setIsLoadingOffers(false);
     }
@@ -838,7 +841,7 @@ export default function TelecomServicesPage() {
             serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
         } else { // Yemen Mobile or other generic operators
             if (isPackage) { // Only for Yemen Mobile
-                apiUrl += `&service=yem&action=bill&offerid=${selectedPackage!.offerId}`;
+                apiUrl += `&service=yem&action=bill&amount=${selectedPackage!.offerId}`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else { // Generic bill payment for all others
                  const serviceMap: { [key: string]: string } = {
@@ -1108,5 +1111,6 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 

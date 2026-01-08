@@ -779,7 +779,7 @@ export default function TelecomServicesPage() {
     if (getOperator(phoneNumber) !== 'Yemen Post') return;
     setIsLoadingYemenPostQuery(true);
     setYemenPostQueryData(null);
-    setActiveYemenPostQuery(type); // Set active query type immediately
+    setActiveYemenPostQuery(type);
     try {
         const response = await fetch(`/api/echehanly?service=post&action=query&mobile=${phoneNumber}&type=${type}`);
         const data = await response.json();
@@ -815,9 +815,12 @@ export default function TelecomServicesPage() {
     
     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
     const isLandline = operator === 'Yemen Post';
-    
+    const isYemen4G = operator === 'Yemen 4G';
+
     if (isMobile && phoneLength < 9) return;
     if (isLandline && phoneLength < 7) return;
+    if (isYemen4G && phoneLength < 9) return;
+
 
     if (operator === 'Yemen Mobile') {
         fetchBalance(phoneNumber);
@@ -865,8 +868,7 @@ export default function TelecomServicesPage() {
                 if (!offerId) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                const numericOfferId = offerId.replace(/\D/g, '');
-                finalAmountForApi = numericOfferId;
+                finalAmountForApi = offerId.replace(/\D/g, ''); // Ensure only numbers are sent
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else {
                 finalAmountForApi = String(amountToPay);
@@ -976,9 +978,11 @@ export default function TelecomServicesPage() {
     
     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
     const isLandline = operator === 'Yemen Post';
+    const isYemen4G = operator === 'Yemen 4G';
     
     if (isMobile && phoneLength < 9) return null;
     if (isLandline && phoneLength < 7) return null;
+    if (isYemen4G && phoneLength < 9) return null;
 
 
     switch (detectedOperator) {
@@ -1063,7 +1067,8 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </CardContent>
+                </div>
+            </CardContent>
         </Card>
       </div>
     )
@@ -1101,8 +1106,11 @@ export default function TelecomServicesPage() {
                 onChange={(e) => {
                     const operator = getOperator(e.target.value);
                     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-                    let maxLength = 9;
-                    if (!isMobile) {
+                    const isYemen4G = operator === 'Yemen 4G';
+                    let maxLength = 9; // Default for most
+                    if (!isMobile && !isYemen4G) {
+                        maxLength = 9; // Fallback for landlines etc.
+                    } else if (isYemen4G) {
                         maxLength = 9;
                     }
                     

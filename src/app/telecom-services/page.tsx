@@ -320,7 +320,7 @@ const YemenMobileUI = ({
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
                 <TabsTrigger value="balance">الرصيد</TabsTrigger>
             </TabsList>
-            <TabsContent value="packages" className="pt-4">
+            <TabsContent value="packages" className="pt-4 space-y-4">
                  <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
                     {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
                         <AccordionItem value={category} key={category} className="border-none">
@@ -347,6 +347,34 @@ const YemenMobileUI = ({
                         </AccordionItem>
                     ))}
                 </Accordion>
+                 {activeSubscriptions.length > 0 && (
+                    <Card>
+                        <CardHeader className="p-3">
+                            <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 space-y-2">
+                            {activeSubscriptions.map(sub => (
+                                <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                                    <div className="flex justify-between items-start">
+                                        <div className='flex-1'>
+                                            <p className="font-bold text-sm">{sub.offerName}</p>
+                                            <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                                <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
+                                                <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="p-2 bg-primary/10 rounded-full">
+                                                <RefreshCw className="h-5 w-5 text-primary"/>
+                                            </div>
+                                            <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
             </TabsContent>
             <TabsContent value="balance" className="pt-4">
                 <Card>
@@ -382,34 +410,6 @@ const YemenMobileUI = ({
             </TabsContent>
         </Tabs>
         
-        {activeSubscriptions.length > 0 && (
-            <Card>
-                <CardHeader className="p-3">
-                    <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-2">
-                    {activeSubscriptions.map(sub => (
-                        <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
-                            <div className="flex justify-between items-start">
-                                <div className='flex-1'>
-                                    <p className="font-bold text-sm">{sub.offerName}</p>
-                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                        <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
-                                        <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-2 bg-primary/10 rounded-full">
-                                        <RefreshCw className="h-5 w-5 text-primary"/>
-                                    </div>
-                                    <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        )}
     </div>
 );
 }
@@ -868,17 +868,16 @@ export default function TelecomServicesPage() {
             const service = serviceMap[detectedOperator || ''];
             if (!service) throw new Error('مشغل خدمة غير مدعوم.');
             
-            apiUrl += `&service=${service}&action=bill`;
+            apiUrl += `&service=${service}&action=bill&amount=${amountToPay}`;
 
             if (detectedOperator === 'Yemen Mobile' && isPackage) {
                 const offerId = selectedPackage?.offerId || selectedPackage?.id;
                 if (!offerId) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                apiUrl += `&offerid=${offerId}&amount=${amountToPay}`;
+                apiUrl += `&offerid=${offerId}`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else {
-                apiUrl += `&amount=${amountToPay}`;
                 if (detectedOperator === 'Yemen 4G') {
                     serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
                     apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
@@ -1102,9 +1101,9 @@ export default function TelecomServicesPage() {
                     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
                     const isYemen4G = operator === 'Yemen 4G';
                     let maxLength = 9;
-                    if (!isMobile && !isYemen4G) {
+                    if (isYemen4G) {
                         maxLength = 9;
-                    } else if (isYemen4G) {
+                    } else if (isMobile) {
                         maxLength = 9;
                     }
                     
@@ -1159,4 +1158,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 

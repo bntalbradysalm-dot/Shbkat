@@ -775,110 +775,116 @@ export default function TelecomServicesPage() {
     }
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery]);
   
-  const handlePurchase = async () => {
-    const isPackage = !!selectedPackage;
-    let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
-
-    if (!amountToPay || amountToPay <= 0) {
-        toast({ variant: "destructive", title: "خطأ", description: "المبلغ غير صالح." });
-        setIsConfirming(false);
-        return;
-    }
+    const handlePurchase = async () => {
+        const isPackage = !!selectedPackage;
+        let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
     
-    const commission = (detectedOperator === 'Yemen 4G' || detectedOperator === 'Yemen Post') ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
-    const totalCost = amountToPay + commission;
+        if (!amountToPay || amountToPay <= 0) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'المبلغ غير صالح.' });
+            setIsConfirming(false);
+            return;
+        }
     
-    if (!userProfile || !firestore || !userDocRef || !user) {
-        toast({ variant: 'destructive', title: "خطأ", description: "معلومات غير كافية لإتمام العملية." });
-        setIsConfirming(false);
-        return;
-    }
+        const commission = (detectedOperator === 'Yemen 4G' || detectedOperator === 'Yemen Post') ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
+        const totalCost = amountToPay + commission;
     
-    if ((userProfile.balance ?? 0) < totalCost) {
-        toast({ variant: "destructive", title: "رصيد غير كاف", description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'} (التكلفة الإجمالية ${totalCost} ريال).` });
-        setIsConfirming(false);
-        return;
+        if (!userProfile || !firestore || !userDocRef || !user) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'معلومات غير كافية لإتمام العملية.' });
+            setIsConfirming(false);
+            return;
+        }
+    
+        if ((userProfile.balance ?? 0) < totalCost) {
+            toast({ variant: 'destructive', title: 'رصيد غير كاف', description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'} (التكلفة الإجمالية ${totalCost} ريال).` });
+            setIsConfirming(false);
+            return;
+        }
+    
+        setIsProcessing(true);
+        let transid = Date.now().toString();
+        try {
+            let serviceNameForDb: string = detectedOperator || 'خدمة';
+            let serviceType: string;
+            let finalAmountForApi: string;
+            let transactionNotes = '';
+    
+            if (detectedOperator === 'Yemen Mobile' && isPackage) {
+                if (!selectedPackage?.offerId && !selectedPackage?.id) {
+                    throw new Error('معرف الباقة غير صالح.');
+                }
+                const numericOfferId = (selectedPackage!.offerId || selectedPackage!.id!).replace(/\D/g, '');
+                if (!numericOfferId) {
+                    throw new Error('لم يتم العثور على معرف رقمي صالح للباقة.');
+                }
+                finalAmountForApi = numericOfferId;
+                serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
+                transactionNotes = `باقة: ${selectedPackage!.offerName}`;
+            } else {
+                finalAmountForApi = String(amountToPay);
+                if (detectedOperator === 'Yemen 4G') {
+                    serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
+                } else if (detectedOperator === 'Yemen Post') {
+                    serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
+                } else {
+                    serviceType = 'تسديد رصيد';
+                }
+                transactionNotes = `إلى رقم: ${phoneNumber}`;
+            }
+    
+            let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&amount=${finalAmountForApi}`;
+            const serviceMap: { [key: string]: string } = {
+                'Yemen Mobile': 'yem', 'SabaFon': 'sab', 'YOU': 'mtn', 'Way': 'way', 'Yemen 4G': 'yem4g', 'Yemen Post': 'post',
+            };
+            const service = serviceMap[detectedOperator || ''];
+            if (!service) throw new Error('مشغل خدمة غير مدعوم.');
+            apiUrl += `&service=${service}&action=bill`;
+    
+            if (detectedOperator === 'Yemen 4G' && yemen4GType) {
+                apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
+            }
+            if (detectedOperator === 'Yemen Post' && yemenPostType) {
+                apiUrl += `&type=${yemenPostType}`;
+            }
+    
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            if (!response.ok || (data.resultCode && data.resultCode !== '0')) {
+                throw new Error(data.resultDesc || data.message || 'فشلت عملية الدفع لدى مزود الخدمة.');
+            }
+    
+            const batch = writeBatch(firestore);
+            batch.update(userDocRef, { balance: increment(-totalCost) });
+    
+            const requestData = {
+                userId: user.uid,
+                userName: userProfile.displayName,
+                userPhoneNumber: userProfile.phoneNumber,
+                company: serviceNameForDb,
+                serviceType: serviceType,
+                targetPhoneNumber: phoneNumber,
+                amount: amountToPay,
+                commission: commission,
+                totalCost: totalCost,
+                status: 'approved',
+                requestTimestamp: new Date().toISOString(),
+                transid: transid,
+            };
+            const requestsCollection = collection(firestore, 'billPaymentRequests');
+            batch.set(doc(requestsCollection), requestData);
+    
+            await batch.commit();
+    
+            setSuccessMessage(isPackage ? `تم تفعيل باقة "${selectedPackage?.offerName}" بنجاح.` : `تم تسديد مبلغ ${totalCost.toLocaleString('en-US')} ريال بنجاح.`);
+            setShowSuccess(true);
+    
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'فشل الدفع', description: error.message });
+        } finally {
+            setIsProcessing(false);
+            setIsConfirming(false);
+        }
     }
 
-    setIsProcessing(true);
-    let transid = Date.now().toString();
-    try {
-        let serviceNameForDb: string = detectedOperator || 'خدمة';
-        let serviceType: string;
-        let finalAmountForApi: string;
-
-        if (detectedOperator === 'Yemen Mobile' && isPackage) {
-            finalAmountForApi = selectedPackage!.offerId || selectedPackage!.id!;
-            serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
-        } else {
-             finalAmountForApi = String(amountToPay);
-             if (detectedOperator === 'Yemen 4G') {
-                 serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
-             } else if (detectedOperator === 'Yemen Post') {
-                serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
-             } else {
-                 serviceType = 'تسديد رصيد';
-             }
-        }
-        
-        let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&amount=${finalAmountForApi}`;
-        const serviceMap: { [key: string]: string } = {
-            'Yemen Mobile': 'yem',
-            'SabaFon': 'sab',
-            'YOU': 'mtn',
-            'Way': 'way',
-            'Yemen 4G': 'yem4g',
-            'Yemen Post': 'post',
-        };
-        const service = serviceMap[detectedOperator || ''];
-        if (!service) throw new Error('مشغل خدمة غير مدعوم.');
-        apiUrl += `&service=${service}&action=bill`;
-
-        if (detectedOperator === 'Yemen 4G' && yemen4GType) {
-            apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
-        }
-        if (detectedOperator === 'Yemen Post' && yemenPostType) {
-            apiUrl += `&type=${yemenPostType}`;
-        }
-
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
-            throw new Error(data.message || data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة.`);
-        }
-        
-        const batch = writeBatch(firestore);
-        batch.update(userDocRef, { balance: increment(-totalCost) });
-        
-        const requestData = {
-          userId: user.uid,
-          userName: userProfile.displayName,
-          userPhoneNumber: userProfile.phoneNumber,
-          company: serviceNameForDb,
-          serviceType: serviceType,
-          targetPhoneNumber: phoneNumber,
-          amount: amountToPay,
-          commission: commission, 
-          totalCost: totalCost,
-          status: 'approved',
-          requestTimestamp: new Date().toISOString(),
-          transid: transid,
-        };
-        const requestsCollection = collection(firestore, 'billPaymentRequests');
-        batch.set(doc(requestsCollection), requestData);
-
-        await batch.commit();
-        
-        setSuccessMessage(isPackage ? `تم تفعيل باقة "${selectedPackage?.offerName}" بنجاح.` : `تم تسديد مبلغ ${totalCost.toLocaleString('en-US')} ريال بنجاح.`);
-        setShowSuccess(true);
-
-    } catch(error: any) {
-        toast({ variant: 'destructive', title: 'فشل الدفع', description: error.message });
-    } finally {
-        setIsProcessing(false);
-        setIsConfirming(false);
-    }
-  }
 
   const getConfirmationDetails = () => {
     let baseAmount = billAmount ?? selectedPackage?.price ?? 0;
@@ -917,12 +923,14 @@ export default function TelecomServicesPage() {
     }
     
     const phoneLength = phoneNumber.length;
+    const operator = getOperator(phoneNumber);
     
-    if (detectedOperator === 'Yemen Mobile' && phoneLength < 9) return null;
-    if (detectedOperator === 'SabaFon' && phoneLength < 9) return null;
-    if (detectedOperator === 'YOU' && phoneLength < 9) return null;
-    if (detectedOperator === 'Way' && phoneLength < 9) return null;
-    if (detectedOperator === 'Yemen Post' && phoneLength < 7) return null;
+    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
+    const isLandline = operator === 'Yemen Post';
+    
+    if (isMobile && phoneLength < 9) return null;
+    if (isLandline && phoneLength < 7) return null;
+
 
     switch (detectedOperator) {
         case 'Yemen Mobile':
@@ -1005,8 +1013,7 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </div>
-            </CardContent>
+                </CardContent>
         </Card>
       </div>
     )

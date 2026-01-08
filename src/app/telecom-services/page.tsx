@@ -59,7 +59,7 @@ type Offer = {
     offerEndDate: string;
 };
 
-type OfferWithPrice = Offer & { price?: number };
+type OfferWithPrice = Offer & { price?: number; id?: string };
 
 type Yemen4GQuery = {
     balance: string;
@@ -784,7 +784,6 @@ export default function TelecomServicesPage() {
   
   const handlePurchase = async () => {
     const isPackage = !!selectedPackage;
-    
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
 
     if (!amountToPay || amountToPay <= 0) {
@@ -813,62 +812,46 @@ export default function TelecomServicesPage() {
     try {
         let serviceNameForDb: string = detectedOperator || 'خدمة';
         let serviceType: string;
+        let finalAmountForApi: string;
 
         if (detectedOperator === 'Yemen Mobile' && isPackage) {
-            // Step 1: Bill balance
-            const balanceApiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&service=yem&action=bill&amount=${amountToPay}`;
-            const balanceResponse = await fetch(balanceApiUrl);
-            const balanceData = await balanceResponse.json();
-            if (!balanceResponse.ok || (balanceData.resultCode && balanceData.resultCode !== "0")) {
-                throw new Error(balanceData.message || balanceData.resultDesc || 'فشل شحن الرصيد لتفعيل الباقة.');
-            }
-
-            // Step 2: Activate package
-            const packageTransid = Date.now().toString();
-            const packageApiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${packageTransid}&service=yem&action=bill&amount=${selectedPackage?.offerId || selectedPackage?.id}`;
-            const packageResponse = await fetch(packageApiUrl);
-            const packageData = await packageResponse.json();
-            if (!packageResponse.ok || (packageData.resultCode && packageData.resultCode !== "0")) {
-                throw new Error(packageData.message || packageData.resultDesc || 'تم شحن الرصيد ولكن فشل تفعيل الباقة. يرجى المحاولة يدوياً.');
-            }
-            transid = packageTransid; // Use the final transaction ID for logging
+            finalAmountForApi = selectedPackage!.offerId || selectedPackage!.id!;
             serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
-
         } else {
-             let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}`;
+             finalAmountForApi = String(amountToPay);
              if (detectedOperator === 'Yemen 4G') {
-                serviceNameForDb = 'Yemen 4G';
-                apiUrl += `&service=yem4g&action=bill&amount=${amountToPay}`;
-                if(yemen4GType === 'package') {
-                    apiUrl += '&type=1';
-                    serviceType = 'شراء باقة 4G';
-                } else {
-                     apiUrl += '&type=2';
-                     serviceType = 'تسديد رصيد 4G';
-                }
-            } else if (detectedOperator === 'Yemen Post') {
-                serviceNameForDb = 'بريد اليمن';
-                apiUrl += `&service=post&action=bill&amount=${amountToPay}&type=${yemenPostType}`;
+                 serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
+             } else if (detectedOperator === 'Yemen Post') {
                 serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
-            } else { // Generic bill payment for all others including YM balance
-                 const serviceMap: { [key: string]: string } = {
-                    'Yemen Mobile': 'yem',
-                    'SabaFon': 'sab',
-                    'YOU': 'mtn',
-                    'Way': 'way',
-                 };
-                const service = serviceMap[detectedOperator || ''];
-                if (!service) throw new Error('مشغل خدمة غير مدعوم.');
-                
-                apiUrl += `&service=${service}&action=bill&amount=${amountToPay}`;
-                serviceType = 'تسديد رصيد';
-            }
+             } else {
+                 serviceType = 'تسديد رصيد';
+             }
+        }
+        
+        let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&amount=${finalAmountForApi}`;
+        const serviceMap: { [key: string]: string } = {
+            'Yemen Mobile': 'yem',
+            'SabaFon': 'sab',
+            'YOU': 'mtn',
+            'Way': 'way',
+            'Yemen 4G': 'yem4g',
+            'Yemen Post': 'post',
+        };
+        const service = serviceMap[detectedOperator || ''];
+        if (!service) throw new Error('مشغل خدمة غير مدعوم.');
+        apiUrl += `&service=${service}&action=bill`;
 
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة. (${response.status})`);
-            }
+        if (detectedOperator === 'Yemen 4G' && yemen4GType) {
+            apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
+        }
+        if (detectedOperator === 'Yemen Post' && yemenPostType) {
+            apiUrl += `&type=${yemenPostType}`;
+        }
+
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
+            throw new Error(data.message || data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة.`);
         }
         
         const batch = writeBatch(firestore);
@@ -879,7 +862,7 @@ export default function TelecomServicesPage() {
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
           company: serviceNameForDb,
-          serviceType: isPackage ? `شراء باقة: ${selectedPackage!.offerName}` : serviceType,
+          serviceType: serviceType,
           targetPhoneNumber: phoneNumber,
           amount: amountToPay,
           commission: commission, 
@@ -946,7 +929,7 @@ export default function TelecomServicesPage() {
     if (detectedOperator === 'SabaFon' && phoneLength < 9) return null;
     if (detectedOperator === 'YOU' && phoneLength < 9) return null;
     if (detectedOperator === 'Way' && phoneLength < 9) return null;
-    if (detectedOperator === 'Yemen Post' && phoneLength < 7) return null; // Landlines can be shorter
+    if (detectedOperator === 'Yemen Post' && phoneLength < 7) return null;
 
     switch (detectedOperator) {
         case 'Yemen Mobile':
@@ -1029,8 +1012,7 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </div>
-            </CardContent>
+                </CardContent>
         </Card>
       </div>
     )
@@ -1065,7 +1047,13 @@ export default function TelecomServicesPage() {
                 type="tel"
                 placeholder="7X XXX XXXX"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => {
+                    const operator = getOperator(e.target.value);
+                    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
+                    const maxLength = isMobile ? 9 : 8;
+                    const newValue = e.target.value.replace(/\D/g, '').slice(0, maxLength);
+                    setPhoneNumber(newValue);
+                }}
                 className="text-2xl text-center h-16 tracking-widest"
               />
             </div>

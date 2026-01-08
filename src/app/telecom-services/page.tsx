@@ -684,7 +684,7 @@ export default function TelecomServicesPage() {
   
   const getOperatorLogo = (operator: string | null) => {
       switch(operator) {
-          case 'Yemen Mobile': return 'https://i.postimg.cc/90FqYx0x/yemen-mobile.png';
+          case 'Yemen Mobile': return 'https://i.postimg.cc/tR80r860/090b6af8-e8d8-4825-bddf-8469a3e8a36c.jpg';
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';
@@ -1162,10 +1162,3 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-
-
-
-
-
-

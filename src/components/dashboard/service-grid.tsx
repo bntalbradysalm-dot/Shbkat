@@ -22,14 +22,14 @@ type Service = {
 };
 
 const services: Service[] = [
+  { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'سجل العمليات', icon: History, href: '/transactions' },
+  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
   { name: 'المدفوعات', icon: Bolt, href: '/payments' },
+  { name: 'سجل العمليات', icon: History, href: '/transactions' },
 ];
 
 const ServiceItem = ({

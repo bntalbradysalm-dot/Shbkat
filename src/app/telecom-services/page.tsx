@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -289,14 +290,10 @@ const YemenMobileUI = ({
                 {isLoadingBalance ? (
                     <Skeleton className="h-10 w-full" />
                 ) : balanceData ? (
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
                         <div className="p-2 bg-muted rounded-lg">
                             <p className="font-semibold text-muted-foreground">الرصيد</p>
                             <p className="font-bold text-primary">{balanceData.balance} ريال</p>
-                        </div>
-                        <div className="p-2 bg-muted rounded-lg">
-                            <p className="font-semibold text-muted-foreground">الصلاحية</p>
-                            <p className="font-bold text-primary">{balanceData.availableCredit}</p>
                         </div>
                         <div className="p-2 bg-muted rounded-lg">
                             <p className="font-semibold text-muted-foreground">نوع الخط</p>
@@ -1068,7 +1065,7 @@ export default function TelecomServicesPage() {
             </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   const { baseAmount, commission, totalCost, message } = getConfirmationDetails();
@@ -1162,3 +1159,4 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+

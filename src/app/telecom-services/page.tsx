@@ -181,6 +181,18 @@ const YemenMobileUI = ({
         return text;
     };
     
+    const formatApiDate = (dateString: string) => {
+        if (!dateString || dateString.length < 14) return dateString; // YYYYMMDDHHMMSS
+        const year = dateString.substring(0, 4);
+        const month = dateString.substring(4, 6);
+        const day = dateString.substring(6, 8);
+        const hour = parseInt(dateString.substring(8, 10), 10);
+        const minute = dateString.substring(10, 12);
+        const ampm = hour >= 12 ? 'م' : 'ص';
+        const formattedHour = hour % 12 || 12; // convert to 12-hour format
+        return `${day}/${month}/${year} - ${String(formattedHour).padStart(2, '0')}:${minute} ${ampm}`;
+    };
+    
     const offerCategories: Record<string, string[]> = {
         'باقات مزايا': ['مزايا'],
         'باقات فورجي': ['فورجي', '4G'],
@@ -371,8 +383,8 @@ const YemenMobileUI = ({
                                 <div className='flex-1'>
                                     <p className="font-bold text-sm">{sub.offerName}</p>
                                     <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                        <p>الاشتراك: <span className="font-mono">{sub.offerStartDate}</span></p>
-                                        <p>الانتهاء: <span className="font-mono">{sub.offerEndDate}</span></p>
+                                        <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
+                                        <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center gap-1">
@@ -540,7 +552,7 @@ const YemenPostUI = ({
                 <Skeleton className="h-8 w-full" />
             ) : queryData && (
                  <div className="text-center p-2 rounded-lg bg-muted text-sm">
-                    <p>الرصيد الحالي: <strong className="text-primary">{queryData.balance} ريال</strong></p>
+                    <p>الرصيد الحالي للفاتورة: <strong className="text-primary">{queryData.balance} ريال</strong></p>
                  </div>
             )}
             <Separator />

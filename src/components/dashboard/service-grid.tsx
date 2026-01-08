@@ -27,7 +27,7 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'ببجي موبايل', icon: 'https://i.postimg.cc/7ZZvJb3z/pubg-icon.png', href: '/pubg' },
+  { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
   { name: 'المدفوعات', icon: Bolt, href: '/payments' },
 ];

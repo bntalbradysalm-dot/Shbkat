@@ -145,6 +145,8 @@ const manualPackages: { name: string; id: string; price: number }[] = [
     { name: 'باقه 300 ميجابايت فوتره شريحه', id: 'A69352', price: 900 },
     { name: 'باقه 300 ميجابايت فوتره برمجه', id: 'A69362', price: 900 },
     { name: 'باقه 450 ميجابايت فوتره شريحه', id: 'A69354', price: 1300 },
+    { name: 'باقة دفع مسبق 150 ميجا', id: 'A69332', price: 500 },
+    { name: 'باقة دفع مسبق 150 ميجا', id: 'A69329', price: 500 },
 ];
 
 
@@ -812,18 +814,14 @@ export default function TelecomServicesPage() {
             let serviceNameForDb: string = detectedOperator || 'خدمة';
             let serviceType: string;
             let finalAmountForApi: string;
-            let transactionNotes = '';
     
             if (detectedOperator === 'Yemen Mobile' && isPackage) {
-                if (!selectedPackage?.offerId && !selectedPackage?.id) {
+                const offerId = selectedPackage?.offerId || selectedPackage?.id;
+                if (!offerId) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                finalAmountForApi = (selectedPackage!.offerId || selectedPackage!.id!).replace(/\D/g, '');
-                if (!finalAmountForApi) {
-                    throw new Error('لم يتم العثور على معرف رقمي صالح للباقة.');
-                }
+                finalAmountForApi = offerId;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
-                transactionNotes = `باقة: ${selectedPackage!.offerName}`;
             } else {
                 finalAmountForApi = String(amountToPay);
                 if (detectedOperator === 'Yemen 4G') {
@@ -833,7 +831,6 @@ export default function TelecomServicesPage() {
                 } else {
                     serviceType = 'تسديد رصيد';
                 }
-                transactionNotes = `إلى رقم: ${phoneNumber}`;
             }
     
             let apiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&amount=${finalAmountForApi}`;
@@ -873,7 +870,7 @@ export default function TelecomServicesPage() {
                 status: 'approved',
                 requestTimestamp: new Date().toISOString(),
                 transid: transid,
-                notes: transactionNotes,
+                notes: isPackage ? `باقة: ${selectedPackage?.offerName}` : `إلى رقم: ${phoneNumber}`,
             };
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
@@ -1058,7 +1055,14 @@ export default function TelecomServicesPage() {
                 onChange={(e) => {
                     const operator = getOperator(e.target.value);
                     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-                    const maxLength = isMobile ? 9 : 8;
+                    const isYemen4G = operator === 'Yemen 4G';
+                    let maxLength = 9;
+                    if (isYemen4G) {
+                        maxLength = 8;
+                    } else if (!isMobile) {
+                        maxLength = 9; // default for landlines etc.
+                    }
+                    
                     const newValue = e.target.value.replace(/\D/g, '').slice(0, maxLength);
                     setPhoneNumber(newValue);
                 }}

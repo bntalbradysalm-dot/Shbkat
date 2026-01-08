@@ -1063,8 +1063,7 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </div>
-            </CardContent>
+                </CardContent>
         </Card>
       </div>
     )
@@ -1102,12 +1101,9 @@ export default function TelecomServicesPage() {
                 onChange={(e) => {
                     const operator = getOperator(e.target.value);
                     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-                    const isYemen4G = operator === 'Yemen 4G';
                     let maxLength = 9;
-                    if (isYemen4G) {
-                        maxLength = 8;
-                    } else if (!isMobile) {
-                        maxLength = 9; // default for landlines etc.
+                    if (!isMobile) {
+                        maxLength = 9;
                     }
                     
                     const newValue = e.target.value.replace(/\D/g, '').slice(0, maxLength);

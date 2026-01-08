@@ -6,7 +6,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History, CircleDollarSign } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -192,43 +192,30 @@ const YemenMobileUI = ({
     };
 
     const categorizedOffers = useMemo(() => {
-        if (!offers) return { available: {}, active: [] };
-        
         const initializedCategories: Record<string, OfferWithPrice[]> = Object.fromEntries(
-          Object.keys(offerCategories).map(key => [key, []])
+            Object.keys(offerCategories).map(key => [key, []])
         );
         initializedCategories['باقات أخرى'] = [];
         const active: OfferWithPrice[] = [];
-        
-        let allOffers = [...offers];
-        
-        manualPackages.forEach(manualPkg => {
-            if (!allOffers.some(o => o.offerId === manualPkg.id)) {
-                allOffers.push({
-                    offerId: manualPkg.id,
-                    offerName: manualPkg.name,
-                    price: manualPkg.price,
-                    offerStartDate: '',
-                    offerEndDate: '',
-                });
-            }
-        });
-
-
-        allOffers.forEach(offer => {
-            const correctedName = reverseText(offer.offerName);
+    
+        const allOffers = [...(offers || []), ...manualPackages];
+        const uniqueOffers = Array.from(new Map(allOffers.map(o => [o.offerId || o.id, o])).values());
+    
+        uniqueOffers.forEach(offer => {
+            const offerId = offer.offerId || offer.id;
+            const correctedName = reverseText(offer.offerName || offer.name);
             
-            const manualPkg = manualPackages.find(p => p.id === offer.offerId);
+            const manualPkg = manualPackages.find(p => p.id === offerId);
             const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
             const price = offer.price || manualPkg?.price || priceFromName;
-
-            const offerWithDetails = { ...offer, offerName: correctedName, price };
-
-            if (offer.offerId.startsWith('A') && !manualPackages.some(p => p.id === offer.offerId)) { 
+    
+            const offerWithDetails = { ...offer, offerId, name: correctedName, offerName: correctedName, price };
+    
+            if (offer.offerId && offer.offerId.startsWith('A') && !manualPackages.some(p => p.id === offer.offerId)) {
                 active.push(offerWithDetails);
                 return;
             }
-
+    
             let assigned = false;
             for (const category in offerCategories) {
                 const keywords = offerCategories[category];
@@ -238,23 +225,22 @@ const YemenMobileUI = ({
                     break;
                 }
             }
-
+    
             if (!assigned) {
                 initializedCategories['باقات أخرى'].push(offerWithDetails);
             }
         });
         
         setActiveSubscriptions(active);
-
+    
         const finalCategories: Record<string, OfferWithPrice[]> = {};
         for(const category in initializedCategories) {
             if(initializedCategories[category].length > 0) {
                 finalCategories[category] = initializedCategories[category].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
             }
         }
-
+    
         return { available: finalCategories, active };
-
     }, [offers]);
 
     const isLoanActive = solfaData?.status === "1";
@@ -270,7 +256,42 @@ const YemenMobileUI = ({
 
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
-        
+        <Card>
+            <CardHeader className="flex-row items-center justify-between p-3">
+                <CardTitle className="text-sm">بيانات الرقم</CardTitle>
+                <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
+                    <RefreshCw className={`h-4 w-4 ${(isLoadingBalance || isLoadingSolfa) ? 'animate-spin' : ''}`} />
+                </Button>
+            </CardHeader>
+            <CardContent className="p-3 pt-0 space-y-2">
+                {isLoadingBalance ? (
+                    <Skeleton className="h-10 w-full" />
+                ) : balanceData ? (
+                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                        <div className="p-2 bg-muted rounded-lg">
+                            <p className="font-semibold text-muted-foreground">الرصيد</p>
+                            <p className="font-bold text-primary">{balanceData.balance} ريال</p>
+                        </div>
+                        <div className="p-2 bg-muted rounded-lg">
+                            <p className="font-semibold text-muted-foreground">الصلاحية</p>
+                            <p className="font-bold text-primary">{balanceData.availableCredit}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-center text-xs text-muted-foreground py-2">تعذر جلب بيانات الرصيد.</p>
+                )}
+                {isLoadingSolfa ? (
+                    <Skeleton className="h-8 w-full" />
+                ) : solfaData && (
+                     <div className={cn("p-2 rounded-lg text-center text-xs font-semibold flex items-center justify-center gap-2", isLoanActive ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                        {isLoanActive ? <ThumbsDown className="h-4 w-4" /> : <Smile className="h-4 w-4" />}
+                        <span>{solfaData.message}</span>
+                        {isLoanActive && <span>({solfaData.loan_amount} ريال)</span>}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+
         <Tabs defaultValue="packages" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
@@ -629,12 +650,11 @@ export default function TelecomServicesPage() {
           setBalanceData(data);
       } catch (error: any) {
           console.error("Balance fetch error:", error);
-          toast({ variant: 'destructive', title: 'خطأ', description: error.message });
           setBalanceData(null);
       } finally {
           setIsLoadingBalance(false);
       }
-  }, [toast]);
+  }, []);
   
   const fetchOffers = useCallback(async (phone: string) => {
     if (getOperator(phone) !== 'Yemen Mobile') return;
@@ -649,12 +669,11 @@ export default function TelecomServicesPage() {
         setOffers(data.offers);
     } catch (error: any) {
         console.error("Offers fetch error:", error);
-        toast({ variant: 'destructive', title: 'خطأ', description: error.message });
         setOffers(null);
     } finally {
         setIsLoadingOffers(false);
     }
-  }, [toast]);
+  }, []);
   
   const fetchSolfa = useCallback(async (phone: string) => {
     if (getOperator(phone) !== 'Yemen Mobile') return;
@@ -669,12 +688,11 @@ export default function TelecomServicesPage() {
         setSolfaData(data);
     } catch (error: any) {
         console.error("Solfa fetch error:", error);
-        toast({ variant: 'destructive', title: 'خطأ', description: error.message });
         setSolfaData(null);
     } finally {
         setIsLoadingSolfa(false);
     }
-  }, [toast]);
+  }, []);
 
   const fetchYemen4GQuery = useCallback(async (phone: string) => {
     if (getOperator(phone) !== 'Yemen 4G') return;

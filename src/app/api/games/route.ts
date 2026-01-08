@@ -21,6 +21,7 @@ function generateToken(transid: string, mobile: string): string {
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
+    const service = searchParams.get('service'); // e.g., 'freefire'
 
     if (!USERID || !USERNAME || !PASSWORD || !DOMAIN) {
         return new NextResponse(JSON.stringify({ message: 'Server is not configured for echehanly API' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
@@ -31,7 +32,9 @@ export async function GET(request: Request) {
     const mobile = '777777777'; 
     const token = generateToken(transid, mobile);
 
-    let apiUrl = `https://${DOMAIN}/api/yr/gameswcards?userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
+    const apiService = service || 'gameswcards';
+
+    let apiUrl = `https://${DOMAIN}/api/yr/${apiService}?userid=${USERID}&mobile=${mobile}&transid=${transid}&token=${token}`;
 
     try {
         const apiResponse = await fetch(apiUrl, {

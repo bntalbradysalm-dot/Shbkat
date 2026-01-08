@@ -27,12 +27,20 @@ type Game = {
   cards: GameCard[];
 };
 
+type FreeFireOffer = {
+    offerName: string;
+    offerId: string;
+    price: string;
+};
+
 type ApiResponse = {
-    games: Game[];
+    games?: Game[];
+    offers?: FreeFireOffer[];
 };
 
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
+  const [freeFireOffers, setFreeFireOffers] = useState<FreeFireOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +49,23 @@ export default function GamesPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/games');
-        const data: ApiResponse = await response.json();
-        if (!response.ok) {
-          throw new Error((data as any).message || 'Failed to fetch games data');
+        // Fetch general games
+        const gamesResponse = await fetch('/api/games');
+        const gamesData: ApiResponse = await gamesResponse.json();
+        if (!gamesResponse.ok) {
+          throw new Error((gamesData as any).message || 'Failed to fetch games data');
         }
-        setGames(data.games || []);
+        setGames(gamesData.games || []);
+        
+        // Fetch Free Fire offers
+        const freeFireResponse = await fetch('/api/games?service=freefire');
+        const freeFireData: ApiResponse = await freeFireResponse.json();
+        if(!freeFireResponse.ok) {
+            console.warn('Could not fetch Free Fire offers');
+        } else {
+            setFreeFireOffers(freeFireData.offers || []);
+        }
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -60,7 +79,7 @@ export default function GamesPage() {
     if (isLoading) {
       return (
         <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <Card key={i}>
                 <CardHeader className="flex flex-row items-center gap-4 p-4">
                     <Skeleton className="h-12 w-12 rounded-lg" />
@@ -82,7 +101,9 @@ export default function GamesPage() {
       );
     }
     
-    if (games.length === 0) {
+    const allGamesAvailable = games.length === 0 && freeFireOffers.length === 0;
+
+    if (allGamesAvailable) {
       return (
         <div className="flex flex-col items-center justify-center text-center h-64">
             <Gamepad2 className="h-16 w-16 text-muted-foreground" />
@@ -96,6 +117,28 @@ export default function GamesPage() {
 
     return (
         <Accordion type="single" collapsible className="w-full space-y-3">
+             {freeFireOffers.length > 0 && (
+                <AccordionItem value="freefire" className="border bg-card rounded-lg overflow-hidden">
+                    <AccordionTrigger className="p-3 hover:no-underline">
+                        <div className="flex items-center gap-4">
+                            <Image src="https://i.postimg.cc/k4LdtZ5k/freefire.png" alt="Free Fire" width={48} height={48} className="rounded-lg object-cover bg-black p-1" />
+                            <h3 className="text-lg font-bold">Free Fire</h3>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="border-t px-3 pb-3">
+                        <div className="pt-3 space-y-2">
+                            {freeFireOffers.map(card => (
+                                <Card key={card.offerId} className="bg-muted/50">
+                                    <CardContent className="p-3 flex justify-between items-center">
+                                        <span className="font-semibold text-sm">{card.offerName}</span>
+                                        <Button size="sm">{card.price} ريال</Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            )}
             {games.map(game => (
                 <AccordionItem value={game.gameId} key={game.gameId} className="border bg-card rounded-lg overflow-hidden">
                     <AccordionTrigger className="p-3 hover:no-underline">

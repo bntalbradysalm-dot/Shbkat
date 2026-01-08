@@ -766,11 +766,17 @@ export default function TelecomServicesPage() {
     }
     const phoneLength = phoneNumber.length;
     
-    if (operator === 'Yemen Mobile' && phoneLength === 9) {
+    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
+    const isLandline = operator === 'Yemen Post';
+    
+    if (isMobile && phoneLength < 9) return;
+    if (isLandline && phoneLength < 7) return;
+
+    if (operator === 'Yemen Mobile') {
         fetchBalance(phoneNumber);
         fetchOffers(phoneNumber);
         fetchSolfa(phoneNumber);
-    } else if (operator === 'Yemen 4G' && phoneLength > 0) {
+    } else if (operator === 'Yemen 4G') {
         fetchYemen4GQuery(phoneNumber);
     }
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery]);
@@ -812,11 +818,10 @@ export default function TelecomServicesPage() {
                 if (!selectedPackage?.offerId && !selectedPackage?.id) {
                     throw new Error('معرف الباقة غير صالح.');
                 }
-                const numericOfferId = (selectedPackage!.offerId || selectedPackage!.id!).replace(/\D/g, '');
-                if (!numericOfferId) {
+                finalAmountForApi = (selectedPackage!.offerId || selectedPackage!.id!).replace(/\D/g, '');
+                if (!finalAmountForApi) {
                     throw new Error('لم يتم العثور على معرف رقمي صالح للباقة.');
                 }
-                finalAmountForApi = numericOfferId;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
                 transactionNotes = `باقة: ${selectedPackage!.offerName}`;
             } else {
@@ -849,7 +854,7 @@ export default function TelecomServicesPage() {
             const response = await fetch(apiUrl);
             const data = await response.json();
             if (!response.ok || (data.resultCode && data.resultCode !== '0')) {
-                throw new Error(data.resultDesc || data.message || 'فشلت عملية الدفع لدى مزود الخدمة.');
+                throw new Error(data.message || data.resultDesc || 'فشلت عملية الدفع لدى مزود الخدمة.');
             }
     
             const batch = writeBatch(firestore);
@@ -868,6 +873,7 @@ export default function TelecomServicesPage() {
                 status: 'approved',
                 requestTimestamp: new Date().toISOString(),
                 transid: transid,
+                notes: transactionNotes,
             };
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
@@ -1013,7 +1019,8 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </CardContent>
+                </div>
+            </CardContent>
         </Card>
       </div>
     )

@@ -266,6 +266,12 @@ const YemenMobileUI = ({
         return <CreditCard className="w-5 h-5"/>;
     }
 
+    const getMobileTypeString = (type: string) => {
+        if (type === '0') return 'دفع مسبق';
+        if (type === '1') return 'فوترة';
+        return 'غير معروف';
+    }
+
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
         <Card>
@@ -279,7 +285,7 @@ const YemenMobileUI = ({
                 {isLoadingBalance ? (
                     <Skeleton className="h-10 w-full" />
                 ) : balanceData ? (
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="p-2 bg-muted rounded-lg">
                             <p className="font-semibold text-muted-foreground">الرصيد</p>
                             <p className="font-bold text-primary">{balanceData.balance} ريال</p>
@@ -287,6 +293,10 @@ const YemenMobileUI = ({
                         <div className="p-2 bg-muted rounded-lg">
                             <p className="font-semibold text-muted-foreground">الصلاحية</p>
                             <p className="font-bold text-primary">{balanceData.availableCredit}</p>
+                        </div>
+                        <div className="p-2 bg-muted rounded-lg">
+                            <p className="font-semibold text-muted-foreground">نوع الخط</p>
+                            <p className="font-bold text-primary">{getMobileTypeString(balanceData.mobileType)}</p>
                         </div>
                     </div>
                 ) : (
@@ -1098,4 +1108,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 

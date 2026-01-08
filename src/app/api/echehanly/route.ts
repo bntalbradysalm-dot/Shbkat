@@ -76,6 +76,14 @@ export async function GET(request: Request) {
             return new NextResponse(JSON.stringify({ message: description }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
         }
 
+        // Ensure mobileType is passed for Yemen Mobile queries
+        if (service === 'yem' && action === 'query' && data.mobileType !== undefined) {
+          return NextResponse.json({
+            ...data,
+            mobileType: String(data.mobileType)
+          });
+        }
+        
         return NextResponse.json(data);
 
     } catch (error) {

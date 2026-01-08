@@ -640,7 +640,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
-    if (phone.startsWith('10')) return 'Yemen 4G';
+    if (phone.length > 1 && phone.startsWith('1')) return 'Yemen 4G'; // simplified yemen 4g check
     if (phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
@@ -772,25 +772,23 @@ export default function TelecomServicesPage() {
         setYemenPostQueryData(null);
     }
     const phoneLength = phoneNumber.length;
-    const expectedLength = operator === 'Yemen Post' ? 8 : 9;
-
+    
     if (operator === 'Yemen Mobile' && phoneLength === 9) {
         fetchBalance(phoneNumber);
         fetchOffers(phoneNumber);
         fetchSolfa(phoneNumber);
-    } else if (operator === 'Yemen 4G' && phoneLength > 0) { // Yemen 4G numbers can vary
+    } else if (operator === 'Yemen 4G' && phoneLength > 0) {
         fetchYemen4GQuery(phoneNumber);
     }
   }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery]);
   
   const handlePurchase = async () => {
     const isPackage = !!selectedPackage;
-    const isYemenMobile = detectedOperator === 'Yemen Mobile';
-
+    
     let amountToPay: number | undefined | null = isPackage ? selectedPackage?.price : billAmount;
 
     if (!amountToPay || amountToPay <= 0) {
-        toast({ variant: 'destructive', title: "خطأ", description: "المبلغ غير صالح." });
+        toast({ variant: "destructive", title: "خطأ", description: "المبلغ غير صالح." });
         setIsConfirming(false);
         return;
     }
@@ -816,7 +814,7 @@ export default function TelecomServicesPage() {
         let serviceNameForDb: string = detectedOperator || 'خدمة';
         let serviceType: string;
 
-        if (isYemenMobile && isPackage) {
+        if (detectedOperator === 'Yemen Mobile' && isPackage) {
             // Step 1: Bill balance
             const balanceApiUrl = `/api/echehanly?mobile=${phoneNumber}&transid=${transid}&service=yem&action=bill&amount=${amountToPay}`;
             const balanceResponse = await fetch(balanceApiUrl);
@@ -867,9 +865,8 @@ export default function TelecomServicesPage() {
             }
 
             const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
+            if (!response.ok) {
+                const data = await response.json();
                 throw new Error(data.message || data.resultDesc || `فشلت عملية الدفع لدى مزود الخدمة. (${response.status})`);
             }
         }
@@ -882,7 +879,7 @@ export default function TelecomServicesPage() {
           userName: userProfile.displayName,
           userPhoneNumber: userProfile.phoneNumber,
           company: serviceNameForDb,
-          serviceType: isPackage ? `شراء باقة: ${selectedPackage!.offerName}` : 'تسديد رصيد',
+          serviceType: isPackage ? `شراء باقة: ${selectedPackage!.offerName}` : serviceType,
           targetPhoneNumber: phoneNumber,
           amount: amountToPay,
           commission: commission, 
@@ -944,13 +941,12 @@ export default function TelecomServicesPage() {
     }
     
     const phoneLength = phoneNumber.length;
-    const operator = getOperator(phoneNumber);
-    const expectedLength = operator === 'Yemen Post' ? undefined : 9;
-
-    if (expectedLength && phoneLength < expectedLength) {
-        return null;
-    }
-
+    
+    if (detectedOperator === 'Yemen Mobile' && phoneLength < 9) return null;
+    if (detectedOperator === 'SabaFon' && phoneLength < 9) return null;
+    if (detectedOperator === 'YOU' && phoneLength < 9) return null;
+    if (detectedOperator === 'Way' && phoneLength < 9) return null;
+    if (detectedOperator === 'Yemen Post' && phoneLength < 7) return null; // Landlines can be shorter
 
     switch (detectedOperator) {
         case 'Yemen Mobile':

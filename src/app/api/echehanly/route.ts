@@ -66,14 +66,9 @@ export async function GET(request: Request) {
 
         // Check for specific error messages or non-zero resultCode
         if (!apiResponse.ok || (data.resultCode && data.resultCode !== "0")) {
-            const description = data.resultDesc || `Failed to process request on echehanly API. Code: ${data.resultCode}`;
+            const description = data.resultDesc || data.message || `Failed to process request on echehanly API. Code: ${data.resultCode}`;
             
-            // Check for specific known error phrases from the provider
-            if (description.includes('لا يوجد رصيد') || description.includes('غير متاحة')) {
-                return new NextResponse(JSON.stringify({ message: description }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-            }
-            
-            return new NextResponse(JSON.stringify({ message: description }), { status: apiResponse.status || 400, headers: { 'Content-Type': 'application/json' } });
+            return new NextResponse(JSON.stringify({ message: description }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
 
         // Ensure mobileType is passed for Yemen Mobile queries

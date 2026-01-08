@@ -580,24 +580,24 @@ const YemenPostUI = ({
                     <Table>
                         <TableBody>
                             <TableRow>
-                                <TableCell className="font-semibold bg-muted">الرصيد (جيجا)</TableCell>
-                                <TableCell className="text-left font-mono">{queryData['Gigabyte(s)']}</TableCell>
+                                <TableCell className="font-semibold bg-muted text-sm p-2">الرصيد (جيجا)</TableCell>
+                                <TableCell className="text-left font-mono text-sm p-2">{queryData['Gigabyte(s)']}</TableCell>
                             </TableRow>
                              <TableRow>
-                                <TableCell className="font-semibold bg-muted">قيمة الباقة</TableCell>
-                                <TableCell className="text-left font-mono">{queryData['Package Price']}</TableCell>
+                                <TableCell className="font-semibold bg-muted text-sm p-2">قيمة الباقة</TableCell>
+                                <TableCell className="text-left font-mono text-sm p-2">{queryData['Package Price']}</TableCell>
                             </TableRow>
                              <TableRow>
-                                <TableCell className="font-semibold bg-muted">أقل مبلغ للسداد</TableCell>
-                                <TableCell className="text-left font-mono">{queryData['Minimum Amount']}</TableCell>
+                                <TableCell className="font-semibold bg-muted text-sm p-2">أقل مبلغ للسداد</TableCell>
+                                <TableCell className="text-left font-mono text-sm p-2">{queryData['Minimum Amount']}</TableCell>
                             </TableRow>
                              <TableRow>
-                                <TableCell className="font-semibold bg-muted">الحجم | السرعة</TableCell>
-                                <TableCell className="text-left font-mono">{queryData['Package Size']} | {queryData['Speed']}</TableCell>
+                                <TableCell className="font-semibold bg-muted text-sm p-2">الحجم | السرعة</TableCell>
+                                <TableCell className="text-left font-mono text-sm p-2">{queryData['Package Size']} | {queryData['Speed']}</TableCell>
                             </TableRow>
                              <TableRow>
-                                <TableCell className="font-semibold bg-muted">تاريخ الإنتهاء</TableCell>
-                                <TableCell className="text-left font-mono">{queryData['Expire Date']}</TableCell>
+                                <TableCell className="font-semibold bg-muted text-sm p-2">تاريخ الإنتهاء</TableCell>
+                                <TableCell className="text-left font-mono text-sm p-2">{queryData['Expire Date']}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -917,6 +917,7 @@ export default function TelecomServicesPage() {
                 status: 'approved',
                 requestTimestamp: new Date().toISOString(),
                 transid: transid,
+                notes: isPackage ? `باقة: ${selectedPackage!.offerName}` : undefined,
             };
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
@@ -1043,7 +1044,7 @@ export default function TelecomServicesPage() {
   
   if (showSuccess) {
     return (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+      <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
         <Card className="w-full max-w-sm text-center shadow-2xl">
             <CardContent className="p-6">
                 <div className="flex flex-col items-center justify-center gap-4">
@@ -1062,7 +1063,8 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </CardContent>
+                </div>
+            </CardContent>
         </Card>
       </div>
     )

@@ -913,13 +913,14 @@ export default function TelecomServicesPage() {
         return (
             <div className="text-center text-muted-foreground p-8 space-y-4">
                 <Info className="mx-auto h-12 w-12" />
-                <p className="font-semibold">أدخل رقم هاتف صالح (9 أرقام)</p>
+                <p className="font-semibold">أدخل رقم هاتف صالح</p>
                 <p className="text-sm">سيتم عرض الخدمات المتاحة للرقم تلقائياً.</p>
             </div>
         );
     }
     
-    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 6 : 9) && detectedOperator !== 'Yemen 4G') {
+    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 8 : 9) && detectedOperator !== 'Yemen 4G') {
+        if(detectedOperator !== 'Yemen Mobile') return null;
         return (
             <div className="text-center text-muted-foreground p-8 space-y-4">
                 <Info className="mx-auto h-12 w-12" />
@@ -1046,6 +1047,7 @@ export default function TelecomServicesPage() {
                 placeholder="7X XXX XXXX"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                maxLength={detectedOperator === 'Yemen Post' ? 8 : 9}
                 className="text-2xl text-center h-16 tracking-widest"
               />
             </div>

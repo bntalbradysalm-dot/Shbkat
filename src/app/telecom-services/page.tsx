@@ -580,8 +580,8 @@ const YemenPostUI = ({
                     <Table>
                         <TableBody>
                             <TableRow>
-                                <TableCell className="font-semibold bg-muted">الرصيد</TableCell>
-                                <TableCell className="text-left font-mono">Gigabyte(s) {queryData['Gigabyte(s)']}</TableCell>
+                                <TableCell className="font-semibold bg-muted">الرصيد (جيجا)</TableCell>
+                                <TableCell className="text-left font-mono">{queryData['Gigabyte(s)']}</TableCell>
                             </TableRow>
                              <TableRow>
                                 <TableCell className="font-semibold bg-muted">قيمة الباقة</TableCell>
@@ -917,7 +917,6 @@ export default function TelecomServicesPage() {
                 status: 'approved',
                 requestTimestamp: new Date().toISOString(),
                 transid: transid,
-                notes: isPackage ? `باقة: ${selectedPackage?.offerName}` : `إلى رقم: ${phoneNumber}`,
             };
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
@@ -1063,7 +1062,6 @@ export default function TelecomServicesPage() {
                             router.push('/login');
                          }}>العودة للرئيسية</Button>
                     </div>
-                </div>
                 </CardContent>
         </Card>
       </div>

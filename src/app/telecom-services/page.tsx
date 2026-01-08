@@ -632,7 +632,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
     if (phone.startsWith('10')) return 'Yemen 4G';
-    if (phone.startsWith('0')) return 'Yemen Post';
+    if (phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
   
@@ -790,7 +790,7 @@ export default function TelecomServicesPage() {
         return;
     }
     
-    const commission = detectedOperator === 'Yemen 4G' ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
+    const commission = (isYemen4G || isYemenPost) ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
     const totalCost = amountToPay + commission;
     
     if (!userProfile || !firestore || !userDocRef || !user) {
@@ -889,14 +889,16 @@ export default function TelecomServicesPage() {
     let baseAmount = billAmount ?? selectedPackage?.price ?? 0;
     if (!baseAmount) return { baseAmount: 0, commission: 0, totalCost: 0, message: '' };
 
-    const commission = detectedOperator === 'Yemen 4G' ? Math.ceil(baseAmount * COMMISSION_RATE) : 0;
+    const isYemen4G = detectedOperator === 'Yemen 4G';
+    const isYemenPost = detectedOperator === 'Yemen Post';
+    const commission = (isYemen4G || isYemenPost) ? Math.ceil(baseAmount * COMMISSION_RATE) : 0;
     const totalCost = baseAmount + commission;
     let message = '';
 
-    if (detectedOperator === 'Yemen 4G') {
+    if (isYemen4G) {
         const actionText = yemen4GType === 'package' ? 'شراء باقة' : 'تسديد رصيد';
         message = `هل تريد بالتأكيد ${actionText} للرقم ${phoneNumber}؟`;
-    } else if (detectedOperator === 'Yemen Post') {
+    } else if (isYemenPost) {
         const actionText = yemenPostType === 'adsl' ? 'فاتورة ADSL' : 'فاتورة هاتف';
         message = `هل تريد بالتأكيد دفع ${actionText} للرقم ${phoneNumber}؟`;
     } else if (selectedPackage) {
@@ -919,15 +921,15 @@ export default function TelecomServicesPage() {
         );
     }
     
-    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 8 : 9) && detectedOperator !== 'Yemen 4G') {
-        if(detectedOperator !== 'Yemen Mobile') return null;
-        return (
-            <div className="text-center text-muted-foreground p-8 space-y-4">
-                <Info className="mx-auto h-12 w-12" />
-                <p className="font-semibold">أكمل إدخال الرقم</p>
-            </div>
-        )
+    if (phoneNumber.length < (detectedOperator === 'Yemen Post' ? 8 : (detectedOperator === 'Yemen Mobile' ? 9 : 0))) {
+        if(detectedOperator !== 'Yemen 4G' && detectedOperator !== 'Yemen Post') { // yemen 4g can be any length, post is 8
+             return null;
+        }
+        if(detectedOperator === 'Yemen Post' && phoneNumber.length < 7) {
+            return null;
+        }
     }
+
 
     switch (detectedOperator) {
         case 'Yemen Mobile':
@@ -1096,3 +1098,4 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+

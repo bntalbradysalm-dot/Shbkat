@@ -99,7 +99,7 @@ const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center h-screen bg-background">
     <div className="flex flex-col items-center gap-4">
       <Image
-        src="https://i.postimg.cc/tR80r860/090b6af8-e8d8-4825-bddf-8469a3e8a36c.jpg"
+        src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png"
         alt="logo"
         width={160}
         height={160}

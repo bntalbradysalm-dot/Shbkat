@@ -7,7 +7,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History, CircleDollarSign, Router, Zap } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, ChevronLeft, Loader2, Search, CheckCircle, CreditCard, AlertTriangle, Info, Calendar, Database, Smile, ThumbsDown, Phone, Wifi, Send, History, CircleDollarSign, Router, Zap, MessageSquare, Briefcase } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,7 +62,16 @@ type Offer = {
     offerEndDate: string;
 };
 
-type OfferWithPrice = Offer & { price?: number; id?: string };
+type OfferDetails = {
+  data?: string;
+  minutes?: string;
+  sms?: string;
+  validity?: string;
+  price: number;
+}
+
+type OfferWithPrice = Offer & OfferDetails & { id?: string };
+
 
 type Yemen4GQuery = {
     balance: string;
@@ -141,23 +150,39 @@ const BalanceDisplay = () => {
     );
 }
 
-const manualPackages: { name: string; id: string; price: number }[] = [
-    { name: 'هدايا - الشهرية', id: 'A68329', price: 1500 },
-    { name: 'مزايا الاسبوعية', id: 'A64329', price: 485 },
-    { name: 'مزايا الشهريه - دفع مسبق', id: 'A38394', price: 1300 },
-    { name: 'هدايا - فوترة الاسبوعيه', id: 'A44330', price: 600 },
-    { name: 'هدايا توفير 250', id: 'A66328', price: 250 },
-    { name: 'مزايا ماكس الشهريه', id: 'A75328', price: 2000 },
-    { name: 'الشهريه للفوتره', id: 'A76328', price: 3000 },
-    { name: 'باقه 150 ميجابايت فوتره شريحه', id: 'A69351', price: 500 },
-    { name: 'باقه 150 ميجابايت فوتره برمجه', id: 'A69361', price: 500 },
-    { name: 'باقه 300 ميجابايت فوتره شريحه', id: 'A69352', price: 900 },
-    { name: 'باقه 300 ميجابايت فوتره برمجه', id: 'A69362', price: 900 },
-    { name: 'باقه 450 ميجابايت فوتره شريحه', id: 'A69354', price: 1300 },
-    { name: 'باقة دفع مسبق 150 ميجا', id: 'A69332', price: 500 },
-    { name: 'باقة دفع مسبق 150 ميجا', id: 'A69329', price: 500 },
+const manualPackages: OfferWithPrice[] = [
+    { name: 'هدايا - الشهرية', offerName: 'هدايا - الشهرية', id: 'A68329', offerId: 'A68329', price: 1500, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الشهريه - دفع مسبق', offerName: 'مزايا الشهريه - دفع مسبق', id: 'A38394', offerId: 'A38394', price: 1300, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'هدايا - فوترة الاسبوعيه', offerName: 'هدايا - فوترة الاسبوعيه', id: 'A44330', offerId: 'A44330', price: 600, validity: 'أسبوع', offerStartDate: '', offerEndDate: '' },
+    { name: 'هدايا توفير 250', offerName: 'هدايا توفير 250', id: 'A66328', offerId: 'A66328', price: 250, offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'الشهريه للفوتره', offerName: 'الشهريه للفوتره', id: 'A76328', offerId: 'A76328', price: 3000, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقه 150 ميجابايت فوتره شريحه', offerName: 'باقه 150 ميجابايت فوتره شريحه', id: 'A69351', offerId: 'A69351', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقه 150 ميجابايت فوتره برمجه', offerName: 'باقه 150 ميجابايت فوتره برمجه', id: 'A69361', offerId: 'A69361', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقه 300 ميجابايت فوتره شريحه', offerName: 'باقه 300 ميجابايت فوتره شريحه', id: 'A69352', offerId: 'A69352', price: 900, data: '300 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقه 300 ميجابايت فوتره برمجه', offerName: 'باقه 300 ميجابايت فوتره برمجه', id: 'A69362', offerId: 'A69362', price: 900, data: '300 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقه 450 ميجابايت فوتره شريحه', offerName: 'باقه 450 ميجابايت فوتره شريحه', id: 'A69354', offerId: 'A69354', price: 1300, data: '450 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقة دفع مسبق 150 ميجا', offerName: 'باقة دفع مسبق 150 ميجا', id: 'A69332', offerId: 'A69332', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
+    { name: 'باقة دفع مسبق 150 ميجا', offerName: 'باقة دفع مسبق 150 ميجا', id: 'A69329', offerId: 'A69329', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
 ];
 
+const parseOfferDetails = (name: string): Partial<OfferDetails> => {
+    const details: Partial<OfferDetails> = {};
+  
+    // Regex to find patterns like 2GB, 500MB, 100 دق, 200 رس, etc.
+    const dataMatch = name.match(/(\d+)\s?(GB|MB|جيجا|ميجابايت|غيغا)/i);
+    const minutesMatch = name.match(/(\d+)\s?(دقائق|دق|دقيقة)/i);
+    const smsMatch = name.match(/(\d+)\s?(رسائل|رسالة|رس)/i);
+    const validityMatch = name.match(/(يوم|أسبوع|شهر|يومين|أيام|اسبوع|شهري|اسبوعي)/i);
+    
+    if (dataMatch) details.data = `${dataMatch[1]} ${dataMatch[2].toUpperCase().startsWith('G') ? 'GB' : 'MB'}`;
+    if (minutesMatch) details.minutes = minutesMatch[1];
+    if (smsMatch) details.sms = smsMatch[1];
+    if (validityMatch) details.validity = validityMatch[0];
+  
+    return details;
+  }
 
 const YemenMobileUI = ({ 
     balanceData, 
@@ -221,12 +246,11 @@ const YemenMobileUI = ({
             if (!offerId) return;
 
             const correctedName = offer.offerName || offer.name;
-            
             const manualPkg = manualPackages.find(p => p.id === offerId);
-            const priceFromName = Number(correctedName.match(/\d+/g)?.join('')) || undefined;
-            const price = offer.price || manualPkg?.price || priceFromName;
-    
-            const offerWithDetails = { ...offer, offerId, name: correctedName, offerName: correctedName, price };
+            const price = offer.price || manualPkg?.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
+            const parsedDetails = parseOfferDetails(correctedName);
+            
+            const offerWithDetails: OfferWithPrice = { ...offer, ...parsedDetails, offerId, name: correctedName, offerName: correctedName, price };
     
             if (offer.offerId && offer.offerId.startsWith('A') && !manualPackages.some(p => p.id === offer.offerId)) {
                 active.push(offerWithDetails);
@@ -236,7 +260,7 @@ const YemenMobileUI = ({
             let assigned = false;
             for (const category in offerCategories) {
                 const keywords = offerCategories[category];
-                if (keywords.some(kw => correctedName.includes(kw))) {
+                if (keywords.some(kw => correctedName.toLowerCase().includes(kw.toLowerCase()))) {
                     initializedCategories[category].push(offerWithDetails);
                     assigned = true;
                     break;
@@ -263,7 +287,7 @@ const YemenMobileUI = ({
     const isLoanActive = solfaData?.status === "1";
     
     const renderOfferIcon = (category: string) => {
-        if (category.includes('فورجي') || category.includes('VoLTE')) return <Wifi className="w-5 h-5"/>;
+        if (category.includes('فورجي') || category.includes('VoLTE')) return <Briefcase className="w-5 h-5"/>;
         if (category.includes('مزايا')) return <Smile className="w-5 h-5"/>;
         if (category.includes('هدايا')) return <History className="w-5 h-5"/>;
         if (category.includes('انترنت')) return <Database className="w-5 h-5"/>;
@@ -275,6 +299,17 @@ const YemenMobileUI = ({
         if (type === '0') return 'دفع مسبق';
         if (type === '1') return 'فوترة';
         return 'غير معروف';
+    }
+    
+    const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType, value?: string, label: string }) => {
+        if (!value) return null;
+        return (
+            <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-semibold">{value}</span>
+                <span className="text-[10px] hidden">{label}</span>
+            </div>
+        );
     }
 
     return (
@@ -335,11 +370,18 @@ const YemenMobileUI = ({
                             <AccordionContent className="pt-2">
                                 <div className="space-y-2">
                                 {pkgs.map(pkg => (
-                                    <Card key={pkg.offerId || pkg.id} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50">
-                                        <CardContent className="p-3 flex justify-between items-center">
-                                            <p className="font-semibold text-sm">{pkg.offerName}</p>
-                                            {pkg.price && <p className="text-sm font-bold text-primary">{pkg.price.toLocaleString('en-US')} ريال</p>}
-                                        </CardContent>
+                                    <Card key={pkg.offerId || pkg.id} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50 p-4">
+                                        <div className="flex flex-col items-center text-center">
+                                            <h4 className="font-bold text-base">{pkg.offerName}</h4>
+                                            <p className="text-xs text-muted-foreground">{getMobileTypeString(balanceData?.mobileType || '0')}</p>
+                                            <p className="text-2xl font-bold text-primary my-2">{pkg.price.toLocaleString('en-US')} ريال</p>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2 pt-3 border-t">
+                                            <OfferDetailIcon icon={Database} value={pkg.data} label="Data" />
+                                            <OfferDetailIcon icon={MessageSquare} value={pkg.sms} label="SMS" />
+                                            <OfferDetailIcon icon={Phone} value={pkg.minutes} label="Minutes" />
+                                            <OfferDetailIcon icon={Calendar} value={pkg.validity} label="Validity" />
+                                        </div>
                                     </Card>
                                 ))}
                                 </div>
@@ -347,33 +389,33 @@ const YemenMobileUI = ({
                         </AccordionItem>
                     ))}
                 </Accordion>
-                 {activeSubscriptions.length > 0 && (
-                    <Card>
-                        <CardHeader className="p-3">
-                            <CardTitle className="text-sm">الاشتراكات الحالية</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0 space-y-2">
-                            {activeSubscriptions.map(sub => (
-                                <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
-                                    <div className="flex justify-between items-start">
-                                        <div className='flex-1'>
-                                            <p className="font-bold text-sm">{sub.offerName}</p>
-                                            <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                                <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
-                                                <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
+                {activeSubscriptions.length > 0 && (
+                    <div className="pt-4">
+                        <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
+                         <Card>
+                            <CardContent className="p-3 pt-0 space-y-2">
+                                {activeSubscriptions.map(sub => (
+                                    <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                                        <div className="flex justify-between items-start">
+                                            <div className='flex-1'>
+                                                <p className="font-bold text-sm">{sub.offerName}</p>
+                                                <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                                    <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
+                                                    <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="p-2 bg-primary/10 rounded-full">
-                                                <RefreshCw className="h-5 w-5 text-primary"/>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="p-2 bg-primary/10 rounded-full">
+                                                    <RefreshCw className="h-5 w-5 text-primary"/>
+                                                </div>
+                                                <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
                                             </div>
-                                            <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
                 )}
             </TabsContent>
             <TabsContent value="balance" className="pt-4">
@@ -794,7 +836,6 @@ export default function TelecomServicesPage() {
         setYemenPostQueryData(null);
     } finally {
         setIsLoadingYemenPostQuery(false);
-        setActiveYemenPostQuery(type);
     }
   }, [phoneNumber, toast]);
 
@@ -973,9 +1014,10 @@ export default function TelecomServicesPage() {
     const isLandline = operator === 'Yemen Post';
     const isYemen4G = operator === 'Yemen 4G';
     
-    if (isMobile && phoneLength < 9) return null;
-    if (isLandline && phoneLength < 7) return null;
-    if (isYemen4G && phoneLength < 9) return null;
+    let requiredLength = 9;
+    if (isLandline) requiredLength = 7;
+
+    if (phoneLength < requiredLength) return null;
 
 
     switch (detectedOperator) {
@@ -1041,7 +1083,7 @@ export default function TelecomServicesPage() {
   
   if (showSuccess) {
     return (
-      <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
         <Card className="w-full max-w-sm text-center shadow-2xl">
             <CardContent className="p-6">
                 <div className="flex flex-col items-center justify-center gap-4">
@@ -1050,15 +1092,15 @@ export default function TelecomServicesPage() {
                     </div>
                     <h2 className="text-2xl font-bold">تمت العملية بنجاح</h2>
                      <p className="text-sm text-muted-foreground">{successMessage}</p>
-                    <div className="w-full pt-4">
-                         <Button variant="outline" className="w-full" onClick={() => {
+                    <div className="w-full grid grid-cols-1 gap-3 pt-4">
+                        <Button variant="outline" onClick={() => {
                             setShowSuccess(false);
                             setSelectedPackage(null);
                             setBillAmount(null);
                             setYemen4GType(null);
                             setYemenPostType(null);
-                            router.push('/login');
-                         }}>العودة للرئيسية</Button>
+                            // Do not clear phone number to allow another operation
+                        }}>إجراء عملية أخرى</Button>
                     </div>
                 </div>
             </CardContent>
@@ -1097,17 +1139,7 @@ export default function TelecomServicesPage() {
                 placeholder="7X XXX XXXX"
                 value={phoneNumber}
                 onChange={(e) => {
-                    const operator = getOperator(e.target.value);
-                    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-                    const isYemen4G = operator === 'Yemen 4G';
-                    let maxLength = 9;
-                    if (isYemen4G) {
-                        maxLength = 9;
-                    } else if (isMobile) {
-                        maxLength = 9;
-                    }
-                    
-                    const newValue = e.target.value.replace(/\D/g, '').slice(0, maxLength);
+                    const newValue = e.target.value.replace(/\D/g, '');
                     setPhoneNumber(newValue);
                 }}
                 className="text-2xl text-center h-16 tracking-widest"
@@ -1158,5 +1190,6 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 

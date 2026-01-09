@@ -1013,13 +1013,7 @@ export default function TelecomServicesPage() {
 
   const renderOperatorUI = () => {
     if (!detectedOperator) {
-        return (
-            <div className="text-center text-muted-foreground p-8 space-y-4">
-                <Info className="mx-auto h-12 w-12" />
-                <p className="font-semibold">أدخل رقم هاتف صالح</p>
-                <p className="text-sm">سيتم عرض الخدمات المتاحة للرقم تلقائياً.</p>
-            </div>
-        );
+        return null;
     }
     
     const phoneLength = phoneNumber.length;
@@ -1157,7 +1151,7 @@ export default function TelecomServicesPage() {
                     const newValue = e.target.value.replace(/\D/g, '');
                     setPhoneNumber(newValue);
                 }}
-                className="text-2xl text-center h-16 tracking-widest"
+                className="text-xl text-center h-14 tracking-wider"
               />
             </div>
           </CardContent>
@@ -1205,4 +1199,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 

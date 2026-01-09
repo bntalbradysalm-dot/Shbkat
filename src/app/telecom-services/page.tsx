@@ -494,74 +494,61 @@ const Yemen4GUI = ({
     return (
         <div className="space-y-4 animate-in fade-in-0 duration-500">
             <Card>
-                <CardHeader className="flex-row items-center justify-between p-3">
-                    <CardTitle className="text-sm">بيانات الرقم (يمن فورجي)</CardTitle>
-                     <Button variant="ghost" size="icon" onClick={refreshQuery} disabled={isLoadingQuery}>
-                        <RefreshCw className={`h-4 w-4 ${isLoadingQuery ? 'animate-spin' : ''}`} />
-                    </Button>
+                <CardHeader className="p-3 text-center">
+                    <CardTitle className="text-base">بيانات الرقم (يمن فورجي)</CardTitle>
                 </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-2">
-                    {isLoadingQuery ? (
-                         <Skeleton className="h-8 w-full" />
-                    ) : queryData ? (
-                        <div className="flex justify-between items-center text-xs text-muted-foreground p-2 rounded-lg bg-muted">
-                           <p>الرصيد: <strong>{queryData.balance}</strong></p>
-                           {queryData.exp_date && <p className="flex items-center gap-1">الصلاحية: <strong>{format(parseISO(queryData.exp_date), 'd/M/yyyy', {locale: ar})}</strong></p>}
-                        </div>
-                    ) : (
-                        <p className="text-center text-xs text-muted-foreground py-2">لا توجد بيانات لعرضها.</p>
+                <CardContent className="p-3 pt-0 space-y-3">
+                     <div className="flex gap-2">
+                        <Button onClick={refreshQuery} disabled={isLoadingQuery} className="flex-1" variant="outline">
+                            {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : 'استعلام'}
+                        </Button>
+                        <Button onClick={() => onBillPay(Number(billAmount), 'balance')} disabled={!billAmount || Number(billAmount) <= 0} className="flex-1">
+                            تسديد
+                        </Button>
+                    </div>
+                     <div className="relative">
+                        <CircleDollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                            id="y4g-bill-amount"
+                            type="number"
+                            placeholder="أو أدخل مبلغ مخصص..."
+                            value={billAmount}
+                            onChange={(e) => setBillAmount(e.target.value)}
+                            className="pr-10"
+                        />
+                    </div>
+                     {queryData && (
+                        <Card className="bg-muted/50">
+                            <CardContent className="p-3 text-xs">
+                                <p>الرصيد: <strong>{queryData.balance}</strong></p>
+                                {queryData.exp_date && <p>تاريخ الانتهاء: <strong>{format(parseISO(queryData.exp_date), 'd/M/yyyy', {locale: ar})}</strong></p>}
+                            </CardContent>
+                        </Card>
                     )}
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="packages" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="packages">شراء باقة</TabsTrigger>
-                    <TabsTrigger value="balance">تسديد رصيد</TabsTrigger>
-                </TabsList>
-                <TabsContent value="packages" className="pt-4">
+            <Card>
+                <CardHeader className="p-3 text-center">
+                     <CardTitle className="text-base">شراء باقة</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
                     <div className="grid grid-cols-2 gap-3">
                         {yemen4gPackages.map(pkg => (
-                            <Card key={pkg.name} onClick={() => onBillPay(pkg.price, 'package')} className="cursor-pointer hover:bg-muted/50 p-3">
-                                <CardContent className="p-0 flex flex-col items-center justify-center text-center">
-                                    <div className="p-2 bg-primary/10 rounded-lg mb-2">
-                                        <Database className="h-5 w-5 text-primary" />
+                            <Card key={pkg.name} onClick={() => onBillPay(pkg.price, 'package')} className="cursor-pointer hover:bg-primary/10 transition-colors">
+                                <CardContent className="p-3 text-center text-primary-foreground bg-primary rounded-lg">
+                                    <p className="text-xs">فئة</p>
+                                    <p className="font-bold text-sm truncate">{pkg.name}</p>
+                                    <div className="mt-2 pt-2 border-t border-primary-foreground/30">
+                                        <p className="text-xs">السعر</p>
+                                        <p className="font-bold">{pkg.price.toLocaleString('en-US')} ريال</p>
                                     </div>
-                                    <h4 className="font-bold text-sm">{pkg.name}</h4>
-                                    <p className="text-lg font-bold text-primary mt-1">{pkg.price.toLocaleString('en-US')} ريال</p>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
-                </TabsContent>
-                <TabsContent value="balance" className="pt-4">
-                    <Card>
-                        <CardHeader className="p-3">
-                            <CardTitle className="text-base text-center">تسديد رصيد</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0 space-y-3">
-                            <div>
-                              <Label htmlFor="y4g-bill-amount" className="sr-only">المبلغ</Label>
-                              <Input 
-                                id="y4g-bill-amount"
-                                type="number"
-                                placeholder="أدخل مبلغ الرصيد..."
-                                value={billAmount}
-                                onChange={(e) => setBillAmount(e.target.value)}
-                              />
-                            </div>
-                            <Button 
-                                className="w-full" 
-                                onClick={() => onBillPay(Number(billAmount), 'balance')} 
-                                disabled={!billAmount || Number(billAmount) <= 0}
-                            >
-                                <CreditCard className="ml-2 h-4 w-4" />
-                                تسديد رصيد
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                </CardContent>
+            </Card>
         </div>
     )
 }
@@ -599,47 +586,61 @@ const YemenPostUI = ({
                 <TabsTrigger value="line">الهاتف الثابت</TabsTrigger>
             </TabsList>
             <TabsContent value="adsl" className="pt-4 space-y-4">
-                <div className="flex gap-2">
-                    <Button onClick={() => onQuery('adsl')} disabled={isLoadingQuery} className="flex-1">
-                        {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : 'استعلام'}
-                    </Button>
-                    <Button onClick={() => onBillPay(Number(billAmount), 'adsl')} disabled={!billAmount || Number(billAmount) <= 0} className="flex-1">
-                        تسديد
-                    </Button>
-                </div>
-                 <div className="relative">
-                    <CircleDollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input 
-                        id="post-adsl-amount"
-                        type="number"
-                        placeholder="أو أدخل مبلغ مخصص..."
-                        value={billAmount}
-                        onChange={(e) => setBillAmount(e.target.value)}
-                        className="pr-10"
-                    />
-                </div>
-                {queryData && (
-                    <Card className="bg-muted/50">
-                        <CardContent className="p-3 text-xs">
-                             <p>الرصيد (جيجا): {queryData['Gigabyte(s)']}</p>
-                             <p>تاريخ الانتهاء: {queryData['Expire Date']}</p>
-                        </CardContent>
-                    </Card>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                    {yemenPostPackages.map(pkg => (
-                        <Card key={pkg.name} onClick={() => onBillPay(pkg.price, 'adsl')} className="cursor-pointer hover:bg-primary/10 transition-colors">
-                            <CardContent className="p-3 text-center text-primary-foreground bg-primary rounded-lg">
-                                <p className="text-xs">فئة</p>
-                                <p className="font-bold text-sm truncate">{pkg.name}</p>
-                                <div className="mt-2 pt-2 border-t border-primary-foreground/30">
-                                    <p className="text-xs">السعر</p>
-                                    <p className="font-bold">{pkg.price.toLocaleString('en-US')} ريال</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <Card>
+                    <CardHeader className="p-3 text-center">
+                        <CardTitle className="text-base">تسديد فاتورة ADSL</CardTitle>
+                    </CardHeader>
+                     <CardContent className="p-3 pt-0 space-y-3">
+                        <div className="flex gap-2">
+                            <Button onClick={() => onQuery('adsl')} disabled={isLoadingQuery} className="flex-1" variant="outline">
+                                {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : 'استعلام'}
+                            </Button>
+                            <Button onClick={() => onBillPay(Number(billAmount), 'adsl')} disabled={!billAmount || Number(billAmount) <= 0} className="flex-1">
+                                تسديد
+                            </Button>
+                        </div>
+                        <div className="relative">
+                            <CircleDollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input 
+                                id="post-adsl-amount"
+                                type="number"
+                                placeholder="أو أدخل مبلغ مخصص..."
+                                value={billAmount}
+                                onChange={(e) => setBillAmount(e.target.value)}
+                                className="pr-10"
+                            />
+                        </div>
+                        {queryData && (
+                            <Card className="bg-muted/50">
+                                <CardContent className="p-3 text-xs">
+                                    <p>الرصيد (جيجا): {queryData['Gigabyte(s)']}</p>
+                                    <p>تاريخ الانتهاء: {queryData['Expire Date']}</p>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="p-3 text-center">
+                        <CardTitle className="text-base">شراء باقة إنترنت</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0">
+                         <div className="grid grid-cols-2 gap-3">
+                            {yemenPostPackages.map(pkg => (
+                                <Card key={pkg.name} onClick={() => onBillPay(pkg.price, 'adsl')} className="cursor-pointer hover:bg-primary/10 transition-colors">
+                                    <CardContent className="p-3 text-center text-primary-foreground bg-primary rounded-lg">
+                                        <p className="text-xs">فئة</p>
+                                        <p className="font-bold text-sm truncate">{pkg.name}</p>
+                                        <div className="mt-2 pt-2 border-t border-primary-foreground/30">
+                                            <p className="text-xs">السعر</p>
+                                            <p className="font-bold">{pkg.price.toLocaleString('en-US')} ريال</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             </TabsContent>
             <TabsContent value="line" className="pt-4 space-y-4">
                 <Card>
@@ -724,7 +725,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('73')) return 'SabaFon';
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
-    if (phone.length === 8 && phone.match(/^(1|2|3|4|5|6|7)/)) return 'Yemen Post';
+    if (phone.startsWith('0') && phone.length === 8) return 'Yemen Post';
     if (phone.length === 9 && phone.match(/^(1|2|3|4|5|6|7)/)) return 'Yemen 4G';
     return null;
   };

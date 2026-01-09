@@ -321,49 +321,48 @@ const YemenMobileUI = ({
 
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
-        <Card>
-            <CardHeader className="flex-row items-center justify-between p-3">
-                <CardTitle className="text-sm">بيانات الرقم</CardTitle>
-                <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
-                    <RefreshCw className={`h-4 w-4 ${(isLoadingBalance || isLoadingSolfa) ? 'animate-spin' : ''}`} />
-                </Button>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-2">
-                {isLoadingBalance ? (
-                    <Skeleton className="h-10 w-full" />
-                ) : balanceData ? (
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                        <div className="p-2 bg-muted rounded-lg">
-                            <p className="font-semibold text-muted-foreground">الرصيد</p>
-                            <p className="font-bold text-primary">{balanceData.balance} ريال</p>
-                        </div>
-                        <div className="p-2 bg-muted rounded-lg">
-                            <p className="font-semibold text-muted-foreground">نوع الخط</p>
-                            <p className="font-bold text-primary">{getMobileTypeString(balanceData.mobileType)}</p>
-                        </div>
-                    </div>
-                ) : (
-                    <p className="text-center text-xs text-muted-foreground py-2">تعذر جلب بيانات الرصيد.</p>
-                )}
-                {isLoadingSolfa ? (
-                    <Skeleton className="h-8 w-full" />
-                ) : solfaData && (
-                     <div className={cn("p-2 rounded-lg text-center text-xs font-semibold flex items-center justify-center gap-2", isLoanActive ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
-                        {isLoanActive ? <ThumbsDown className="h-4 w-4" /> : <Smile className="h-4 w-4" />}
-                        <span>{solfaData.message}</span>
-                        {isLoanActive && <span>({solfaData.loan_amount} ريال)</span>}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-
         <Tabs defaultValue="packages" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
                 <TabsTrigger value="balance">الرصيد</TabsTrigger>
             </TabsList>
             <TabsContent value="packages" className="pt-4 space-y-4">
-                 <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
+                 <Card>
+                    <CardHeader className="flex-row items-center justify-between p-3">
+                        <CardTitle className="text-sm">بيانات الرقم</CardTitle>
+                        <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
+                            <RefreshCw className={`h-4 w-4 ${(isLoadingBalance || isLoadingSolfa) ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 space-y-2">
+                        {isLoadingBalance ? (
+                            <Skeleton className="h-10 w-full" />
+                        ) : balanceData ? (
+                            <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                                <div className="p-2 bg-muted rounded-lg">
+                                    <p className="font-semibold text-muted-foreground">الرصيد</p>
+                                    <p className="font-bold text-primary">{balanceData.balance} ريال</p>
+                                </div>
+                                <div className="p-2 bg-muted rounded-lg">
+                                    <p className="font-semibold text-muted-foreground">نوع الخط</p>
+                                    <p className="font-bold text-primary">{getMobileTypeString(balanceData.mobileType)}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-center text-xs text-muted-foreground py-2">تعذر جلب بيانات الرصيد.</p>
+                        )}
+                        {isLoadingSolfa ? (
+                            <Skeleton className="h-8 w-full" />
+                        ) : solfaData && (
+                            <div className={cn("p-2 rounded-lg text-center text-xs font-semibold flex items-center justify-center gap-2", isLoanActive ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}>
+                                {isLoanActive ? <ThumbsDown className="h-4 w-4" /> : <Smile className="h-4 w-4" />}
+                                <span>{solfaData.message}</span>
+                                {isLoanActive && <span>({solfaData.loan_amount} ريال)</span>}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+                <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
                     {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
                         <AccordionItem value={category} key={category} className="border-none">
                             <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
@@ -428,11 +427,10 @@ const YemenMobileUI = ({
             <TabsContent value="balance" className="pt-4">
                 <Card>
                     <CardHeader className="p-3">
-                        <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
+                        <CardTitle className="text-base text-center">أدخل المبلغ</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-3">
                         <div className="space-y-2">
-                            <Label htmlFor="bill-amount">المبلغ الإجمالي</Label>
                             <Input 
                                 id="bill-amount"
                                 type="number"
@@ -446,9 +444,9 @@ const YemenMobileUI = ({
                                 </p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="net-amount">صافي الرصيد (بعد خصم الضريبة)</Label>
-                            <div id="net-amount" className="p-2 h-10 flex items-center justify-center rounded-xl bg-muted text-center font-bold text-primary">
+                        <div className="space-y-2 text-center">
+                            <Label htmlFor="net-amount">صافي الرصيد بعد خصم الضريبة</Label>
+                            <div id="net-amount" className="p-2 h-10 flex items-center justify-center rounded-xl bg-muted font-bold text-primary">
                                 {netAmount.toFixed(2)} ريال
                             </div>
                         </div>
@@ -736,7 +734,7 @@ export default function TelecomServicesPage() {
   
   const getOperatorLogo = (operator: string | null) => {
       switch(operator) {
-          case 'Yemen Mobile': return 'https://i.postimg.cc/tR80r860/090b6af8-e8d8-4825-bddf-8469a3e8a36c.jpg';
+          case 'Yemen Mobile': return 'https://i.ibb.co/b3C30W2/logo.png';
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';
@@ -1013,13 +1011,7 @@ export default function TelecomServicesPage() {
 
   const renderOperatorUI = () => {
     if (!detectedOperator) {
-        return (
-             <Card className="shadow-lg">
-                <CardContent className="p-6 text-center">
-                    <Info className="mx-auto h-12 w-12 text-muted-foreground" />
-                </CardContent>
-            </Card>
-        );
+        return null; // Don't render anything if no operator is detected
     }
     
     const phoneLength = phoneNumber.length;
@@ -1033,7 +1025,7 @@ export default function TelecomServicesPage() {
     if (isLandline) requiredLength = 7;
     else if (isYemen4G) requiredLength = 9;
 
-    if (phoneLength < requiredLength && isMobile) return null;
+    if (isMobile && phoneLength < requiredLength) return null;
 
 
     switch (detectedOperator) {
@@ -1134,7 +1126,7 @@ export default function TelecomServicesPage() {
         <BalanceDisplay />
 
         <Card className="shadow-lg">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="relative">
                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
                     {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery || isLoadingYemenPostQuery) ? (

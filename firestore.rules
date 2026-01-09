@@ -206,8 +206,9 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow user to update their own document, or an admin to update any user document.
-      allow update: if isOwner(userId) || isAdmin();
+      // Allow user to update their own document, an admin, or any signed-in user
+      // to support balance transfers.
+      allow update: if isOwner(userId) || isAdmin() || isSignedIn();
       allow delete: if isAdmin();
 
       /**
@@ -275,4 +276,6 @@ service cloud.firestore {
   }
 }
     
+    
+
     

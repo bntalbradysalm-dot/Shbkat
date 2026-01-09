@@ -14,14 +14,25 @@ export async function POST(request: Request) {
       return new NextResponse(JSON.stringify({ message: 'Mobile number and offerID are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const externalApiBody = {
+    const externalApiBody: {
+      data: {
+        mobile: string;
+        offerID: string;
+        method: string;
+        packageId?: number;
+      }
+    } = {
       data: {
         mobile: String(mobile),
         offerID: String(offerID),
         method: method ? String(method) : "1", // Default to "1" if not provided
-        ...(packageId && { packageId: Number(packageId) }),
       }
     };
+    
+    // Conditionally add packageId as a number if it exists
+    if (packageId !== undefined && packageId !== null) {
+        externalApiBody.data.packageId = Number(packageId);
+    }
     
     const response = await fetch(API_BASE_URL, {
       method: 'POST',

@@ -736,7 +736,7 @@ export default function TelecomServicesPage() {
   
   const getOperatorLogo = (operator: string | null) => {
       switch(operator) {
-          case 'Yemen Mobile': return 'https://i.postimg.cc/tR80r860/090b6af8-e8d8-4825-bddf-8469a3e8a36c.jpg';
+          case 'Yemen Mobile': return 'https://i.ibb.co/b3C30W2/logo.png';
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';
@@ -1129,7 +1129,7 @@ export default function TelecomServicesPage() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center">ادخل رقم الهاتف</CardTitle>
+            <CardTitle className="text-center text-base">ادخل رقم الهاتف</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative">
@@ -1139,7 +1139,7 @@ export default function TelecomServicesPage() {
                     ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
                         <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>
                     ) : (
-                        <Search className="h-5 w-5 text-muted-foreground" />
+                        <Phone className="h-5 w-5 text-muted-foreground" />
                     )}
                 </div>
               <Input
@@ -1151,7 +1151,7 @@ export default function TelecomServicesPage() {
                     const newValue = e.target.value.replace(/\D/g, '');
                     setPhoneNumber(newValue);
                 }}
-                className="text-xl text-center h-14 tracking-wider"
+                className="text-lg text-center h-12 tracking-wider"
               />
             </div>
           </CardContent>
@@ -1199,5 +1199,6 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 

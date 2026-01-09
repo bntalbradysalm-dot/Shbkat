@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo } from 'react';
@@ -342,3 +343,4 @@ export default function NetworkCardsPage() {
       </Suspense>
     );
 }
+

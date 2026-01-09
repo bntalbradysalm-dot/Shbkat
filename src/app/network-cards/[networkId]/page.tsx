@@ -45,9 +45,10 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
-type NetworkOwnerProfile = {
-    balance?: number;
+type Network = {
+    ownerId: string;
 };
+
 
 function NetworkPurchasePageComponent() {
   const params = useParams();
@@ -59,6 +60,9 @@ function NetworkPurchasePageComponent() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+
+  const networkDocRef = useMemoFirebase(() => (firestore && networkId ? doc(firestore, 'networks', networkId) : null), [firestore, networkId]);
+  const { data: networkData } = useDoc<Network>(networkDocRef);
 
   const categoriesQuery = useMemoFirebase(() => (
     firestore && networkId ? collection(firestore, `networks/${networkId}/cardCategories`) : null
@@ -78,7 +82,17 @@ function NetworkPurchasePageComponent() {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId) return;
+    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) return;
+
+    if (user.uid === networkData.ownerId) {
+        toast({
+            variant: "destructive",
+            title: "غير مسموح",
+            description: "لا يمكنك شراء كرت من شبكتك الخاصة.",
+        });
+        setIsConfirming(false);
+        return;
+    }
 
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
@@ -106,16 +120,7 @@ function NetworkPurchasePageComponent() {
 
         const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
         const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard;
-
-
-        const networkDocRef = doc(firestore, 'networks', networkId);
-        const networkDocSnapshot = await getDoc(networkDocRef);
         
-        if (!networkDocSnapshot.exists()) {
-            throw new Error('لم يتم العثور على الشبكة.');
-        }
-        
-        const networkData = networkDocSnapshot.data();
         const ownerId = networkData.ownerId;
         const ownerDocRef = doc(firestore, 'users', ownerId);
 

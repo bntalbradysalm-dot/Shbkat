@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo } from 'react';
@@ -74,21 +73,31 @@ function NetworkPurchasePageComponent() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
-  const [purchasedCardPassword, setPurchasedCardPassword] = useState<string | null>(null);
 
   const userDocRef = useMemo(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-
+  
   const handlePurchase = async () => {
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) return;
-
+  
+    // Prevent owner from buying from their own network
+    if (user.uid === networkData.ownerId) {
+      toast({
+        variant: "destructive",
+        title: "غير مسموح",
+        description: "لا يمكنك شراء كرت من شبكتك الخاصة.",
+      });
+      setIsConfirming(false);
+      return;
+    }
+  
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
     const userBalance = userProfile?.balance ?? 0;
-
+  
     if (userBalance < categoryPrice) {
         toast({
             variant: "destructive",
@@ -99,28 +108,28 @@ function NetworkPurchasePageComponent() {
         setIsConfirming(false);
         return;
     }
-
+  
     try {
         const cardsRef = collection(firestore, `networks/${networkId}/cards`);
         const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
         const availableCardsSnapshot = await getDocs(q);
-
+  
         if (availableCardsSnapshot.empty) {
             throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
         }
-
+  
         const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
         const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard;
         
         const ownerId = networkData.ownerId;
         const ownerDocRef = doc(firestore, 'users', ownerId);
-
+  
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
         const commission = categoryPrice * 0.10;
         const payoutAmount = categoryPrice - commission;
-
-        // 1. Update card status
+  
+        // 1. Update card status to 'sold'
         batch.update(cardToPurchaseDoc.ref, {
             status: 'sold',
             soldTo: user.uid,
@@ -129,11 +138,8 @@ function NetworkPurchasePageComponent() {
         
         // 2. Deduct balance from buyer
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
-
-        // 3. Add earnings to the owner's balance
-        batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-        // 4. Create transaction for buyer
+  
+        // 3. Create transaction for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -142,24 +148,33 @@ function NetworkPurchasePageComponent() {
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
             cardNumber: cardToPurchaseData.cardNumber,
-            cardPassword: cardToPurchaseData.cardNumber, // Assuming card number is the password
+            cardPassword: cardToPurchaseData.cardNumber,
         });
 
-        // 5. Create transaction for owner
-        const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-        batch.set(ownerTransactionRef, {
-             userId: ownerId,
-             transactionDate: now,
-             amount: payoutAmount,
-             transactionType: 'أرباح مبيعات الكروت',
-             notes: `ربح من بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`
+        // 4. Create a record in soldCards for the admin to approve payout
+        const soldCardRef = doc(collection(firestore, 'soldCards'));
+        batch.set(soldCardRef, {
+            networkId: networkId,
+            ownerId: ownerId,
+            networkName: networkName,
+            categoryId: selectedCategory.id,
+            categoryName: selectedCategory.name,
+            cardId: cardToPurchaseData.id,
+            cardNumber: cardToPurchaseData.cardNumber,
+            price: categoryPrice,
+            commissionAmount: commission,
+            payoutAmount: payoutAmount,
+            buyerId: user.uid,
+            buyerName: userProfile.displayName,
+            buyerPhoneNumber: userProfile.phoneNumber,
+            soldTimestamp: now,
+            payoutStatus: 'pending' 
         });
         
         await batch.commit();
-
+  
         setPurchasedCard(cardToPurchaseData);
-        setPurchasedCardPassword(cardToPurchaseData.cardNumber); // Assuming card number is the password
-
+  
     } catch (error: any) {
         console.error("Purchase failed:", error);
         toast({
@@ -175,7 +190,7 @@ function NetworkPurchasePageComponent() {
 
   const handleCopyCardDetails = () => {
     if (purchasedCard) {
-        const cardDetails = `رقم الكرت: ${purchasedCard.cardNumber}\nكلمة المرور: ${purchasedCardPassword}`;
+        const cardDetails = `رقم الكرت: ${purchasedCard.cardNumber}\nكلمة المرور: ${purchasedCard.cardNumber}`;
         navigator.clipboard.writeText(cardDetails);
         toast({
             title: "تم النسخ",
@@ -198,7 +213,7 @@ function NetworkPurchasePageComponent() {
                         
                         <div className="w-full text-right space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono">
                            <p>ID: {purchasedCard.cardNumber}</p>
-                           <p>Pass: {purchasedCardPassword}</p>
+                           <p>Pass: {purchasedCard.cardNumber}</p>
                         </div>
                         
                          <Button className="w-full" onClick={handleCopyCardDetails}>
@@ -209,7 +224,6 @@ function NetworkPurchasePageComponent() {
                         <div className="w-full pt-4">
                             <Button variant="outline" className="w-full" onClick={() => {
                                 setPurchasedCard(null);
-                                setPurchasedCardPassword(null);
                                 router.push('/login');
                             }}>العودة للرئيسية</Button>
                         </div>
@@ -319,4 +333,3 @@ export default function NetworkCardsPage() {
       </Suspense>
     );
 }
-

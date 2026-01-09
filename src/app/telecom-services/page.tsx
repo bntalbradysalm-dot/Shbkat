@@ -362,10 +362,10 @@ const YemenMobileUI = ({
                             </div>
                         )}
                          {activeSubscriptions.length > 0 && (
-                            <div className="pt-4">
-                                <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
+                            <div className="pt-2">
+                                <h3 className="font-bold text-center mb-2 text-sm">الاشتراكات الحالية</h3>
                                  <Card>
-                                    <CardContent className="p-3 pt-0 space-y-2">
+                                    <CardContent className="p-3 space-y-2">
                                         {activeSubscriptions.map(sub => (
                                             <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
                                                 <div className="flex justify-between items-start">
@@ -730,7 +730,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
     if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G';
-    if (phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
+    if (phone.length === 8 && phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
   
@@ -864,17 +864,14 @@ export default function TelecomServicesPage() {
         setYemenPostQueryData(null);
         setActiveYemenPostQuery(null);
     }
-    const phoneLength = phoneNumber.length;
-    
-    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-    const isLandline = operator === 'Yemen Post';
-    const isYemen4G = operator === 'Yemen 4G';
     
     let requiredLength = 9;
-    if (isLandline) requiredLength = 7;
-    else if (isYemen4G) requiredLength = 9;
+    if (operator === 'Yemen Post') requiredLength = 8;
 
-    if (isMobile && phoneLength < requiredLength) return;
+    if (phoneNumber.length < requiredLength) {
+      if (operator) setDetectedOperator(null); // Clear operator if length is insufficient
+      return;
+    }
 
 
     if (operator === 'Yemen Mobile') {
@@ -1016,20 +1013,6 @@ export default function TelecomServicesPage() {
         return null;
     }
     
-    const phoneLength = phoneNumber.length;
-    const operator = getOperator(phoneNumber);
-    
-    const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
-    const isLandline = operator === 'Yemen Post';
-    const isYemen4G = operator === 'Yemen 4G';
-    
-    let requiredLength = 9;
-    if (isLandline) requiredLength = 7;
-    else if (isYemen4G) requiredLength = 9;
-
-    if (isMobile && phoneLength < requiredLength) return null;
-
-
     switch (detectedOperator) {
         case 'Yemen Mobile':
             return <YemenMobileUI 

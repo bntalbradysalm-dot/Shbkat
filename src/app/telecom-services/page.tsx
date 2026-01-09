@@ -396,7 +396,7 @@ const YemenMobileUI = ({
                         </AccordionItem>
                     ))}
                 </Accordion>
-                 {activeSubscriptions.length > 0 && (
+                {activeSubscriptions.length > 0 && (
                     <div className="pt-4">
                         <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
                          <Card>
@@ -1017,7 +1017,6 @@ export default function TelecomServicesPage() {
              <Card className="shadow-lg">
                 <CardContent className="p-6 text-center">
                     <Info className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <p className="mt-4 text-sm font-medium text-muted-foreground">أدخل رقم هاتف صالح</p>
                 </CardContent>
             </Card>
         );
@@ -1205,3 +1204,6 @@ export default function TelecomServicesPage() {
 }
 
 
+
+
+    

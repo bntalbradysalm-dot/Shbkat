@@ -852,6 +852,17 @@ export default function TelecomServicesPage() {
     }
   }, [phoneNumber, toast]);
 
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, '');
+        const operator = getOperator(value);
+        let maxLength = 9;
+        if (operator === 'Yemen Post') {
+            maxLength = 8;
+        }
+        setPhoneNumber(value.slice(0, maxLength));
+    };
+
+
   useEffect(() => {
     const operator = getOperator(phoneNumber);
     setDetectedOperator(operator);
@@ -866,10 +877,12 @@ export default function TelecomServicesPage() {
     }
     
     let requiredLength = 9;
-    if (operator === 'Yemen Post') requiredLength = 8;
+    if (operator === 'Yemen Post') {
+      requiredLength = 8;
+    }
 
-    if (phoneNumber.length < requiredLength) {
-      if (operator) setDetectedOperator(null); // Clear operator if length is insufficient
+    if (phoneNumber.length !== requiredLength) {
+      if (operator) setDetectedOperator(null);
       return;
     }
 
@@ -903,7 +916,7 @@ export default function TelecomServicesPage() {
         }
     
         if ((userProfile.balance ?? 0) < totalCost) {
-            toast({ variant: 'destructive', title: 'رصيد غير كاف', description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'} (التكلفة الإجمالية ${totalCost} ريال).` });
+            toast({ variant: "destructive", title: "رصيد غير كاف", description: `رصيدك الحالي لا يكفي ل${isPackage ? 'شراء هذه الباقة' : 'تسديد هذا المبلغ'} (التكلفة الإجمالية ${totalCost} ريال).` });
             setIsConfirming(false);
             return;
         }
@@ -1127,10 +1140,7 @@ export default function TelecomServicesPage() {
                 type="tel"
                 placeholder="ادخل رقم الهاتف..."
                 value={phoneNumber}
-                onChange={(e) => {
-                    const newValue = e.target.value.replace(/\D/g, '');
-                    setPhoneNumber(newValue);
-                }}
+                onChange={handlePhoneChange}
                 className="text-lg text-center h-12 tracking-wider"
               />
             </div>

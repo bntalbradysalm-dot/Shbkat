@@ -141,8 +141,7 @@ service cloud.firestore {
      */
     match /withdrawalRequests/{requestId} {
       allow create: if isSignedIn() && isWithdrawalRequestOwner();
-      allow read, update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, update, delete: if isAdmin();
     }
     
     /**
@@ -169,12 +168,9 @@ service cloud.firestore {
     match /soldCards/{cardId} {
       allow create: if isSignedIn() && isBuyer();
       allow get: if isAdmin() || isBuyer();
+      allow list: if isAdmin();
       allow update: if isAdmin(); // Admin can update payoutStatus
       allow delete: if false;
-    }
-    
-    match /soldCards {
-        allow list: if isAdmin();
     }
     
     /**
@@ -208,14 +204,14 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
       /**
        * @description Manages a user's private transaction history.
        */
       match /transactions/{transactionId} {
-        allow create: if isSignedIn();
+        allow create: if isOwner(userId) || isAdmin();
         allow read: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }

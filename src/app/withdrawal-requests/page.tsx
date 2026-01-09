@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, query, orderBy, updateDoc, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, query, orderBy, updateDoc, addDoc, writeBatch, getDocs, where, increment } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,37 +114,40 @@ export default function WithdrawalRequestsPage() {
 
     const requestDocRef = doc(firestore, 'withdrawalRequests', selectedRequest.id);
     const ownerDocRef = doc(firestore, 'users', selectedRequest.ownerId);
-    const ownerTransactionsRef = collection(firestore, 'users', selectedRequest.ownerId, 'transactions');
     const ownerNotificationsRef = collection(firestore, 'users', selectedRequest.ownerId, 'notifications');
     
     try {
         const batch = writeBatch(firestore);
 
         if (finalAction === 'approve') {
-            // Find all pending sold cards for the owner and mark them as completed
+            // Find all pending sold cards for the owner up to the requested amount and mark them as completed
             const soldCardsRef = collection(firestore, 'soldCards');
             const q = query(soldCardsRef, where('ownerId', '==', selectedRequest.ownerId), where('payoutStatus', '==', 'pending'));
             const soldCardsSnapshot = await getDocs(q);
 
-            soldCardsSnapshot.forEach(cardDoc => {
-                batch.update(cardDoc.ref, { payoutStatus: 'completed' });
+            let accumulatedAmount = 0;
+            for (const cardDoc of soldCardsSnapshot.docs) {
+                if (accumulatedAmount < selectedRequest.amount) {
+                    const cardData = cardDoc.data();
+                    accumulatedAmount += cardData.payoutAmount;
+                    batch.update(cardDoc.ref, { payoutStatus: 'completed' });
+                } else {
+                    break; // Stop once we've covered the withdrawal amount
+                }
+            }
+            
+            // NOTE: We do not add the amount to the owner's balance.
+            // The process is: Admin sees request, sends money externally, marks as approved.
+            // This simply records that the payout for these cards is done.
+
+            const notificationRef = doc(ownerNotificationsRef);
+            batch.set(notificationRef, {
+                title: 'تمت الموافقة على طلب السحب',
+                body: `تمت الموافقة على طلب سحب مبلغ ${selectedRequest.amount.toLocaleString('en-US')} ريال. سيتم إرسال المبلغ إلى حسابك المحدد.`,
+                timestamp: new Date().toISOString(),
             });
 
-            // Create a single transaction record for the withdrawal
-            const transactionRef = doc(ownerTransactionsRef);
-            batch.set(transactionRef, {
-                userId: selectedRequest.ownerId,
-                transactionDate: new Date().toISOString(),
-                amount: selectedRequest.amount,
-                transactionType: 'سحب أرباح',
-                paymentMethodName: selectedRequest.paymentMethodName,
-                recipientName: selectedRequest.recipientName,
-                accountNumber: selectedRequest.accountNumber,
-                notes: `تم تحويل مبلغ ${selectedRequest.amount.toLocaleString('en-US')} ريال.`,
-            });
         } else { // 'reject'
-            // No balance change needed, as it was never deducted.
-            // Just create a notification for the user.
             const notificationRef = doc(ownerNotificationsRef);
             batch.set(notificationRef, {
                 title: 'تم رفض طلب السحب',
@@ -345,7 +348,7 @@ export default function WithdrawalRequestsPage() {
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
             <AlertDialogDescription>
               {actionToConfirm === 'approve'
-                ? `سيتم تأكيد الطلب كمقبول وتسجيل عملية السحب في سجل المالك.`
+                ? `سيتم تأكيد الطلب كمقبول. هذا يعني أنك قمت بإرسال المبلغ المطلوب خارج التطبيق.`
                 : 'سيتم رفض هذا الطلب. لن يتم إعادة أي رصيد لأن المبلغ لم يتم خصمه مسبقاً.'}
             </AlertDialogDescription>
           </AlertDialogHeader>

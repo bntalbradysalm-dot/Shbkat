@@ -153,7 +153,7 @@ const BalanceDisplay = () => {
 const manualPackages: OfferWithPrice[] = [
     { name: 'هدايا - الشهرية', offerName: 'هدايا - الشهرية', id: 'A68329', offerId: 'A68329', price: 1500, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
-    { name: 'مزايا الشهريه - دفع مسبق', offerName: 'مزايا الشهريه - دفع مسبق', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الشهرية', offerName: 'مزايا الشهرية', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'هدايا - فوترة الاسبوعيه', offerName: 'هدايا - فوترة الاسبوعيه', id: 'A44330', offerId: 'A44330', price: 600, validity: 'أسبوع', offerStartDate: '', offerEndDate: '' },
     { name: 'هدايا توفير 250', offerName: 'هدايا توفير 250', id: 'A66328', offerId: 'A66328', price: 250, offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
@@ -736,7 +736,7 @@ export default function TelecomServicesPage() {
   
   const getOperatorLogo = (operator: string | null) => {
       switch(operator) {
-          case 'Yemen Mobile': return 'https://i.ibb.co/b3C30W2/logo.png';
+          case 'Yemen Mobile': return 'https://i.postimg.cc/tR80r860/090b6af8-e8d8-4825-bddf-8469a3e8a36c.jpg';
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';
@@ -869,12 +869,12 @@ export default function TelecomServicesPage() {
     const isMobile = operator === 'Yemen Mobile' || operator === 'SabaFon' || operator === 'YOU' || operator === 'Way';
     const isLandline = operator === 'Yemen Post';
     const isYemen4G = operator === 'Yemen 4G';
-
+    
     let requiredLength = 9;
     if (isLandline) requiredLength = 7;
     else if (isYemen4G) requiredLength = 9;
 
-    if (phoneLength < requiredLength) return;
+    if (phoneLength < requiredLength && isMobile) return;
 
 
     if (operator === 'Yemen Mobile') {
@@ -1128,10 +1128,7 @@ export default function TelecomServicesPage() {
         <BalanceDisplay />
 
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center text-base">ادخل رقم الهاتف</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             <div className="relative">
                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
                     {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery || isLoadingYemenPostQuery) ? (
@@ -1145,7 +1142,7 @@ export default function TelecomServicesPage() {
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="7X XXX XXXX"
+                placeholder="ادخل رقم الهاتف..."
                 value={phoneNumber}
                 onChange={(e) => {
                     const newValue = e.target.value.replace(/\D/g, '');
@@ -1199,6 +1196,7 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 
 

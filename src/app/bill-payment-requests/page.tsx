@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle } from 'lucide-react';
+import { User, Tag, Phone, CreditCard, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle, Building, HelpCircle, Loader2 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -39,21 +38,29 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-type Yemen4gRequest = {
+type BillPaymentRequest = {
   id: string;
   userId: string;
   userName: string;
   userPhoneNumber: string;
   targetPhoneNumber: string;
-  packageTitle: string;
-  packagePrice: number;
+  company: string;
+  serviceType: string;
+  amount: number;
   commission: number;
   totalCost: number;
   status: 'pending' | 'approved' | 'rejected';
   requestTimestamp: string;
+  transid?: string;
 };
 
-const StatusBadge = ({ status }: { status: Yemen4gRequest['status'] }) => {
+type OperationStatus = {
+    isDone: string; // "1" or "0"
+    isBan: string; // "1" or "0"
+    reason: string;
+};
+
+const StatusBadge = ({ status }: { status: BillPaymentRequest['status'] }) => {
   const statusStyles = {
     pending: 'bg-yellow-400/20 text-yellow-600 border-yellow-400/30',
     approved: 'bg-green-400/20 text-green-600 border-green-400/30',
@@ -68,25 +75,27 @@ const StatusBadge = ({ status }: { status: Yemen4gRequest['status'] }) => {
   return <Badge className={statusStyles[status]}>{statusText[status]}</Badge>;
 };
 
-export default function Yemen4gRequestsPage() {
+export default function BillPaymentRequestsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [selectedRequest, setSelectedRequest] = useState<Yemen4gRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<BillPaymentRequest | null>(null);
   const [actionToConfirm, setActionToConfirm] = useState<'approve' | 'reject' | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [rejectionNote, setRejectionNote] = useState('');
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
 
   const requestsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'yemen4gRequests'), orderBy('requestTimestamp', 'desc')) : null),
+    () => (firestore ? query(collection(firestore, 'billPaymentRequests'), orderBy('requestTimestamp', 'desc')) : null),
     [firestore]
   );
-  const { data: requests, isLoading } = useCollection<Yemen4gRequest>(requestsQuery);
+  const { data: requests, isLoading } = useCollection<BillPaymentRequest>(requestsQuery);
 
   const { pendingRequests, archivedRequests } = useMemo(() => {
-    const pending: Yemen4gRequest[] = [];
-    const archived: Yemen4gRequest[] = [];
+    const pending: BillPaymentRequest[] = [];
+    const archived: BillPaymentRequest[] = [];
     requests?.forEach(req => {
       if (req.status === 'pending') {
         pending.push(req);
@@ -102,7 +111,7 @@ export default function Yemen4gRequestsPage() {
     const finalAction = actionType || actionToConfirm;
     if (!selectedRequest || !finalAction || !firestore) return;
 
-    const requestDocRef = doc(firestore, 'yemen4gRequests', selectedRequest.id);
+    const requestDocRef = doc(firestore, 'billPaymentRequests', selectedRequest.id);
     const userDocRef = doc(firestore, 'users', selectedRequest.userId);
     const userTransactionsRef = collection(firestore, 'users', selectedRequest.userId, 'transactions');
     const userNotificationsRef = collection(firestore, 'users', selectedRequest.userId, 'notifications');
@@ -116,7 +125,7 @@ export default function Yemen4gRequestsPage() {
                 userId: selectedRequest.userId,
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.totalCost,
-                transactionType: `سداد ${selectedRequest.packageTitle}`,
+                transactionType: `سداد ${selectedRequest.company}`,
                 notes: `إلى رقم: ${selectedRequest.targetPhoneNumber}`,
                 recipientPhoneNumber: selectedRequest.targetPhoneNumber,
               });
@@ -131,13 +140,13 @@ export default function Yemen4gRequestsPage() {
                 transactionDate: new Date().toISOString(),
                 amount: selectedRequest.totalCost,
                 transactionType: 'استرجاع مبلغ مرفوض',
-                notes: `تم رفض طلب سداد "${selectedRequest.packageTitle}". ${rejectionNote ? `السبب: ${rejectionNote}` : ''}`,
+                notes: `تم رفض طلب سداد "${selectedRequest.company}". ${rejectionNote ? `السبب: ${rejectionNote}` : ''}`,
             });
 
             const notificationRef = doc(userNotificationsRef);
             batch.set(notificationRef, {
                 title: 'تم رفض طلب السداد',
-                body: `تم رفض طلب سداد باقة "${selectedRequest.packageTitle}". السبب: ${rejectionNote || 'لا يوجد سبب محدد.'}`,
+                body: `تم رفض طلب سداد فاتورة ${selectedRequest.company}. السبب: ${rejectionNote || 'لا يوجد سبب محدد.'}`,
                 timestamp: new Date().toISOString(),
             });
         }
@@ -166,9 +175,53 @@ export default function Yemen4gRequestsPage() {
     }
   };
 
+  const handleCheckStatus = useCallback(async () => {
+    if (!selectedRequest?.transid || !selectedRequest?.targetPhoneNumber) {
+        toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'لا يوجد رقم معاملة (transid) للتحقق منه.'
+        });
+        return;
+    }
+    setIsCheckingStatus(true);
+    try {
+        const response = await fetch(`/api/echehanly?service=info&action=status&mobile=${selectedRequest.targetPhoneNumber}&transid=${selectedRequest.transid}`);
+        const data: OperationStatus = await response.json();
+
+        if (!response.ok) {
+            throw new Error((data as any).message || 'فشل التحقق من الحالة.');
+        }
+
+        let statusDescription = 'الحالة غير معروفة.';
+        if (data.isDone === '1' && data.isBan === '0') {
+            statusDescription = `✅ نجحت العملية: ${data.reason}`;
+        } else if (data.isDone === '0' && data.isBan === '0') {
+            statusDescription = `⏳ لا تزال قيد التنفيذ: ${data.reason}`;
+        } else if (data.isBan === '1') {
+            statusDescription = `❌ محظورة/مرفوضة: ${data.reason}`;
+        }
+
+        toast({
+            title: 'نتيجة التحقق من العملية',
+            description: statusDescription,
+            duration: 9000,
+        });
+
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'فشل التحقق',
+            description: error.message,
+        });
+    } finally {
+        setIsCheckingStatus(false);
+    }
+}, [selectedRequest, toast]);
+
   const handleDelete = () => {
     if (!selectedRequest || !firestore) return;
-    const requestDocRef = doc(firestore, 'yemen4gRequests', selectedRequest.id);
+    const requestDocRef = doc(firestore, 'billPaymentRequests', selectedRequest.id);
     deleteDocumentNonBlocking(requestDocRef);
     toast({
         title: "تم الحذف",
@@ -184,7 +237,7 @@ export default function Yemen4gRequestsPage() {
     
     const batch = writeBatch(firestore);
     archivedRequests.forEach(request => {
-      const docRef = doc(firestore, 'yemen4gRequests', request.id);
+      const docRef = doc(firestore, 'billPaymentRequests', request.id);
       batch.delete(docRef);
     });
 
@@ -198,7 +251,7 @@ export default function Yemen4gRequestsPage() {
       .catch((serverError) => {
         const contextualError = new FirestorePermissionError({
           operation: 'delete',
-          path: '/yemen4gRequests'
+          path: '/billPaymentRequests'
         });
         errorEmitter.emit('permission-error', contextualError);
       });
@@ -206,7 +259,7 @@ export default function Yemen4gRequestsPage() {
     setIsDeleteAllAlertOpen(false);
   };
 
-  const RequestList = ({ list, emptyMessage }: { list: Yemen4gRequest[], emptyMessage: string }) => {
+  const RequestList = ({ list, emptyMessage }: { list: BillPaymentRequest[], emptyMessage: string }) => {
     if (!list || list.length === 0) {
       return <p className="text-center text-muted-foreground mt-10">{emptyMessage}</p>;
     }
@@ -225,11 +278,11 @@ export default function Yemen4gRequestsPage() {
               <CardContent className="p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-full">
-                      <User className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                      <User className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                       <p className="font-bold">{request.userName}</p>
-                      <p className="text-sm text-muted-foreground">{request.packageTitle}</p>
+                      <p className="text-sm text-muted-foreground">{request.company} - {request.serviceType}</p>
                   </div>
                   </div>
                   <div className="text-left flex flex-col items-end gap-1">
@@ -292,7 +345,7 @@ export default function Yemen4gRequestsPage() {
   return (
     <>
       <div className="flex flex-col h-full bg-background">
-        <SimpleHeader title="طلبات يمن 4G" />
+        <SimpleHeader title="طلبات كبينة السداد" />
         <div className="flex-1 overflow-y-auto">
           {renderContent()}
         </div>
@@ -314,11 +367,12 @@ export default function Yemen4gRequestsPage() {
                     <InfoRow icon={User} label="اسم العميل" value={selectedRequest.userName} />
                     <InfoRow icon={Phone} label="رقم العميل" value={selectedRequest.userPhoneNumber} />
                     <hr className="my-2"/>
+                    <InfoRow icon={Building} label="الشركة" value={selectedRequest.company} />
+                     <InfoRow icon={Tag} label="نوع الخدمة" value={selectedRequest.serviceType} />
                     <InfoRow icon={Phone} label="رقم السداد" value={selectedRequest.targetPhoneNumber} />
-                    <InfoRow icon={Tag} label="الباقة المطلوبة" value={selectedRequest.packageTitle} />
                     <InfoRow icon={Calendar} label="تاريخ الطلب" value={format(parseISO(selectedRequest.requestTimestamp), 'Pp', { locale: ar })} />
                     <hr className="my-2"/>
-                    <InfoRow icon={CreditCard} label="سعر الباقة" value={selectedRequest.packagePrice} />
+                    <InfoRow icon={CreditCard} label="مبلغ الفاتورة" value={selectedRequest.amount} />
                     <InfoRow icon={CreditCard} label="العمولة" value={selectedRequest.commission} />
                     <div className="flex justify-between items-center pt-2 border-t mt-3">
                         <span className="text-muted-foreground font-semibold">التكلفة الإجمالية:</span>
@@ -330,6 +384,12 @@ export default function Yemen4gRequestsPage() {
                     <>
                         <Button variant="destructive" onClick={() => setActionToConfirm('reject')}><X className="ml-2"/> رفض</Button>
                         <Button onClick={() => handleAction('approve')}><Check className="ml-2"/> قبول</Button>
+                        {selectedRequest.transid && (
+                            <Button variant="outline" className="col-span-2" onClick={handleCheckStatus} disabled={isCheckingStatus}>
+                                {isCheckingStatus ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : <HelpCircle className="ml-2 h-4 w-4" />}
+                                {isCheckingStatus ? 'جاري التحقق...' : 'التحقق من حالة العملية'}
+                            </Button>
+                        )}
                     </>
                     )}
                      {selectedRequest.status !== 'pending' && (

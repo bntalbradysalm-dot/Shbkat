@@ -179,7 +179,7 @@ export default function SignupPage() {
         <div className="flex-1 flex flex-col justify-center text-center px-6">
           <div className="mb-8 flex flex-col items-center">
              <Image 
-                src="https://i.postimg.cc/XNhdQKqs/44.png" 
+                src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png" 
                 alt="Shabakat Wallet Logo" 
                 width={100} 
                 height={100} 

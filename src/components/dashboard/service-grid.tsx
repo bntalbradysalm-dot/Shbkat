@@ -8,10 +8,11 @@ import {
   History,
   Wifi,
   CreditCard,
+  Smartphone,
+  Gamepad2,
+  Bolt,
 } from 'lucide-react';
 import Link from 'next/link';
-import { PromotionalImage } from './promotional-image';
-import { RecentTransactions } from './recent-transactions';
 import Image from 'next/image';
 
 type Service = {
@@ -21,12 +22,14 @@ type Service = {
 };
 
 const services: Service[] = [
+  { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
-  { name: 'يمن 4G', icon: 'https://i.postimg.cc/yNZxB8js/unnamed-(1).png', href: '/pay-balance' },
-  { name: 'العمليات', icon: History, href: '/transactions' },
+  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
+  { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
+  { name: 'المدفوعات', icon: Bolt, href: '/payments' },
+  { name: 'سجل العمليات', icon: History, href: '/transactions' },
 ];
 
 const ServiceItem = ({
@@ -57,7 +60,7 @@ const ServiceItem = ({
 export function ServiceGrid() {
   return (
     <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
-      <div className="grid grid-cols-3 gap-3 px-4">
+      <div className="grid grid-cols-4 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem key={service.name} {...service} index={index} />
         ))}

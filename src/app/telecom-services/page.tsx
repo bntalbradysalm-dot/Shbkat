@@ -396,7 +396,7 @@ const YemenMobileUI = ({
                         </AccordionItem>
                     ))}
                 </Accordion>
-                {activeSubscriptions.length > 0 && (
+                 {activeSubscriptions.length > 0 && (
                     <div className="pt-4">
                         <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
                          <Card>
@@ -447,7 +447,7 @@ const YemenMobileUI = ({
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="net-amount">صافي الرصيد (بعد خصم الضريبة 17.4%)</Label>
+                            <Label htmlFor="net-amount">صافي الرصيد (بعد خصم الضريبة)</Label>
                             <div id="net-amount" className="p-2 h-10 flex items-center justify-center rounded-xl bg-muted text-center font-bold text-primary">
                                 {netAmount.toFixed(2)} ريال
                             </div>
@@ -1013,7 +1013,14 @@ export default function TelecomServicesPage() {
 
   const renderOperatorUI = () => {
     if (!detectedOperator) {
-        return null;
+        return (
+             <Card className="shadow-lg">
+                <CardContent className="p-6 text-center">
+                    <Info className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <p className="mt-4 text-sm font-medium text-muted-foreground">أدخل رقم هاتف صالح</p>
+                </CardContent>
+            </Card>
+        );
     }
     
     const phoneLength = phoneNumber.length;
@@ -1196,7 +1203,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-
 
 

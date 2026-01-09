@@ -268,10 +268,7 @@ service cloud.firestore {
         allow read: if isSignedIn() || isAdmin();
         allow create, delete: if isAdmin() || isNetworkOwner(networkId);
         // Allow user to purchase a card.
-        allow update: if (isAdmin() || isNetworkOwner(networkId)) || (isSignedIn() 
-            && request.resource.data.status == 'sold'
-            && resource.data.status == 'available'
-            && request.resource.data.soldTo == request.auth.uid);
+        allow update: if isSignedIn();
       }
     }
   }
@@ -282,5 +279,7 @@ service cloud.firestore {
     
 
 
+
+    
 
     

@@ -232,7 +232,7 @@ export default function TransactionsPage() {
                         </DialogHeader>
                         <div className="space-y-4 py-4 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">الباقة:</span>
+                                <span className="text-muted-foreground">النوع:</span>
                                 <span className="font-semibold">{selectedTx.transactionType}</span>
                             </div>
                              {selectedTx.notes && (selectedTx.transactionType.startsWith('شراء كرت') || selectedTx.transactionType.startsWith('تجديد')) && (
@@ -263,21 +263,22 @@ export default function TransactionsPage() {
                                     <span className="font-semibold">{selectedTx.subscriberName}</span>
                                 </div>
                             )}
-                            {selectedTx.cardNumber && (
-                                <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
-                                    <div className="flex items-center gap-1">
-                                        <span className="font-semibold">{selectedTx.cardNumber}</span>
-                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardNumber!, 'رقم الكرت')}>
-                                            <Copy className="h-4 w-4"/>
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                            {(selectedTx.cardPassword) && (
+                            
+                            {(selectedTx.cardNumber || selectedTx.cardPassword) && (
                                  <div className="pt-4 mt-2 border-t">
                                      <h4 className="font-bold text-base mb-2">تفاصيل الكرت</h4>
                                         <div className="space-y-2">
+                                            {selectedTx.cardNumber && 
+                                                <div className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                                    <span className="text-muted-foreground">رقم الكرت:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono font-semibold">{selectedTx.cardNumber}</span>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardNumber!, 'رقم الكرت')}>
+                                                            <Copy className="h-4 w-4"/>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            }
                                             {selectedTx.cardPassword &&
                                              <div className="flex justify-between items-center bg-muted p-2 rounded-md">
                                                 <span className="text-muted-foreground">كلمة المرور:</span>

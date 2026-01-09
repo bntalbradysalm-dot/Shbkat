@@ -131,7 +131,7 @@ function NetworkPurchasePageComponent() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
+            throw new Error(errorData?.message?.ar || errorData?.message || 'فشل إنشاء الطلب.');
         }
 
         const result: OrderResponse = await response.json();
@@ -146,15 +146,21 @@ function NetworkPurchasePageComponent() {
 
         // 2. Create a transaction record for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
-        batch.set(buyerTransactionRef, {
+        const transactionPayload: any = {
             userId: user.uid,
             transactionDate: now,
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
             cardNumber: cardData.cardID,
-            cardPassword: cardData.cardPass,
-        });
+        };
+
+        // Only add cardPassword if it's different from cardID
+        if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+            transactionPayload.cardPassword = cardData.cardPass;
+        }
+        
+        batch.set(buyerTransactionRef, transactionPayload);
         
         await batch.commit();
 
@@ -175,7 +181,10 @@ function NetworkPurchasePageComponent() {
 
   const handleCopyCardDetails = () => {
     if (purchasedCard) {
-        const cardDetails = `رقم الكرت: ${purchasedCard.cardID}\nكلمة المرور: ${purchasedCard.cardPass}`;
+        let cardDetails = `رقم الكرت: ${purchasedCard.cardID}`;
+        if (purchasedCard.cardPass && purchasedCard.cardPass !== purchasedCard.cardID) {
+            cardDetails += `\nكلمة المرور: ${purchasedCard.cardPass}`;
+        }
         navigator.clipboard.writeText(cardDetails);
         toast({
             title: "تم النسخ",
@@ -185,6 +194,7 @@ function NetworkPurchasePageComponent() {
   };
 
   if (purchasedCard) {
+    const hasPassword = purchasedCard.cardPass && purchasedCard.cardPass !== purchasedCard.cardID;
     return (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
@@ -198,7 +208,7 @@ function NetworkPurchasePageComponent() {
                         
                         <div className="w-full text-right space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono">
                            <p>ID: {purchasedCard.cardID}</p>
-                           <p>Pass: {purchasedCard.cardPass}</p>
+                           {hasPassword && <p>Pass: {purchasedCard.cardPass}</p>}
                         </div>
                         
                          <Button className="w-full" onClick={handleCopyCardDetails}>

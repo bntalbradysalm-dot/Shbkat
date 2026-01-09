@@ -208,7 +208,7 @@ const YemenMobileUI = ({
     const [billAmount, setBillAmount] = useState('');
     const [activeSubscriptions, setActiveSubscriptions] = useState<OfferWithPrice[]>([]);
     const isAmountInvalid = Number(billAmount) < 21 && billAmount !== '';
-    const TAX_RATE = 0.174; // 17.4%
+    const TAX_RATE = 0.174;
 
     const netAmount = useMemo(() => {
         const amount = parseFloat(billAmount);
@@ -321,18 +321,19 @@ const YemenMobileUI = ({
 
     return (
     <div className="space-y-4 animate-in fade-in-0 duration-500" data-theme="yemen-mobile">
-        <Tabs defaultValue="packages" className="w-full">
+        <Tabs defaultValue="packages" className="w-full" onValueChange={(value) => {
+            if (value === 'packages') {
+                refreshBalanceAndSolfa();
+            }
+        }}>
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="packages">الباقات</TabsTrigger>
                 <TabsTrigger value="balance">الرصيد</TabsTrigger>
             </TabsList>
             <TabsContent value="packages" className="pt-4 space-y-4">
                  <Card>
-                    <CardHeader className="flex-row items-center justify-between p-3">
-                        <CardTitle className="text-sm">بيانات الرقم</CardTitle>
-                        <Button variant="ghost" size="icon" onClick={refreshBalanceAndSolfa} disabled={isLoadingBalance || isLoadingSolfa}>
-                            <RefreshCw className={`h-4 w-4 ${(isLoadingBalance || isLoadingSolfa) ? 'animate-spin' : ''}`} />
-                        </Button>
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-sm text-center">بيانات الرقم</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-2">
                         {isLoadingBalance ? (
@@ -872,7 +873,7 @@ export default function TelecomServicesPage() {
     if (isLandline) requiredLength = 7;
     else if (isYemen4G) requiredLength = 9;
 
-    if (phoneLength < requiredLength && isMobile) return;
+    if (isMobile && phoneLength < requiredLength) return;
 
 
     if (operator === 'Yemen Mobile') {

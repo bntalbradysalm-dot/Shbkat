@@ -730,7 +730,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
     if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G';
-    if (phone.length === 8 && phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
+    if (phone.length >= 6 && phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
   
@@ -879,11 +879,13 @@ export default function TelecomServicesPage() {
     let requiredLength = 9;
     if (operator === 'Yemen Post') {
       requiredLength = 8;
+    } else if (operator === 'Way') {
+        requiredLength = 9;
     }
 
-    if (phoneNumber.length !== requiredLength) {
-      if (operator) setDetectedOperator(null);
-      return;
+    if (phoneNumber.length !== requiredLength && operator !== 'Yemen Post' && operator !== 'SabaFon' && operator !== 'YOU') {
+        if (operator && phoneNumber.length < 6) setDetectedOperator(null);
+        return;
     }
 
 
@@ -964,7 +966,7 @@ export default function TelecomServicesPage() {
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalCost) });
     
-            const requestData = {
+            const requestData: any = {
                 userId: user.uid,
                 userName: userProfile.displayName,
                 userPhoneNumber: userProfile.phoneNumber,
@@ -977,8 +979,12 @@ export default function TelecomServicesPage() {
                 status: 'approved',
                 requestTimestamp: new Date().toISOString(),
                 transid: transid,
-                notes: isPackage ? `باقة: ${selectedPackage!.offerName}` : undefined,
             };
+
+            if (isPackage) {
+                requestData.notes = `باقة: ${selectedPackage!.offerName}`;
+            }
+
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
     

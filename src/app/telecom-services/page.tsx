@@ -152,11 +152,11 @@ const BalanceDisplay = () => {
 
 const manualPackages: OfferWithPrice[] = [
     { name: 'هدايا - الشهرية', offerName: 'هدايا - الشهرية', id: 'A68329', offerId: 'A68329', price: 1500, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
-    { name: 'مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
-    { name: 'مزايا الشهريه - دفع مسبق', offerName: 'مزايا الشهريه - دفع مسبق', id: 'A38394', offerId: 'A38394', price: 1300, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الشهريه - دفع مسبق', offerName: 'مزايا الشهريه - دفع مسبق', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'هدايا - فوترة الاسبوعيه', offerName: 'هدايا - فوترة الاسبوعيه', id: 'A44330', offerId: 'A44330', price: 600, validity: 'أسبوع', offerStartDate: '', offerEndDate: '' },
     { name: 'هدايا توفير 250', offerName: 'هدايا توفير 250', id: 'A66328', offerId: 'A66328', price: 250, offerStartDate: '', offerEndDate: '' },
-    { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'الشهريه للفوتره', offerName: 'الشهريه للفوتره', id: 'A76328', offerId: 'A76328', price: 3000, validity: 'شهر', offerStartDate: '', offerEndDate: '' },
     { name: 'باقه 150 ميجابايت فوتره شريحه', offerName: 'باقه 150 ميجابايت فوتره شريحه', id: 'A69351', offerId: 'A69351', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
     { name: 'باقه 150 ميجابايت فوتره برمجه', offerName: 'باقه 150 ميجابايت فوتره برمجه', id: 'A69361', offerId: 'A69361', price: 500, data: '150 MB', offerStartDate: '', offerEndDate: '' },
@@ -248,7 +248,7 @@ const YemenMobileUI = ({
             const correctedName = offer.offerName || offer.name;
             const manualPkg = manualPackages.find(p => p.id === offerId);
             const price = offer.price || manualPkg?.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
-            const parsedDetails = parseOfferDetails(correctedName);
+            const parsedDetails = manualPkg ? { data: manualPkg.data, sms: manualPkg.sms, minutes: manualPkg.minutes, validity: manualPkg.validity } : parseOfferDetails(correctedName);
             
             const offerWithDetails: OfferWithPrice = { ...offer, ...parsedDetails, offerId, name: correctedName, offerName: correctedName, price };
     
@@ -857,9 +857,11 @@ export default function TelecomServicesPage() {
     const isLandline = operator === 'Yemen Post';
     const isYemen4G = operator === 'Yemen 4G';
 
-    if (isMobile && phoneLength < 9) return;
-    if (isLandline && phoneLength < 7) return;
-    if (isYemen4G && phoneLength < 9) return;
+    let requiredLength = 9;
+    if (isLandline) requiredLength = 7;
+    else if (isYemen4G) requiredLength = 9;
+
+    if (phoneLength < requiredLength) return;
 
 
     if (operator === 'Yemen Mobile') {
@@ -1016,8 +1018,9 @@ export default function TelecomServicesPage() {
     
     let requiredLength = 9;
     if (isLandline) requiredLength = 7;
+    else if (isYemen4G) requiredLength = 9;
 
-    if (phoneLength < requiredLength) return null;
+    if (phoneLength < requiredLength && isMobile) return null;
 
 
     switch (detectedOperator) {
@@ -1099,7 +1102,6 @@ export default function TelecomServicesPage() {
                             setBillAmount(null);
                             setYemen4GType(null);
                             setYemenPostType(null);
-                            // Do not clear phone number to allow another operation
                         }}>إجراء عملية أخرى</Button>
                     </div>
                 </div>
@@ -1190,6 +1192,7 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
 
 
 

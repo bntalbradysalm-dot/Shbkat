@@ -613,8 +613,34 @@ const YemenPostUI = ({
                         {queryData && (
                             <Card className="bg-muted/50">
                                 <CardContent className="p-3 text-xs">
-                                    <p>الرصيد (جيجا): {queryData['Gigabyte(s)']}</p>
-                                    <p>تاريخ الانتهاء: {queryData['Expire Date']}</p>
+                                     <Table>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">حجم الباقة</TableCell>
+                                                <TableCell>{queryData['Package Size']}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">الرصيد</TableCell>
+                                                <TableCell>{queryData['Gigabyte(s)']}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">سعر الباقة</TableCell>
+                                                <TableCell>{queryData['Package Price']} ريال</TableCell>
+                                            </TableRow>
+                                             <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">السرعة</TableCell>
+                                                <TableCell>{queryData['Speed']}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">تاريخ الانتهاء</TableCell>
+                                                <TableCell>{queryData['Expire Date']}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-semibold text-muted-foreground">أقل مبلغ للفاتورة</TableCell>
+                                                <TableCell className='text-destructive font-bold'>{queryData['Minimum Amount']} ريال</TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
                                 </CardContent>
                             </Card>
                         )}

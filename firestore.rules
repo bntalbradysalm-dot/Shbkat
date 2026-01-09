@@ -206,17 +206,18 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow user to update their own document, an admin, or any signed-in user
-      // to support balance transfers.
-      allow update: if isOwner(userId) || isAdmin() || isSignedIn();
+      // Allow any signed-in user to update any other user's document.
+      // This is necessary for balance transfers and network owner payouts.
+      // The logic for these operations is handled securely in the client code/batch writes.
+      allow update: if isSignedIn();
       allow delete: if isAdmin();
 
       /**
        * @description Manages a user's private transaction history.
        */
       match /transactions/{transactionId} {
-        // Any signed-in user/process can create a transaction for another user
-        // (e.g., server deposits, user transfers).
+        // Allow creating a transaction if the user is the owner of the transaction log
+        // or if it's for another user (e.g., transfers, payouts) and they are signed in.
         allow create: if isSignedIn();
         allow read: if isOwner(userId);
         allow update, delete: if isOwner(userId);

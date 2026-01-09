@@ -31,6 +31,7 @@ import { useRouter } from 'next/navigation';
 type UserProfile = {
   displayName?: string;
   phoneNumber?: string;
+  balance?: number; // Include balance here
 };
 
 type PaymentMethod = {
@@ -39,11 +40,6 @@ type PaymentMethod = {
     logoUrl?: string;
     accountHolderName: string;
     accountNumber: string;
-};
-
-type SoldCard = {
-    payoutAmount: number;
-    payoutStatus: 'pending' | 'completed';
 };
 
 const getLogoSrc = (url?: string) => {
@@ -74,23 +70,6 @@ export default function WithdrawPage() {
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
-    // Fetch pending sold cards to calculate withdrawable balance
-    const soldCardsQuery = useMemoFirebase(
-        () => user ? query(
-            collection(firestore, 'soldCards'),
-            where('ownerId', '==', user.uid),
-            where('payoutStatus', '==', 'pending')
-        ) : null,
-        [user, firestore]
-    );
-    const { data: pendingPayouts, isLoading: isLoadingPayouts } = useCollection<SoldCard>(soldCardsQuery);
-
-    const withdrawableBalance = useMemo(() => {
-        if (!pendingPayouts) return 0;
-        return pendingPayouts.reduce((total, card) => total + card.payoutAmount, 0);
-    }, [pendingPayouts]);
-
-
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
@@ -103,10 +82,11 @@ export default function WithdrawPage() {
         }
     }, [withdrawalMethods, selectedMethod]);
     
-    const isLoading = isUserLoading || isProfileLoading || isLoadingMethods || isLoadingPayouts;
+    const isLoading = isUserLoading || isProfileLoading || isLoadingMethods;
     const numericAmount = parseFloat(amount);
+    const userBalance = userProfile?.balance ?? 0;
     const isAmountInvalid = isNaN(numericAmount) || numericAmount <= 0;
-    const isBalanceInsufficient = numericAmount > withdrawableBalance;
+    const isBalanceInsufficient = numericAmount > userBalance;
     const isButtonDisabled = isAmountInvalid || isBalanceInsufficient || !recipientName || !accountNumber;
 
     const handleConfirmRequest = () => {
@@ -115,7 +95,7 @@ export default function WithdrawPage() {
             return;
         }
         if (isBalanceInsufficient) {
-            toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك القابل للسحب لا يكفي لطلب هذا المبلغ." });
+            toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك لا يكفي لطلب هذا المبلغ." });
             return;
         }
         setIsConfirming(true);
@@ -182,11 +162,11 @@ export default function WithdrawPage() {
                 <Card>
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="font-medium text-muted-foreground">رصيدك القابل للسحب</p>
+                            <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
                             {isLoading ? (
                                 <Skeleton className="h-8 w-32 mt-2" />
                             ) : (
-                                <p className="text-3xl font-bold text-primary mt-1">{withdrawableBalance.toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                                <p className="text-3xl font-bold text-primary mt-1">{userBalance.toLocaleString('en-US')} <span className="text-base">ريال</span></p>
                             )}
                         </div>
                         <Wallet className="h-8 w-8 text-primary" />

@@ -49,6 +49,7 @@ type Transaction = {
   paymentMethodName?: string;
   recipientName?: string;
   accountNumber?: string;
+  recipientPhoneNumber?: string;
 };
 
 const getTransactionIcon = (type: string) => {
@@ -241,6 +242,12 @@ export default function TransactionsPage() {
                                     <span className="font-semibold">{selectedTx.notes.replace('شبكة: ', '')}</span>
                                 </div>
                             )}
+                             {selectedTx.recipientPhoneNumber && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="h-4 w-4"/> الرقم:</span>
+                                    <span className="font-semibold">{selectedTx.recipientPhoneNumber}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
                                 <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') || selectedTx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
@@ -264,7 +271,7 @@ export default function TransactionsPage() {
                                 </div>
                             )}
                             
-                            {(selectedTx.cardNumber || selectedTx.cardPassword) && (
+                            {(selectedTx.cardNumber) && (
                                  <div className="pt-4 mt-2 border-t">
                                      <h4 className="font-bold text-base mb-2">تفاصيل الكرت</h4>
                                         <div className="space-y-2">
@@ -278,17 +285,6 @@ export default function TransactionsPage() {
                                                         </Button>
                                                     </div>
                                                 </div>
-                                            }
-                                            {selectedTx.cardPassword &&
-                                             <div className="flex justify-between items-center bg-muted p-2 rounded-md">
-                                                <span className="text-muted-foreground">كلمة المرور:</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-semibold">{selectedTx.cardPassword}</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(selectedTx.cardPassword!, 'كلمة المرور')}>
-                                                         <Copy className="h-4 w-4"/>
-                                                    </Button>
-                                                </div>
-                                            </div>
                                             }
                                         </div>
                                  </div>

@@ -81,7 +81,15 @@ function NetworkPurchasePageComponent() {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
   
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) return;
+    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في البيانات",
+        description: "معلومات المستخدم أو الشبكة غير مكتملة. لا يمكن إتمام الشراء.",
+      });
+      setIsConfirming(false);
+      return;
+    }
   
     // Prevent owner from buying from their own network
     if (user.uid === networkData.ownerId) {
@@ -138,8 +146,11 @@ function NetworkPurchasePageComponent() {
         
         // 2. Deduct balance from buyer
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
+
+        // 3. Add payoutAmount to network owner's balance
+        batch.update(ownerDocRef, { balance: increment(payoutAmount) });
   
-        // 3. Create transaction for buyer
+        // 4. Create transaction for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -148,10 +159,19 @@ function NetworkPurchasePageComponent() {
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
             cardNumber: cardToPurchaseData.cardNumber,
-            cardPassword: cardToPurchaseData.cardNumber,
         });
 
-        // 4. Create a record in soldCards for the admin to approve payout
+        // 5. Create transaction log for owner (optional but good for tracking)
+        const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+        batch.set(ownerTransactionRef, {
+            userId: ownerId,
+            transactionDate: now,
+            amount: payoutAmount,
+            transactionType: 'أرباح بيع كرت',
+            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+        });
+
+        // 6. Create a record in soldCards for the admin to track sales
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -168,7 +188,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
             soldTimestamp: now,
-            payoutStatus: 'pending' 
+            payoutStatus: 'completed' // Marked as completed since it's an auto-transfer
         });
         
         await batch.commit();

@@ -730,7 +730,7 @@ export default function TelecomServicesPage() {
     if (phone.startsWith('71')) return 'YOU';
     if (phone.startsWith('70')) return 'Way';
     if (phone.length === 9 && phone.startsWith('1')) return 'Yemen 4G';
-    if (phone.length === 8 && phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
+    if (phone.length >= 6 && phone.match(/^(01|02|03|04|05|06|07)/)) return 'Yemen Post';
     return null;
   };
   
@@ -881,9 +881,9 @@ export default function TelecomServicesPage() {
       requiredLength = 8;
     }
 
-    if (phoneNumber.length !== requiredLength) {
-      if (operator) setDetectedOperator(null);
-      return;
+    if (phoneNumber.length !== requiredLength && operator !== 'Yemen Post') {
+        if (operator && phoneNumber.length < 6) setDetectedOperator(null);
+        return;
     }
 
 

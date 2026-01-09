@@ -35,7 +35,7 @@ type UserProfile = {
 
 // Updated packages list
 const baityPackages = [
-    { id: 'A64329', name: 'تعريف الحزمة A64329', price: 485 },
+    { id: 'A64329', name: 'باقة مزايا الاسبوعية', price: 485 },
     { id: 'A38394', name: 'باقة مزايا الشهرية', price: 1300 },
     { id: 'A75328', name: 'مزايا ماكس الشهرية', price: 2000 },
     { id: 'A76328', name: 'الشهرية للفوترة', price: 3000 },
@@ -355,3 +355,5 @@ export default function BaityServicesPage() {
     </>
   );
 }
+
+    

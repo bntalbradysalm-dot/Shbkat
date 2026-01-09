@@ -911,7 +911,7 @@ export default function TelecomServicesPage() {
         const commission = (detectedOperator === 'Yemen 4G' || detectedOperator === 'Yemen Post') ? Math.ceil(amountToPay * COMMISSION_RATE) : 0;
         const totalCost = amountToPay + commission;
     
-        if (!userProfile || !firestore || !userDocRef || !user) {
+        if (!userProfile || !firestore || !userDocRef || !user || !userProfile.displayName) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'معلومات غير كافية لإتمام العملية.' });
             setIsConfirming(false);
             return;
@@ -953,7 +953,7 @@ export default function TelecomServicesPage() {
                     serviceType = yemenPostType === 'adsl' ? 'تسديد فاتورة ADSL' : 'تسديد فاتورة هاتف';
                     apiUrl += `&type=${yemenPostType}`;
                 } else {
-                    serviceType = 'تسديد رصيد';
+                    serviceType = `سداد ${serviceNameForDb}`;
                 }
             }
     
@@ -981,12 +981,24 @@ export default function TelecomServicesPage() {
                 transid: transid,
             };
 
+            const transactionData: any = {
+                userId: user.uid,
+                transactionDate: new Date().toISOString(),
+                amount: totalCost,
+                transactionType: serviceType,
+                recipientPhoneNumber: phoneNumber,
+            };
+    
             if (isPackage) {
                 requestData.notes = `باقة: ${selectedPackage!.offerName}`;
+                transactionData.notes = `باقة: ${selectedPackage!.offerName}`;
             }
-
+    
             const requestsCollection = collection(firestore, 'billPaymentRequests');
             batch.set(doc(requestsCollection), requestData);
+
+            const transactionsCollection = collection(firestore, 'users', user.uid, 'transactions');
+            batch.set(doc(transactionsCollection), transactionData);
     
             await batch.commit();
     

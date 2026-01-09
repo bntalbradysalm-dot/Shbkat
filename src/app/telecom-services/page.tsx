@@ -208,6 +208,13 @@ const YemenMobileUI = ({
     const [billAmount, setBillAmount] = useState('');
     const [activeSubscriptions, setActiveSubscriptions] = useState<OfferWithPrice[]>([]);
     const isAmountInvalid = Number(billAmount) < 21 && billAmount !== '';
+    const TAX_RATE = 0.174; // 17.4%
+
+    const netAmount = useMemo(() => {
+        const amount = parseFloat(billAmount);
+        if (isNaN(amount) || amount <= 0) return 0;
+        return amount - (amount * TAX_RATE);
+    }, [billAmount]);
 
     const formatApiDate = (dateString: string) => {
         if (!dateString || dateString.length < 14) return dateString; // YYYYMMDDHHMMSS
@@ -295,7 +302,7 @@ const YemenMobileUI = ({
         return <CreditCard className="w-5 h-5"/>;
     }
 
-    const getMobileTypeString = (type: string) => {
+    const getMobileTypeString = (type: string | undefined) => {
         if (type === '0') return 'دفع مسبق';
         if (type === '1') return 'فوترة';
         return 'غير معروف';
@@ -373,7 +380,7 @@ const YemenMobileUI = ({
                                     <Card key={pkg.offerId || pkg.id} onClick={() => onPackageSelect(pkg)} className="cursor-pointer hover:bg-muted/50 p-4">
                                         <div className="flex flex-col items-center text-center">
                                             <h4 className="font-bold text-base">{pkg.offerName}</h4>
-                                            <p className="text-xs text-muted-foreground">{getMobileTypeString(balanceData?.mobileType || '0')}</p>
+                                            <p className="text-xs text-muted-foreground">{getMobileTypeString(balanceData?.mobileType)}</p>
                                             <p className="text-2xl font-bold text-primary my-2">{pkg.price.toLocaleString('en-US')} ريال</p>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2 pt-3 border-t">
@@ -424,8 +431,8 @@ const YemenMobileUI = ({
                         <CardTitle className="text-base">تسديد الفواتير أو الرصيد</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-3">
-                        <div>
-                            <Label htmlFor="bill-amount" className="sr-only">المبلغ</Label>
+                        <div className="space-y-2">
+                            <Label htmlFor="bill-amount">المبلغ الإجمالي</Label>
                             <Input 
                                 id="bill-amount"
                                 type="number"
@@ -438,6 +445,12 @@ const YemenMobileUI = ({
                                     أقل مبلغ للسداد هو 21 ريال.
                                 </p>
                             )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="net-amount">صافي الرصيد (بعد خصم الضريبة 17.4%)</Label>
+                            <div id="net-amount" className="p-2 h-10 flex items-center justify-center rounded-xl bg-muted text-center font-bold text-primary">
+                                {netAmount.toFixed(2)} ريال
+                            </div>
                         </div>
                         <Button 
                             className="w-full" 
@@ -1192,7 +1205,4 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-
-
 

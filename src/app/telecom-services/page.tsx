@@ -361,36 +361,37 @@ const YemenMobileUI = ({
                                 {isLoanActive && <span>({solfaData.loan_amount} ريال)</span>}
                             </div>
                         )}
+                         {activeSubscriptions.length > 0 && (
+                            <div className="pt-4">
+                                <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
+                                 <Card>
+                                    <CardContent className="p-3 pt-0 space-y-2">
+                                        {activeSubscriptions.map(sub => (
+                                            <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
+                                                <div className="flex justify-between items-start">
+                                                    <div className='flex-1'>
+                                                        <p className="font-bold text-sm">{sub.offerName}</p>
+                                                        <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                                            <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
+                                                            <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="p-2 bg-primary/10 rounded-full">
+                                                            <RefreshCw className="h-5 w-5 text-primary"/>
+                                                        </div>
+                                                        <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
-                {activeSubscriptions.length > 0 && (
-                    <div className="pt-4">
-                        <h3 className="font-bold text-center mb-2">الاشتراكات الحالية</h3>
-                         <Card>
-                            <CardContent className="p-3 pt-0 space-y-2">
-                                {activeSubscriptions.map(sub => (
-                                    <div key={sub.offerId} className="p-3 rounded-lg border bg-accent/50">
-                                        <div className="flex justify-between items-start">
-                                            <div className='flex-1'>
-                                                <p className="font-bold text-sm">{sub.offerName}</p>
-                                                <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                                                    <p>الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
-                                                    <p>الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="p-2 bg-primary/10 rounded-full">
-                                                    <RefreshCw className="h-5 w-5 text-primary"/>
-                                                </div>
-                                                <Button size="sm" className="h-auto py-1 px-3 text-xs" onClick={() => onPackageSelect(sub)}>تجديد</Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
+               
                 <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={Object.keys(categorizedOffers.available)[0]}>
                     {Object.entries(categorizedOffers.available).map(([category, pkgs]) => (
                         <AccordionItem value={category} key={category} className="border-none">
@@ -428,7 +429,7 @@ const YemenMobileUI = ({
             <TabsContent value="balance" className="pt-4">
                 <Card>
                     <CardHeader className="p-3 text-center">
-                        <CardTitle className="text-base">أدخل المبلغ</CardTitle>
+                        <CardTitle className="text-base text-center">أدخل المبلغ</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-3">
                         <div className="space-y-2">
@@ -735,7 +736,7 @@ export default function TelecomServicesPage() {
   
   const getOperatorLogo = (operator: string | null) => {
       switch(operator) {
-          case 'Yemen Mobile': return 'https://i.ibb.co/b3C30W2/logo.png';
+          case 'Yemen Mobile': return 'https://i.postimg.cc/52nxCtk5/images.png';
           case 'SabaFon': return 'https://i.postimg.cc/T1j31fnC/sabafon.png';
           case 'YOU': return 'https://i.postimg.cc/SN7B5Y3z/you.png';
           case 'Way': return 'https://i.postimg.cc/j5P7qJ62/logo-W-svg.png';

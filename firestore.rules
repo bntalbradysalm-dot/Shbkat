@@ -206,7 +206,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow any signed-in user to update any other user's document.
+      // Allow any signed-in user to update any user's document.
       // This is necessary for balance transfers and network owner payouts.
       // The logic for these operations is handled securely in the client code/batch writes.
       allow update: if isSignedIn();

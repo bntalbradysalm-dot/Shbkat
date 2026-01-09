@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { collection, doc, query, orderBy, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, query, orderBy, updateDoc, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,11 @@ type WithdrawalRequest = {
   accountNumber: string;
   status: 'pending' | 'approved' | 'rejected';
   requestTimestamp: string;
+};
+
+type SoldCard = {
+    id: string;
+    payoutStatus: 'pending' | 'completed';
 };
 
 const StatusBadge = ({ status }: { status: WithdrawalRequest['status'] }) => {
@@ -115,6 +121,16 @@ export default function WithdrawalRequestsPage() {
         const batch = writeBatch(firestore);
 
         if (finalAction === 'approve') {
+            // Find all pending sold cards for the owner and mark them as completed
+            const soldCardsRef = collection(firestore, 'soldCards');
+            const q = query(soldCardsRef, where('ownerId', '==', selectedRequest.ownerId), where('payoutStatus', '==', 'pending'));
+            const soldCardsSnapshot = await getDocs(q);
+
+            soldCardsSnapshot.forEach(cardDoc => {
+                batch.update(cardDoc.ref, { payoutStatus: 'completed' });
+            });
+
+            // Create a single transaction record for the withdrawal
             const transactionRef = doc(ownerTransactionsRef);
             batch.set(transactionRef, {
                 userId: selectedRequest.ownerId,
@@ -124,24 +140,11 @@ export default function WithdrawalRequestsPage() {
                 paymentMethodName: selectedRequest.paymentMethodName,
                 recipientName: selectedRequest.recipientName,
                 accountNumber: selectedRequest.accountNumber,
+                notes: `تم تحويل مبلغ ${selectedRequest.amount.toLocaleString('en-US')} ريال.`,
             });
         } else { // 'reject'
-            // Refund the user's balance
-            batch.update(ownerDocRef, {
-                balance: increment(selectedRequest.amount)
-            });
-
-            // Create a refund transaction record
-            const refundTransactionRef = doc(ownerTransactionsRef);
-            batch.set(refundTransactionRef, {
-                userId: selectedRequest.ownerId,
-                transactionDate: new Date().toISOString(),
-                amount: selectedRequest.amount,
-                transactionType: 'استرجاع مبلغ مرفوض',
-                notes: rejectionNote || 'تم رفض طلب السحب من قبل الإدارة.',
-            });
-            
-             // Create a notification for the user
+            // No balance change needed, as it was never deducted.
+            // Just create a notification for the user.
             const notificationRef = doc(ownerNotificationsRef);
             batch.set(notificationRef, {
                 title: 'تم رفض طلب السحب',
@@ -343,7 +346,7 @@ export default function WithdrawalRequestsPage() {
             <AlertDialogDescription>
               {actionToConfirm === 'approve'
                 ? `سيتم تأكيد الطلب كمقبول وتسجيل عملية السحب في سجل المالك.`
-                : 'سيتم رفض هذا الطلب وإعادة المبلغ إلى رصيد المالك. لا يمكن التراجع عن هذا الإجراء.'}
+                : 'سيتم رفض هذا الطلب. لن يتم إعادة أي رصيد لأن المبلغ لم يتم خصمه مسبقاً.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {actionToConfirm === 'reject' && (

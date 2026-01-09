@@ -163,12 +163,14 @@ service cloud.firestore {
     }
     
     /**
-     * @description Stores records of sold cards for reporting.
+     * @description Stores records of sold cards for reporting. Users create upon purchase.
+     * Admins can read for payout processing.
      */
     match /soldCards/{cardId} {
       allow create: if isSignedIn() && isBuyer();
       allow get: if isAdmin() || isBuyer();
-      allow update, delete: if false;
+      allow update: if isAdmin(); // Admin can update payoutStatus
+      allow delete: if false;
     }
     
     match /soldCards {
@@ -261,6 +263,7 @@ service cloud.firestore {
       match /cards/{cardId} {
         allow read: if isSignedIn() || isAdmin();
         allow create, delete: if isAdmin() || isNetworkOwner(networkId);
+        // Allow any signed in user to update card status (for purchasing)
         allow update: if isSignedIn();
       }
     }

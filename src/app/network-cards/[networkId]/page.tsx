@@ -47,6 +47,7 @@ type UserProfile = {
 
 type Network = {
     ownerId: string;
+    name: string;
 };
 
 
@@ -54,7 +55,6 @@ function NetworkPurchasePageComponent() {
   const params = useParams();
   const networkId = params.networkId as string;
   const searchParams = useSearchParams();
-  const networkName = searchParams.get('name') || 'شراء كروت';
   
   const { user } = useUser();
   const firestore = useFirestore();
@@ -63,6 +63,7 @@ function NetworkPurchasePageComponent() {
 
   const networkDocRef = useMemoFirebase(() => (firestore && networkId ? doc(firestore, 'networks', networkId) : null), [firestore, networkId]);
   const { data: networkData } = useDoc<Network>(networkDocRef);
+  const networkName = networkData?.name || searchParams.get('name') || 'شراء كروت';
 
   const categoriesQuery = useMemoFirebase(() => (
     firestore && networkId ? collection(firestore, `networks/${networkId}/cardCategories`) : null
@@ -122,7 +123,10 @@ function NetworkPurchasePageComponent() {
         const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard;
         
         const ownerId = networkData.ownerId;
-        const ownerDocRef = doc(firestore, 'users', ownerId);
+        const ownerDocSnapshot = await getDoc(doc(firestore, 'users', ownerId));
+        if (!ownerDocSnapshot.exists()) {
+             throw new Error('لا يمكن العثور على مالك الشبكة.');
+        }
 
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
@@ -136,7 +140,7 @@ function NetworkPurchasePageComponent() {
             soldTimestamp: now,
         });
 
-        // 2. Create sold card record
+        // 2. Create sold card record for payout tracking
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -153,16 +157,16 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
             soldTimestamp: now,
-            payoutStatus: 'pending' 
+            payoutStatus: 'pending' // << Payout is pending admin approval
         });
 
         // 3. Deduct balance from buyer
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
 
-        // 4. Add earnings to owner's balance
-        batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+        // NOTE: We DO NOT add earnings to the owner's balance here anymore.
+        // This will be handled by the admin through the withdrawal request system.
 
-        // 5. Create transaction for buyer
+        // 4. Create transaction for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -174,15 +178,8 @@ function NetworkPurchasePageComponent() {
             cardPassword: cardToPurchaseData.cardNumber, // Assuming card number is the password
         });
         
-        // 6. Create transaction for owner
-        const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-        batch.set(ownerTransactionRef, {
-            userId: ownerId,
-            transactionDate: now,
-            amount: payoutAmount,
-            transactionType: `أرباح بيع كرت`,
-            notes: `من: ${userProfile.displayName}`,
-        });
+        // NOTE: No transaction is created for the owner at this point.
+        // A transaction will be created for them when their withdrawal is approved.
         
         await batch.commit();
 

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Smartphone, Loader2 } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type UserProfile = {
   id: string;
@@ -30,6 +31,14 @@ type UserProfile = {
   phoneNumber?: string;
   displayName?: string;
 };
+
+// Placeholder data for packages
+const baityPackages = [
+  { id: 'pkg1', name: 'باقة 1 جيجا', price: 1000 },
+  { id: 'pkg2', name: 'باقة 5 جيجا', price: 3000 },
+  { id: 'pkg3', name: 'باقة 10 جيجا', price: 5000 },
+  { id: 'pkg4', name: 'باقة شهرية', price: 8000 },
+];
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -59,7 +68,7 @@ const BalanceDisplay = () => {
     );
 }
 
-export default function BaityBalancePage() {
+export default function BaityServicesPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -70,6 +79,8 @@ export default function BaityBalancePage() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [confirmationDetails, setConfirmationDetails] = useState({ title: '', description: '', type: '' });
+  const [selectedPackage, setSelectedPackage] = useState<{ id: string; name: string; price: number } | null>(null);
   
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -77,16 +88,32 @@ export default function BaityBalancePage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
   
-  const handleConfirmClick = () => {
+  const handleConfirmClick = (type: 'balance' | 'package', pkg?: typeof baityPackages[0]) => {
     const numericAmount = parseFloat(amount);
-    if (!mobileNumber || !amount || isNaN(numericAmount) || numericAmount <= 0) {
-      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم جوال ومبلغ صحيح." });
-      return;
+
+    if (type === 'balance') {
+      if (!mobileNumber || !amount || isNaN(numericAmount) || numericAmount <= 0) {
+        toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم جوال ومبلغ صحيح." });
+        return;
+      }
+      if ((userProfile?.balance ?? 0) < numericAmount) {
+        toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
+        return;
+      }
+      setConfirmationDetails({ title: 'تأكيد تسديد الرصيد', description: `سيتم تسديد مبلغ ${numericAmount.toLocaleString('en-US')} ريال للرقم ${mobileNumber}.`, type: 'balance' });
+    } else if (type === 'package' && pkg) {
+      if (!mobileNumber) {
+        toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم الجوال أولاً." });
+        return;
+      }
+      if ((userProfile?.balance ?? 0) < pkg.price) {
+        toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك لا يكفي لشراء هذه الباقة." });
+        return;
+      }
+      setSelectedPackage(pkg);
+      setConfirmationDetails({ title: 'تأكيد شراء الباقة', description: `سيتم شراء باقة "${pkg.name}" بسعر ${pkg.price.toLocaleString('en-US')} ريال للرقم ${mobileNumber}.`, type: 'package' });
     }
-    if ((userProfile?.balance ?? 0) < numericAmount) {
-      toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
-      return;
-    }
+    
     setIsConfirming(true);
   };
 
@@ -94,56 +121,63 @@ export default function BaityBalancePage() {
     if (!user || !userProfile || !firestore || !userDocRef) return;
 
     setIsProcessing(true);
-    const numericAmount = parseFloat(amount);
+    let apiEndpoint = '';
+    let requestBody: any = {};
+    let transactionNotes = '';
+    let transactionAmount = 0;
+
+    if (confirmationDetails.type === 'balance') {
+      transactionAmount = parseFloat(amount);
+      apiEndpoint = '/api/baity';
+      requestBody = { mobile: mobileNumber, amount: transactionAmount };
+      transactionNotes = `تسديد رصيد بيتي إلى رقم: ${mobileNumber}`;
+    } else if (confirmationDetails.type === 'package' && selectedPackage) {
+      transactionAmount = selectedPackage.price;
+      apiEndpoint = '/api/baity-offer';
+      requestBody = { mobile: mobileNumber, offerID: selectedPackage.id };
+      transactionNotes = `شراء باقة بيتي: ${selectedPackage.name}`;
+    } else {
+        setIsProcessing(false);
+        return;
+    }
 
     try {
-      // Step 1: Call the external API via our new API route
-      const apiResponse = await fetch('/api/baity', {
+      const apiResponse = await fetch(apiEndpoint, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            mobile: mobileNumber,
-            amount: numericAmount,
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
       });
 
       const result = await apiResponse.json();
 
       if (!apiResponse.ok) {
-        throw new Error(result.message || 'فشل تسديد الرصيد لدى مزود الخدمة.');
+        throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
       }
 
-      // Step 2: If API call is successful, perform Firestore batch write
       const batch = writeBatch(firestore);
-
-      // 2a: Decrement user's balance
-      batch.update(userDocRef, { balance: increment(-numericAmount) });
-
-      // 2b: Create transaction log for the user
+      batch.update(userDocRef, { balance: increment(-transactionAmount) });
       const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(transactionRef, {
         userId: user.uid,
         transactionDate: new Date().toISOString(),
-        amount: numericAmount,
-        transactionType: 'تسديد رصيد بيتي',
-        notes: `إلى رقم: ${mobileNumber}`
+        amount: transactionAmount,
+        transactionType: confirmationDetails.type === 'balance' ? 'تسديد رصيد بيتي' : 'شراء باقة بيتي',
+        notes: transactionNotes
       });
 
       await batch.commit();
-
       setShowSuccess(true);
 
     } catch (error: any) {
         toast({
             variant: "destructive",
-            title: "فشل تسديد الرصيد",
+            title: "فشل تنفيذ الطلب",
             description: error.message || "حدث خطأ أثناء محاولة تنفيذ العملية.",
         });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
+        setSelectedPackage(null);
     }
   };
   
@@ -157,18 +191,8 @@ export default function BaityBalancePage() {
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
                         <h2 className="text-2xl font-bold">تمت العملية بنجاح</h2>
-                         <p className="text-sm text-muted-foreground">تم تسديد الرصيد بنجاح.</p>
-                        <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
-                           <div className="flex justify-between">
-                                <span className="text-muted-foreground">الرقم:</span>
-                                <span className="font-semibold">{mobileNumber}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">المبلغ:</span>
-                                <span className="font-semibold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</span>
-                            </div>
-                        </div>
-                        <div className="w-full grid grid-cols-1 gap-3 pt-4">
+                         <p className="text-sm text-muted-foreground">{confirmationDetails.type === 'balance' ? 'تم تسديد الرصيد بنجاح.' : 'تم شراء الباقة بنجاح.'}</p>
+                        <div className="w-full pt-4">
                             <Button variant="outline" onClick={() => router.push('/')}>الرئيسية</Button>
                         </div>
                     </div>
@@ -186,13 +210,8 @@ export default function BaityBalancePage() {
         <BalanceDisplay />
 
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center">تسديد رصيد</CardTitle>
-            <CardDescription className="text-center">أدخل رقم الجوال والمبلغ المطلوب.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="mobileNumber" className="text-muted-foreground flex items-center gap-2 mb-1">
+          <CardContent className="p-3">
+              <Label htmlFor="mobileNumber" className="text-muted-foreground flex items-center gap-2 mb-1 px-1">
                 <Smartphone className="h-4 w-4" />
                 رقم الجوال
               </Label>
@@ -204,31 +223,67 @@ export default function BaityBalancePage() {
                 onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 disabled={isProcessing}
                 maxLength={9}
-                className="text-right"
+                className="text-center h-12 text-lg tracking-wider"
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="amount" className="text-muted-foreground flex items-center gap-2 mb-1">
-                <Wallet className="h-4 w-4" />
-                المبلغ
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                inputMode='numeric'
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-
-            <Button onClick={handleConfirmClick} className="w-full h-auto py-3 text-base" disabled={!mobileNumber || !amount || isProcessing}>
-                {isProcessing ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : <Send className="ml-2 h-5 w-5"/>}
-                {isProcessing ? 'جاري التسديد...' : 'تسديد الرصيد'}
-            </Button>
           </CardContent>
         </Card>
+
+        <Tabs defaultValue="balance" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="balance"><Building2 className="ml-2 h-4 w-4" /> تسديد رصيد</TabsTrigger>
+            <TabsTrigger value="packages"><Package className="ml-2 h-4 w-4" /> شراء باقات</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="balance" className="pt-4">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-center">تسديد رصيد</CardTitle>
+                <CardDescription className="text-center">أدخل المبلغ المطلوب تسديده.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="amount" className="text-muted-foreground flex items-center gap-2 mb-1">
+                    <Wallet className="h-4 w-4" />
+                    المبلغ
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    inputMode='numeric'
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+                <Button onClick={() => handleConfirmClick('balance')} className="w-full h-auto py-3 text-base" disabled={!mobileNumber || !amount || isProcessing}>
+                    {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : <Send className="ml-2 h-5 w-5"/>}
+                    {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'تسديد الرصيد'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="packages" className="pt-4">
+            <Card className="shadow-lg">
+              <CardHeader>
+                  <CardTitle className="text-center">شراء باقات</CardTitle>
+                  <CardDescription className="text-center">اختر الباقة التي تريد شراءها.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                  {baityPackages.map((pkg) => (
+                      <Card key={pkg.id} className="p-3">
+                          <div className="flex justify-between items-center">
+                              <div className='font-semibold'>{pkg.name}</div>
+                              <Button onClick={() => handleConfirmClick('package', pkg)} disabled={!mobileNumber || isProcessing}>
+                                {isProcessing && selectedPackage?.id === pkg.id ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : `${pkg.price.toLocaleString('en-US')} ريال`}
+                              </Button>
+                          </div>
+                      </Card>
+                  ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
     <Toaster />
@@ -236,13 +291,10 @@ export default function BaityBalancePage() {
     <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle className="text-center">تأكيد العملية</AlertDialogTitle>
+                <AlertDialogTitle className="text-center">{confirmationDetails.title}</AlertDialogTitle>
                 <AlertDialogDescription asChild>
                     <div className="space-y-4 pt-4 text-base text-foreground text-center">
-                         <p className="text-sm text-center text-muted-foreground pb-2">سيتم خصم المبلغ من رصيدك وتسديده للرقم المدخل.</p>
-                         <p className="font-bold">{mobileNumber}</p>
-                         <p className="text-sm text-center text-muted-foreground">بمبلغ وقدره</p>
-                         <p className="text-2xl font-bold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</p>
+                         <p className="text-sm text-center text-muted-foreground pb-2">{confirmationDetails.description}</p>
                     </div>
                 </AlertDialogDescription>
             </AlertDialogHeader>

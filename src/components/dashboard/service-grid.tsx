@@ -10,7 +10,7 @@ import {
   CreditCard,
   Smartphone,
   Gamepad2,
-  Building,
+  Building2,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,7 +28,7 @@ const services: Service[] = [
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
-  { name: 'رصيد بيتي', icon: Building, href: '/baity-balance' },
+  { name: 'رصيد بيتي', icon: Building2, href: '/baity-balance' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
 ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, writeBatch, increment, collection } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,12 +81,48 @@ export default function BaityServicesPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [confirmationDetails, setConfirmationDetails] = useState({ title: '', description: '', type: '' });
   const [selectedPackage, setSelectedPackage] = useState<{ id: string; name: string; price: number } | null>(null);
-  
+  const [recipient, setRecipient] = useState<UserProfile | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  
+  useEffect(() => {
+    const handleSearch = async () => {
+      if (mobileNumber.length !== 9 || !firestore) {
+        setRecipient(null);
+        return;
+      }
+      
+      setIsSearching(true);
+      setRecipient(null);
+
+      try {
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('phoneNumber', '==', mobileNumber));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const recipientData = querySnapshot.docs[0].data() as UserProfile;
+            setRecipient(recipientData);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    
+    const timerId = setTimeout(() => {
+        handleSearch();
+    }, 500);
+
+    return () => clearTimeout(timerId);
+
+  }, [mobileNumber, firestore]);
   
   const handleConfirmClick = (type: 'balance' | 'package', pkg?: typeof baityPackages[0]) => {
     const numericAmount = parseFloat(amount);
@@ -215,16 +251,25 @@ export default function BaityServicesPage() {
                 <Smartphone className="h-4 w-4" />
                 رقم الجوال
               </Label>
-              <Input
-                id="mobileNumber"
-                type="tel"
-                placeholder="7xxxxxxxx"
-                value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                disabled={isProcessing}
-                maxLength={9}
-                className="text-center h-12 text-lg tracking-wider"
-              />
+              <div className="relative">
+                <Input
+                  id="mobileNumber"
+                  type="tel"
+                  placeholder="7xxxxxxxx"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  disabled={isProcessing}
+                  maxLength={9}
+                  className="text-center h-12 text-lg tracking-wider"
+                />
+                 {isSearching && <Loader2 className="animate-spin absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
+              </div>
+              {recipient && (
+                <div className="mt-2 p-2 bg-muted rounded-lg flex items-center justify-center gap-2 animate-in fade-in-0 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p className="font-semibold text-primary dark:text-primary-foreground">{recipient.displayName}</p>
+                </div>
+            )}
           </CardContent>
         </Card>
 

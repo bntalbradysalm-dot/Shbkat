@@ -206,9 +206,6 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      // Allow any signed-in user to update any user's document.
-      // This is necessary for balance transfers and network owner payouts.
-      // The logic for these operations is handled securely in the client code/batch writes.
       allow update: if isSignedIn();
       allow delete: if isAdmin();
 
@@ -216,8 +213,6 @@ service cloud.firestore {
        * @description Manages a user's private transaction history.
        */
       match /transactions/{transactionId} {
-        // Allow creating a transaction if the user is the owner of the transaction log
-        // or if it's for another user (e.g., transfers, payouts) and they are signed in.
         allow create: if isSignedIn();
         allow read: if isOwner(userId);
         allow update, delete: if isOwner(userId);
@@ -237,7 +232,6 @@ service cloud.firestore {
        */
       match /notifications/{notificationId} {
           allow read: if isOwner(userId);
-          // Admins or any signed-in process (like the server) can create notifications.
           allow create: if isAdmin() || isSignedIn();
           allow delete: if isOwner(userId);
           allow update: if false;
@@ -267,7 +261,6 @@ service cloud.firestore {
       match /cards/{cardId} {
         allow read: if isSignedIn() || isAdmin();
         allow create, delete: if isAdmin() || isNetworkOwner(networkId);
-        // Allow user to purchase a card.
         allow update: if isSignedIn();
       }
     }

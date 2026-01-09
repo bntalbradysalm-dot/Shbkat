@@ -32,12 +32,12 @@ type UserProfile = {
   displayName?: string;
 };
 
-// Placeholder data for packages
+// Updated packages list
 const baityPackages = [
-  { id: 'pkg1', name: 'باقة 1 جيجا', price: 1000 },
-  { id: 'pkg2', name: 'باقة 5 جيجا', price: 3000 },
-  { id: 'pkg3', name: 'باقة 10 جيجا', price: 5000 },
-  { id: 'pkg4', name: 'باقة شهرية', price: 8000 },
+    { id: 'A64329', name: 'باقة مزايا الاسبوعية', price: 485 },
+    { id: 'A38394', name: 'باقة مزايا الشهرية', price: 1300 },
+    { id: 'A75328', name: 'مزايا ماكس الشهرية', price: 2000 },
+    { id: 'A76328', name: 'الشهرية للفوترة', price: 3000 },
 ];
 
 const BalanceDisplay = () => {

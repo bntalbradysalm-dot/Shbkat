@@ -8,31 +8,18 @@ const API_KEY = process.env.BAITY_API_KEY || 'fb845cb5-b835-4d88-8c8e-eb28cc38a2
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { mobile, offerID, method, packageId } = body;
+    const { mobile, offerID } = body;
 
     if (!mobile || !offerID) {
       return new NextResponse(JSON.stringify({ message: 'Mobile number and offerID are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const externalApiBody: {
-      data: {
-        mobile: string;
-        offerID: string;
-        method: string;
-        packageId?: number;
-      }
-    } = {
+    const externalApiBody = {
       data: {
         mobile: String(mobile),
         offerID: String(offerID),
-        method: method ? String(method) : "1", // Default to "1" if not provided
       }
     };
-    
-    // Conditionally add packageId as a number if it exists
-    if (packageId !== undefined && packageId !== null) {
-        externalApiBody.data.packageId = Number(packageId);
-    }
     
     const response = await fetch(API_BASE_URL, {
       method: 'POST',

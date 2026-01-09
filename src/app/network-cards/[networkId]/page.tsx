@@ -6,7 +6,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard } from 'lucide-react';
 import {
@@ -108,11 +108,13 @@ function NetworkPurchasePageComponent() {
         cardToPurchaseData.id = cardToPurchaseDoc.id;
 
         const networkDocRef = doc(firestore, 'networks', networkId);
-        const networkDocSnapshot = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', networkId)));
-        if (networkDocSnapshot.empty) {
+        const networkDocSnapshot = await getDoc(networkDocRef);
+        
+        if (!networkDocSnapshot.exists()) {
             throw new Error('لم يتم العثور على الشبكة.');
         }
-        const networkData = networkDocSnapshot.docs[0].data();
+        
+        const networkData = networkDocSnapshot.data();
         const ownerId = networkData.ownerId;
         const ownerDocRef = doc(firestore, 'users', ownerId);
 

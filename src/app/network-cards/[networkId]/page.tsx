@@ -104,8 +104,8 @@ function NetworkPurchasePageComponent() {
         }
 
         const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
-        const cardToPurchaseData = cardToPurchaseDoc.data() as NetworkCard;
-        cardToPurchaseData.id = cardToPurchaseDoc.id;
+        const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard;
+
 
         const networkDocRef = doc(firestore, 'networks', networkId);
         const networkDocSnapshot = await getDoc(networkDocRef);

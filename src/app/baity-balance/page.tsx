@@ -515,6 +515,3 @@ const renderOfferIcon = (category: string) => {
     </>
   );
 }
-
-
-

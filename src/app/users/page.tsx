@@ -63,56 +63,6 @@ type User = {
   accountType?: 'user' | 'network-owner';
 };
 
-const AgentBalanceCard = () => {
-    const [balance, setBalance] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        const fetchAgentBalance = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch('/api/echehanly?service=info&action=balance');
-                const data = await response.json();
-                if (response.ok) {
-                    setBalance(data.balance);
-                } else {
-                    throw new Error(data.message || 'Failed to fetch agent balance.');
-                }
-            } catch (error: any) {
-                toast({
-                    variant: 'destructive',
-                    title: 'خطأ في جلب رصيد الوكيل',
-                    description: error.message,
-                });
-                setBalance(null);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAgentBalance();
-    }, [toast]);
-
-    return (
-        <Card className="shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">رصيد الوكيل (اشحن لي)</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <Skeleton className="h-6 w-32" />
-                ) : (
-                    <div className="text-2xl font-bold text-blue-600">
-                        {balance !== null ? `${Number(balance).toLocaleString('en-US')} ريال` : 'تعذر الجلب'}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
-
 export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -505,7 +455,6 @@ export default function UsersPage() {
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AgentBalanceCard />
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input

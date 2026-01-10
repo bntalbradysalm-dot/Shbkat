@@ -99,7 +99,9 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        <UserIcon className="h-10 w-10 text-primary dark:text-primary-foreground" />
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
+        </div>
         <div>
            {isUserLoading ? (
              <Skeleton className="h-6 w-32 mt-1" />
@@ -111,7 +113,7 @@ const Header = () => {
            ) : (
             <>
               <p className="text-sm text-foreground/80">أهلاً بك</p>
-              <Link href="/login">
+              <Link href="/">
                 <h1 className="font-bold text-lg text-primary hover:underline">تسجيل الدخول</h1>
               </Link>
             </>

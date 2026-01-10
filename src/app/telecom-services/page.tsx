@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+
 
 type UserProfile = {
   balance?: number;
@@ -113,7 +115,7 @@ export default function TelecomServicesPage() {
     try {
         const response = await fetch(`/api/echehanly?${url.toString()}`);
         const data = await response.json();
-        if (data.resultCode !== '0' && data.resultCode !== '200') { // 200 for success from some endpoints
+        if (data.resultCode !== '0' && !String(data.resultCode).startsWith('10')) {
             throw new Error(data.message || data.resultDesc || `فشل: ${action}`);
         }
         return data;
@@ -143,9 +145,11 @@ export default function TelecomServicesPage() {
     if (phoneNumber.length !== 9) return;
     setIsLoadingOffers(true);
     setOffersData(null);
-    const offersResult = await callApi('queryoffer');
+    const offersResult = await callApi('query', { type: 'offers'});
     if (offersResult && Array.isArray(offersResult.offers)) {
         setOffersData(offersResult.offers);
+    } else if (offersResult) {
+        setOffersData([]);
     }
     setIsLoadingOffers(false);
   };
@@ -160,8 +164,9 @@ export default function TelecomServicesPage() {
         return;
     }
     if (type === 'package' && offer) {
+        const numericAmount = parseFloat(offer.offerName.match(/(\d+)/)?.[0] || '0');
         setSelectedOffer(offer);
-        setConfirmationDetails({ type, title: 'تأكيد شراء الباقة', description: `هل تريد بالتأكيد شراء باقة "${offer.offerName}"؟`, amount, offerName: offer.offerName });
+        setConfirmationDetails({ type, title: 'تأكيد شراء الباقة', description: `هل تريد بالتأكيد شراء باقة "${offer.offerName}"؟`, amount: numericAmount, offerName: offer.offerName });
     } else {
         setConfirmationDetails({ type, title: 'تأكيد تسديد الرصيد', description: `هل تريد تسديد مبلغ ${amount.toLocaleString('en-US')} ريال؟`, amount, offerName: '' });
     }
@@ -176,14 +181,14 @@ export default function TelecomServicesPage() {
 
     try {
         const billResponse = await callApi('bill', { amount: String(amount) });
-        if (!billResponse || !billResponse.transid) {
+        if (!billResponse || !billResponse.sequenceId) {
             throw new Error('فشل تسديد المبلغ الأولي. لم يتم الحصول على معرف العملية.');
         }
 
         let finalMessage = `تم تسديد مبلغ ${amount.toLocaleString('en-US')} ريال بنجاح.`;
         
         if (type === 'package' && selectedOffer) {
-            const offerResponse = await callApi('billoffer', { offerid: selectedOffer.offerId, transid: billResponse.transid });
+            const offerResponse = await callApi('billoffer', { offerid: selectedOffer.offerId, transid: billResponse.sequenceId });
             if (!offerResponse) {
                 throw new Error('تم خصم المبلغ ولكن فشل تفعيل الباقة. يرجى التواصل مع الدعم.');
             }
@@ -197,7 +202,7 @@ export default function TelecomServicesPage() {
             userId: user.uid, userName: userProfile.displayName, userPhoneNumber: userProfile.phoneNumber,
             company: 'Yemen Mobile', serviceType: type === 'package' ? 'شراء باقة' : 'سداد فاتورة',
             targetPhoneNumber: phoneNumber, amount, commission: 0, totalCost: amount, status: 'approved',
-            requestTimestamp: new Date().toISOString(), transid: billResponse.transid,
+            requestTimestamp: new Date().toISOString(), transid: billResponse.sequenceId,
         };
         batch.set(doc(collection(firestore, 'billPaymentRequests')), requestData);
 
@@ -282,33 +287,38 @@ export default function TelecomServicesPage() {
                     <AccordionContent className="pt-4">
                          {isLoadingBalance ? <Skeleton className='h-32 w-full' /> : (
                              (balanceData || loanData) && (
-                                 <Card>
-                                     <CardContent className="p-3 pt-3 space-y-3">
-                                        {balanceData && (
-                                             <Card className="bg-muted/50 text-center">
-                                                <CardContent className="p-3">
-                                                    <p className="text-sm text-muted-foreground">الرصيد الحالي للرقم</p>
-                                                    <p className="text-2xl font-bold text-primary">{balanceData.balance} <span className="text-base">ريال</span></p>
-                                                    <p className="text-xs text-muted-foreground mt-1">نوع الخط: {getMobileTypeString(balanceData.mobileType)}</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                        {loanData && loanData.status === '1' && (
-                                            <Card className="bg-orange-500/10 border-orange-500/20 text-center">
-                                                <CardContent className="p-3">
-                                                    <p className="text-sm text-orange-600 flex items-center justify-center gap-2 font-semibold"><AlertTriangle className='w-4 h-4' />يوجد سلفة</p>
-                                                    <p className="text-2xl font-bold text-orange-500 mt-2">{loanData.loan_amount} <span className="text-base">ريال</span></p>
-                                                    <p className="text-xs text-muted-foreground mt-1">تاريخ السلفة: {loanData.loan_time}</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                         {loanData && loanData.status === '0' && (
-                                            <Card className="bg-green-500/10 border-green-500/20 text-center">
-                                                <CardContent className="p-3"><p className="text-sm text-green-600 font-semibold">لا توجد سلفة على هذا الرقم</p></CardContent>
-                                            </Card>
-                                        )}
-                                     </CardContent>
-                                 </Card>
+                                <Card>
+                                    <CardContent className="p-0">
+                                      <Table>
+                                          <TableBody>
+                                              {balanceData && (
+                                                  <>
+                                                      <TableRow>
+                                                          <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
+                                                          <TableCell className="font-bold text-left text-primary">{balanceData.balance} ريال</TableCell>
+                                                      </TableRow>
+                                                      <TableRow>
+                                                          <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
+                                                          <TableCell className="font-bold text-left">{getMobileTypeString(balanceData.mobileType)}</TableCell>
+                                                      </TableRow>
+                                                  </>
+                                              )}
+                                              {loanData && loanData.status === '1' && (
+                                                  <TableRow>
+                                                      <TableCell className="font-semibold text-muted-foreground text-orange-600">السلفة</TableCell>
+                                                      <TableCell className="font-bold text-left text-orange-500">{loanData.loan_amount} ريال</TableCell>
+                                                  </TableRow>
+                                              )}
+                                               {loanData && loanData.status === '0' && (
+                                                  <TableRow>
+                                                        <TableCell className="font-semibold text-muted-foreground">السلفة</TableCell>
+                                                        <TableCell className="font-bold text-left text-green-600">لا توجد سلفة</TableCell>
+                                                  </TableRow>
+                                              )}
+                                          </TableBody>
+                                      </Table>
+                                    </CardContent>
+                                </Card>
                              )
                          )}
                     </AccordionContent>

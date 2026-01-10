@@ -7,7 +7,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2, Phone } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2, Phone, Contact } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,7 +58,7 @@ export default function BaityServicesPage() {
   const [selectedPackage, setSelectedPackage] = useState<{ id: string; name: string; price: number } | null>(null);
   const [recipient, setRecipient] = useState<UserProfile | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState('prepaid');
+  const [activeTab, setActiveTab] = useState('payment');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -236,13 +236,8 @@ export default function BaityServicesPage() {
         
         <Card className="rounded-2xl bg-destructive/10 p-4">
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                    <div className="p-2 bg-white rounded-lg">
-                        <Image src="https://i.postimg.cc/tJ01wBw9/baity-logo.png" alt="Baity" width={28} height={28} />
-                    </div>
-                     <div className="p-2 bg-white rounded-lg">
-                        <Phone className="h-7 w-7 text-muted-foreground"/>
-                    </div>
+                 <div className="p-2 bg-white rounded-lg">
+                    <Contact className="h-7 w-7 text-muted-foreground"/>
                 </div>
                 <div className="flex-1 text-right">
                     <Label htmlFor="mobileNumber" className="text-xs text-muted-foreground">رقم الجوال</Label>
@@ -260,48 +255,54 @@ export default function BaityServicesPage() {
             </div>
         </Card>
 
-        <div className="flex gap-2 p-1 bg-destructive/10 rounded-full">
-            <TabButton value="payment" label="سداد" />
-            <TabButton value="packages" label="باقات" />
-            <TabButton value="prepaid" label="دفع مسبق" />
-            <TabButton value="postpaid" label="فوترة" />
-        </div>
-        
-         <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
-            <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
-            <p className="text-2xl font-bold text-destructive mt-1">
-                {(userProfile?.balance ?? 0).toLocaleString('en-US')}
-            </p>
-        </Card>
+        {mobileNumber && (
+            <div className="animate-in fade-in-0 duration-300 space-y-4">
+                <div className="flex gap-2 p-1 bg-destructive/10 rounded-full">
+                    <TabButton value="payment" label="سداد" />
+                    <TabButton value="packages" label="باقات" />
+                    <TabButton value="prepaid" label="دفع مسبق" />
+                    <TabButton value="postpaid" label="فوترة" />
+                </div>
+                
+                 <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
+                    <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
+                    <p className="text-2xl font-bold text-destructive mt-1">
+                        {(userProfile?.balance ?? 0).toLocaleString('en-US')}
+                    </p>
+                </Card>
 
-        <div className="flex justify-around items-center">
-            {presetAmounts.map(pAmount => (
-                <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
-                    {pAmount}
-                </Button>
-            ))}
-        </div>
+                <div className="flex justify-around items-center">
+                    {presetAmounts.map(pAmount => (
+                        <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
+                            {pAmount}
+                        </Button>
+                    ))}
+                </div>
 
-        <div className="relative">
-            <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
-            <Input
-                id="amount"
-                type="number"
-                inputMode='numeric'
-                placeholder="أدخل المبلغ"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
-            />
-        </div>
+                <div className="relative">
+                    <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
+                    <Input
+                        id="amount"
+                        type="number"
+                        inputMode='numeric'
+                        placeholder="أدخل المبلغ"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
+                    />
+                </div>
+            </div>
+        )}
 
       </div>
-       <div className="p-4 border-t">
-          <Button onClick={() => handleConfirmClick('balance')} className="w-full h-12 text-base rounded-full bg-destructive text-destructive-foreground" disabled={!mobileNumber || !amount || isProcessing}>
-              {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : null}
-              {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'سداد'}
-          </Button>
-       </div>
+       {mobileNumber && (
+          <div className="p-4 border-t animate-in fade-in-0 duration-300">
+              <Button onClick={() => handleConfirmClick('balance')} className="w-full h-12 text-base rounded-full bg-destructive text-destructive-foreground" disabled={!mobileNumber || !amount || isProcessing}>
+                  {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : null}
+                  {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'سداد'}
+              </Button>
+           </div>
+        )}
     </div>
     <Toaster />
 

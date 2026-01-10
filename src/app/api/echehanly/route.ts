@@ -14,9 +14,9 @@ export async function GET(request: Request) {
   const offerid = searchParams.get('offerid');
   const type = searchParams.get('type'); 
 
-  if (!service || !action || !mobile) {
+  if (!service || !mobile) {
     return new NextResponse(
-      JSON.stringify({ message: 'Missing required query parameters: service, action, mobile' }),
+      JSON.stringify({ message: 'Missing required query parameters: service, mobile' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -25,21 +25,20 @@ export async function GET(request: Request) {
   let requestBody: any = { data: { mobile: String(mobile) } };
   let method = 'POST';
 
-  if (service === 'yem' && action === 'query') {
+  if (action === 'query') {
     endpoint = '/partner-yem/query';
-    const queryType = searchParams.get('type'); 
-    if (!queryType) {
+    if (!type) {
         return new NextResponse(JSON.stringify({ message: 'Missing type for query action' }), { status: 400 });
     }
-    requestBody.data.type = queryType;
-    if (queryType === 'status' && transid) {
+    requestBody.data.type = type;
+    if (type === 'status' && transid) {
         requestBody.data.transid = transid;
     }
-  } else if (service === 'yem' && action === 'bill') {
+  } else if (action === 'bill') {
     endpoint = '/partner-yem/bill-balance';
     if (!amount) return new NextResponse(JSON.stringify({ message: 'Missing amount for bill action' }), { status: 400 });
     requestBody.data.amount = Number(amount);
-  } else if (service === 'yem' && action === 'bill-offer') {
+  } else if (action === 'bill-offer') {
     endpoint = '/partner-yem/bill-offer';
     if (!offerid) return new NextResponse(JSON.stringify({ message: 'Missing offerID for bill-offer action' }), { status: 400 });
     if (!transid) return new NextResponse(JSON.stringify({ message: 'Missing transid for bill-offer action' }), { status: 400 });
@@ -52,20 +51,8 @@ export async function GET(request: Request) {
     requestBody = undefined;
   }
   else {
-      let legacyEndpoint = `/Eshehanly?service=${service}&action=${action}&mobile=${mobile}`;
-      if (transid) legacyEndpoint += `&transid=${transid}`;
-      if (amount) legacyEndpoint += `&amount=${amount}`;
-      if (offerid) legacyEndpoint += `&offerid=${offerid}`;
-      if (type) legacyEndpoint += `&type=${type}`;
-      
-      try {
-          const legacyResponse = await fetch(`${API_BASE_URL_LEGACY}${legacyEndpoint}`);
-          const legacyData = await legacyResponse.json();
-          return NextResponse.json(legacyData);
-      } catch (error) {
-          console.error(`Legacy API call failed for service: ${service}`, error);
-          return new NextResponse(JSON.stringify({ message: 'Legacy API call failed' }), { status: 500 });
-      }
+      // Fallback for other services if any, though the main ones are handled above.
+      return new NextResponse(JSON.stringify({ message: 'Invalid or unsupported action' }), { status: 400 });
   }
   
   if (!endpoint) {
@@ -109,4 +96,7 @@ export async function GET(request: Request) {
   }
 }
 
-const API_BASE_URL_LEGACY = 'https://yourapi.com';
+export async function POST(request: Request) {
+  return GET(request);
+}
+

@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 type Notification = {
@@ -16,6 +17,7 @@ type Notification = {
 type UserProfile = {
   lastNotificationRead?: string;
   displayName?: string;
+  photoURL?: string;
 };
 
 const getShortName = (fullName: string | null | undefined): string => {
@@ -99,9 +101,12 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
-        </div>
+        <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName || 'User'} />
+            <AvatarFallback>
+                <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
+            </AvatarFallback>
+        </Avatar>
         <div>
            {isUserLoading ? (
              <Skeleton className="h-6 w-32 mt-1" />

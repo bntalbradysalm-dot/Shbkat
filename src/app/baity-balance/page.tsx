@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -66,6 +67,7 @@ const manualPackages: OfferWithPrice[] = [
     { name: 'باقة مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا الشهرية', offerName: 'مزايا الشهرية', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا فورجي اليومية', offerName: 'مزايا فورجي اليومية', id: 'A88337', offerId: 'A88337', price: 250, data: '1 GB', sms: '30', minutes: '30', validity: '2 أيام', offerStartDate: '', offerEndDate: '' },
 ];
 
 
@@ -98,7 +100,7 @@ const formatApiDate = (dateString: string) => {
     return `${day}/${month}/${year} - ${String(formattedHour).padStart(2, '0')}:${minute} ${ampm}`;
 };
 
-const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType, value?: string, label: string }) => {
+const OfferDetailIcon = ({ icon: React.ElementType, value?: string, label: string }) => {
     if (!value) return null;
     return (
         <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
@@ -171,6 +173,7 @@ export default function BaityServicesPage() {
 
   const categorizedOffers = useMemo(() => {
     const initializedCategories: Record<string, OfferWithPrice[]> = {
+        'مزايا فورجي': [],
         'باقات مزايا': [],
         'باقات الانترنت الشهرية': [],
         'باقات انترنت 10 أيام': [],
@@ -192,7 +195,8 @@ export default function BaityServicesPage() {
         
         const offerWithDetails: OfferWithPrice = { ...offer, ...parsedDetails, offerId, name: correctedName, offerName: correctedName, price };
 
-        if (correctedName.includes('مزايا')) initializedCategories['باقات مزايا'].push(offerWithDetails);
+        if (correctedName.includes('مزايا فورجي')) initializedCategories['مزايا فورجي'].push(offerWithDetails);
+        else if (correctedName.includes('مزايا')) initializedCategories['باقات مزايا'].push(offerWithDetails);
         else if (correctedName.includes('شهري')) initializedCategories['باقات الانترنت الشهرية'].push(offerWithDetails);
         else if (correctedName.includes('10 أيّام')) initializedCategories['باقات انترنت 10 أيام'].push(offerWithDetails);
         else if (correctedName.includes('تواصل')) initializedCategories['باقات تواصل اجتماعي'].push(offerWithDetails);
@@ -210,6 +214,7 @@ export default function BaityServicesPage() {
 }, []);
 
 const renderOfferIcon = (category: string) => {
+    if (category.includes('مزايا فورجي')) return <Briefcase className="w-5 h-5"/>;
     if (category.includes('مزايا')) return <Smile className="w-5 h-5"/>;
     if (category.includes('شهري')) return <Database className="w-5 h-5"/>;
     if (category.includes('10 أيّام')) return <History className="w-5 h-5"/>;
@@ -334,7 +339,7 @@ const renderOfferIcon = (category: string) => {
     setAmount(String(value));
   };
   
-  const TabButton = ({ value, label }: { value: string, label: string}) => (
+  const TabButton = ({ value: string, label: string}) => (
     <Button
         variant={activeTab === value ? 'default' : 'ghost'}
         onClick={() => setActiveTab(value)}
@@ -509,3 +514,4 @@ const renderOfferIcon = (category: string) => {
     </>
   );
 }
+

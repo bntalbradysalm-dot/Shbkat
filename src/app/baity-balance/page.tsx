@@ -63,7 +63,7 @@ type OfferDetails = {
   price: number;
 }
 
-type OfferWithPrice = Offer & OfferDetails & { id?: string };
+type OfferWithPrice = Offer & OfferDetails & { id?: string; name?: string };
 
 type SolfaResponse = {
     resultCode: string;
@@ -133,18 +133,20 @@ export default function BaityBalancePage() {
   
   const callQueryApi = useCallback(async (phone: string, type: 'balance' | 'solfa' | 'offers' | 'status', transid?: string) => {
     try {
-        const response = await fetch('/api/baity/balance', {
+        const response = await fetch('/api/baity', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ data: { mobile: phone, type, transid }})
+            body: JSON.stringify({ 
+                endpoint: 'partner-yem/query',
+                payload: { data: { mobile: phone, type, transid } }
+            })
         });
         
         const text = await response.text();
         const data = text ? JSON.parse(text) : {};
 
         if (!response.ok) {
-            // Attempt to get a meaningful error message from the response body
-            const errorMessage = data?.message || data?.error?.message || `Failed to fetch ${type}`;
+            const errorMessage = data?.message || `Failed to fetch ${type}: ${response.statusText}`;
             throw new Error(errorMessage);
         }
         
@@ -215,7 +217,7 @@ export default function BaityBalancePage() {
         const offerId = offer.offerId || offer.id;
         if (!offerId) return;
 
-        const correctedName = offer.offerName || offer.name;
+        const correctedName = offer.offerName || offer.name || 'باقة غير مسماة';
         const price = offer.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
         const parsedDetails = { data: offer.data, sms: offer.sms, minutes: offer.minutes, validity: offer.validity };
         
@@ -292,15 +294,18 @@ const renderOfferIcon = (category: string) => {
     }
 
     try {
-        const billResponse = await fetch('/api/baity', {
+        const billRes = await fetch('/api/baity', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ data: { mobile: mobileNumber, amount: amountToPay }})
+            body: JSON.stringify({ 
+                endpoint: 'partner-yem/bill-balance',
+                payload: { data: { mobile: mobileNumber, amount: amountToPay } }
+            })
         });
 
-        const billData: BillResponse = await billResponse.json();
+        const billData: BillResponse = await billRes.json();
         
-        if (!billResponse.ok || !billData.success) {
+        if (!billRes.ok || !billData.success) {
             throw new Error((billData as any).message || 'فشل تسديد المبلغ.');
         }
         
@@ -309,10 +314,13 @@ const renderOfferIcon = (category: string) => {
         if (isPackage && selectedPackage) {
             const transid = billData.bill.transid;
             const offerId = selectedPackage.offerId || selectedPackage.id;
-            const offerResponse = await fetch('/api/baity-offer', {
+            const offerResponse = await fetch('/api/baity', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ data: { mobile: mobileNumber, offerID: offerId, transid }})
+                body: JSON.stringify({
+                    endpoint: 'partner-yem/bill-offer',
+                    payload: { data: { mobile: mobileNumber, offerID: offerId, transid } }
+                })
             });
 
             if (!offerResponse.ok) {
@@ -550,3 +558,4 @@ const renderOfferIcon = (category: string) => {
     </>
   );
 }
+

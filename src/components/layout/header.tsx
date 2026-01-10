@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -102,7 +103,6 @@ const Header = () => {
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10 border-2 border-primary/20">
-            <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName || 'User'} />
             <AvatarFallback>
                 <UserIcon className="h-6 w-6 text-primary dark:text-primary-foreground" />
             </AvatarFallback>

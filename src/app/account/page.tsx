@@ -193,7 +193,6 @@ export default function AccountPage() {
         <Card className="overflow-hidden rounded-2xl shadow-lg bg-primary text-primary-foreground">
           <CardContent className="p-4 flex items-center gap-4">
              <Avatar className="h-14 w-14 border-2 border-primary-foreground/50">
-                <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName || 'User'} />
                 <AvatarFallback>
                     <User className="h-8 w-8" />
                 </AvatarFallback>

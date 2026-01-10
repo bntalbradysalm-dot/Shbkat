@@ -308,7 +308,7 @@ const YemenMobileUI = ({
         return 'غير معروف';
     }
     
-    const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType, value?: string, label: string }) => {
+    const OfferDetailIcon = ({ icon: React.ElementType, value?: string, label }: { icon: React.ElementType, value?: string, label: string }) => {
         if (!value) return null;
         return (
             <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
@@ -898,8 +898,9 @@ export default function TelecomServicesPage() {
         setActiveYemenPostQuery(null);
     }
     
-    if (!phoneNumber.startsWith('77')) {
-      return;
+    if (phoneNumber.length === 0) {
+        setDetectedOperator(null);
+        return;
     }
 
     let requiredLength = 9;
@@ -908,7 +909,7 @@ export default function TelecomServicesPage() {
     }
 
     if (phoneNumber.length !== requiredLength) {
-        if (operator && phoneNumber.length < 6) setDetectedOperator(null);
+        if (operator && phoneNumber.length < 2) setDetectedOperator(null);
         return;
     }
 
@@ -1065,9 +1066,8 @@ export default function TelecomServicesPage() {
   }
 
   const renderOperatorUI = () => {
-    if (!detectedOperator || !phoneNumber.startsWith('77')) {
-        return null;
-    }
+    if (phoneNumber.length === 0) return null;
+    if (!detectedOperator) return null;
     
     switch (detectedOperator) {
         case 'Yemen Mobile':
@@ -1168,22 +1168,23 @@ export default function TelecomServicesPage() {
         <Card className="shadow-lg">
           <CardContent className="p-3">
             <div className="relative">
-               <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
                     {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery || isLoadingYemenPostQuery) ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                     ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
                         <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>
-                    ) : (
-                        <Phone className="h-5 w-5 text-muted-foreground" />
-                    )}
+                    ) : null}
                 </div>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center">
+                {phoneNumber.length > 0 && <Phone className="h-5 w-5 text-muted-foreground" />}
+              </div>
               <Input
                 id="phoneNumber"
                 type="tel"
                 placeholder="ادخل رقم الهاتف..."
                 value={phoneNumber}
                 onChange={handlePhoneChange}
-                className="text-lg text-center h-12 tracking-wider"
+                className="text-lg text-center h-12 tracking-wider px-12"
               />
             </div>
           </CardContent>
@@ -1234,5 +1235,7 @@ export default function TelecomServicesPage() {
 
 
 
+
+    
 
     

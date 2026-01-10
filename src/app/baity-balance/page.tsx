@@ -138,20 +138,17 @@ export default function BaityBalancePage() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ data: { mobile: phone, type, transid }})
         });
-
-        if (!response.ok) {
-            let errorData = { message: `فشلت العملية: ${response.statusText}` };
-            try {
-                // Try to parse error response from server
-                errorData = await response.json();
-            } catch (e) {
-                // Ignore if error response is not valid JSON
-            }
-            throw new Error(errorData.message || `Failed to fetch ${type}`);
-        }
         
         const text = await response.text();
-        return text ? JSON.parse(text) : {};
+        const data = text ? JSON.parse(text) : {};
+
+        if (!response.ok) {
+            // Attempt to get a meaningful error message from the response body
+            const errorMessage = data?.message || data?.error?.message || `Failed to fetch ${type}`;
+            throw new Error(errorMessage);
+        }
+        
+        return data;
 
     } catch (error: any) {
         console.error(`${type} fetch error:`, error);

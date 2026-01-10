@@ -1,13 +1,12 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2, Phone, Contact } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2, Phone, Contact, RefreshCw, Smile, ThumbsDown, Database, MessageSquare, Briefcase, History } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 type UserProfile = {
   id: string;
@@ -40,14 +40,68 @@ type UserProfile = {
   displayName?: string;
 };
 
-const baityPackages = [
-    { id: 'A64329', name: 'باقة مزايا الاسبوعية', price: 485 },
-    { id: 'A38394', name: 'باقة مزايا الشهرية', price: 1300 },
-    { id: 'A75328', name: 'مزايا ماكس الشهرية', price: 2000 },
-    { id: 'A76328', name: 'الشهرية للفوترة', price: 3000 },
+type Offer = {
+    offerStartDate: string;
+    offerName: string;
+    offerId: string;
+    offerEndDate: string;
+};
+
+type OfferDetails = {
+  data?: string;
+  minutes?: string;
+  sms?: string;
+  validity?: string;
+  price: number;
+}
+
+type OfferWithPrice = Offer & OfferDetails & { id?: string };
+
+const manualPackages: OfferWithPrice[] = [
+    { name: 'باقة مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الشهرية', offerName: 'مزايا الشهرية', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
 ];
 
+
 const presetAmounts = [100, 200, 500, 1000, 2000];
+
+const parseOfferDetails = (name: string): Partial<OfferDetails> => {
+    const details: Partial<OfferDetails> = {};
+    const dataMatch = name.match(/(\d+)\s?(GB|MB|جيجا|ميجابايت|غيغا)/i);
+    const minutesMatch = name.match(/(\d+)\s?(دقائق|دق|دقيقة)/i);
+    const smsMatch = name.match(/(\d+)\s?(رسائل|رسالة|رس)/i);
+    const validityMatch = name.match(/(يوم|أسبوع|شهر|يومين|أيام|اسبوع|شهري|اسبوعي)/i);
+    
+    if (dataMatch) details.data = `${dataMatch[1]} ${dataMatch[2].toUpperCase().startsWith('G') ? 'GB' : 'MB'}`;
+    if (minutesMatch) details.minutes = minutesMatch[1];
+    if (smsMatch) details.sms = smsMatch[1];
+    if (validityMatch) details.validity = validityMatch[0];
+  
+    return details;
+};
+
+const formatApiDate = (dateString: string) => {
+    if (!dateString || dateString.length < 14) return dateString; // YYYYMMDDHHMMSS
+    const year = dateString.substring(0, 4);
+    const month = dateString.substring(4, 6);
+    const day = dateString.substring(6, 8);
+    const hour = parseInt(dateString.substring(8, 10), 10);
+    const minute = dateString.substring(10, 12);
+    const ampm = hour >= 12 ? 'م' : 'ص';
+    const formattedHour = hour % 12 || 12; // convert to 12-hour format
+    return `${day}/${month}/${year} - ${String(formattedHour).padStart(2, '0')}:${minute} ${ampm}`;
+};
+
+const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType, value?: string, label: string }) => {
+    if (!value) return null;
+    return (
+        <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
+            <Icon className="w-5 h-5" />
+            <span className="text-xs font-semibold">{value}</span>
+        </div>
+    );
+}
 
 export default function BaityServicesPage() {
   const { toast } = useToast();
@@ -61,71 +115,145 @@ export default function BaityServicesPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [confirmationDetails, setConfirmationDetails] = useState({ title: '', description: '', type: '' });
-  const [selectedPackage, setSelectedPackage] = useState<{ id: string; name: string; price: number } | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
   const [recipient, setRecipient] = useState<UserProfile | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState('payment');
+  const [activeTab, setActiveTab] = useState('packages');
+  const [balance, setBalance] = useState<string | null>(null);
+
+  const [offers, setOffers] = useState<Offer[] | null>(null);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  const fetchBalance = useCallback(async (phone: string) => {
+    setBalance(null);
+    try {
+        const response = await fetch(`/api/baity/balance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch balance');
+        }
+        setBalance(data.data.balance);
+    } catch (error: any) {
+        console.error("Balance fetch error:", error);
+    }
+  }, []);
+
+  const fetchOffers = useCallback(async () => {
+    setIsLoadingOffers(true);
+    setOffers(null);
+    try {
+        const response = await fetch(`/api/echehanly?service=mtn&action=queryoffer`);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch offers');
+        }
+        if (data && Array.isArray(data.offers)) {
+            setOffers(data.offers);
+        } else {
+            setOffers([]);
+        }
+    } catch (error: any) {
+        console.error("Offers fetch error:", error);
+        setOffers([]);
+    } finally {
+        setIsLoadingOffers(false);
+    }
+  }, []);
   
   useEffect(() => {
-    const handleSearch = async () => {
-      if (mobileNumber.length !== 9 || !firestore) {
-        setRecipient(null);
-        return;
-      }
-      
-      setIsSearching(true);
-      setRecipient(null);
-
-      try {
-        const usersRef = collection(firestore, 'users');
-        const q = query(usersRef, where('phoneNumber', '==', mobileNumber));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const recipientData = querySnapshot.docs[0].data() as UserProfile;
-            setRecipient(recipientData);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsSearching(false);
-      }
+    if (mobileNumber.length === 9) {
+        fetchBalance(mobileNumber);
+    }
+    if(!offers && !isLoadingOffers) {
+        fetchOffers();
+    }
+  }, [mobileNumber, fetchBalance, offers, isLoadingOffers, fetchOffers]);
+  
+  const categorizedOffers = useMemo(() => {
+    const initializedCategories: Record<string, OfferWithPrice[]> = {
+        'الاشتراكات الحالية': [],
+        'باقات مزايا': [],
+        'باقات الانترنت الشهرية': [],
+        'باقات انترنت 10 أيام': [],
+        'باقات تواصل اجتماعي': [],
+        'باقات أخرى': [],
     };
     
-    const timerId = setTimeout(() => {
-        handleSearch();
-    }, 500);
+    const allOffers = [...(offers || []), ...manualPackages];
+    const uniqueOffers = Array.from(new Map(allOffers.map(o => [o.offerId || o.id, o])).values());
 
-    return () => clearTimeout(timerId);
+    uniqueOffers.forEach(offer => {
+        const offerId = offer.offerId || offer.id;
+        if (!offerId) return;
 
-  }, [mobileNumber, firestore]);
+        const correctedName = offer.offerName || offer.name;
+        const manualPkg = manualPackages.find(p => p.id === offerId);
+        const price = offer.price || manualPkg?.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
+        const parsedDetails = manualPkg ? { data: manualPkg.data, sms: manualPkg.sms, minutes: manualPkg.minutes, validity: manualPkg.validity } : parseOfferDetails(correctedName);
+        
+        const offerWithDetails: OfferWithPrice = { ...offer, ...parsedDetails, offerId, name: correctedName, offerName: correctedName, price };
+
+        if (offer.offerId && offer.offerStartDate) { // Active subscriptions
+            initializedCategories['الاشتراكات الحالية'].push(offerWithDetails);
+            return;
+        }
+
+        if (correctedName.includes('مزايا')) initializedCategories['باقات مزايا'].push(offerWithDetails);
+        else if (correctedName.includes('شهري')) initializedCategories['باقات الانترنت الشهرية'].push(offerWithDetails);
+        else if (correctedName.includes('10 أيّام')) initializedCategories['باقات انترنت 10 أيام'].push(offerWithDetails);
+        else if (correctedName.includes('تواصل')) initializedCategories['باقات تواصل اجتماعي'].push(offerWithDetails);
+        else initializedCategories['باقات أخرى'].push(offerWithDetails);
+    });
+
+    const finalCategories: Record<string, OfferWithPrice[]> = {};
+    for(const category in initializedCategories) {
+        if(initializedCategories[category].length > 0) {
+            finalCategories[category] = initializedCategories[category].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        }
+    }
+    
+    return finalCategories;
+}, [offers]);
+
+const renderOfferIcon = (category: string) => {
+    if (category.includes('مزايا')) return <Smile className="w-5 h-5"/>;
+    if (category.includes('شهري')) return <Database className="w-5 h-5"/>;
+    if (category.includes('10 أيّام')) return <History className="w-5 h-5"/>;
+    if (category.includes('تواصل')) return <Send className="w-5 h-5"/>;
+    return <Package className="w-5 h-5"/>;
+}
   
-  const handleConfirmClick = (type: 'balance' | 'package', pkg?: typeof baityPackages[0]) => {
+  const handleConfirmClick = (type: 'balance' | 'package', pkg?: OfferWithPrice) => {
     const numericAmount = parseFloat(amount);
+    const finalAmount = type === 'package' ? pkg?.price : numericAmount;
 
+    if (!finalAmount || finalAmount <= 0) {
+        toast({ variant: "destructive", title: "خطأ", description: "الرجاء تحديد مبلغ أو باقة صالحة." });
+        return;
+    }
+    if ((userProfile?.balance ?? 0) < finalAmount) {
+      toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
+      return;
+    }
     if (type === 'balance') {
       if (!mobileNumber || !amount || isNaN(numericAmount) || numericAmount <= 0) {
         toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم جوال ومبلغ صحيح." });
-        return;
-      }
-      if ((userProfile?.balance ?? 0) < numericAmount) {
-        toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
         return;
       }
       setConfirmationDetails({ title: 'تأكيد تسديد الرصيد', description: `سيتم تسديد مبلغ ${numericAmount.toLocaleString('en-US')} ريال للرقم ${mobileNumber}.`, type: 'balance' });
     } else if (type === 'package' && pkg) {
       if (!mobileNumber) {
         toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم الجوال أولاً." });
-        return;
-      }
-      if ((userProfile?.balance ?? 0) < pkg.price) {
-        toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك لا يكفي لشراء هذه الباقة." });
         return;
       }
       setSelectedPackage(pkg);
@@ -152,7 +280,7 @@ export default function BaityServicesPage() {
     } else if (confirmationDetails.type === 'package' && selectedPackage) {
       transactionAmount = selectedPackage.price;
       apiEndpoint = '/api/baity-offer';
-      requestBody = { mobile: mobileNumber, offerID: selectedPackage.id };
+      requestBody = { mobile: mobileNumber, offerID: selectedPackage.offerId };
       transactionNotes = `شراء باقة بيتي: ${selectedPackage.name}`;
     } else {
         setIsProcessing(false);
@@ -263,84 +391,95 @@ export default function BaityServicesPage() {
                 </div>
             </div>
         </Card>
+        
+        <Table>
+            <TableBody>
+                <TableRow>
+                    <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
+                    <TableCell className="font-bold text-left">{balance ? `${balance} ريال` : <Skeleton className="h-5 w-20 ml-auto" />}</TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
+                    <TableCell className="font-bold text-left">دفع مسبق | 3G</TableCell>
+                </TableRow>
+                <TableRow>
+                     <TableCell className="font-semibold text-muted-foreground">فحص السلفة</TableCell>
+                    <TableCell className="font-bold text-left flex items-center justify-end gap-1">
+                        <Smile className="w-4 h-4 text-green-500" />
+                        غير متسلف
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
 
-        {mobileNumber.length > 0 && (
+
+        {mobileNumber.length === 9 && (
             <div className="animate-in fade-in-0 duration-300 space-y-4">
-                <div className="flex gap-2 p-1 bg-destructive/10 rounded-full">
-                    <TabButton value="payment" label="سداد" />
-                    <TabButton value="packages" label="باقات" />
-                    <TabButton value="prepaid" label="دفع مسبق" />
-                    <TabButton value="postpaid" label="فوترة" />
-                </div>
+                <Card className="bg-destructive text-white">
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-base text-center">الاشتراكات الحالية</CardTitle>
+                    </CardHeader>
+                </Card>
                 
-                {activeTab === 'payment' && (
-                    <>
-                         <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
-                            <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
-                            <p className="text-2xl font-bold text-destructive mt-1">
-                                {(userProfile?.balance ?? 0).toLocaleString('en-US')}
-                            </p>
+                {categorizedOffers['الاشتراكات الحالية']?.length > 0 ? (
+                    categorizedOffers['الاشتراكات الحالية'].map(sub => (
+                        <Card key={sub.offerId} className="bg-red-50 dark:bg-destructive/10">
+                            <CardContent className="p-3 flex items-center gap-3">
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="w-12 h-12 bg-destructive text-destructive-foreground rounded-lg flex items-center justify-center">
+                                        <RefreshCw />
+                                    </div>
+                                    <span className="text-xs font-bold">تجديد</span>
+                                </div>
+                                <div className="flex-1 text-right text-sm">
+                                    <p className="font-bold">{sub.offerName}</p>
+                                    <p className="text-xs text-muted-foreground">الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
+                                    <p className="text-xs text-muted-foreground">الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
+                                </div>
+                            </CardContent>
                         </Card>
-
-                        <div className="flex justify-around items-center">
-                            {presetAmounts.map(pAmount => (
-                                <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
-                                    {pAmount}
-                                </Button>
-                            ))}
-                        </div>
-
-                        <div className="relative">
-                            <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                inputMode='numeric'
-                                placeholder="أدخل المبلغ"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
-                            />
-                        </div>
-                    </>
+                    ))
+                ) : (
+                    <p className="text-center text-muted-foreground py-4">لا توجد اشتراكات حالية.</p>
                 )}
 
-                {activeTab === 'packages' && (
-                    <Accordion type="single" collapsible className="w-full space-y-3">
-                         {[{title: 'باقات مزايا', packages: baityPackages}].map((category) => (
-                             <AccordionItem value={category.title} key={category.title} className="border-none">
-                                <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
-                                    <span>{category.title}</span>
-                                </AccordionTrigger>
-                                <AccordionContent className="pt-2">
-                                     <div className="space-y-2">
-                                        {category.packages.map(pkg => (
-                                            <Card key={pkg.id} onClick={() => handleConfirmClick('package', pkg)} className="cursor-pointer p-3 hover:bg-muted/50">
-                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-semibold">{pkg.name}</span>
-                                                    <span className="font-bold text-destructive">{pkg.price.toLocaleString('en-US')} ريال</span>
-                                                 </div>
-                                            </Card>
-                                        ))}
-                                     </div>
-                                </AccordionContent>
-                             </AccordionItem>
-                         ))}
-                    </Accordion>
-                )}
 
+                <Accordion type="single" collapsible className="w-full space-y-3">
+                     {Object.entries(categorizedOffers).filter(([category]) => category !== 'الاشتراكات الحالية').map(([category, pkgs]) => (
+                         <AccordionItem value={category} key={category} className="border-none">
+                            <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
+                                <div className='flex items-center justify-between w-full'>
+                                    <span>{category}</span>
+                                    <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center">
+                                        {renderOfferIcon(category)}
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-2">
+                                 <div className="space-y-2">
+                                    {pkgs.map(pkg => (
+                                        <Card key={pkg.offerId || pkg.id} onClick={() => handleConfirmClick('package', pkg)} className="cursor-pointer p-4 hover:bg-muted/50">
+                                            <div className="flex flex-col items-center text-center">
+                                                <h4 className="font-bold text-base">{pkg.offerName}</h4>
+                                                <p className="text-2xl font-bold text-destructive my-2">{pkg.price.toLocaleString('en-US')} ريال</p>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2 pt-3 border-t">
+                                                <OfferDetailIcon icon={Database} value={pkg.data} label="Data" />
+                                                <OfferDetailIcon icon={MessageSquare} value={pkg.sms} label="SMS" />
+                                                <OfferDetailIcon icon={Phone} value={pkg.minutes} label="Minutes" />
+                                                <OfferDetailIcon icon={History} value={pkg.validity} label="Validity" />
+                                            </div>
+                                        </Card>
+                                    ))}
+                                 </div>
+                            </AccordionContent>
+                         </AccordionItem>
+                     ))}
+                </Accordion>
             </div>
         )}
 
       </div>
-       {mobileNumber.length > 0 && activeTab === 'payment' && (
-          <div className="p-4 border-t animate-in fade-in-0 duration-300">
-              <Button onClick={() => handleConfirmClick('balance')} className="w-full h-12 text-base rounded-full bg-destructive text-destructive-foreground" disabled={!mobileNumber || !amount || isProcessing}>
-                  {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : null}
-                  {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'سداد'}
-              </Button>
-           </div>
-        )}
     </div>
     <Toaster />
 
@@ -365,5 +504,3 @@ export default function BaityServicesPage() {
     </>
   );
 }
-
-    

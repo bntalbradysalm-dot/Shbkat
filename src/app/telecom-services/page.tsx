@@ -1,13 +1,11 @@
-
-
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Smartphone, RefreshCw, Loader2, Phone, CreditCard } from 'lucide-react';
+import { Wallet, Smartphone, RefreshCw, Loader2, Phone, CreditCard, AlertTriangle, FileText } from 'lucide-react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 
 type UserProfile = {
@@ -39,6 +36,15 @@ type YemenMobileBalance = {
     balance: string;
     resultDesc: string;
 };
+
+type YemenMobileLoan = {
+    message: string;
+    status: string; // "1" if has loan, "0" if not
+    loan_amount: string;
+    loan_time: string;
+    resultCode: string;
+};
+
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -68,84 +74,14 @@ const BalanceDisplay = () => {
     );
 }
 
-const YemenMobileUI = ({ 
-    onBillPay,
-    queryData, 
-    isLoadingQuery, 
-    refreshQuery 
-}: { 
-    onBillPay: (amount: number) => void,
-    queryData: YemenMobileBalance | null,
-    isLoadingQuery: boolean,
-    refreshQuery: () => void 
-}) => {
-    const [billAmount, setBillAmount] = useState('');
-    const getMobileTypeString = (type: string | undefined) => {
-        if (type === '0') return 'دفع مسبق';
-        if (type === '1') return 'فوترة';
-        return 'غير معروف';
-    }
-
-    return (
-        <div className="space-y-4 animate-in fade-in-0 duration-500">
-            <Card>
-                <CardHeader className="p-3 text-center">
-                    <CardTitle className="text-base">بيانات الرقم (يمن موبايل)</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-3">
-                     <Button onClick={refreshQuery} disabled={isLoadingQuery} className="w-full" variant="outline">
-                        {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="ml-2 h-4 w-4"/>}
-                        {isLoadingQuery ? 'جاري الاستعلام...' : 'الاستعلام عن الرصيد'}
-                    </Button>
-                    <div className="space-y-2">
-                        {queryData && (
-                            <Card className="bg-muted/50 text-center">
-                                <CardContent className="p-3">
-                                    <p className="text-sm text-muted-foreground">الرصيد الحالي للرقم</p>
-                                    <p className="text-2xl font-bold text-primary">{queryData.balance} <span className="text-base">ريال</span></p>
-                                    <p className="text-xs text-muted-foreground mt-1">نوع الخط: {getMobileTypeString(queryData.mobileType)}</p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="p-3 text-center">
-                     <CardTitle className="text-base">تسديد الرصيد</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 space-y-3">
-                    <div>
-                        <Label htmlFor="bill-amount">المبلغ</Label>
-                        <Input 
-                            id="bill-amount"
-                            type="number"
-                            placeholder="أدخل المبلغ..."
-                            value={billAmount}
-                            onChange={e => setBillAmount(e.target.value)}
-                        />
-                    </div>
-                    <Button 
-                        className="w-full"
-                        onClick={() => onBillPay(Number(billAmount))}
-                        disabled={!billAmount || Number(billAmount) <= 0}
-                    >
-                        <CreditCard className="ml-2 h-4 w-4" />
-                        تسديد
-                    </Button>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
 export default function TelecomServicesPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
   
-  const [queryData, setQueryData] = useState<YemenMobileBalance | null>(null);
+  const [balanceData, setBalanceData] = useState<YemenMobileBalance | null>(null);
+  const [loanData, setLoanData] = useState<YemenMobileLoan | null>(null);
   const [isLoadingQuery, setIsLoadingQuery] = useState(false);
   
   const [billAmount, setBillAmount] = useState<number | null>(null);
@@ -158,25 +94,38 @@ export default function TelecomServicesPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
+  const callApi = useCallback(async (type: 'balance' | 'solfa') => {
+    try {
+        const response = await fetch(`/api/echehanly?service=yem&action=query&mobile=${phoneNumber}&type=${type}`);
+        const data = await response.json();
+        if (!response.ok || data.resultCode !== '0') {
+            throw new Error(data.message || data.resultDesc || 'فشل الاستعلام.');
+        }
+        return data;
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: `خطأ في استعلام ${type}`, description: error.message });
+        return null;
+    }
+  }, [phoneNumber, toast]);
+
   const handleQuery = async () => {
     if (phoneNumber.length !== 9) {
       toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف صحيح (9 أرقام).' });
       return;
     }
     setIsLoadingQuery(true);
-    setQueryData(null);
-    try {
-      const response = await fetch(`/api/echehanly?service=yem&action=query&mobile=${phoneNumber}&type=balance`);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'فشل الاستعلام عن الرصيد.');
-      }
-      setQueryData(data);
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
-    } finally {
-      setIsLoadingQuery(false);
-    }
+    setBalanceData(null);
+    setLoanData(null);
+    
+    const [balanceResult, loanResult] = await Promise.all([
+        callApi('balance'),
+        callApi('solfa')
+    ]);
+
+    if (balanceResult) setBalanceData(balanceResult);
+    if (loanResult) setLoanData(loanResult);
+
+    setIsLoadingQuery(false);
   };
 
   const handlePaymentInitiation = (amount: number) => {
@@ -201,8 +150,8 @@ export default function TelecomServicesPage() {
     try {
         const response = await fetch(`/api/echehanly?service=yem&action=bill&mobile=${phoneNumber}&amount=${billAmount}`);
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'فشلت عملية الدفع لدى مزود الخدمة.');
+        if (!response.ok || data.resultCode !== '0') {
+            throw new Error(data.message || data.resultDesc || 'فشلت عملية الدفع لدى مزود الخدمة.');
         }
 
         const batch = writeBatch(firestore);
@@ -250,6 +199,12 @@ export default function TelecomServicesPage() {
     }
   }
 
+  const getMobileTypeString = (type: string | undefined) => {
+    if (type === '0') return 'دفع مسبق';
+    if (type === '1') return 'فوترة';
+    return 'غير معروف';
+  };
+
   return (
     <>
     <div className="flex flex-col h-full bg-background">
@@ -279,12 +234,85 @@ export default function TelecomServicesPage() {
         </Card>
         
         {phoneNumber.length === 9 && (
-            <YemenMobileUI
-                onBillPay={handlePaymentInitiation}
-                queryData={queryData}
-                isLoadingQuery={isLoadingQuery}
-                refreshQuery={handleQuery}
-            />
+            <div className="space-y-4 animate-in fade-in-0 duration-500">
+                <Button onClick={handleQuery} disabled={isLoadingQuery} className="w-full">
+                    {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="ml-2 h-4 w-4"/>}
+                    {isLoadingQuery ? 'جاري الاستعلام...' : 'استعلام عن الرصيد والسلفة'}
+                </Button>
+
+                {isLoadingQuery ? (
+                    <div className='space-y-4'>
+                        <Skeleton className='h-24 w-full' />
+                        <Skeleton className='h-32 w-full' />
+                    </div>
+                ) : (
+                    <>
+                    {(balanceData || loanData) && (
+                         <Card>
+                             <CardHeader className="p-3 text-center">
+                                <CardTitle className="text-base">بيانات الرقم</CardTitle>
+                             </CardHeader>
+                             <CardContent className="p-3 pt-0 space-y-3">
+                                {balanceData && (
+                                     <Card className="bg-muted/50 text-center">
+                                        <CardContent className="p-3">
+                                            <p className="text-sm text-muted-foreground">الرصيد الحالي للرقم</p>
+                                            <p className="text-2xl font-bold text-primary">{balanceData.balance} <span className="text-base">ريال</span></p>
+                                            <p className="text-xs text-muted-foreground mt-1">نوع الخط: {getMobileTypeString(balanceData.mobileType)}</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                                {loanData && loanData.status === '1' && (
+                                    <Card className="bg-orange-500/10 border-orange-500/20 text-center">
+                                        <CardContent className="p-3">
+                                            <p className="text-sm text-orange-600 flex items-center justify-center gap-2 font-semibold">
+                                                <AlertTriangle className='w-4 h-4' />
+                                                يوجد سلفة على هذا الرقم
+                                            </p>
+                                            <p className="text-2xl font-bold text-orange-500 mt-2">{loanData.loan_amount} <span className="text-base">ريال</span></p>
+                                            <p className="text-xs text-muted-foreground mt-1">تاريخ السلفة: {loanData.loan_time}</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                                 {loanData && loanData.status === '0' && (
+                                    <Card className="bg-green-500/10 border-green-500/20 text-center">
+                                        <CardContent className="p-3">
+                                            <p className="text-sm text-green-600 font-semibold">لا توجد سلفة على هذا الرقم</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                             </CardContent>
+                         </Card>
+                    )}
+                   
+                    <Card>
+                        <CardHeader className="p-3 text-center">
+                            <CardTitle className="text-base">تسديد الرصيد</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 space-y-3">
+                            <div>
+                                <Label htmlFor="bill-amount">المبلغ</Label>
+                                <Input 
+                                    id="bill-amount"
+                                    type="number"
+                                    placeholder="أدخل المبلغ..."
+                                    value={billAmount || ''}
+                                    onChange={e => setBillAmount(Number(e.target.value))}
+                                />
+                            </div>
+                            <Button 
+                                className="w-full"
+                                onClick={() => handlePaymentInitiation(Number(billAmount))}
+                                disabled={!billAmount || Number(billAmount) <= 0}
+                            >
+                                <CreditCard className="ml-2 h-4 w-4" />
+                                تسديد
+                            </Button>
+                        </CardContent>
+                    </Card>
+                    </>
+                )}
+            </div>
         )}
 
       </div>

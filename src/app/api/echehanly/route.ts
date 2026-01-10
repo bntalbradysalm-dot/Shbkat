@@ -27,7 +27,8 @@ async function handleRequest(request: Request) {
     );
   }
   
-  const transid = searchParams.get('transid') || Date.now().toString();
+  // Use a more unique transaction ID
+  const transid = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const token = generateToken(transid, mobile);
   
   const endpoint = new URL(`${API_BASE_URL}/${service}`);
@@ -53,11 +54,18 @@ async function handleRequest(request: Request) {
     if (offerid) {
         endpoint.searchParams.append('offerid', offerid);
     }
+    // The transid for bill-offer should come from the initial bill payment
+    const originalTransid = searchParams.get('original_transid');
+    if (originalTransid) {
+        endpoint.searchParams.set('transid', originalTransid);
+        // Re-generate token with the original transid
+        endpoint.searchParams.set('token', generateToken(originalTransid, mobile));
+    }
   }
   
   try {
     const fetchOptions: RequestInit = {
-      method: 'GET', // The new API seems to use GET for all operations
+      method: 'GET', // The API uses GET for all operations
       headers: {
         'Content-Type': 'application/json',
       },
@@ -66,8 +74,9 @@ async function handleRequest(request: Request) {
     const response = await fetch(endpoint.toString(), fetchOptions);
     const data = await response.json();
 
+    // The API returns resultCode "0" for success
     if (data.resultCode !== "0") {
-        const errorMessage = data?.resultDesc || 'Failed to process the request with the provider.';
+        const errorMessage = data?.resultDesc || data?.message || 'Failed to process the request with the provider.';
         return new NextResponse(
             JSON.stringify({ message: errorMessage, ...data }),
             { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -85,12 +94,13 @@ async function handleRequest(request: Request) {
   }
 }
 
+// The API uses GET, so we only need the GET handler.
 export async function GET(request: Request) {
   return handleRequest(request);
 }
 
+// We can keep POST for compatibility in case frontend components still use it,
+// but it will just be passed to the GET handler.
 export async function POST(request: Request) {
-    // The new API uses GET, so we just pass it to the GET handler.
-    // We keep POST for compatibility in case frontend components still use it.
     return handleRequest(request);
 }

@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 
 const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem';
-const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
 
 async function proxyRequest(endpoint: string, body: any) {
   try {

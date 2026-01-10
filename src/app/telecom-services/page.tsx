@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Smartphone, Building, Wifi, Phone } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  ChevronRight,
+  Heart,
+  HelpCircle,
+  Smartphone,
+  Contact,
+} from 'lucide-react';
 import Image from 'next/image';
 
 type Company = {
@@ -27,7 +33,7 @@ const companies: Company[] = [
   {
     name: 'YOU',
     icon: 'https://i.postimg.cc/W3t9tD5B/Yo-Logo.png',
-    prefixes: ['73'],
+    prefixes: ['73', '71', '70'],
     length: 9,
     href: '/you-services',
   },
@@ -40,14 +46,14 @@ const companies: Company[] = [
   },
   {
     name: 'الهاتف الثابت',
-    icon: Phone,
-    prefixes: ['0'], 
+    icon: 'https://i.postimg.cc/d1qWc06N/Yemen-4g-logo.png', // Using same for landline
+    prefixes: ['0'],
     length: 8, // e.g., 05333333
     href: '/landline-services',
   },
-   {
+  {
     name: 'نت ADSL',
-    icon: Wifi,
+    icon: 'https://i.postimg.cc/d1qWc06N/Yemen-4g-logo.png', // Using same for ADSL
     prefixes: [''], // Handled by length
     length: 8,
     href: '/landline-services',
@@ -55,25 +61,30 @@ const companies: Company[] = [
 ];
 
 const getCompanyFromNumber = (phone: string): Company | null => {
-    if (!phone) return null;
+  if (!phone) return null;
 
-    for (const company of companies) {
-        if (company.length === phone.length) {
-            if (company.prefixes.length > 0 && company.prefixes.some(p => phone.startsWith(p))) {
-                return company;
-            }
-            if (company.prefixes.length === 0 || company.prefixes.includes('')) {
-                 // For Yemen4G/ADSL which are identified by length
-                 if (company.name === 'يمن فورجي' && /^\d{8}$/.test(phone)) return company;
-                 if (company.name === 'نت ADSL' && /^\d{8}$/.test(phone)) return company;
-                 if (company.name === 'الهاتف الثابت' && phone.startsWith('0')) return company;
-            }
-        }
-    }
-    return null;
+  // Yemen Mobile logic
+  if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
+      return companies.find(c => c.name === 'يمن موبايل') || null;
+  }
+  // YOU logic
+  if (phone.length === 9 && (phone.startsWith('73') || phone.startsWith('71') || phone.startsWith('70'))) {
+      return companies.find(c => c.name === 'YOU') || null;
+  }
+  // Yemen 4G / ADSL / Landline logic
+  if (phone.length === 8) {
+      if (phone.startsWith('0')) return companies.find(c => c.name === 'الهاتف الثابت') || null;
+      // Heuristic: If it's 8 digits and doesn't start with 0, it could be 4G or ADSL.
+      // We'll need more info to distinguish, but for now we can group them.
+      return companies.find(c => c.name === 'يمن فورجي') || null; // Defaulting to 4G for now
+  }
+
+  return null;
 };
 
+
 export default function TelecomPage() {
+  const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [identifiedCompany, setIdentifiedCompany] = useState<Company | null>(null);
 
@@ -85,61 +96,68 @@ export default function TelecomPage() {
   const handleNext = () => {
     if (identifiedCompany) {
       // In a real app, you would navigate to the specific service page
-      console.log(`Navigating to ${identifiedCompany.href} for number ${phoneNumber}`);
+      console.log(
+        `Navigating to ${identifiedCompany.href} for number ${phoneNumber}`
+      );
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="رصيد وباقات" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="shadow-lg">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-bold">تسديد فواتير وشحن رصيد</h2>
-            <p className="text-muted-foreground mt-2">أدخل رقم الهاتف للبدء</p>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4">
-            <div className='relative'>
-                <Input
-                    id="phone-number"
-                    type="tel"
-                    placeholder="ادخل الرقم هنا..."
-                    className="h-16 text-center text-2xl font-bold tracking-widest"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                />
-                {identifiedCompany && (
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 animate-in fade-in-0">
-                        {typeof identifiedCompany.icon === 'string' ? (
-                            <Image src={identifiedCompany.icon} alt={identifiedCompany.name} width={24} height={24} className="rounded-md" />
-                        ) : (
-                            <identifiedCompany.icon className="h-6 w-6 text-muted-foreground" />
-                        )}
-                        <span className="text-sm font-semibold text-muted-foreground">{identifiedCompany.name}</span>
-                    </div>
-                )}
-            </div>
-
-            <Card>
-                <CardContent className="p-3 text-xs text-muted-foreground space-y-2">
-                    <p>• <span className="font-semibold text-primary">يمن موبايل:</span> يبدأ بـ 77 أو 78 (9 أرقام)</p>
-                    <p>• <span className="font-semibold text-primary">YOU:</span> يبدأ بـ 73 أو 71 أو 70 (9 أرقام)</p>
-                    <p>• <span className="font-semibold text-primary">يمن فورجي / نت:</span> رقم المشترك (8 أرقام)</p>
-                    <p>• <span className="font-semibold text-primary">الهاتف الثابت:</span> يبدأ بـ 0 (8 أرقام)</p>
-                </CardContent>
-            </Card>
+    <div
+      className="flex flex-col h-full bg-background"
+      style={{
+        backgroundImage: 'url("https://i.postimg.cc/zXN6p33v/pattern-bg.png")',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+    >
+      <header className="flex items-center p-4 bg-transparent text-foreground">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
+            onClick={() => router.push('/favorites')}
+          >
+            <Heart className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Button>
         </div>
-
-        <Button 
-            className="w-full h-12 text-lg font-bold"
-            disabled={!identifiedCompany}
-            onClick={handleNext}
+        <h1 className="font-bold text-lg text-center flex-1">رصيد وباقات</h1>
+        <Button
+          onClick={() => router.back()}
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
         >
-            التالي
-            <ChevronLeft className="mr-2 h-5 w-5" />
+          <ChevronRight className="h-6 w-6" />
         </Button>
+      </header>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="relative group">
+          <div className="absolute -left-px -top-px h-full w-14 flex items-center justify-center bg-muted rounded-r-xl border-r z-10">
+            <Contact className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <Input
+            id="phone-number"
+            type="tel"
+            placeholder="ادخل رقم الجوال"
+            className="h-16 text-center text-xl font-bold tracking-wider rounded-xl pl-4 pr-16 peer"
+            value={phoneNumber}
+            onChange={(e) =>
+              setPhoneNumber(e.target.value.replace(/\D/g, ''))
+            }
+          />
+           <Label htmlFor="phone-number" className="absolute right-16 top-1 text-xs text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs">
+            رقم الجوال
+          </Label>
+        </div>
       </div>
     </div>
   );

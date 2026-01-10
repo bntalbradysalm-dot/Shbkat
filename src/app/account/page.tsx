@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -194,7 +193,7 @@ export default function AccountPage() {
           <CardContent className="p-4 flex items-center gap-4">
              <Avatar className="h-14 w-14 border-2 border-primary-foreground/50">
                 <AvatarFallback>
-                    <User className="h-8 w-8" />
+                    <User className="h-8 w-8 text-muted-foreground" />
                 </AvatarFallback>
             </Avatar>
             <div className="flex-grow">

@@ -137,7 +137,10 @@ export default function BaityBalancePage() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ data: { mobile: phone, type, transid }})
         });
-        const data = await response.json();
+
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
+
         if (!response.ok) {
             throw new Error(data.message || `Failed to fetch ${type}`);
         }

@@ -40,6 +40,11 @@ type UserProfile = {
   displayName?: string;
 };
 
+type BalanceResponse = {
+    balance: string;
+    mobile_type: string; // 0 for prepaid, 1 for postpaid
+};
+
 type Offer = {
     offerStartDate: string;
     offerName: string;
@@ -118,6 +123,10 @@ export default function BaityServicesPage() {
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
 
   const [activeTab, setActiveTab] = useState('packages');
+  
+  const [balanceData, setBalanceData] = useState<BalanceResponse | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -125,9 +134,43 @@ export default function BaityServicesPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
   
+  const fetchBalance = useCallback(async () => {
+    if (!mobileNumber || mobileNumber.length !== 9) return;
+    setIsLoadingBalance(true);
+    try {
+        const response = await fetch('/api/baity/balance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: mobileNumber }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'فشل جلب الرصيد');
+        }
+        setBalanceData(data.data);
+    } catch (error: any) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: error.message,
+        });
+    } finally {
+        setIsLoadingBalance(false);
+    }
+  }, [mobileNumber, toast]);
+
+  useEffect(() => {
+    if (mobileNumber.length === 9) {
+      fetchBalance();
+    } else {
+      setBalanceData(null);
+    }
+  }, [mobileNumber, fetchBalance]);
+
+
   const categorizedOffers = useMemo(() => {
     const initializedCategories: Record<string, OfferWithPrice[]> = {
-        'الاشتراكات الحالية': [],
         'باقات مزايا': [],
         'باقات الانترنت الشهرية': [],
         'باقات انترنت 10 أيام': [],
@@ -229,18 +272,15 @@ const renderOfferIcon = (category: string) => {
     }
 
     try {
-      // This is where you would call the actual Baity API
-      // For now, we simulate success
-      console.log("Calling API:", apiEndpoint, requestBody);
-      // const apiResponse = await fetch(apiEndpoint, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(requestBody),
-      // });
-      // const result = await apiResponse.json();
-      // if (!apiResponse.ok) {
-      //   throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
-      // }
+      const apiResponse = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      const result = await apiResponse.json();
+      if (!apiResponse.ok) {
+        throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
+      }
 
       const batch = writeBatch(firestore);
       batch.update(userDocRef, { balance: increment(-transactionAmount) });
@@ -306,6 +346,12 @@ const renderOfferIcon = (category: string) => {
         {label}
     </Button>
   );
+  
+  const getMobileTypeString = (type: string | undefined) => {
+    if (type === '0') return 'دفع مسبق';
+    if (type === '1') return 'فوترة';
+    return 'غير معروف';
+  };
 
   return (
     <>
@@ -334,7 +380,7 @@ const renderOfferIcon = (category: string) => {
             </div>
         </Card>
         
-        {mobileNumber.length > 0 && (
+        {mobileNumber.length === 9 && (
           <div className="animate-in fade-in-0 duration-300">
             <div className="flex items-center gap-2 rounded-full bg-destructive/10 p-1 mb-4">
               <TabButton value="packages" label="باقات" />
@@ -378,37 +424,31 @@ const renderOfferIcon = (category: string) => {
             )}
             
             {activeTab === 'packages' && (
-              <div className="animate-in fade-in-0 duration-300">
-                  <Table>
-                      <TableBody>
-                          <TableRow>
-                              <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
-                              <TableCell className="font-bold text-left">2,500 ريال</TableCell>
-                          </TableRow>
-                          <TableRow>
-                              <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
-                              <TableCell className="font-bold text-left">دفع مسبق | 3G</TableCell>
-                          </TableRow>
-                          <TableRow>
-                              <TableCell className="font-semibold text-muted-foreground">فحص السلفة</TableCell>
-                              <TableCell className="font-bold text-left flex items-center justify-end gap-1">
-                                  <Smile className="w-4 h-4 text-green-500" />
-                                  غير متسلف
-                              </TableCell>
-                          </TableRow>
-                      </TableBody>
-                  </Table>
-
-                  <Card className="mt-4 bg-destructive text-white">
+              <div className="animate-in fade-in-0 duration-300 space-y-4">
+                  <Card>
                       <CardHeader className="p-3">
-                          <CardTitle className="text-base text-center">الاشتراكات الحالية</CardTitle>
+                          <CardTitle className="text-sm text-center">بيانات الرقم</CardTitle>
                       </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                         {isLoadingBalance ? <Skeleton className="h-16 w-full" /> : balanceData ? (
+                            <Table>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
+                                        <TableCell className="font-bold text-left">{balanceData.balance} ريال</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
+                                        <TableCell className="font-bold text-left">{getMobileTypeString(balanceData.mobile_type)}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                         ) : <p className="text-center text-muted-foreground py-4 text-sm">لم يتم العثور على بيانات للرقم.</p>}
+                      </CardContent>
                   </Card>
-                  
-                  <p className="text-center text-muted-foreground py-4 text-sm">لا توجد اشتراكات حالية.</p>
 
-                  <Accordion type="single" collapsible className="w-full space-y-3 mt-4">
-                      {Object.entries(categorizedOffers).filter(([category]) => category !== 'الاشتراكات الحالية').map(([category, pkgs]) => (
+                  <Accordion type="single" collapsible className="w-full space-y-3">
+                      {Object.entries(categorizedOffers).map(([category, pkgs]) => (
                           <AccordionItem value={category} key={category} className="border-none">
                               <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
                                   <div className='flex items-center justify-between w-full'>

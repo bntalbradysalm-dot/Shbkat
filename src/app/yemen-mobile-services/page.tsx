@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -9,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 type UserProfile = {
     balance?: number;
@@ -64,9 +66,9 @@ export default function YemenMobileServicesPage() {
                     <Card className='shadow-md'>
                         <CardContent className="p-2">
                              <div className="relative flex items-center">
-                                <div className='p-2'>
+                                <Button variant="ghost" size="icon" className="p-2">
                                     <User className="h-6 w-6 text-muted-foreground" />
-                                </div>
+                                </Button>
                                 <span className="pl-2 pr-1 text-muted-foreground font-semibold">+967</span>
                                 <Input
                                     id="phone-input"
@@ -78,12 +80,12 @@ export default function YemenMobileServicesPage() {
                                     maxLength={9}
                                 />
                                 <div className="flex items-center">
-                                    <div className='p-2 border-r'>
+                                    <Button variant="ghost" size="icon" className="p-2 border-r rounded-none">
                                         <Phone className="h-5 w-5 text-muted-foreground" />
-                                    </div>
-                                    <div className='p-2'>
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="p-2">
                                         <Heart className="h-5 w-5 text-muted-foreground" />
-                                    </div>
+                                    </Button>
                                 </div>
                             </div>
                         </CardContent>

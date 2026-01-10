@@ -4,11 +4,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2 } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Smartphone, Loader2, Package, Building2, Phone } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from 'next/image';
 
 type UserProfile = {
   id: string;
@@ -33,7 +33,6 @@ type UserProfile = {
   displayName?: string;
 };
 
-// Updated packages list
 const baityPackages = [
     { id: 'A64329', name: 'باقة مزايا الاسبوعية', price: 485 },
     { id: 'A38394', name: 'باقة مزايا الشهرية', price: 1300 },
@@ -41,33 +40,7 @@ const baityPackages = [
     { id: 'A76328', name: 'الشهرية للفوترة', price: 3000 },
 ];
 
-const BalanceDisplay = () => {
-    const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
-
-    const userDocRef = useMemoFirebase(
-        () => (user ? doc(firestore, 'users', user.uid) : null),
-        [firestore, user]
-    );
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
-    const isLoading = isUserLoading || isProfileLoading;
-
-    return (
-        <Card className="shadow-lg">
-            <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
-                    {isLoading ? (
-                        <Skeleton className="h-8 w-32 mt-2" />
-                    ) : (
-                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
-                    )}
-                </div>
-                <Wallet className="h-8 w-8 text-primary" />
-            </CardContent>
-        </Card>
-    );
-}
+const presetAmounts = [100, 200, 500, 1000, 2000];
 
 export default function BaityServicesPage() {
   const { toast } = useToast();
@@ -84,6 +57,7 @@ export default function BaityServicesPage() {
   const [selectedPackage, setSelectedPackage] = useState<{ id: string; name: string; price: number } | null>(null);
   const [recipient, setRecipient] = useState<UserProfile | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState('prepaid');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -239,98 +213,94 @@ export default function BaityServicesPage() {
     )
   }
 
+  const handleAmountButtonClick = (value: number) => {
+    setAmount(String(value));
+  };
+  
+  const TabButton = ({ value, label }: { value: string, label: string}) => (
+    <Button
+        variant={activeTab === value ? 'default' : 'ghost'}
+        onClick={() => setActiveTab(value)}
+        className={`flex-1 rounded-full ${activeTab === value ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'}`}
+    >
+        {label}
+    </Button>
+  );
+
   return (
     <>
-    <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="رصيد بيتي" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <BalanceDisplay />
-
-        <Card className="shadow-lg">
-          <CardContent className="p-3">
-              <Label htmlFor="mobileNumber" className="text-muted-foreground flex items-center gap-2 mb-1 px-1">
-                <Smartphone className="h-4 w-4" />
-                رقم الجوال
-              </Label>
-              <div className="relative">
-                <Input
-                  id="mobileNumber"
-                  type="tel"
-                  placeholder="7xxxxxxxx"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                  disabled={isProcessing}
-                  maxLength={9}
-                  className="text-center h-12 text-lg tracking-wider"
-                />
-                 {isSearching && <Loader2 className="animate-spin absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
-              </div>
-              {recipient && (
-                <div className="mt-2 p-2 bg-muted rounded-lg flex items-center justify-center gap-2 animate-in fade-in-0 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <p className="font-semibold text-primary dark:text-primary-foreground">{recipient.displayName}</p>
+    <div className="flex flex-col h-full bg-background" style={{'--primary': '222 47% 11%', '--destructive': '340 84% 43%'} as React.CSSProperties}>
+      <SimpleHeader title="رصيد وباقات" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        
+        <Card className="rounded-2xl bg-destructive/10 p-4">
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-white rounded-lg">
+                        <Image src="https://i.postimg.cc/tJ01wBw9/baity-logo.png" alt="Baity" width={28} height={28} />
+                    </div>
+                     <div className="p-2 bg-white rounded-lg">
+                        <Phone className="h-7 w-7 text-muted-foreground"/>
+                    </div>
                 </div>
-            )}
-          </CardContent>
+                <div className="flex-1 text-right">
+                    <Label htmlFor="mobileNumber" className="text-xs text-muted-foreground">رقم الجوال</Label>
+                    <Input
+                      id="mobileNumber"
+                      type="tel"
+                      placeholder="7xxxxxxxx"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                      disabled={isProcessing}
+                      maxLength={9}
+                      className="bg-transparent border-none text-lg h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                </div>
+            </div>
         </Card>
 
-        <Tabs defaultValue="balance" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="balance"><Building2 className="ml-2 h-4 w-4" /> تسديد رصيد</TabsTrigger>
-            <TabsTrigger value="packages"><Package className="ml-2 h-4 w-4" /> شراء باقات</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="balance" className="pt-4">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-center">تسديد رصيد</CardTitle>
-                <CardDescription className="text-center">أدخل المبلغ المطلوب تسديده.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="amount" className="text-muted-foreground flex items-center gap-2 mb-1">
-                    <Wallet className="h-4 w-4" />
-                    المبلغ
-                  </Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    inputMode='numeric'
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
-                </div>
-                <Button onClick={() => handleConfirmClick('balance')} className="w-full h-auto py-3 text-base" disabled={!mobileNumber || !amount || isProcessing}>
-                    {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : <Send className="ml-2 h-5 w-5"/>}
-                    {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'تسديد الرصيد'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        <div className="flex gap-2 p-1 bg-destructive/10 rounded-full">
+            <TabButton value="payment" label="سداد" />
+            <TabButton value="packages" label="باقات" />
+            <TabButton value="prepaid" label="دفع مسبق" />
+            <TabButton value="postpaid" label="فوترة" />
+        </div>
+        
+         <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
+            <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
+            <p className="text-2xl font-bold text-destructive mt-1">
+                {(userProfile?.balance ?? 0).toLocaleString('en-US')}
+            </p>
+        </Card>
 
-          <TabsContent value="packages" className="pt-4">
-            <Card className="shadow-lg">
-              <CardHeader>
-                  <CardTitle className="text-center">شراء باقات</CardTitle>
-                  <CardDescription className="text-center">اختر الباقة التي تريد شراءها.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                  {baityPackages.map((pkg) => (
-                      <Card key={pkg.id} className="p-3">
-                          <div className="flex justify-between items-center">
-                              <div className='font-semibold'>{pkg.name}</div>
-                              <Button onClick={() => handleConfirmClick('package', pkg)} disabled={!mobileNumber || isProcessing}>
-                                {isProcessing && selectedPackage?.id === pkg.id ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : `${pkg.price.toLocaleString('en-US')} ريال`}
-                              </Button>
-                          </div>
-                      </Card>
-                  ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="flex justify-around items-center">
+            {presetAmounts.map(pAmount => (
+                <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
+                    {pAmount}
+                </Button>
+            ))}
+        </div>
+
+        <div className="relative">
+            <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
+            <Input
+                id="amount"
+                type="number"
+                inputMode='numeric'
+                placeholder="أدخل المبلغ"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
+            />
+        </div>
+
       </div>
+       <div className="p-4 border-t">
+          <Button onClick={() => handleConfirmClick('balance')} className="w-full h-12 text-base rounded-full bg-destructive text-destructive-foreground" disabled={!mobileNumber || !amount || isProcessing}>
+              {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : null}
+              {isProcessing && confirmationDetails.type === 'balance' ? 'جاري التسديد...' : 'سداد'}
+          </Button>
+       </div>
     </div>
     <Toaster />
 
@@ -356,4 +326,3 @@ export default function BaityServicesPage() {
   );
 }
 
-    

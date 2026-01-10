@@ -97,14 +97,17 @@ const YemenMobileUI = ({
                         {isLoadingQuery ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="ml-2 h-4 w-4"/>}
                         {isLoadingQuery ? 'جاري الاستعلام...' : 'الاستعلام عن الرصيد'}
                     </Button>
-                     {queryData && (
-                        <Card className="bg-muted/50">
-                            <CardContent className="p-3 text-xs grid grid-cols-2 gap-2">
-                               <p>الرصيد: <strong>{queryData.balance} ريال</strong></p>
-                               <p>نوع الخط: <strong>{getMobileTypeString(queryData.mobileType)}</strong></p>
-                            </CardContent>
-                        </Card>
-                    )}
+                    <div className="space-y-2">
+                        {queryData && (
+                            <Card className="bg-muted/50 text-center">
+                                <CardContent className="p-3">
+                                    <p className="text-sm text-muted-foreground">الرصيد الحالي للرقم</p>
+                                    <p className="text-2xl font-bold text-primary">{queryData.balance} <span className="text-base">ريال</span></p>
+                                    <p className="text-xs text-muted-foreground mt-1">نوع الخط: {getMobileTypeString(queryData.mobileType)}</p>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
             <Card>

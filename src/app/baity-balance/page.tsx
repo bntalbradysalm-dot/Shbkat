@@ -111,7 +111,7 @@ const formatApiDate = (dateString: string) => {
     return `${day}/${month}/${year} - ${String(formattedHour).padStart(2, '0')}:${minute} ${ampm}`;
 };
 
-const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType, value?: string, label: string }) => {
+const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType; value?: string; label: string }) => {
     if (!value) return null;
     return (
         <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">

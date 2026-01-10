@@ -898,6 +898,10 @@ export default function TelecomServicesPage() {
         setActiveYemenPostQuery(null);
     }
     
+    if (!phoneNumber.startsWith('77')) {
+      return;
+    }
+
     let requiredLength = 9;
     if (operator === 'Yemen Post') {
       requiredLength = 8;
@@ -1061,7 +1065,7 @@ export default function TelecomServicesPage() {
   }
 
   const renderOperatorUI = () => {
-    if (!detectedOperator) {
+    if (!detectedOperator || !phoneNumber.startsWith('77')) {
         return null;
     }
     

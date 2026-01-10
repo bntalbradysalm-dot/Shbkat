@@ -137,8 +137,8 @@ export default function BaityBalancePage() {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ 
-                endpoint: 'partner-yem/query',
-                payload: { data: { mobile: phone, type, transid } }
+                endpoint: 'query',
+                payload: { mobile: phone, type, transid }
             })
         });
         
@@ -298,8 +298,8 @@ const renderOfferIcon = (category: string) => {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ 
-                endpoint: 'partner-yem/bill-balance',
-                payload: { data: { mobile: mobileNumber, amount: amountToPay } }
+                endpoint: 'bill',
+                payload: { mobile: mobileNumber, amount: amountToPay }
             })
         });
 
@@ -318,14 +318,14 @@ const renderOfferIcon = (category: string) => {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    endpoint: 'partner-yem/bill-offer',
-                    payload: { data: { mobile: mobileNumber, offerID: offerId, transid } }
+                    endpoint: 'bill-offer',
+                    payload: { mobile: mobileNumber, offerID: offerId, transid }
                 })
             });
 
             if (!offerResponse.ok) {
                 const errorData = await offerResponse.json();
-                throw new Error(errorData.message || 'فشل تفعيل الباقة بعد خصم المبلغ.');
+                throw new Error(errorData.message || 'تم خصم المبلغ ولكن فشل تفعيل الباقة.');
             }
             finalMessage = `تم تفعيل باقة "${selectedPackage.offerName}" بنجاح.`;
         }

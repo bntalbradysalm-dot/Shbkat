@@ -23,6 +23,7 @@ type Service = {
 
 const services: Service[] = [
   { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
+  { name: 'رصيد بيتي', icon: 'https://i.postimg.cc/52nxCtk5/images.png', href: '/baity-balance'},
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },

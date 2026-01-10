@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -67,7 +68,7 @@ const manualPackages: OfferWithPrice[] = [
     { name: 'باقة مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا الشهرية', offerName: 'مزايا الشهرية', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
-    { name: 'مزايا فورجي اليومية', offerName: 'مزايا فورجي اليومية', id: 'A88337', offerId: 'A88337', price: 250, data: '1 GB', sms: '30', minutes: '30', validity: '2 أيام', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا فورجي اليومية', offerName: 'مزايا فورجي اليومية', id: 'A88337', offerId: 'A88337', price: 600, data: '1 GB', sms: '30', minutes: '30', validity: '2 أيام', offerStartDate: '', offerEndDate: '' },
 ];
 
 
@@ -514,4 +515,5 @@ const renderOfferIcon = (category: string) => {
     </>
   );
 }
+
 

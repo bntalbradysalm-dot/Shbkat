@@ -18,14 +18,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Image from 'next/image';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type UserProfile = {
   id: string;
@@ -222,7 +228,10 @@ export default function BaityServicesPage() {
     <Button
         variant={activeTab === value ? 'default' : 'ghost'}
         onClick={() => setActiveTab(value)}
-        className={`flex-1 rounded-full ${activeTab === value ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'}`}
+        className={cn(
+            'flex-1 rounded-full text-sm',
+            activeTab === value ? 'bg-destructive text-destructive-foreground shadow-md' : 'bg-destructive/10 text-destructive'
+        )}
     >
         {label}
     </Button>
@@ -237,7 +246,7 @@ export default function BaityServicesPage() {
         <Card className="rounded-2xl bg-destructive/10 p-4">
             <div className="flex items-center gap-3">
                  <div className="p-2 bg-white rounded-lg">
-                    <Contact className="h-7 w-7 text-muted-foreground"/>
+                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
                 </div>
                 <div className="flex-1 text-right">
                     <Label htmlFor="mobileNumber" className="text-xs text-muted-foreground">رقم الجوال</Label>
@@ -255,7 +264,7 @@ export default function BaityServicesPage() {
             </div>
         </Card>
 
-        {mobileNumber && (
+        {mobileNumber.length > 0 && (
             <div className="animate-in fade-in-0 duration-300 space-y-4">
                 <div className="flex gap-2 p-1 bg-destructive/10 rounded-full">
                     <TabButton value="payment" label="سداد" />
@@ -264,38 +273,67 @@ export default function BaityServicesPage() {
                     <TabButton value="postpaid" label="فوترة" />
                 </div>
                 
-                 <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
-                    <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
-                    <p className="text-2xl font-bold text-destructive mt-1">
-                        {(userProfile?.balance ?? 0).toLocaleString('en-US')}
-                    </p>
-                </Card>
+                {activeTab === 'payment' && (
+                    <>
+                         <Card className="rounded-2xl bg-destructive/10 p-4 text-center">
+                            <p className="text-sm text-destructive">الرصيد الحالي للإشتراك</p>
+                            <p className="text-2xl font-bold text-destructive mt-1">
+                                {(userProfile?.balance ?? 0).toLocaleString('en-US')}
+                            </p>
+                        </Card>
 
-                <div className="flex justify-around items-center">
-                    {presetAmounts.map(pAmount => (
-                        <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
-                            {pAmount}
-                        </Button>
-                    ))}
-                </div>
+                        <div className="flex justify-around items-center">
+                            {presetAmounts.map(pAmount => (
+                                <Button key={pAmount} variant="outline" onClick={() => handleAmountButtonClick(pAmount)} className="rounded-full border-destructive text-destructive">
+                                    {pAmount}
+                                </Button>
+                            ))}
+                        </div>
 
-                <div className="relative">
-                    <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
-                    <Input
-                        id="amount"
-                        type="number"
-                        inputMode='numeric'
-                        placeholder="أدخل المبلغ"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
-                    />
-                </div>
+                        <div className="relative">
+                            <Label htmlFor="amount" className="absolute -top-2 right-4 text-xs bg-background px-1 text-muted-foreground">مبلغ</Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                inputMode='numeric'
+                                placeholder="أدخل المبلغ"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="h-14 text-center text-lg rounded-xl border-destructive focus-visible:ring-destructive"
+                            />
+                        </div>
+                    </>
+                )}
+
+                {activeTab === 'packages' && (
+                    <Accordion type="single" collapsible className="w-full space-y-3">
+                         {[{title: 'باقات مزايا', packages: baityPackages}].map((category) => (
+                             <AccordionItem value={category.title} key={category.title} className="border-none">
+                                <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
+                                    <span>{category.title}</span>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-2">
+                                     <div className="space-y-2">
+                                        {category.packages.map(pkg => (
+                                            <Card key={pkg.id} onClick={() => handleConfirmClick('package', pkg)} className="cursor-pointer p-3 hover:bg-muted/50">
+                                                 <div className="flex justify-between items-center">
+                                                    <span className="font-semibold">{pkg.name}</span>
+                                                    <span className="font-bold text-destructive">{pkg.price.toLocaleString('en-US')} ريال</span>
+                                                 </div>
+                                            </Card>
+                                        ))}
+                                     </div>
+                                </AccordionContent>
+                             </AccordionItem>
+                         ))}
+                    </Accordion>
+                )}
+
             </div>
         )}
 
       </div>
-       {mobileNumber && (
+       {mobileNumber.length > 0 && activeTab === 'payment' && (
           <div className="p-4 border-t animate-in fade-in-0 duration-300">
               <Button onClick={() => handleConfirmClick('balance')} className="w-full h-12 text-base rounded-full bg-destructive text-destructive-foreground" disabled={!mobileNumber || !amount || isProcessing}>
                   {isProcessing && confirmationDetails.type === 'balance' ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : null}

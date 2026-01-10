@@ -1,90 +1,79 @@
 
 import { NextResponse } from 'next/server';
+import md5 from 'crypto-js/md5';
 
-const API_BASE_URL = 'https://apis.okamel.org/api';
-const API_KEY = process.env.BAITY_API_KEY || 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr';
+const USER_ID = '23207';
+const USERNAME = '770326828';
+const PASSWORD = '770326828moh';
 
-export async function GET(request: Request) {
+// Helper function to generate the required token
+function generateToken(transid: string, mobile: string) {
+  const hashPassword = md5(PASSWORD).toString();
+  const token = md5(hashPassword + transid + USERNAME + mobile).toString();
+  return token;
+}
+
+async function handleRequest(request: Request) {
   const { searchParams } = new URL(request.url);
-  const service = searchParams.get('service');
-  const action = searchParams.get('action');
+  const service = searchParams.get('service'); // yem, sab, mtn, etc.
+  const action = searchParams.get('action'); // query, bill, etc.
   const mobile = searchParams.get('mobile');
-  const transid = searchParams.get('transid');
-  const amount = searchParams.get('amount');
-  const offerid = searchParams.get('offerid');
-  const type = searchParams.get('type'); 
-
-  if (!service || !mobile) {
+  
+  if (!service || !action || !mobile) {
     return new NextResponse(
-      JSON.stringify({ message: 'Missing required query parameters: service, mobile' }),
+      JSON.stringify({ message: 'Missing required query parameters: service, action, mobile' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
+  
+  const transid = searchParams.get('transid') || Date.now().toString();
+  const token = generateToken(transid, mobile);
+  
+  const endpoint = new URL(`${API_BASE_URL}/${service}`);
+  endpoint.searchParams.append('action', action);
+  endpoint.searchParams.append('userid', USER_ID);
+  endpoint.searchParams.append('mobile', mobile);
+  endpoint.searchParams.append('transid', transid);
+  endpoint.searchParams.append('token', token);
 
-  let endpoint = '';
-  let requestBody: any = { data: { mobile: String(mobile) } };
-  let method = 'POST';
-
+  // Add parameters specific to certain actions
   if (action === 'query') {
-    endpoint = '/partner-yem/query';
-    if (!type) {
-        return new NextResponse(JSON.stringify({ message: 'Missing type for query action' }), { status: 400 });
-    }
-    requestBody.data.type = type;
-    if (type === 'status' && transid) {
-        requestBody.data.transid = transid;
+    const type = searchParams.get('type');
+    if (type) {
+      endpoint.searchParams.append('type', type);
     }
   } else if (action === 'bill') {
-    endpoint = '/partner-yem/bill-balance';
-    if (!amount) return new NextResponse(JSON.stringify({ message: 'Missing amount for bill action' }), { status: 400 });
-    requestBody.data.amount = Number(amount);
+    const amount = searchParams.get('amount');
+    if (amount) {
+      endpoint.searchParams.append('amount', amount);
+    }
   } else if (action === 'bill-offer') {
-    endpoint = '/partner-yem/bill-offer';
-    if (!offerid) return new NextResponse(JSON.stringify({ message: 'Missing offerID for bill-offer action' }), { status: 400 });
-    if (!transid) return new NextResponse(JSON.stringify({ message: 'Missing transid for bill-offer action' }), { status: 400 });
-    requestBody.data.offerID = offerid;
-    requestBody.data.transid = transid;
-  }
-   else if (service === 'info' && action === 'status') {
-    endpoint = `/partner-yem/status/${transid}`;
-    method = 'GET';
-    requestBody = undefined;
-  }
-  else {
-      // Fallback for other services if any, though the main ones are handled above.
-      return new NextResponse(JSON.stringify({ message: 'Invalid or unsupported action' }), { status: 400 });
+    const offerid = searchParams.get('offerid');
+    if (offerid) {
+        endpoint.searchParams.append('offerid', offerid);
+    }
   }
   
-  if (!endpoint) {
-    return new NextResponse(JSON.stringify({ message: 'Invalid service or action combination' }), { status: 400 });
-  }
-
   try {
     const fetchOptions: RequestInit = {
-      method: method,
+      method: 'GET', // The new API seems to use GET for all operations
       headers: {
-        'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
     };
 
-    if (method === 'POST') {
-        fetchOptions.body = JSON.stringify(requestBody);
-    }
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
-
+    const response = await fetch(endpoint.toString(), fetchOptions);
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error(`External API failed with status: ${response.status}`, data);
-      const errorMessage = data?.message || data?.error?.message || 'Failed to process the request with the provider.';
-      return new NextResponse(
-        JSON.stringify({ message: errorMessage }),
-        { status: response.status, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (data.resultCode !== "0") {
+        const errorMessage = data?.resultDesc || 'Failed to process the request with the provider.';
+        return new NextResponse(
+            JSON.stringify({ message: errorMessage, ...data }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
     }
-    
+
     return NextResponse.json(data);
 
   } catch (error) {
@@ -96,7 +85,12 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  return GET(request);
+export async function GET(request: Request) {
+  return handleRequest(request);
 }
 
+export async function POST(request: Request) {
+    // The new API uses GET, so we just pass it to the GET handler.
+    // We keep POST for compatibility in case frontend components still use it.
+    return handleRequest(request);
+}

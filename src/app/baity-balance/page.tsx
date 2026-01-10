@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -43,8 +42,10 @@ type UserProfile = {
 };
 
 type BalanceResponse = {
+    mobileType: string;
+    availableCredit: string;
     balance: string;
-    mobile_type: string; // 0 for prepaid, 1 for postpaid
+    resultDesc: string;
 };
 
 type Offer = {
@@ -64,8 +65,17 @@ type OfferDetails = {
 
 type OfferWithPrice = Offer & OfferDetails & { id?: string };
 
+type SolfaResponse = {
+    resultCode: string;
+    message: string;
+    status: string; // "1" for loan, "0" for no loan
+    loan_amount: string;
+    loan_time: string;
+};
+
+
 const manualPackages: OfferWithPrice[] = [
-    { name: 'باقة مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
+    { name: 'مزايا الاسبوعية', offerName: 'مزايا الاسبوعية', id: 'A64329', offerId: 'A64329', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا الشهرية', offerName: 'مزايا الشهرية', id: 'A38394', offerId: 'A38394', price: 1300, data: '250 MB', sms: '150', minutes: '350', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا ماكس الشهريه', offerName: 'مزايا ماكس الشهريه', id: 'A75328', offerId: 'A75328', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offerStartDate: '', offerEndDate: '' },
     { name: 'مزايا فورجي اليومية', offerName: 'مزايا فورجي اليومية', id: 'A88337', offerId: 'A88337', price: 600, data: '1 GB', sms: '30', minutes: '30', validity: '2 أيام', offerStartDate: '', offerEndDate: '' },
@@ -129,6 +139,10 @@ export default function BaityServicesPage() {
   
   const [balanceData, setBalanceData] = useState<BalanceResponse | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [offersData, setOffersData] = useState<Offer[] | null>(null);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(false);
+  const [solfaData, setSolfaData] = useState<SolfaResponse | null>(null);
+  const [isLoadingSolfa, setIsLoadingSolfa] = useState(false);
 
 
   const userDocRef = useMemoFirebase(
@@ -137,39 +151,64 @@ export default function BaityServicesPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
   
-  const fetchBalance = useCallback(async () => {
-    if (!mobileNumber || mobileNumber.length !== 9) return;
-    setIsLoadingBalance(true);
+  const callQueryApi = useCallback(async (phone: string, type: 'balance' | 'solfa' | 'offers' | 'status', transid?: string) => {
     try {
-        const response = await fetch('/api/baity/balance', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile: mobileNumber }),
-        });
+        let apiUrl = `/api/echehanly?service=yem&action=query&mobile=${phone}&type=${type}`;
+        if (transid) {
+            apiUrl += `&transid=${transid}`;
+        }
+        const response = await fetch(apiUrl);
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.message || 'فشل جلب الرصيد');
+            throw new Error(data.message || `Failed to fetch ${type}`);
         }
-        setBalanceData(data.data);
+        return data;
     } catch (error: any) {
-        console.error(error);
+        console.error(`${type} fetch error:`, error);
         toast({
             variant: "destructive",
-            title: "خطأ",
+            title: `خطأ في استعلام ${type}`,
             description: error.message,
         });
-    } finally {
-        setIsLoadingBalance(false);
+        return null;
     }
-  }, [mobileNumber, toast]);
+  }, [toast]);
+  
+  const fetchYemenMobileData = useCallback(async (phone: string) => {
+      if (phone.length !== 9) return;
+      setIsLoadingBalance(true);
+      setIsLoadingOffers(true);
+      setIsLoadingSolfa(true);
+  
+      const [balanceRes, offersRes, solfaRes] = await Promise.all([
+          callQueryApi(phone, 'balance'),
+          callQueryApi(phone, 'offers'),
+          callQueryApi(phone, 'solfa'),
+      ]);
+  
+      setBalanceData(balanceRes);
+      if (offersRes && Array.isArray(offersRes.offers)) {
+        setOffersData(offersRes.offers);
+      } else {
+        setOffersData([]);
+      }
+      setSolfaData(solfaRes);
+  
+      setIsLoadingBalance(false);
+      setIsLoadingOffers(false);
+      setIsLoadingSolfa(false);
+  }, [callQueryApi]);
+
 
   useEffect(() => {
     if (mobileNumber.length === 9) {
-      fetchBalance();
+      fetchYemenMobileData(mobileNumber);
     } else {
       setBalanceData(null);
+      setOffersData(null);
+      setSolfaData(null);
     }
-  }, [mobileNumber, fetchBalance]);
+  }, [mobileNumber, fetchYemenMobileData]);
 
 
   const categorizedOffers = useMemo(() => {
@@ -182,8 +221,7 @@ export default function BaityServicesPage() {
         'باقات أخرى': [],
     };
     
-    // Using only manual packages for now
-    const allOffers = [...manualPackages];
+    const allOffers = [...(offersData || []), ...manualPackages];
     const uniqueOffers = Array.from(new Map(allOffers.map(o => [o.offerId || o.id, o])).values());
 
     uniqueOffers.forEach(offer => {
@@ -212,7 +250,7 @@ export default function BaityServicesPage() {
     }
     
     return finalCategories;
-}, []);
+}, [offersData]);
 
 const renderOfferIcon = (category: string) => {
     if (category.includes('مزايا فورجي')) return <Briefcase className="w-5 h-5"/>;
@@ -255,53 +293,60 @@ const renderOfferIcon = (category: string) => {
 
   const handleFinalConfirmation = async () => {
     if (!user || !userProfile || !firestore || !userDocRef) return;
-
     setIsProcessing(true);
-    let apiEndpoint = '';
-    let requestBody: any = {};
-    let transactionNotes = '';
-    let transactionAmount = 0;
-
-    if (confirmationDetails.type === 'balance') {
-      transactionAmount = parseFloat(amount);
-      apiEndpoint = '/api/baity';
-      requestBody = { mobile: mobileNumber, amount: transactionAmount };
-      transactionNotes = `تسديد رصيد بيتي إلى رقم: ${mobileNumber}`;
-    } else if (confirmationDetails.type === 'package' && selectedPackage) {
-      transactionAmount = selectedPackage.price;
-      apiEndpoint = '/api/baity-offer';
-      requestBody = { mobile: mobileNumber, offerID: selectedPackage.offerId };
-      transactionNotes = `شراء باقة بيتي: ${selectedPackage.name}`;
-    } else {
+    
+    const isPackage = !!selectedPackage;
+    let amountToPay = isPackage ? selectedPackage?.price : parseFloat(amount);
+    if (!amountToPay || amountToPay <= 0) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'مبلغ غير صالح.' });
         setIsProcessing(false);
+        setIsConfirming(false);
         return;
     }
 
     try {
-      const apiResponse = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-      const result = await apiResponse.json();
-      if (!apiResponse.ok) {
-        throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
-      }
+        const transid = Date.now().toString();
+        
+        // Step 1: Pay the bill
+        const billResponse = await fetch(`/api/echehanly?service=yem&action=bill&mobile=${mobileNumber}&amount=${amountToPay}&transid=${transid}`);
+        const billData = await billResponse.json();
+        if (!billResponse.ok || (billData.resultCode && billData.resultCode !== '0')) {
+            throw new Error(billData.message || billData.resultDesc || 'فشل تسديد المبلغ.');
+        }
+        
+        let finalData = billData;
+        let finalMessage = `تم تسديد مبلغ ${amountToPay.toLocaleString('en-US')} ريال بنجاح.`;
 
-      const batch = writeBatch(firestore);
-      batch.update(userDocRef, { balance: increment(-transactionAmount) });
-      const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-      batch.set(transactionRef, {
-        userId: user.uid,
-        transactionDate: new Date().toISOString(),
-        amount: transactionAmount,
-        transactionType: confirmationDetails.type === 'balance' ? 'تسديد رصيد بيتي' : 'شراء باقة بيتي',
-        notes: transactionNotes
-      });
+        // Step 2: Activate the offer if it's a package purchase
+        if (isPackage && selectedPackage) {
+            const returnedTransId = billData.transid || transid;
+            const offerId = selectedPackage.offerId || selectedPackage.id;
+            const offerResponse = await fetch(`/api/echehanly?service=yem&action=bill-offer&mobile=${mobileNumber}&offerid=${offerId}&transid=${returnedTransId}`);
+            finalData = await offerResponse.json();
+            if (!offerResponse.ok || (finalData.resultCode && finalData.resultCode !== '0')) {
+                // This is a critical failure, as money was deducted but offer not activated.
+                // A refund mechanism or manual intervention alert would be needed in a real app.
+                throw new Error(finalData.message || finalData.resultDesc || 'فشل تفعيل الباقة بعد خصم المبلغ.');
+            }
+            finalMessage = `تم تفعيل باقة "${selectedPackage.offerName}" بنجاح.`;
+        }
 
-      await batch.commit();
-      setShowSuccess(true);
+        // Step 3: Update Firestore
+        const batch = writeBatch(firestore);
+        batch.update(userDocRef, { balance: increment(-amountToPay) });
+        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        batch.set(transactionRef, {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: amountToPay,
+            transactionType: isPackage ? `شراء باقة: ${selectedPackage!.offerName}` : 'تسديد رصيد بيتي',
+            notes: `إلى رقم: ${mobileNumber}`,
+            recipientPhoneNumber: mobileNumber,
+        });
 
+        await batch.commit();
+        toast({ title: 'نجاح', description: finalMessage });
+        setShowSuccess(true);
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -313,8 +358,8 @@ const renderOfferIcon = (category: string) => {
         setIsConfirming(false);
         setSelectedPackage(null);
     }
-  };
-  
+};
+
   if (showSuccess) {
     return (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
@@ -361,7 +406,7 @@ const renderOfferIcon = (category: string) => {
 
   return (
     <>
-    <div className="flex flex-col h-full bg-background" style={{'--primary': '222 47% 11%', '--destructive': '340 84% 43%'} as React.CSSProperties}>
+    <div className="flex flex-col h-full bg-background" style={{'--primary': '222 47% 11%', '--destructive': '0 72% 51%'} as React.CSSProperties}>
       <SimpleHeader title="رصيد وباقات" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
@@ -372,7 +417,7 @@ const renderOfferIcon = (category: string) => {
                     <Input
                       id="mobileNumber"
                       type="tel"
-                      placeholder="7xxxxxxxx"
+                      placeholder="77xxxxxxx"
                       value={mobileNumber}
                       onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
                       disabled={isProcessing}
@@ -381,7 +426,7 @@ const renderOfferIcon = (category: string) => {
                     />
                 </div>
                  <div className="p-2 bg-white rounded-lg">
-                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
+                    <Image src="https://i.postimg.cc/52nxCtk5/images.png" alt="Yemen Mobile" width={28} height={28} className="object-contain" />
                 </div>
             </div>
         </Card>
@@ -389,7 +434,7 @@ const renderOfferIcon = (category: string) => {
         {mobileNumber.length === 9 && (
           <div className="animate-in fade-in-0 duration-300">
             <div className="flex items-center gap-2 rounded-full bg-destructive/10 p-1 mb-4">
-              <TabButton value="packages" label="باقات" />
+              <TabButton value="packages" label="الباقات" />
               <TabButton value="balance" label="سداد" />
             </div>
 
@@ -445,7 +490,7 @@ const renderOfferIcon = (category: string) => {
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
-                                        <TableCell className="font-bold text-left">{getMobileTypeString(balanceData.mobile_type)}</TableCell>
+                                        <TableCell className="font-bold text-left">{getMobileTypeString(balanceData.mobileType)}</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const transid = searchParams.get('transid');
   const amount = searchParams.get('amount');
   const offerid = searchParams.get('offerid');
-  const type = searchParams.get('type'); // For Yemen Post (adsl/line) or Yemen 4G (1/2)
+  const type = searchParams.get('type'); 
 
   if (!service || !action || !mobile) {
     return new NextResponse(
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   if (service === 'yem' && action === 'query') {
     endpoint = '/partner-yem/query';
-    const queryType = searchParams.get('type'); // balance, solfa, offers, status
+    const queryType = searchParams.get('type'); 
     if (!queryType) {
         return new NextResponse(JSON.stringify({ message: 'Missing type for query action' }), { status: 400 });
     }
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         requestBody.data.transid = transid;
     }
   } else if (service === 'yem' && action === 'bill') {
-    endpoint = '/partner-yem/bill';
+    endpoint = '/partner-yem/bill-balance';
     if (!amount) return new NextResponse(JSON.stringify({ message: 'Missing amount for bill action' }), { status: 400 });
     requestBody.data.amount = Number(amount);
   } else if (service === 'yem' && action === 'bill-offer') {
@@ -46,9 +46,12 @@ export async function GET(request: Request) {
     requestBody.data.offerID = offerid;
     requestBody.data.transid = transid;
   }
-  // Keep other operators logic if any, for now only Yemen Mobile is updated as per docs
+   else if (service === 'info' && action === 'status') {
+    endpoint = `/partner-yem/status/${transid}`;
+    method = 'GET';
+    requestBody = undefined;
+  }
   else {
-      // Fallback for old structure or other services not covered by new docs
       let legacyEndpoint = `/Eshehanly?service=${service}&action=${action}&mobile=${mobile}`;
       if (transid) legacyEndpoint += `&transid=${transid}`;
       if (amount) legacyEndpoint += `&amount=${amount}`;
@@ -70,14 +73,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: method,
       headers: {
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
-    });
+    };
+
+    if (method === 'POST') {
+        fetchOptions.body = JSON.stringify(requestBody);
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
 
     const data = await response.json();
 
@@ -101,5 +109,4 @@ export async function GET(request: Request) {
   }
 }
 
-// Dummy legacy URL, replace if needed
 const API_BASE_URL_LEGACY = 'https://yourapi.com';

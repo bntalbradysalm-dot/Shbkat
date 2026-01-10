@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -138,13 +139,20 @@ export default function BaityBalancePage() {
             body: JSON.stringify({ data: { mobile: phone, type, transid }})
         });
 
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : {};
-
         if (!response.ok) {
-            throw new Error(data.message || `Failed to fetch ${type}`);
+            let errorData = { message: `فشلت العملية: ${response.statusText}` };
+            try {
+                // Try to parse error response from server
+                errorData = await response.json();
+            } catch (e) {
+                // Ignore if error response is not valid JSON
+            }
+            throw new Error(errorData.message || `Failed to fetch ${type}`);
         }
-        return data;
+        
+        const text = await response.text();
+        return text ? JSON.parse(text) : {};
+
     } catch (error: any) {
         console.error(`${type} fetch error:`, error);
         toast({

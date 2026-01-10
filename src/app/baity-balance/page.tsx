@@ -515,3 +515,4 @@ const renderOfferIcon = (category: string) => {
     </>
   );
 }
+

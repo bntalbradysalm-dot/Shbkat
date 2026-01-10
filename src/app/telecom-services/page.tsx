@@ -308,7 +308,7 @@ const YemenMobileUI = ({
         return 'غير معروف';
     }
     
-    const OfferDetailIcon = ({ icon: React.ElementType, value?: string, label }: { icon: React.ElementType, value?: string, label: string }) => {
+    const OfferDetailIcon = ({ icon: Icon, value, label }: { icon: React.ElementType; value?: string; label: string }) => {
         if (!value) return null;
         return (
             <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
@@ -1168,13 +1168,13 @@ export default function TelecomServicesPage() {
         <Card className="shadow-lg">
           <CardContent className="p-3">
             <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
-                    {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery || isLoadingYemenPostQuery) ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
-                        <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>
-                    ) : null}
-                </div>
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-12 flex items-center justify-center">
+                  {(isLoadingBalance || isLoadingOffers || isLoadingSolfa || isLoadingYemen4gQuery || isLoadingYemenPostQuery) ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : detectedOperator && getOperatorLogo(detectedOperator) ? (
+                      <Image src={getOperatorLogo(detectedOperator)!} alt={detectedOperator} width={32} height={32} className="object-contain"/>
+                  ) : null}
+              </div>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center">
                 {phoneNumber.length > 0 && <Phone className="h-5 w-5 text-muted-foreground" />}
               </div>

@@ -27,8 +27,6 @@ const services: Service[] = [
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
-  { name: 'رصيد بيتي', icon: Building2, href: '/baity-balance' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
 ];
 

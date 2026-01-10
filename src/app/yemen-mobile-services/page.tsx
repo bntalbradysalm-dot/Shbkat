@@ -1,111 +1,146 @@
-
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { RefreshCw, Settings, User, Phone, Heart } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { ChevronLeft, Smartphone, Building, Wifi, Phone } from 'lucide-react';
+import Image from 'next/image';
 
-type UserProfile = {
-    balance?: number;
+type Company = {
+  name: string;
+  icon: string | React.ElementType;
+  prefixes: string[];
+  length: number;
+  href: string;
 };
 
-const CustomHeader = () => {
-    const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
+const companies: Company[] = [
+  {
+    name: 'يمن موبايل',
+    icon: 'https://i.postimg.cc/52nxCtk5/images.png',
+    prefixes: ['77', '78'],
+    length: 9,
+    href: '/yemen-mobile-services',
+  },
+  {
+    name: 'YOU',
+    icon: 'https://i.postimg.cc/W3t9tD5B/Yo-Logo.png',
+    prefixes: ['73'],
+    length: 9,
+    href: '/you-services',
+  },
+  {
+    name: 'يمن فورجي',
+    icon: 'https://i.postimg.cc/d1qWc06N/Yemen-4g-logo.png',
+    prefixes: [''], // Handled by length
+    length: 8,
+    href: '/yemen-4g-services',
+  },
+  {
+    name: 'الهاتف الثابت',
+    icon: Phone,
+    prefixes: ['0'], 
+    length: 8, // e.g., 05333333
+    href: '/landline-services',
+  },
+   {
+    name: 'نت ADSL',
+    icon: Wifi,
+    prefixes: [''], // Handled by length
+    length: 8,
+    href: '/landline-services',
+  },
+];
 
-    const userDocRef = useMemoFirebase(
-      () => (user ? doc(firestore, 'users', user.uid) : null),
-      [firestore, user]
-    );
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+const getCompanyFromNumber = (phone: string): Company | null => {
+    if (!phone) return null;
 
-    const isLoading = isUserLoading || isProfileLoading;
+    for (const company of companies) {
+        if (company.length === phone.length) {
+            if (company.prefixes.length > 0 && company.prefixes.some(p => phone.startsWith(p))) {
+                return company;
+            }
+            if (company.prefixes.length === 0 || company.prefixes.includes('')) {
+                 // For Yemen4G/ADSL which are identified by length
+                 if (company.name === 'يمن فورجي' && /^\d{8}$/.test(phone)) return company;
+                 if (company.name === 'نت ADSL' && /^\d{8}$/.test(phone)) return company;
+                 if (company.name === 'الهاتف الثابت' && phone.startsWith('0')) return company;
+            }
+        }
+    }
+    return null;
+};
 
-    return (
-        <div className="bg-primary text-primary-foreground p-4 flex justify-between items-center">
-            <button className="p-2 rounded-full bg-white/20">
-                <RefreshCw className="h-5 w-5" />
-            </button>
-            <div className="text-center">
-                {isLoading ? (
-                    <Skeleton className="h-6 w-24 bg-white/30" />
-                ) : (
-                    <span className="text-xl font-bold">رصيدي {userProfile?.balance?.toLocaleString('en-US') ?? 0}</span>
+export default function TelecomPage() {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [identifiedCompany, setIdentifiedCompany] = useState<Company | null>(null);
+
+  useEffect(() => {
+    const company = getCompanyFromNumber(phoneNumber);
+    setIdentifiedCompany(company);
+  }, [phoneNumber]);
+
+  const handleNext = () => {
+    if (identifiedCompany) {
+      // In a real app, you would navigate to the specific service page
+      console.log(`Navigating to ${identifiedCompany.href} for number ${phoneNumber}`);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <SimpleHeader title="رصيد وباقات" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <Card className="shadow-lg">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-xl font-bold">تسديد فواتير وشحن رصيد</h2>
+            <p className="text-muted-foreground mt-2">أدخل رقم الهاتف للبدء</p>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+            <div className='relative'>
+                <Input
+                    id="phone-number"
+                    type="tel"
+                    placeholder="ادخل الرقم هنا..."
+                    className="h-16 text-center text-2xl font-bold tracking-widest"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                />
+                {identifiedCompany && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 animate-in fade-in-0">
+                        {typeof identifiedCompany.icon === 'string' ? (
+                            <Image src={identifiedCompany.icon} alt={identifiedCompany.name} width={24} height={24} className="rounded-md" />
+                        ) : (
+                            <identifiedCompany.icon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                        <span className="text-sm font-semibold text-muted-foreground">{identifiedCompany.name}</span>
+                    </div>
                 )}
             </div>
-            <button className="p-2 rounded-full bg-white/20">
-                <Settings className="h-5 w-5" />
-            </button>
+
+            <Card>
+                <CardContent className="p-3 text-xs text-muted-foreground space-y-2">
+                    <p>• <span className="font-semibold text-primary">يمن موبايل:</span> يبدأ بـ 77 أو 78 (9 أرقام)</p>
+                    <p>• <span className="font-semibold text-primary">YOU:</span> يبدأ بـ 73 أو 71 أو 70 (9 أرقام)</p>
+                    <p>• <span className="font-semibold text-primary">يمن فورجي / نت:</span> رقم المشترك (8 أرقام)</p>
+                    <p>• <span className="font-semibold text-primary">الهاتف الثابت:</span> يبدأ بـ 0 (8 أرقام)</p>
+                </CardContent>
+            </Card>
         </div>
-    );
-};
 
-export default function YemenMobileServicesPage() {
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [useNorthGateway, setUseNorthGateway] = useState(false);
-
-    return (
-        <div className="flex flex-col h-screen bg-background">
-            <CustomHeader />
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                <div className="flex items-center justify-center my-4">
-                    <div className="flex-grow border-t border-gray-300"></div>
-                    <span className="px-4 text-sm font-semibold text-muted-foreground">تسديد شبكات الاتصالات اليمنية</span>
-                    <div className="flex-grow border-t border-gray-300"></div>
-                </div>
-
-                <div className='space-y-2'>
-                    <Label htmlFor="phone-input" className="text-sm font-medium pr-1">ادخل رقم الهاتف :</Label>
-                    <Card className='shadow-md'>
-                        <CardContent className="p-2">
-                             <div className="relative flex items-center">
-                                <Button variant="ghost" size="icon" className="p-2">
-                                    <User className="h-6 w-6 text-muted-foreground" />
-                                </Button>
-                                <span className="pl-2 pr-1 text-muted-foreground font-semibold">+967</span>
-                                <Input
-                                    id="phone-input"
-                                    type="tel"
-                                    placeholder="رقم الهاتف"
-                                    className="border-0 text-right text-lg flex-1 !ring-0 !shadow-none p-0"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                                    maxLength={9}
-                                />
-                                <div className="flex items-center">
-                                    <Button variant="ghost" size="icon" className="p-2 border-r rounded-none">
-                                        <Phone className="h-5 w-5 text-muted-foreground" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="p-2">
-                                        <Heart className="h-5 w-5 text-muted-foreground" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                
-                <Card className='shadow-md'>
-                    <CardContent className="p-3 flex items-center justify-between">
-                        <Label htmlFor="gateway-switch" className="text-base font-semibold">
-                            بوابة الشمال
-                        </Label>
-                        <Switch
-                            id="gateway-switch"
-                            checked={useNorthGateway}
-                            onCheckedChange={setUseNorthGateway}
-                        />
-                    </CardContent>
-                </Card>
-
-            </div>
-        </div>
-    );
+        <Button 
+            className="w-full h-12 text-lg font-bold"
+            disabled={!identifiedCompany}
+            onClick={handleNext}
+        >
+            التالي
+            <ChevronLeft className="mr-2 h-5 w-5" />
+        </Button>
+      </div>
+    </div>
+  );
 }

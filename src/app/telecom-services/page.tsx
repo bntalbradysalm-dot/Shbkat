@@ -745,6 +745,49 @@ export default function TelecomServicesPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
+  const callQueryApi = useCallback(async (phone: string, type: 'balance' | 'solfa' | 'offers' | 'status', transid?: string) => {
+    if (getOperator(phone) !== 'Yemen Mobile') return null;
+    try {
+        let apiUrl = `/api/echehanly?service=yem&action=query&mobile=${phone}&type=${type}`;
+        if (transid) {
+            apiUrl += `&transid=${transid}`;
+        }
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || `Failed to fetch ${type}`);
+        }
+        return data;
+    } catch (error: any) {
+        console.error(`${type} fetch error:`, error);
+        return null;
+    }
+  }, []);
+
+  const fetchYemenMobileData = useCallback(async (phone: string) => {
+    setIsLoadingBalance(true);
+    setIsLoadingSolfa(true);
+    setIsLoadingOffers(true);
+
+    const [balanceResult, solfaResult, offersResult] = await Promise.all([
+        callQueryApi(phone, 'balance'),
+        callQueryApi(phone, 'solfa'),
+        callQueryApi(phone, 'offers')
+    ]);
+
+    setBalanceData(balanceResult);
+    setSolfaData(solfaResult);
+    if (offersResult && Array.isArray(offersResult.offers)) {
+      setOffers(offersResult.offers);
+    } else {
+      setOffers([]);
+    }
+
+    setIsLoadingBalance(false);
+    setIsLoadingSolfa(false);
+    setIsLoadingOffers(false);
+  }, [callQueryApi]);
+
 
   const getOperator = (phone: string) => {
     if (phone.startsWith('77') || phone.startsWith('78')) return 'Yemen Mobile';
@@ -767,68 +810,6 @@ export default function TelecomServicesPage() {
           default: return null;
       }
   }
-  
-  const fetchBalance = useCallback(async (phone: string) => {
-      if (getOperator(phone) !== 'Yemen Mobile') return;
-
-      setIsLoadingBalance(true);
-      setBalanceData(null);
-      try {
-          const response = await fetch(`/api/echehanly?service=yem&action=query&mobile=${phone}`);
-          const data = await response.json();
-          if (!response.ok) {
-              throw new Error(data.message || 'Failed to fetch balance');
-          }
-          setBalanceData(data);
-      } catch (error: any) {
-          console.error("Balance fetch error:", error);
-          setBalanceData(null);
-      } finally {
-          setIsLoadingBalance(false);
-      }
-  }, []);
-  
-  const fetchOffers = useCallback(async (phone: string) => {
-    if (getOperator(phone) !== 'Yemen Mobile') return;
-    setIsLoadingOffers(true);
-    setOffers(null);
-    try {
-        const response = await fetch(`/api/echehanly?service=yem&action=queryoffer&mobile=${phone}`);
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to fetch offers');
-        }
-        if (data && Array.isArray(data.offers)) {
-            setOffers(data.offers);
-        } else {
-            setOffers([]);
-        }
-    } catch (error: any) {
-        console.error("Offers fetch error:", error);
-        setOffers([]);
-    } finally {
-        setIsLoadingOffers(false);
-    }
-  }, []);
-  
-  const fetchSolfa = useCallback(async (phone: string) => {
-    if (getOperator(phone) !== 'Yemen Mobile') return;
-    setIsLoadingSolfa(true);
-    setSolfaData(null);
-    try {
-        const response = await fetch(`/api/echehanly?service=yem&action=solfa&mobile=${phone}`);
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to fetch loan status');
-        }
-        setSolfaData(data);
-    } catch (error: any) {
-        console.error("Solfa fetch error:", error);
-        setSolfaData(null);
-    } finally {
-        setIsLoadingSolfa(false);
-    }
-  }, []);
 
   const fetchYemen4GQuery = useCallback(async (phone: string) => {
     if (getOperator(phone) !== 'Yemen 4G') return;
@@ -915,13 +896,11 @@ export default function TelecomServicesPage() {
 
 
     if (operator === 'Yemen Mobile') {
-        fetchBalance(phoneNumber);
-        fetchOffers(phoneNumber);
-        fetchSolfa(phoneNumber);
+        fetchYemenMobileData(phoneNumber);
     } else if (operator === 'Yemen 4G') {
         fetchYemen4GQuery(phoneNumber);
     }
-  }, [phoneNumber, detectedOperator, fetchBalance, fetchOffers, fetchSolfa, fetchYemen4GQuery]);
+  }, [phoneNumber, detectedOperator, fetchYemenMobileData, fetchYemen4GQuery]);
   
     const handlePurchase = async () => {
         const isPackage = !!selectedPackage;
@@ -950,7 +929,18 @@ export default function TelecomServicesPage() {
     
         setIsProcessing(true);
         let transid = Date.now().toString();
+        
         try {
+            // Step 1 for Yemen Mobile Packages: Pay the bill first to get a transid
+            if (detectedOperator === 'Yemen Mobile' && isPackage) {
+                const billResponse = await fetch(`/api/echehanly?service=yem&action=bill&mobile=${phoneNumber}&amount=${amountToPay}&transid=${transid}`);
+                const billData = await billResponse.json();
+                if (!billResponse.ok || (billData.resultCode && billData.resultCode !== '0')) {
+                    throw new Error(billData.message || billData.resultDesc || 'فشل تسديد مبلغ الباقة.');
+                }
+                transid = billData.transid || transid; // Use the transid from the response if available
+            }
+
             let serviceNameForDb: string = detectedOperator || 'خدمة';
             let serviceType: string;
             
@@ -961,16 +951,15 @@ export default function TelecomServicesPage() {
             const service = serviceMap[detectedOperator || ''];
             if (!service) throw new Error('مشغل خدمة غير مدعوم.');
             
-            apiUrl += `&service=${service}&action=bill&amount=${amountToPay}`;
+            apiUrl += `&service=${service}`;
 
             if (detectedOperator === 'Yemen Mobile' && isPackage) {
                 const offerId = selectedPackage?.offerId || selectedPackage?.id;
-                if (!offerId) {
-                    throw new Error('معرف الباقة غير صالح.');
-                }
-                apiUrl += `&offerid=${offerId}`;
+                if (!offerId) throw new Error('معرف الباقة غير صالح.');
+                apiUrl += `&action=bill-offer&offerid=${offerId}`;
                 serviceType = `شراء باقة: ${selectedPackage!.offerName}`;
             } else {
+                 apiUrl += `&action=bill&amount=${amountToPay}`;
                 if (detectedOperator === 'Yemen 4G') {
                     serviceType = yemen4GType === 'package' ? 'شراء باقة 4G' : 'تسديد رصيد 4G';
                     apiUrl += `&type=${yemen4GType === 'package' ? '1' : '2'}`;
@@ -982,10 +971,16 @@ export default function TelecomServicesPage() {
                 }
             }
     
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            if (!response.ok || (data.resultCode && data.resultCode !== '0')) {
-                throw new Error(data.message || data.resultDesc || 'فشلت عملية الدفع لدى مزود الخدمة.');
+            const finalResponse = await fetch(apiUrl);
+            const finalData = await finalResponse.json();
+            if (!finalResponse.ok || (finalData.resultCode && finalData.resultCode !== '0')) {
+                 // Attempt to refund if the final step failed
+                if (detectedOperator === 'Yemen Mobile' && isPackage) {
+                    // This is a complex scenario. For now, we just show an error.
+                    // A proper implementation might require a refund mechanism.
+                     throw new Error(finalData.message || finalData.resultDesc || 'فشل تفعيل الباقة بعد خصم المبلغ.');
+                }
+                throw new Error(finalData.message || finalData.resultDesc || 'فشلت عملية الدفع لدى مزود الخدمة.');
             }
     
             const batch = writeBatch(firestore);
@@ -1089,8 +1084,7 @@ export default function TelecomServicesPage() {
                     setIsConfirming(true);
                 }}
                 refreshBalanceAndSolfa={() => {
-                    fetchBalance(phoneNumber);
-                    fetchSolfa(phoneNumber);
+                    fetchYemenMobileData(phoneNumber);
                 }}
             />;
         case 'Yemen 4G':
@@ -1232,10 +1226,3 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-
-
-
-    
-
-    

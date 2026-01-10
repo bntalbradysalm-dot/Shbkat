@@ -38,7 +38,7 @@ export default function TelecomPage() {
         <div className="grid grid-cols-2 gap-4">
           {companies.map((company, index) => (
             <Link
-              href={'#'}
+              href={company.href}
               key={company.name}
               className="group cursor-pointer transition-all duration-300 animate-in fade-in-0 zoom-in-95"
               style={{ animationDelay: `${100 + index * 100}ms` }}

@@ -245,9 +245,6 @@ export default function BaityServicesPage() {
         
         <Card className="rounded-2xl bg-destructive/10 p-4">
             <div className="flex items-center gap-3">
-                 <div className="p-2 bg-white rounded-lg">
-                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
-                </div>
                 <div className="flex-1 text-right">
                     <Label htmlFor="mobileNumber" className="text-xs text-muted-foreground">رقم الجوال</Label>
                     <Input
@@ -260,6 +257,9 @@ export default function BaityServicesPage() {
                       maxLength={9}
                       className="bg-transparent border-none text-lg h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
+                </div>
+                 <div className="p-2 bg-white rounded-lg">
+                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
                 </div>
             </div>
         </Card>

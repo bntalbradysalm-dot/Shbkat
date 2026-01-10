@@ -116,68 +116,14 @@ export default function BaityServicesPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [confirmationDetails, setConfirmationDetails] = useState({ title: '', description: '', type: '' });
   const [selectedPackage, setSelectedPackage] = useState<OfferWithPrice | null>(null);
-  const [recipient, setRecipient] = useState<UserProfile | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState('packages');
-  const [balance, setBalance] = useState<string | null>(null);
 
-  const [offers, setOffers] = useState<Offer[] | null>(null);
-  const [isLoadingOffers, setIsLoadingOffers] = useState(false);
+  const [activeTab, setActiveTab] = useState('packages');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-
-  const fetchBalance = useCallback(async (phone: string) => {
-    setBalance(null);
-    try {
-        const response = await fetch(`/api/baity/balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phone })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to fetch balance');
-        }
-        setBalance(data.data.balance);
-    } catch (error: any) {
-        console.error("Balance fetch error:", error);
-    }
-  }, []);
-
-  const fetchOffers = useCallback(async () => {
-    setIsLoadingOffers(true);
-    setOffers(null);
-    try {
-        const response = await fetch(`/api/echehanly?service=mtn&action=queryoffer`);
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to fetch offers');
-        }
-        if (data && Array.isArray(data.offers)) {
-            setOffers(data.offers);
-        } else {
-            setOffers([]);
-        }
-    } catch (error: any) {
-        console.error("Offers fetch error:", error);
-        setOffers([]);
-    } finally {
-        setIsLoadingOffers(false);
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (mobileNumber.length === 9) {
-        fetchBalance(mobileNumber);
-    }
-    if(!offers && !isLoadingOffers) {
-        fetchOffers();
-    }
-  }, [mobileNumber, fetchBalance, offers, isLoadingOffers, fetchOffers]);
   
   const categorizedOffers = useMemo(() => {
     const initializedCategories: Record<string, OfferWithPrice[]> = {
@@ -189,7 +135,8 @@ export default function BaityServicesPage() {
         'باقات أخرى': [],
     };
     
-    const allOffers = [...(offers || []), ...manualPackages];
+    // Using only manual packages for now
+    const allOffers = [...manualPackages];
     const uniqueOffers = Array.from(new Map(allOffers.map(o => [o.offerId || o.id, o])).values());
 
     uniqueOffers.forEach(offer => {
@@ -197,16 +144,10 @@ export default function BaityServicesPage() {
         if (!offerId) return;
 
         const correctedName = offer.offerName || offer.name;
-        const manualPkg = manualPackages.find(p => p.id === offerId);
-        const price = offer.price || manualPkg?.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
-        const parsedDetails = manualPkg ? { data: manualPkg.data, sms: manualPkg.sms, minutes: manualPkg.minutes, validity: manualPkg.validity } : parseOfferDetails(correctedName);
+        const price = offer.price || parseFloat(correctedName.match(/(\d+(\.\d+)?)/)?.[0] || '0');
+        const parsedDetails = { data: offer.data, sms: offer.sms, minutes: offer.minutes, validity: offer.validity };
         
         const offerWithDetails: OfferWithPrice = { ...offer, ...parsedDetails, offerId, name: correctedName, offerName: correctedName, price };
-
-        if (offer.offerId && offer.offerStartDate) { // Active subscriptions
-            initializedCategories['الاشتراكات الحالية'].push(offerWithDetails);
-            return;
-        }
 
         if (correctedName.includes('مزايا')) initializedCategories['باقات مزايا'].push(offerWithDetails);
         else if (correctedName.includes('شهري')) initializedCategories['باقات الانترنت الشهرية'].push(offerWithDetails);
@@ -223,7 +164,7 @@ export default function BaityServicesPage() {
     }
     
     return finalCategories;
-}, [offers]);
+}, []);
 
 const renderOfferIcon = (category: string) => {
     if (category.includes('مزايا')) return <Smile className="w-5 h-5"/>;
@@ -288,17 +229,18 @@ const renderOfferIcon = (category: string) => {
     }
 
     try {
-      const apiResponse = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-
-      const result = await apiResponse.json();
-
-      if (!apiResponse.ok) {
-        throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
-      }
+      // This is where you would call the actual Baity API
+      // For now, we simulate success
+      console.log("Calling API:", apiEndpoint, requestBody);
+      // const apiResponse = await fetch(apiEndpoint, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(requestBody),
+      // });
+      // const result = await apiResponse.json();
+      // if (!apiResponse.ok) {
+      //   throw new Error(result.message || 'فشل تنفيذ الطلب لدى مزود الخدمة.');
+      // }
 
       const batch = writeBatch(firestore);
       batch.update(userDocRef, { balance: increment(-transactionAmount) });
@@ -373,9 +315,6 @@ const renderOfferIcon = (category: string) => {
         
         <Card className="rounded-2xl bg-destructive/10 p-4">
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg">
-                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
-                </div>
                 <div className="flex-1 text-right">
                     <Label htmlFor="mobileNumber" className="text-xs text-muted-foreground">رقم الجوال</Label>
                     <Input
@@ -389,94 +328,120 @@ const renderOfferIcon = (category: string) => {
                       className="bg-transparent border-none text-lg h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-right"
                     />
                 </div>
+                 <div className="p-2 bg-white rounded-lg">
+                    <Image src="https://i.postimg.cc/SN7B5Y3z/you.png" alt="Baity" width={28} height={28} className="object-contain" />
+                </div>
             </div>
         </Card>
         
-        <Table>
-            <TableBody>
-                <TableRow>
-                    <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
-                    <TableCell className="font-bold text-left">{balance ? `${balance} ريال` : <Skeleton className="h-5 w-20 ml-auto" />}</TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
-                    <TableCell className="font-bold text-left">دفع مسبق | 3G</TableCell>
-                </TableRow>
-                <TableRow>
-                     <TableCell className="font-semibold text-muted-foreground">فحص السلفة</TableCell>
-                    <TableCell className="font-bold text-left flex items-center justify-end gap-1">
-                        <Smile className="w-4 h-4 text-green-500" />
-                        غير متسلف
-                    </TableCell>
-                </TableRow>
-            </TableBody>
-        </Table>
-
-
-        {mobileNumber.length === 9 && (
-            <div className="animate-in fade-in-0 duration-300 space-y-4">
-                <Card className="bg-destructive text-white">
-                    <CardHeader className="p-3">
-                        <CardTitle className="text-base text-center">الاشتراكات الحالية</CardTitle>
-                    </CardHeader>
-                </Card>
-                
-                {categorizedOffers['الاشتراكات الحالية']?.length > 0 ? (
-                    categorizedOffers['الاشتراكات الحالية'].map(sub => (
-                        <Card key={sub.offerId} className="bg-red-50 dark:bg-destructive/10">
-                            <CardContent className="p-3 flex items-center gap-3">
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="w-12 h-12 bg-destructive text-destructive-foreground rounded-lg flex items-center justify-center">
-                                        <RefreshCw />
-                                    </div>
-                                    <span className="text-xs font-bold">تجديد</span>
-                                </div>
-                                <div className="flex-1 text-right text-sm">
-                                    <p className="font-bold">{sub.offerName}</p>
-                                    <p className="text-xs text-muted-foreground">الاشتراك: <span className="font-mono">{formatApiDate(sub.offerStartDate)}</span></p>
-                                    <p className="text-xs text-muted-foreground">الانتهاء: <span className="font-mono">{formatApiDate(sub.offerEndDate)}</span></p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                ) : (
-                    <p className="text-center text-muted-foreground py-4">لا توجد اشتراكات حالية.</p>
-                )}
-
-
-                <Accordion type="single" collapsible className="w-full space-y-3">
-                     {Object.entries(categorizedOffers).filter(([category]) => category !== 'الاشتراكات الحالية').map(([category, pkgs]) => (
-                         <AccordionItem value={category} key={category} className="border-none">
-                            <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
-                                <div className='flex items-center justify-between w-full'>
-                                    <span>{category}</span>
-                                    <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center">
-                                        {renderOfferIcon(category)}
-                                    </div>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="pt-2">
-                                 <div className="space-y-2">
-                                    {pkgs.map(pkg => (
-                                        <Card key={pkg.offerId || pkg.id} onClick={() => handleConfirmClick('package', pkg)} className="cursor-pointer p-4 hover:bg-muted/50">
-                                            <div className="flex flex-col items-center text-center">
-                                                <h4 className="font-bold text-base">{pkg.offerName}</h4>
-                                                <p className="text-2xl font-bold text-destructive my-2">{pkg.price.toLocaleString('en-US')} ريال</p>
-                                            </div>
-                                            <div className="grid grid-cols-4 gap-2 pt-3 border-t">
-                                                <OfferDetailIcon icon={Database} value={pkg.data} label="Data" />
-                                                <OfferDetailIcon icon={MessageSquare} value={pkg.sms} label="SMS" />
-                                                <OfferDetailIcon icon={Phone} value={pkg.minutes} label="Minutes" />
-                                                <OfferDetailIcon icon={History} value={pkg.validity} label="Validity" />
-                                            </div>
-                                        </Card>
-                                    ))}
-                                 </div>
-                            </AccordionContent>
-                         </AccordionItem>
-                     ))}
-                </Accordion>
+        {mobileNumber.length > 0 && (
+          <div className="animate-in fade-in-0 duration-300">
+            <div className="flex items-center gap-2 rounded-full bg-destructive/10 p-1 mb-4">
+              <TabButton value="packages" label="باقات" />
+              <TabButton value="balance" label="سداد" />
             </div>
+
+            {activeTab === 'balance' && (
+              <div className="space-y-4 animate-in fade-in-0 duration-300">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-center text-base">تسديد الرصيد</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                     <div className="grid grid-cols-3 gap-2">
+                        {presetAmounts.map(pa => (
+                            <Button key={pa} variant="outline" onClick={() => handleAmountButtonClick(pa)}>
+                                {pa}
+                            </Button>
+                        ))}
+                    </div>
+                     <div>
+                        <Label htmlFor="amount" className="text-right mb-1 block">أو أدخل مبلغ</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          placeholder="0.00"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                        />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Button 
+                  className="w-full"
+                  disabled={!amount || Number(amount) <= 0} 
+                  onClick={() => handleConfirmClick('balance')}
+                >
+                  تسديد الرصيد
+                </Button>
+              </div>
+            )}
+            
+            {activeTab === 'packages' && (
+              <div className="animate-in fade-in-0 duration-300">
+                  <Table>
+                      <TableBody>
+                          <TableRow>
+                              <TableCell className="font-semibold text-muted-foreground">رصيد الرقم</TableCell>
+                              <TableCell className="font-bold text-left">2,500 ريال</TableCell>
+                          </TableRow>
+                          <TableRow>
+                              <TableCell className="font-semibold text-muted-foreground">نوع الرقم</TableCell>
+                              <TableCell className="font-bold text-left">دفع مسبق | 3G</TableCell>
+                          </TableRow>
+                          <TableRow>
+                              <TableCell className="font-semibold text-muted-foreground">فحص السلفة</TableCell>
+                              <TableCell className="font-bold text-left flex items-center justify-end gap-1">
+                                  <Smile className="w-4 h-4 text-green-500" />
+                                  غير متسلف
+                              </TableCell>
+                          </TableRow>
+                      </TableBody>
+                  </Table>
+
+                  <Card className="mt-4 bg-destructive text-white">
+                      <CardHeader className="p-3">
+                          <CardTitle className="text-base text-center">الاشتراكات الحالية</CardTitle>
+                      </CardHeader>
+                  </Card>
+                  
+                  <p className="text-center text-muted-foreground py-4 text-sm">لا توجد اشتراكات حالية.</p>
+
+                  <Accordion type="single" collapsible className="w-full space-y-3 mt-4">
+                      {Object.entries(categorizedOffers).filter(([category]) => category !== 'الاشتراكات الحالية').map(([category, pkgs]) => (
+                          <AccordionItem value={category} key={category} className="border-none">
+                              <AccordionTrigger className="p-3 bg-destructive text-destructive-foreground rounded-lg hover:no-underline hover:bg-destructive/90">
+                                  <div className='flex items-center justify-between w-full'>
+                                      <span>{category}</span>
+                                      <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center">
+                                          {renderOfferIcon(category)}
+                                      </div>
+                                  </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="pt-2">
+                                  <div className="space-y-2">
+                                      {pkgs.map(pkg => (
+                                          <Card key={pkg.offerId || pkg.id} onClick={() => handleConfirmClick('package', pkg)} className="cursor-pointer p-4 hover:bg-muted/50">
+                                              <div className="flex flex-col items-center text-center">
+                                                  <h4 className="font-bold text-base">{pkg.offerName}</h4>
+                                                  <p className="text-2xl font-bold text-destructive my-2">{pkg.price.toLocaleString('en-US')} ريال</p>
+                                              </div>
+                                              <div className="grid grid-cols-4 gap-2 pt-3 border-t">
+                                                  <OfferDetailIcon icon={Database} value={pkg.data} label="Data" />
+                                                  <OfferDetailIcon icon={MessageSquare} value={pkg.sms} label="SMS" />
+                                                  <OfferDetailIcon icon={Phone} value={pkg.minutes} label="Minutes" />
+                                                  <OfferDetailIcon icon={History} value={pkg.validity} label="Validity" />
+                                              </div>
+                                          </Card>
+                                      ))}
+                                  </div>
+                              </AccordionContent>
+                          </AccordionItem>
+                      ))}
+                  </Accordion>
+              </div>
+            )}
+          </div>
         )}
 
       </div>

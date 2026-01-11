@@ -11,7 +11,7 @@ import {
   Wallet,
   Phone,
   RefreshCw,
-  Info
+  Info,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -104,11 +104,11 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                         </div>
                          <div className="flex-1 space-y-1">
                             <p className="text-muted-foreground text-xs">نوع الرقم</p>
-                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفق مسبق وغير متسلف</p>
+                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفع مسبق</p>
                         </div>
                          <div className="flex-1 space-y-1">
                              <p className="text-muted-foreground text-xs">فحص السلفة</p>
-                              <p className="font-bold text-primary dark:text-primary-foreground text-base">غير مستلف</p>
+                             <p className="font-bold text-primary mt-1">غير متسلف</p>
                         </div>
                     </div>
                 </CardContent>
@@ -183,9 +183,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
 };
 
 export default function TelecomPage() {
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState('777123456');
   const [identifiedCompany, setIdentifiedCompany] = React.useState<Company | null>(null);
-  const [isUiVisible, setIsUiVisible] = React.useState(false);
+  const [isUiVisible, setIsUiVisible] = React.useState(true);
   const [isChecking, setIsChecking] = React.useState(false);
 
   const handleCheckNumber = () => {
@@ -222,9 +222,9 @@ export default function TelecomPage() {
         <BalanceDisplay />
 
         <Card>
-            <CardContent className="p-3 space-y-1">
+            <CardContent className="p-2 space-y-1">
                 <p className="text-right font-semibold text-xs text-muted-foreground px-1">ادخل رقم الهاتف :</p>
-                <div className="flex items-center gap-2 rounded-xl bg-muted p-1 border">
+                <div className="flex items-center gap-1 rounded-xl bg-muted p-1 border">
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Contact className="h-5 w-5 text-primary" />
                     </Button>
@@ -233,7 +233,7 @@ export default function TelecomPage() {
                             id="phone-number"
                             type="tel"
                             placeholder="رقم الهاتف"
-                            className="h-10 text-base font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0 pr-2"
+                            className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0 pr-2"
                             value={phoneNumber}
                             onChange={(e) =>
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))

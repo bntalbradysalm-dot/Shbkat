@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -103,7 +104,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                         </div>
                          <div className="flex-1 space-y-1">
                             <p className="text-muted-foreground text-xs">نوع الرقم</p>
-                            <p className="font-bold text-primary dark:text-primary-foreground text-base">دفع مسبق | 4G</p>
+                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفق مسبق وغير متسلف</p>
                         </div>
                          <div className="flex-1 space-y-1">
                              <p className="text-muted-foreground text-xs">فحص السلفة</p>
@@ -120,7 +121,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                     </div>
                     <div className="p-3 space-y-3">
                         {subscriptions.map((sub, index) => (
-                            <Card key={index} className="bg-primary/5 p-3">
+                            <Card key={index} className="bg-muted/50 p-3">
                                 <div className="flex justify-between items-center">
                                     <div className="flex-1 text-right">
                                         <p className="font-bold text-sm">{sub.name}</p>

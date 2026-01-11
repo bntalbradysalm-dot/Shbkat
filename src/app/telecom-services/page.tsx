@@ -27,6 +27,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -108,6 +119,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [finalBalance, setFinalBalance] = useState(0);
+    const [isConfirming, setIsConfirming] = useState(false);
 
     const { user } = useUser();
     const firestore = useFirestore();
@@ -200,6 +212,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         });
       } finally {
         setIsProcessing(false);
+        setIsConfirming(false);
       }
     };
     
@@ -266,10 +279,30 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     className="text-right mt-1 bg-muted font-bold text-primary"
                                 />
                              </div>
-                             <Button className="w-full" onClick={handlePayment} disabled={isProcessing}>
-                                {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : null}
-                                {isProcessing ? 'جاري التسديد...' : 'تسديد'}
-                             </Button>
+                             <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+                                <AlertDialogTrigger asChild>
+                                  <Button className="w-full" disabled={isProcessing || !amount}>
+                                    تسديد
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-center">تأكيد السداد</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-center pt-2">
+                                      هل أنت متأكد من رغبتك في تسديد مبلغ{' '}
+                                      <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>{' '}
+                                      إلى الرقم{' '}
+                                      <span className="font-bold text-primary">{phoneNumber}</span>؟
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handlePayment} disabled={isProcessing}>
+                                      {isProcessing ? 'جاري السداد...' : 'تأكيد'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                         </CardContent>
                     </Card>
                 </TabsContent>

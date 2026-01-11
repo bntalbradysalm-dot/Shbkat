@@ -1,82 +1,98 @@
 
 import { NextResponse } from 'next/server';
-import md5 from 'crypto-js/md5';
 
-const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/yem';
-const USER_ID = '23207';
-const USERNAME = '770326828';
-const PASSWORD = '770326828moh';
-
-function generateToken(transid: string, mobile: string) {
-  const hashPassword = md5(PASSWORD).toString();
-  const token = md5(hashPassword + transid + USERNAME + mobile).toString();
-  return token;
-}
+const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem';
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
 
 async function handleRequest(request: Request) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
-  const mobile = searchParams.get('mobile');
-  
-  if (!action || !mobile) {
+
+  if (!action) {
     return new NextResponse(
-      JSON.stringify({ message: 'Missing required query parameters: action, mobile' }),
+      JSON.stringify({ message: 'Missing required query parameter: action' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  
-  const transid = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  const token = generateToken(transid, mobile);
-  
-  const endpoint = new URL(API_BASE_URL);
-  endpoint.searchParams.append('action', action);
-  endpoint.searchParams.append('userid', USER_ID);
-  endpoint.searchParams.append('mobile', mobile);
-  
-  // Use original transid if provided for follow-up actions like bill-offer
-  const originalTransid = searchParams.get('transid');
-  if (originalTransid) {
-    endpoint.searchParams.append('transid', originalTransid);
-    endpoint.searchParams.set('token', generateToken(originalTransid, mobile));
-  } else {
-    endpoint.searchParams.append('transid', transid);
-    endpoint.searchParams.append('token', token);
+
+  // Define endpoint path based on action
+  let endpointPath = '';
+  switch (action) {
+    case 'query':
+      endpointPath = '/bill-balance';
+      break;
+    case 'bill':
+       // Assuming the action for payment is 'bill-pay' based on the new structure
+      endpointPath = '/bill-pay';
+      break;
+    case 'billoffer':
+      endpointPath = '/bill-offer';
+      break;
+    case 'status':
+       // Assuming status check endpoint
+       endpointPath = '/bill-status';
+       break;
+    default:
+      return new NextResponse(
+        JSON.stringify({ message: `Invalid action: ${action}` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
   }
 
-  // Add parameters specific to certain actions
-  if (action === 'query') {
-    const type = searchParams.get('type');
-    if (type) endpoint.searchParams.append('type', type);
-  } else if (action === 'bill') {
-    const amount = searchParams.get('amount');
-    if (amount) endpoint.searchParams.append('amount', amount);
-  } else if (action === 'billoffer') {
-    const offerid = searchParams.get('offerid');
-    if (offerid) endpoint.searchParams.append('offerid', offerid);
-  }
+  const endpoint = `${API_BASE_URL}${endpointPath}`;
   
+  let body: any = {};
+  if (request.method === 'POST') {
+    try {
+        // Since the original request might be GET, we parse params and build a body for POST
+        const mobile = searchParams.get('mobile');
+        const amount = searchParams.get('amount');
+        const offerid = searchParams.get('offerid');
+        const transid = searchParams.get('transid');
+
+        if (mobile) body.mobile = mobile;
+
+        if(action === 'bill') {
+          if (amount) body.amount = amount;
+        } else if (action === 'billoffer') {
+          if (offerid) body.offerid = offerid;
+        } else if (action === 'status') {
+            if (transid) body.transid = transid;
+        }
+
+    } catch (e) {
+      console.error("Could not parse request body", e);
+    }
+  }
+
+
   try {
     const fetchOptions: RequestInit = {
-      method: 'GET', 
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', // The new API likely uses POST for all actions
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+      },
+      body: JSON.stringify(body)
     };
 
-    const response = await fetch(endpoint.toString(), fetchOptions);
+    const response = await fetch(endpoint, fetchOptions);
     const data = await response.json();
 
-    if (data.resultCode !== "0" && !String(data.resultCode).startsWith("10")) {
-        const errorMessage = data?.resultDesc || data?.message || 'Failed to process request with the provider.';
+    // Assuming the new API returns non-200 status for errors
+    if (!response.ok) {
+        const errorMessage = data?.message || data?.resultDesc || 'Failed to process request with the provider.';
         return new NextResponse(
             JSON.stringify({ message: errorMessage, ...data }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } }
+            { status: response.status, headers: { 'Content-Type': 'application/json' } }
         );
     }
     
-    // The API might return a new transid for bill payments, pass it back
-    if (action === 'bill' && data.sequenceId) {
-        data.transid = data.sequenceId;
+    // Adapt response for the frontend if necessary
+    // Example: Old API had `amounts.amount1`, new might have `balance`
+    if (action === 'query' && data.balance) {
+        data.amounts = { amount1: data.balance };
     }
-
 
     return NextResponse.json(data);
 
@@ -89,11 +105,11 @@ async function handleRequest(request: Request) {
   }
 }
 
+// Accept both GET and POST, but internally always POST to the new API
 export async function GET(request: Request) {
   return handleRequest(request);
 }
 
 export async function POST(request: Request) {
-    return handleRequest(request);
+  return handleRequest(request);
 }
-

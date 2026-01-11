@@ -172,12 +172,6 @@ export default function TelecomPage() {
             </CardContent>
         </Card>
         
-        <div className="pt-4">
-            <Button className="w-full h-12" disabled={!identifiedCompany}>
-                التالي
-                <ChevronRight className="mr-2 h-5 w-5" />
-            </Button>
-        </div>
 
       </div>
     </div>

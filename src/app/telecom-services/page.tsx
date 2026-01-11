@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -113,7 +112,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     return (
         <div className="space-y-4 animate-in fade-in-0 duration-500">
              <Card>
-                <CardContent className="p-0">
+                <CardContent className="p-0 divide-y divide-border">
                      <div className="flex justify-around items-start text-center p-3 text-sm">
                         <div className="flex-1 space-y-1">
                             <p className="text-muted-foreground text-xs">رصيد الرقم</p>
@@ -124,12 +123,16 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                             <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفع مسبق</p>
                         </div>
                     </div>
+                    <div className="p-3 text-center">
+                        <p className="text-muted-foreground text-xs">حالة السلفة</p>
+                        <p className="font-semibold text-primary dark:text-primary-foreground text-sm">غير متسلف</p>
+                    </div>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardContent className="p-0">
-                    <div className="bg-primary text-primary-foreground text-center font-bold p-2 text-sm">
+                    <div className="bg-muted text-foreground text-center font-bold p-2 text-sm">
                         الاشتراكات الحالية
                     </div>
                     <div className="p-3 space-y-3">
@@ -261,7 +264,7 @@ export default function TelecomPage() {
         <BalanceDisplay />
 
         <Card>
-            <CardContent className="p-2 space-y-1">
+            <CardContent className="p-4 space-y-1">
                 <p className="text-right font-semibold text-xs text-muted-foreground px-1">ادخل رقم الهاتف :</p>
                 <div className="flex items-center gap-1 rounded-xl bg-muted p-1 border">
                     <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -271,7 +274,7 @@ export default function TelecomPage() {
                         <Input
                             id="phone-number"
                             type="tel"
-                            placeholder="رقم الهاتف"
+                            placeholder="7xxxxxxxx"
                             className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0 pr-1"
                             value={phoneNumber}
                             onChange={(e) =>
@@ -310,6 +313,11 @@ export default function TelecomPage() {
                                     <p className="text-center text-muted-foreground">لا توجد أرقام متكررة في سجل عملياتك.</p>
                                 )}
                             </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline">إغلاق</Button>
+                                </DialogClose>
+                            </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 </div>

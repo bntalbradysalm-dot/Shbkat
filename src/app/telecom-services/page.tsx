@@ -99,6 +99,14 @@ const BalanceDisplay = () => {
 }
 
 const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
+    const [amount, setAmount] = useState('');
+    const netAmount = useMemo(() => {
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) return '0.00';
+        const taxDeduction = 0.174; // 17.4%
+        const finalAmount = numericAmount * (1 - taxDeduction);
+        return finalAmount.toFixed(2);
+    }, [amount]);
 
     const subscriptions = [
         { name: 'تفعيل خدمة الانترنت - شريحة (3G)', subscribedAt: '21:23:47 2022-07-07', expiresAt: '00:00:00 2037-01-01', canRenew: true },
@@ -126,6 +134,18 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     inputMode='numeric'
                                     placeholder="0.00"
                                     className="text-right mt-1"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                />
+                             </div>
+                              <div className="text-right">
+                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي المبلغ بعد الضريبة (17.4%)</Label>
+                                <Input
+                                    id="netAmount"
+                                    type="text"
+                                    readOnly
+                                    value={netAmount}
+                                    className="text-right mt-1 bg-muted font-bold text-primary"
                                 />
                              </div>
                              <Button className="w-full">

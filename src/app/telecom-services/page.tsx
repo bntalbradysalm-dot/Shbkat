@@ -136,7 +136,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 <TabsContent value="packages" className="mt-4 space-y-4">
                      <Card>
                         <CardContent className="p-0 divide-y divide-border">
-                            <div className="flex justify-around items-start text-center p-3 text-sm">
+                             <div className="flex justify-around items-start text-center p-3 text-sm">
                                 <div className="flex-1 space-y-1">
                                     <p className="text-muted-foreground text-xs">رصيد الرقم</p>
                                     <p className="font-bold text-primary dark:text-primary-foreground text-base">411.00</p>

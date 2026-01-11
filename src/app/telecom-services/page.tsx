@@ -110,10 +110,11 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                         </div>
                          <div className="flex-1">
                             <p className="text-muted-foreground">نوع الرقم</p>
-                            <p className="font-bold mt-1">دفع مسبق | 4G</p>
+                            <p className="font-bold text-primary mt-1">دفع مسبق | 4G</p>
                         </div>
                          <div className="flex-1">
-                             <Button variant="outline" size="sm" className="font-bold border-yellow-400 text-yellow-600">فحص السلفة</Button>
+                             <p className="text-muted-foreground">فحص السلفة</p>
+                             <p className="font-bold text-primary mt-1">فحص</p>
                         </div>
                     </div>
                      <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-2 text-center font-semibold text-sm flex items-center justify-center gap-2">

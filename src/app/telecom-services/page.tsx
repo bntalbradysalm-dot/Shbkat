@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -339,3 +340,5 @@ export default function TelecomPage() {
     </div>
   );
 }
+
+    

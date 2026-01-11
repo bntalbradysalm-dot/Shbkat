@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Contact, Wallet, Phone, RefreshCw, Loader2, CheckCircle } from 'lucide-react';
+import { Heart, Contact, Wallet, Phone, RefreshCw, Loader2, CheckCircle, Info } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, doc, query, where, writeBatch, increment } from 'firebase/firestore';
@@ -35,7 +35,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Tabs,
@@ -85,6 +84,11 @@ const getCompanyFromNumber = (phone: string): Company | null => {
   return null;
 };
 
+type YemenMobileInfo = {
+    balance: string;
+    type: string;
+    loan: string;
+};
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -120,6 +124,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [finalBalance, setFinalBalance] = useState(0);
     const [isConfirming, setIsConfirming] = useState(false);
+    const [isQuerying, setIsQuerying] = useState(false);
+    const [phoneInfo, setPhoneInfo] = useState<YemenMobileInfo | null>(null);
+    const [queryError, setQueryError] = useState<string | null>(null);
 
     const { user } = useUser();
     const firestore = useFirestore();
@@ -139,6 +146,33 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         const finalAmount = numericAmount * (1 - taxDeduction);
         return finalAmount.toFixed(2);
     }, [amount]);
+    
+    const queryPhoneInfo = useCallback(async () => {
+        setIsQuerying(true);
+        setQueryError(null);
+        try {
+            const response = await fetch(`/api/echehanly?action=query&mobile=${phoneNumber}`);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'فشل الاستعلام عن بيانات الرقم.');
+            }
+            
+            setPhoneInfo({
+                balance: data.amounts?.amount1 || 'N/A',
+                type: data.type || 'N/A',
+                loan: data.isLoan === "1" ? 'عليه سلفة' : 'غير متسلف',
+            });
+        } catch (error: any) {
+            setQueryError(error.message);
+        } finally {
+            setIsQuerying(false);
+        }
+    }, [phoneNumber]);
+
+    useEffect(() => {
+        queryPhoneInfo();
+    }, [queryPhoneInfo]);
+
 
     const subscriptions = [
         { name: 'تفعيل خدمة الانترنت - شريحة (3G)', subscribedAt: '21:23:47 2022-07-07', expiresAt: '00:00:00 2037-01-01', canRenew: true },
@@ -257,7 +291,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 <TabsContent value="balance" className="mt-4">
                     <Card>
                         <CardContent className="p-4 space-y-4">
-                             <div className="text-right">
+                             <div className="text-right space-y-1">
                                 <Label htmlFor="amount" className="text-muted-foreground">ادخل المبلغ</Label>
                                 <Input
                                     id="amount"
@@ -269,7 +303,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     onChange={(e) => setAmount(e.target.value)}
                                 />
                              </div>
-                              <div className="text-right">
+                              <div className="text-right space-y-1">
                                 <Label htmlFor="netAmount" className="text-muted-foreground">صافي الرصيد بعد خصم الضريبة</Label>
                                 <Input
                                     id="netAmount"
@@ -307,24 +341,36 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                     </Card>
                 </TabsContent>
                 <TabsContent value="packages" className="mt-4 space-y-4">
-                     <Card>
+                    <Card>
                         <CardContent className="p-0 divide-y divide-border">
-                            <div className="flex justify-around items-start text-center p-3 text-sm">
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-muted-foreground text-xs">نوع الرقم</p>
-                                    <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفع مسبق</p>
+                            {isQuerying ? (
+                                <div className="p-3 text-center">
+                                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                 </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-muted-foreground text-xs">رصيد الرقم</p>
-                                    <p className="font-bold text-primary dark:text-primary-foreground text-base">411.00</p>
+                            ) : queryError ? (
+                                <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
+                                   <Info className="h-4 w-4" /> {queryError}
                                 </div>
-                            </div>
-                             <div className="p-3 text-center">
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-muted-foreground text-xs">حالة السلفة</p>
-                                    <p className="font-semibold text-primary dark:text-primary-foreground text-sm">غير متسلف</p>
-                                </div>
-                            </div>
+                            ) : phoneInfo ? (
+                                <>
+                                    <div className="flex justify-around items-start text-center p-3 text-sm">
+                                         <div className="flex-1 space-y-1">
+                                            <p className="text-muted-foreground text-xs">نوع الرقم</p>
+                                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">{phoneInfo.type}</p>
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-muted-foreground text-xs">رصيد الرقم</p>
+                                            <p className="font-bold text-primary dark:text-primary-foreground text-base">{phoneInfo.balance}</p>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 text-center">
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-muted-foreground text-xs">حالة السلفة</p>
+                                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">{phoneInfo.loan}</p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : null }
                         </CardContent>
                     </Card>
                     <Card>

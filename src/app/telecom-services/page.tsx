@@ -12,6 +12,7 @@ import {
   Smartphone,
   Contact,
   Wallet,
+  Phone,
 } from 'lucide-react';
 import Image from 'next/image';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -150,29 +151,36 @@ export default function TelecomPage() {
         <BalanceDisplay />
 
         <Card>
-            <CardContent className="p-6">
-                 <div className="relative group">
-                    <div className="absolute -left-px -top-px h-full w-14 flex items-center justify-center bg-muted rounded-r-xl border-r z-10">
-                        <Contact className="h-6 w-6 text-muted-foreground" />
+            <CardContent className="p-4">
+                <p className="text-right font-semibold mb-2">ادخل رقم الهاتف :</p>
+                <div className="flex items-center gap-2 rounded-xl bg-muted p-2 border">
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                        <Contact className="h-6 w-6 text-primary" />
+                    </Button>
+                    <div className="flex-1 relative">
+                        <Input
+                            id="phone-number"
+                            type="tel"
+                            placeholder="رقم الهاتف"
+                            className="h-12 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right pr-12 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            value={phoneNumber}
+                            onChange={(e) =>
+                                setPhoneNumber(e.target.value.replace(/\D/g, ''))
+                            }
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-lg text-muted-foreground font-semibold">+967</span>
                     </div>
-                    <Input
-                        id="phone-number"
-                        type="tel"
-                        placeholder="ادخل رقم الجوال"
-                        className="h-16 text-center text-xl font-bold tracking-wider rounded-xl pl-4 pr-16 peer"
-                        value={phoneNumber}
-                        onChange={(e) =>
-                        setPhoneNumber(e.target.value.replace(/\D/g, ''))
-                        }
-                    />
-                    <Label htmlFor="phone-number" className="absolute right-16 top-1 text-xs text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs">
-                        رقم الجوال
-                    </Label>
-                    </div>
+                    <div className="h-8 w-px bg-border"></div>
+                     <Button variant="ghost" size="icon" className="h-10 w-10">
+                        <Phone className="h-5 w-5 text-primary" />
+                    </Button>
+                     <Button variant="ghost" size="icon" className="h-10 w-10">
+                        <Heart className="h-5 w-5 text-primary" />
+                    </Button>
+                </div>
             </CardContent>
         </Card>
         
-
       </div>
     </div>
   );

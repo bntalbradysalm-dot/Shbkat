@@ -53,8 +53,8 @@ async function handleRequest(request: Request) {
       } else if (action === 'billoffer') {
         if (offerid) requestData.offerID = offerid; // Match user's example
         // Add other potential fields from user example if needed
-        // requestData.method = "1";
-        // requestData.packageId = 36;
+        requestData.method = "1";
+        // requestData.packageId = 36; // This seems specific, should it be dynamic?
       } else if (action === 'status') {
           if (transid) requestData.transid = transid;
       }

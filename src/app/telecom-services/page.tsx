@@ -139,7 +139,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                 />
                              </div>
                               <div className="text-right">
-                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي المبلغ بعد الضريبة (17.4%)</Label>
+                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي المبلغ بعد خصم الضريبة.. فقط</Label>
                                 <Input
                                     id="netAmount"
                                     type="text"

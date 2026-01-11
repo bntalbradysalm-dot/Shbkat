@@ -118,14 +118,14 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 <TabsContent value="balance" className="mt-4">
                     <Card>
                         <CardContent className="p-4 space-y-4">
-                             <div>
+                             <div className="text-right">
                                 <Label htmlFor="amount" className="text-muted-foreground">ادخل المبلغ</Label>
                                 <Input
                                     id="amount"
                                     type="number"
                                     inputMode='numeric'
                                     placeholder="0.00"
-                                    className="text-right"
+                                    className="text-right mt-1"
                                 />
                              </div>
                              <Button className="w-full">

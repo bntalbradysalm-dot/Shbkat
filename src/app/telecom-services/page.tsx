@@ -125,6 +125,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     type="number"
                                     inputMode='numeric'
                                     placeholder="0.00"
+                                    className="text-right"
                                 />
                              </div>
                              <Button className="w-full">
@@ -136,7 +137,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 <TabsContent value="packages" className="mt-4 space-y-4">
                      <Card>
                         <CardContent className="p-0 divide-y divide-border">
-                             <div className="flex justify-around items-start text-center p-3 text-sm">
+                            <div className="flex justify-around items-start text-center p-3 text-sm">
                                 <div className="flex-1 space-y-1">
                                     <p className="text-muted-foreground text-xs">نوع الرقم</p>
                                     <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفع مسبق</p>
@@ -146,7 +147,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     <p className="font-bold text-primary dark:text-primary-foreground text-base">411.00</p>
                                 </div>
                             </div>
-                            <div className="p-3 text-center">
+                             <div className="p-3 text-center">
                                 <div className="flex-1 space-y-1">
                                     <p className="text-muted-foreground text-xs">حالة السلفة</p>
                                     <p className="font-semibold text-primary dark:text-primary-foreground text-sm">غير متسلف</p>

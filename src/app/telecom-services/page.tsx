@@ -35,6 +35,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Tabs,
@@ -298,12 +299,12 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     type="number"
                                     inputMode='numeric'
                                     placeholder="0.00"
-                                    className="text-right mt-1"
+                                    className="text-right"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                 />
                              </div>
-                              <div className="text-right space-y-1">
+                             <div className="text-right space-y-1">
                                 <Label htmlFor="netAmount" className="text-muted-foreground">صافي الرصيد بعد خصم الضريبة</Label>
                                 <Input
                                     id="netAmount"

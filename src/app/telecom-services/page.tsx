@@ -11,8 +11,14 @@ import {
   HelpCircle,
   Smartphone,
   Contact,
+  Wallet,
 } from 'lucide-react';
 import Image from 'next/image';
+import { SimpleHeader } from '@/components/layout/simple-header';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Company = {
   name: string;
@@ -20,6 +26,10 @@ type Company = {
   prefixes: string[];
   length: number;
   href: string;
+};
+
+type UserProfile = {
+    balance?: number;
 };
 
 const companies: Company[] = [
@@ -83,6 +93,34 @@ const getCompanyFromNumber = (phone: string): Company | null => {
 };
 
 
+const BalanceDisplay = () => {
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(
+        () => (user ? doc(firestore, 'users', user.uid) : null),
+        [firestore, user]
+    );
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+    const isLoading = isUserLoading || isProfileLoading;
+
+    return (
+        <Card className="shadow-lg">
+            <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
+                    {isLoading ? (
+                        <Skeleton className="h-8 w-32 mt-2" />
+                    ) : (
+                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                    )}
+                </div>
+                <Wallet className="h-8 w-8 text-primary" />
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function TelecomPage() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -105,59 +143,42 @@ export default function TelecomPage() {
   return (
     <div
       className="flex flex-col h-full bg-background"
-      style={{
-        backgroundImage: 'url("https://i.postimg.cc/zXN6p33v/pattern-bg.png")',
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-      }}
     >
-      <header className="flex items-center p-4 bg-transparent text-foreground">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
-            onClick={() => router.push('/favorites')}
-          >
-            <Heart className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Button>
-        </div>
-        <h1 className="font-bold text-lg text-center flex-1">رصيد وباقات</h1>
-        <Button
-          onClick={() => router.back()}
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
-      </header>
+      <SimpleHeader title="رصيد وباقات" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <div className="relative group">
-          <div className="absolute -left-px -top-px h-full w-14 flex items-center justify-center bg-muted rounded-r-xl border-r z-10">
-            <Contact className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <Input
-            id="phone-number"
-            type="tel"
-            placeholder="ادخل رقم الجوال"
-            className="h-16 text-center text-xl font-bold tracking-wider rounded-xl pl-4 pr-16 peer"
-            value={phoneNumber}
-            onChange={(e) =>
-              setPhoneNumber(e.target.value.replace(/\D/g, ''))
-            }
-          />
-           <Label htmlFor="phone-number" className="absolute right-16 top-1 text-xs text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs">
-            رقم الجوال
-          </Label>
+        
+        <BalanceDisplay />
+
+        <Card>
+            <CardContent className="p-6">
+                 <div className="relative group">
+                    <div className="absolute -left-px -top-px h-full w-14 flex items-center justify-center bg-muted rounded-r-xl border-r z-10">
+                        <Contact className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <Input
+                        id="phone-number"
+                        type="tel"
+                        placeholder="ادخل رقم الجوال"
+                        className="h-16 text-center text-xl font-bold tracking-wider rounded-xl pl-4 pr-16 peer"
+                        value={phoneNumber}
+                        onChange={(e) =>
+                        setPhoneNumber(e.target.value.replace(/\D/g, ''))
+                        }
+                    />
+                    <Label htmlFor="phone-number" className="absolute right-16 top-1 text-xs text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:-translate-y-0 peer-focus:text-xs">
+                        رقم الجوال
+                    </Label>
+                    </div>
+            </CardContent>
+        </Card>
+        
+        <div className="pt-4">
+            <Button className="w-full h-12" disabled={!identifiedCompany}>
+                التالي
+                <ChevronRight className="mr-2 h-5 w-5" />
+            </Button>
         </div>
+
       </div>
     </div>
   );

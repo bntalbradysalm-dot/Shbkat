@@ -1,7 +1,6 @@
-
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,10 +11,11 @@ import {
   Phone,
   RefreshCw,
   Info,
+  Star,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -24,6 +24,22 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+
+type Transaction = {
+    id: string;
+    transactionType: string;
+    recipientPhoneNumber?: string;
+};
 
 type Company = {
   name: string;
@@ -97,7 +113,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         <div className="space-y-4 animate-in fade-in-0 duration-500">
              <Card>
                 <CardContent className="p-0">
-                    <div className="flex justify-around items-start text-center p-3 text-sm">
+                     <div className="flex justify-around items-start text-center p-3 text-sm">
                         <div className="flex-1 space-y-1">
                             <p className="text-muted-foreground text-xs">رصيد الرقم</p>
                             <p className="font-bold text-primary dark:text-primary-foreground text-base">411.00</p>
@@ -105,10 +121,6 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                          <div className="flex-1 space-y-1">
                             <p className="text-muted-foreground text-xs">نوع الرقم</p>
                             <p className="font-semibold text-primary dark:text-primary-foreground text-sm">دفع مسبق</p>
-                        </div>
-                         <div className="flex-1 space-y-1">
-                             <p className="text-muted-foreground text-xs">فحص السلفة</p>
-                             <p className="font-bold text-primary mt-1">غير متسلف</p>
                         </div>
                     </div>
                 </CardContent>
@@ -187,15 +199,41 @@ export default function TelecomPage() {
   const [identifiedCompany, setIdentifiedCompany] = React.useState<Company | null>(null);
   const [isUiVisible, setIsUiVisible] = React.useState(true);
   const [isChecking, setIsChecking] = React.useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const handleCheckNumber = () => {
-    const company = getCompanyFromNumber(phoneNumber);
-    setIdentifiedCompany(company);
-    if(company) {
-        setIsUiVisible(true);
-    }
-  }
+  const transactionsQuery = useMemoFirebase(
+    () => user ? query(
+        collection(firestore, `users/${user.uid}/transactions`),
+        where('transactionType', 'in', ['سداد يمن موبايل', 'سداد YOU', 'سداد سبأفون'])
+    ) : null,
+    [user, firestore]
+  );
+  const { data: transactions } = useCollection<Transaction>(transactionsQuery);
 
+  const frequentNumbers = useMemo(() => {
+    if (!transactions) return [];
+
+    const counts: { [key: string]: number } = {};
+    transactions.forEach(tx => {
+        if(tx.recipientPhoneNumber) {
+            counts[tx.recipientPhoneNumber] = (counts[tx.recipientPhoneNumber] || 0) + 1;
+        }
+    });
+
+    return Object.entries(counts)
+        .sort(([, a], [, b]) => b - a)
+        .map(([phone]) => phone)
+        .slice(0, 5); // Get top 5
+  }, [transactions]);
+
+  const handleSelectFavorite = (phone: string) => {
+    setPhoneNumber(phone);
+    setIsFavoritesOpen(false);
+  };
+  
   React.useEffect(() => {
     // Reset when phone number is cleared
     if (phoneNumber.length === 0) {
@@ -233,7 +271,7 @@ export default function TelecomPage() {
                             id="phone-number"
                             type="tel"
                             placeholder="رقم الهاتف"
-                            className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0 pr-2"
+                            className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0"
                             value={phoneNumber}
                             onChange={(e) =>
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))
@@ -244,9 +282,35 @@ export default function TelecomPage() {
                      <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Phone className="h-4 w-4 text-primary" />
                     </Button>
-                     <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Heart className="h-4 w-4 text-primary" />
-                    </Button>
+                     <Dialog open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9">
+                                <Heart className="h-4 w-4 text-primary" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>الأرقام الأكثر تسديداً</DialogTitle>
+                                <DialogDescription>
+                                    اختر رقماً من القائمة لتعبئته تلقائياً.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                {frequentNumbers.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {frequentNumbers.map(phone => (
+                                            <div key={phone} onClick={() => handleSelectFavorite(phone)} className="p-3 rounded-lg bg-muted hover:bg-primary/10 cursor-pointer flex justify-between items-center">
+                                                <span className="font-mono font-semibold">{phone}</span>
+                                                <Star className="h-4 w-4 text-yellow-500" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-muted-foreground">لا توجد أرقام متكررة في سجل عملياتك.</p>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </CardContent>
         </Card>

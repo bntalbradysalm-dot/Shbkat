@@ -1,8 +1,8 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://apis.baitynet.net/api/partner/yem'; // Unified base URL
-const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a'; // Unified API Key
+const API_BASE_URL = 'https://apis.okamel.org/api/partner/yem'; // Unified base URL
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2'; // Unified API Key
 
 async function handleRequest(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -90,7 +90,7 @@ async function handleRequest(request: Request) {
         );
     }
     
-    // BaityNet returns balance directly inside a `balance` property.
+    // Okamel returns balance directly inside a `balance` property.
     // The old logic was checking for `data.balance` and creating an `amounts` object.
     // This is updated to reflect the new expected structure.
     if (action === 'query' && data.balance) {

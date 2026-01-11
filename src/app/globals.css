@@ -65,12 +65,12 @@
   }
 
   [data-theme="yemen-mobile"] {
-    --primary: 0 72% 51%;
+    --primary: 340 72% 51%;
     --primary-foreground: 0 0% 100%;
   }
 
   .dark [data-theme="yemen-mobile"] {
-    --primary: 0 72% 51%;
+    --primary: 340 72% 51%;
     --primary-foreground: 0 0% 100%;
   }
 }

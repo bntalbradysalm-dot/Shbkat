@@ -151,7 +151,7 @@ export default function TelecomPage() {
         <BalanceDisplay />
 
         <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
                 <p className="text-right font-semibold mb-2 text-sm">ادخل رقم الهاتف :</p>
                 <div className="flex items-center gap-2 rounded-xl bg-muted p-1 border">
                     <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -162,13 +162,12 @@ export default function TelecomPage() {
                             id="phone-number"
                             type="tel"
                             placeholder="رقم الهاتف"
-                            className="h-10 text-base font-bold tracking-wider rounded-lg border-0 bg-transparent text-right pr-12 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-10 text-base font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0"
                             value={phoneNumber}
                             onChange={(e) =>
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))
                             }
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-base text-muted-foreground font-semibold">+967</span>
                     </div>
                     <div className="h-6 w-px bg-border"></div>
                      <Button variant="ghost" size="icon" className="h-9 w-9">

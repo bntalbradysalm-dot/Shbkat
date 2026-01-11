@@ -22,14 +22,12 @@ async function handleRequest(request: Request) {
       endpointPath = '/bill-balance';
       break;
     case 'bill':
-       // Assuming the action for payment is 'bill-pay' based on the new structure
       endpointPath = '/bill-pay';
       break;
     case 'billoffer':
       endpointPath = '/bill-offer';
       break;
     case 'status':
-       // Assuming status check endpoint
        endpointPath = '/bill-status';
        break;
     default:
@@ -41,34 +39,39 @@ async function handleRequest(request: Request) {
 
   const endpoint = `${API_BASE_URL}${endpointPath}`;
   
-  let body: any = {};
-  if (request.method === 'POST') {
-    try {
-        // Since the original request might be GET, we parse params and build a body for POST
-        const mobile = searchParams.get('mobile');
-        const amount = searchParams.get('amount');
-        const offerid = searchParams.get('offerid');
-        const transid = searchParams.get('transid');
+  let requestData: any = {};
+  try {
+      const mobile = searchParams.get('mobile');
+      const amount = searchParams.get('amount');
+      const offerid = searchParams.get('offerid');
+      const transid = searchParams.get('transid');
 
-        if (mobile) body.mobile = mobile;
+      if (mobile) requestData.mobile = mobile;
 
-        if(action === 'bill') {
-          if (amount) body.amount = amount;
-        } else if (action === 'billoffer') {
-          if (offerid) body.offerid = offerid;
-        } else if (action === 'status') {
-            if (transid) body.transid = transid;
-        }
+      if(action === 'bill') {
+        if (amount) requestData.amount = amount;
+      } else if (action === 'billoffer') {
+        if (offerid) requestData.offerID = offerid; // Match user's example
+        // Add other potential fields from user example if needed
+        // requestData.method = "1";
+        // requestData.packageId = 36;
+      } else if (action === 'status') {
+          if (transid) requestData.transid = transid;
+      }
 
-    } catch (e) {
-      console.error("Could not parse request body", e);
-    }
+  } catch (e) {
+    console.error("Could not parse request query params", e);
   }
+
+  // Wrap the collected data into the required {"data": {...}} structure
+  const body = {
+    data: requestData
+  };
 
 
   try {
     const fetchOptions: RequestInit = {
-      method: 'POST', // The new API likely uses POST for all actions
+      method: 'POST', 
       headers: { 
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
@@ -79,7 +82,6 @@ async function handleRequest(request: Request) {
     const response = await fetch(endpoint, fetchOptions);
     const data = await response.json();
 
-    // Assuming the new API returns non-200 status for errors
     if (!response.ok) {
         const errorMessage = data?.message || data?.resultDesc || 'Failed to process request with the provider.';
         return new NextResponse(
@@ -88,8 +90,6 @@ async function handleRequest(request: Request) {
         );
     }
     
-    // Adapt response for the frontend if necessary
-    // Example: Old API had `amounts.amount1`, new might have `balance`
     if (action === 'query' && data.balance) {
         data.amounts = { amount1: data.balance };
     }
@@ -105,7 +105,6 @@ async function handleRequest(request: Request) {
   }
 }
 
-// Accept both GET and POST, but internally always POST to the new API
 export async function GET(request: Request) {
   return handleRequest(request);
 }

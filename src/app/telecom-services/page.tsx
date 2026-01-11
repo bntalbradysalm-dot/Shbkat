@@ -100,7 +100,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
 
 
     return (
-        <div data-theme="yemen-mobile" className="space-y-4 animate-in fade-in-0 duration-500">
+        <div className="space-y-4 animate-in fade-in-0 duration-500">
              <Card>
                 <CardContent className="p-0">
                     <div className="flex justify-around items-center text-center p-3 text-sm">

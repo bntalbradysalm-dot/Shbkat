@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -139,7 +140,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                 />
                              </div>
                               <div className="text-right">
-                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي المبلغ بعد خصم الضريبة.. فقط</Label>
+                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي الرصيد بعد خصم الضريبة</Label>
                                 <Input
                                     id="netAmount"
                                     type="text"
@@ -339,7 +340,7 @@ export default function TelecomPage() {
                                 <Heart className="h-4 w-4 text-primary" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:rounded-xl">
                             <DialogHeader>
                                 <DialogTitle>الارقام المفضلة</DialogTitle>
                                 <DialogDescription>

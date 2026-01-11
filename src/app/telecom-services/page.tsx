@@ -151,6 +151,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const queryPhoneInfo = useCallback(async () => {
         setIsQuerying(true);
         setQueryError(null);
+        setPhoneInfo(null);
         try {
             const response = await fetch(`/api/echehanly?action=query&mobile=${phoneNumber}`);
             const data = await response.json();
@@ -343,9 +344,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 </TabsContent>
                 <TabsContent value="packages" className="mt-4 space-y-4">
                     <Card>
-                        <CardContent className="p-0 divide-y divide-border">
+                        <CardContent className="p-0">
                             {isQuerying ? (
-                                <div className="p-3 text-center">
+                                <div className="p-4 text-center">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                 </div>
                             ) : queryError ? (
@@ -353,24 +354,20 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                    <Info className="h-4 w-4" /> {queryError}
                                 </div>
                             ) : phoneInfo ? (
-                                <>
-                                    <div className="flex justify-around items-start text-center p-3 text-sm">
-                                         <div className="flex-1 space-y-1">
-                                            <p className="text-muted-foreground text-xs">نوع الرقم</p>
-                                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">{phoneInfo.type}</p>
-                                        </div>
-                                        <div className="flex-1 space-y-1">
-                                            <p className="text-muted-foreground text-xs">رصيد الرقم</p>
-                                            <p className="font-bold text-primary dark:text-primary-foreground text-base">{phoneInfo.balance}</p>
-                                        </div>
+                                <div className="divide-y divide-border">
+                                    <div className="flex justify-between items-center p-3 text-sm">
+                                        <span className="text-muted-foreground">رصيد الرقم</span>
+                                        <span className="font-bold text-primary dark:text-primary-foreground">{phoneInfo.balance}</span>
                                     </div>
-                                    <div className="p-3 text-center">
-                                        <div className="flex-1 space-y-1">
-                                            <p className="text-muted-foreground text-xs">حالة السلفة</p>
-                                            <p className="font-semibold text-primary dark:text-primary-foreground text-sm">{phoneInfo.loan}</p>
-                                        </div>
+                                    <div className="flex justify-between items-center p-3 text-sm">
+                                        <span className="text-muted-foreground">نوع الرقم</span>
+                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.type}</span>
                                     </div>
-                                </>
+                                    <div className="flex justify-between items-center p-3 text-sm">
+                                        <span className="text-muted-foreground">حالة السلفة</span>
+                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.loan}</span>
+                                    </div>
+                                </div>
                             ) : null }
                         </CardContent>
                     </Card>
@@ -579,3 +576,5 @@ export default function TelecomPage() {
     </>
   );
 }
+
+    

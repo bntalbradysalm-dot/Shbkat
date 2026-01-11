@@ -152,30 +152,30 @@ export default function TelecomPage() {
 
         <Card>
             <CardContent className="p-4">
-                <p className="text-right font-semibold mb-2">ادخل رقم الهاتف :</p>
-                <div className="flex items-center gap-2 rounded-xl bg-muted p-2 border">
-                    <Button variant="ghost" size="icon" className="h-10 w-10">
-                        <Contact className="h-6 w-6 text-primary" />
+                <p className="text-right font-semibold mb-2 text-sm">ادخل رقم الهاتف :</p>
+                <div className="flex items-center gap-2 rounded-xl bg-muted p-1 border">
+                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Contact className="h-5 w-5 text-primary" />
                     </Button>
                     <div className="flex-1 relative">
                         <Input
                             id="phone-number"
                             type="tel"
                             placeholder="رقم الهاتف"
-                            className="h-12 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right pr-12 focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-10 text-base font-bold tracking-wider rounded-lg border-0 bg-transparent text-right pr-12 focus-visible:ring-0 focus-visible:ring-offset-0"
                             value={phoneNumber}
                             onChange={(e) =>
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))
                             }
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-lg text-muted-foreground font-semibold">+967</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-base text-muted-foreground font-semibold">+967</span>
                     </div>
-                    <div className="h-8 w-px bg-border"></div>
-                     <Button variant="ghost" size="icon" className="h-10 w-10">
-                        <Phone className="h-5 w-5 text-primary" />
+                    <div className="h-6 w-px bg-border"></div>
+                     <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Phone className="h-4 w-4 text-primary" />
                     </Button>
-                     <Button variant="ghost" size="icon" className="h-10 w-10">
-                        <Heart className="h-5 w-5 text-primary" />
+                     <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Heart className="h-4 w-4 text-primary" />
                     </Button>
                 </div>
             </CardContent>

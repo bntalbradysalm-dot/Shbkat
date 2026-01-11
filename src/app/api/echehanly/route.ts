@@ -1,8 +1,8 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem';
-const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+const API_BASE_URL = 'https://apis.baitynet.net/api/partner/yem'; // Updated from okamel.org
+const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a'; // Unified API Key
 
 async function handleRequest(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,10 +51,10 @@ async function handleRequest(request: Request) {
       if(action === 'bill') {
         if (amount) requestData.amount = amount;
       } else if (action === 'billoffer') {
-        if (offerid) requestData.offerID = offerid; // Match user's example
-        // Add other potential fields from user example if needed
+        if (offerid) requestData.offerID = offerid;
         requestData.method = "1";
-        // requestData.packageId = 36; // This seems specific, should it be dynamic?
+        // This seems specific, should be handled by the client if needed
+        // requestData.packageId = 36; 
       } else if (action === 'status') {
           if (transid) requestData.transid = transid;
       }

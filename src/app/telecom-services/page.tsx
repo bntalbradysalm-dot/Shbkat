@@ -1,9 +1,9 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Heart, Contact, Wallet, Phone, RefreshCw } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -116,6 +116,24 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                     <TabsTrigger value="packages">الباقات</TabsTrigger>
                 </TabsList>
                 <TabsContent value="balance" className="mt-4">
+                    <Card>
+                        <CardContent className="p-4 space-y-4">
+                             <div>
+                                <Label htmlFor="amount" className="text-muted-foreground">ادخل المبلغ</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    inputMode='numeric'
+                                    placeholder="0.00"
+                                />
+                             </div>
+                             <Button className="w-full">
+                                تسديد
+                             </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="packages" className="mt-4 space-y-4">
                      <Card>
                         <CardContent className="p-0 divide-y divide-border">
                             <div className="flex justify-around items-start text-center p-3 text-sm">
@@ -136,8 +154,6 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                             </div>
                         </CardContent>
                     </Card>
-                </TabsContent>
-                <TabsContent value="packages" className="mt-4 space-y-4">
                     <Card>
                         <CardContent className="p-0">
                             <div className="bg-muted text-foreground text-center font-bold p-2 text-sm">
@@ -340,5 +356,3 @@ export default function TelecomPage() {
     </div>
   );
 }
-
-    

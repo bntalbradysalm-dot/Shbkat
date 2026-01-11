@@ -1,6 +1,6 @@
 'use client';
 
-import React, 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -96,18 +96,18 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         <div className="space-y-4 animate-in fade-in-0 duration-500">
              <Card>
                 <CardContent className="p-0">
-                    <div className="flex justify-around items-center text-center p-3 text-sm">
-                        <div className="flex-1">
-                            <p className="text-muted-foreground">رصيد الرقم</p>
-                            <p className="font-bold text-primary mt-1">411.00</p>
+                    <div className="flex justify-around items-start text-center p-3 text-sm">
+                        <div className="flex-1 space-y-1">
+                            <p className="text-muted-foreground text-xs">رصيد الرقم</p>
+                            <p className="font-bold text-primary dark:text-primary-foreground text-base">411.00</p>
                         </div>
-                         <div className="flex-1">
-                            <p className="text-muted-foreground">نوع الرقم</p>
-                            <p className="font-bold text-primary mt-1">دفع مسبق | 4G</p>
+                         <div className="flex-1 space-y-1">
+                            <p className="text-muted-foreground text-xs">نوع الرقم</p>
+                            <p className="font-bold text-primary dark:text-primary-foreground text-base">دفع مسبق | 4G</p>
                         </div>
-                         <div className="flex-1">
-                             <p className="text-muted-foreground">فحص السلفة</p>
-                             <p className="font-bold text-primary mt-1">غير مستلف</p>
+                         <div className="flex-1 space-y-1">
+                             <p className="text-muted-foreground text-xs">فحص السلفة</p>
+                              <p className="font-bold text-primary dark:text-primary-foreground text-base">غير مستلف</p>
                         </div>
                     </div>
                 </CardContent>
@@ -200,6 +200,14 @@ export default function TelecomPage() {
     if (phoneNumber.length === 0) {
       setIsUiVisible(false);
       setIdentifiedCompany(null);
+    } else {
+        const company = getCompanyFromNumber(phoneNumber);
+        setIdentifiedCompany(company);
+        if(company) {
+            setIsUiVisible(true);
+        } else {
+            setIsUiVisible(false);
+        }
     }
   }, [phoneNumber]);
 
@@ -213,8 +221,8 @@ export default function TelecomPage() {
         <BalanceDisplay />
 
         <Card>
-            <CardContent className="p-3 space-y-2">
-                <p className="text-right font-semibold text-sm">ادخل رقم الهاتف :</p>
+            <CardContent className="p-3 space-y-1">
+                <p className="text-right font-semibold text-xs text-muted-foreground px-1">ادخل رقم الهاتف :</p>
                 <div className="flex items-center gap-2 rounded-xl bg-muted p-1 border">
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Contact className="h-5 w-5 text-primary" />

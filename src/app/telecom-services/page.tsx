@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -195,9 +196,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
 };
 
 export default function TelecomPage() {
-  const [phoneNumber, setPhoneNumber] = React.useState('777123456');
+  const [phoneNumber, setPhoneNumber] = React.useState('');
   const [identifiedCompany, setIdentifiedCompany] = React.useState<Company | null>(null);
-  const [isUiVisible, setIsUiVisible] = React.useState(true);
+  const [isUiVisible, setIsUiVisible] = React.useState(false);
   const [isChecking, setIsChecking] = React.useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   
@@ -271,7 +272,7 @@ export default function TelecomPage() {
                             id="phone-number"
                             type="tel"
                             placeholder="رقم الهاتف"
-                            className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-10 text-lg font-bold tracking-wider rounded-lg border-0 bg-transparent text-right focus-visible:ring-0 focus-visible:ring-offset-0 pr-1"
                             value={phoneNumber}
                             onChange={(e) =>
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))
@@ -290,9 +291,9 @@ export default function TelecomPage() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>الأرقام الأكثر تسديداً</DialogTitle>
+                                <DialogTitle>الارقام المفضلة</DialogTitle>
                                 <DialogDescription>
-                                    اختر رقماً من القائمة لتعبئته تلقائياً.
+                                    يتم اضافة الارقام الاكثر تسديد تلقائياً
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="py-4">

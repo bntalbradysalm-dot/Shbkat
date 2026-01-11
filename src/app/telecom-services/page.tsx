@@ -1,22 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
-  ChevronLeft,
   Heart,
   HelpCircle,
-  Smartphone,
   Contact,
   Wallet,
   Phone,
   RefreshCw,
   Info
 } from 'lucide-react';
-import Image from 'next/image';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,8 +23,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useToast } from '@/hooks/use-toast';
-import { Toaster } from '@/components/ui/toaster';
 
 type Company = {
   name: string;
@@ -117,10 +110,6 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                              <p className="font-bold text-primary mt-1">غير مستلف</p>
                         </div>
                     </div>
-                     <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-2 text-center font-semibold text-sm flex items-center justify-center gap-2">
-                        <Info className="h-4 w-4" />
-                        <span>غير متسلف</span>
-                    </div>
                 </CardContent>
             </Card>
 
@@ -193,12 +182,25 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
 };
 
 export default function TelecomPage() {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [identifiedCompany, setIdentifiedCompany] = useState<Company | null>(null);
+  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [identifiedCompany, setIdentifiedCompany] = React.useState<Company | null>(null);
+  const [isUiVisible, setIsUiVisible] = React.useState(false);
+  const [isChecking, setIsChecking] = React.useState(false);
 
-  useEffect(() => {
+  const handleCheckNumber = () => {
     const company = getCompanyFromNumber(phoneNumber);
     setIdentifiedCompany(company);
+    if(company) {
+        setIsUiVisible(true);
+    }
+  }
+
+  React.useEffect(() => {
+    // Reset when phone number is cleared
+    if (phoneNumber.length === 0) {
+      setIsUiVisible(false);
+      setIdentifiedCompany(null);
+    }
   }, [phoneNumber]);
 
   return (
@@ -228,15 +230,6 @@ export default function TelecomPage() {
                                 setPhoneNumber(e.target.value.replace(/\D/g, ''))
                             }
                         />
-                         {identifiedCompany && (
-                            <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-2 animate-in fade-in-0">
-                                {typeof identifiedCompany.icon === 'string' ? (
-                                    <Image src={identifiedCompany.icon} alt={identifiedCompany.name} width={20} height={20} className="rounded-md" />
-                                ) : (
-                                    <identifiedCompany.icon className="h-5 w-5 text-muted-foreground" />
-                                )}
-                            </div>
-                        )}
                     </div>
                     <div className="h-6 w-px bg-border"></div>
                      <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -249,10 +242,9 @@ export default function TelecomPage() {
             </CardContent>
         </Card>
         
-        {identifiedCompany?.name === 'يمن موبايل' && <YemenMobileUI phoneNumber={phoneNumber} />}
+        {isUiVisible && identifiedCompany?.name === 'يمن موبايل' && <YemenMobileUI phoneNumber={phoneNumber} />}
         
       </div>
-      <Toaster/>
     </div>
   );
 }

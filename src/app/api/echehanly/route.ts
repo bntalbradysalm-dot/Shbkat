@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://apis.baitynet.net/api/partner/yem'; // Updated from okamel.org
+const API_BASE_URL = 'https://apis.baitynet.net/api/partner/yem'; // Unified base URL
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a'; // Unified API Key
 
 async function handleRequest(request: Request) {
@@ -90,8 +90,12 @@ async function handleRequest(request: Request) {
         );
     }
     
+    // BaityNet returns balance directly inside a `balance` property.
+    // The old logic was checking for `data.balance` and creating an `amounts` object.
+    // This is updated to reflect the new expected structure.
     if (action === 'query' && data.balance) {
-        data.amounts = { amount1: data.balance };
+        // Just return the data as is, the client will handle it.
+        // No need to create a custom `amounts` object.
     }
 
     return NextResponse.json(data);

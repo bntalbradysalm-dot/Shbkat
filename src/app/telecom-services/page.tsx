@@ -1,14 +1,13 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Contact, Wallet, Phone, RefreshCw } from 'lucide-react';
+import { Heart, Contact, Wallet, Phone, RefreshCw, Loader2, CheckCircle } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { collection, doc, query, where, writeBatch, increment } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -33,6 +32,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { useRouter } from 'next/navigation';
 
 
 type Transaction = {
@@ -58,6 +60,8 @@ const companyMap: Record<string, Company> = {
 
 type UserProfile = {
     balance?: number;
+    displayName?: string;
+    phoneNumber?: string;
 };
 
 const getCompanyFromNumber = (phone: string): Company | null => {
@@ -101,6 +105,21 @@ const BalanceDisplay = () => {
 
 const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const [amount, setAmount] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [finalBalance, setFinalBalance] = useState(0);
+
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const userDocRef = useMemoFirebase(
+        () => (user ? doc(firestore, 'users', user.uid) : null),
+        [firestore, user]
+    );
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
     const netAmount = useMemo(() => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) return '0.00';
@@ -115,6 +134,104 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         { name: 'Internet', subscribedAt: '19:35:51 2023-07-19', expiresAt: '00:00:00 2037-01-01', canRenew: false },
         { name: 'باقة مزايا فورجي الشهرية', subscribedAt: '19:36:37 2025-12-17', expiresAt: '23:59:59 2026-01-15', canRenew: true },
     ];
+    
+    const handlePayment = async () => {
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        toast({
+          variant: 'destructive',
+          title: 'خطأ',
+          description: 'الرجاء إدخال مبلغ صالح للتسديد.'
+        });
+        return;
+      }
+    
+      if (!user || !userProfile || !firestore || !userDocRef) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن التحقق من المستخدم. الرجاء إعادة المحاولة.' });
+        return;
+      }
+    
+      if ((userProfile.balance ?? 0) < numericAmount) {
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
+        return;
+      }
+    
+      setIsProcessing(true);
+    
+      try {
+        // Step 1: Call the external API
+        const apiResponse = await fetch(`/api/echehanly?action=bill&mobile=${phoneNumber}&amount=${numericAmount}`);
+        const apiData = await apiResponse.json();
+    
+        if (!apiResponse.ok) {
+          throw new Error(apiData.message || 'فشلت عملية السداد لدى المزود.');
+        }
+    
+        // Step 2: On successful API call, perform Firestore operations
+        const batch = writeBatch(firestore);
+        
+        // Deduct balance
+        batch.update(userDocRef, {
+          balance: increment(-numericAmount)
+        });
+    
+        // Create transaction record
+        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        batch.set(transactionRef, {
+          userId: user.uid,
+          transactionDate: new Date().toISOString(),
+          amount: numericAmount,
+          transactionType: 'سداد يمن موبايل',
+          recipientPhoneNumber: phoneNumber,
+          notes: `سداد فاتورة إلى رقم: ${phoneNumber}`
+        });
+
+        // Commit all changes
+        await batch.commit();
+
+        setFinalBalance((userProfile.balance ?? 0) - numericAmount);
+        setShowSuccess(true);
+    
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'فشلت عملية السداد',
+          description: error.message,
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    
+    if (showSuccess) {
+      return (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <Card className="w-full max-w-sm text-center shadow-2xl">
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="bg-green-100 p-4 rounded-full">
+                            <CheckCircle className="h-16 w-16 text-green-600" />
+                        </div>
+                        <h2 className="text-xl font-bold">تم السداد بنجاح</h2>
+                        <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
+                           <div className="flex justify-between">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="font-semibold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</span>
+                            </div>
+                           <div className="flex justify-between">
+                                <span className="text-muted-foreground">رصيدك المتبقي:</span>
+                                <span className="font-semibold">{finalBalance.toLocaleString('en-US')} ريال</span>
+                            </div>
+                        </div>
+                        <div className="w-full pt-4">
+                            <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      );
+    }
 
 
     return (
@@ -149,8 +266,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     className="text-right mt-1 bg-muted font-bold text-primary"
                                 />
                              </div>
-                             <Button className="w-full">
-                                تسديد
+                             <Button className="w-full" onClick={handlePayment} disabled={isProcessing}>
+                                {isProcessing ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : null}
+                                {isProcessing ? 'جاري التسديد...' : 'تسديد'}
                              </Button>
                         </CardContent>
                     </Card>
@@ -303,6 +421,7 @@ export default function TelecomPage() {
   }, [phoneNumber]);
 
   return (
+    <>
     <div
       className="flex flex-col h-full bg-background"
     >
@@ -344,7 +463,7 @@ export default function TelecomPage() {
                             <DialogHeader>
                                 <DialogTitle>الارقام المفضلة</DialogTitle>
                                 <DialogDescription>
-                                    يتم اضافة الارقام الاكثر تسديد تلقائياً
+                                يتم اضافة الارقام الاكثر تسديد تلقائياً
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="py-4">
@@ -376,5 +495,7 @@ export default function TelecomPage() {
         
       </div>
     </div>
+    <Toaster />
+    </>
   );
 }

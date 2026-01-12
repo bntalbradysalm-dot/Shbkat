@@ -15,12 +15,12 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'pay-bill':
-        endpoint = '/bill-balance'; // As per user instruction
-        apiRequestBody = { data: payload };
+        endpoint = '/bill'; // Updated endpoint for paying bills
+        apiRequestBody = { data: payload }; // Send payload directly in data object
         break;
       
       case 'get-balance':
-        endpoint = '/bill-balance'; // As per user instruction
+        endpoint = '/bill-balance'; // Endpoint for getting balance
         apiRequestBody = { data: { mobile: payload.mobile } };
         break;
 

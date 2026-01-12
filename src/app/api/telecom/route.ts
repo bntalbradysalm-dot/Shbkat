@@ -11,23 +11,28 @@ export async function POST(request: Request) {
     const { action, ...payload } = body;
 
     let endpoint = '';
-    let apiRequestBody: any = { data: payload };
+    let apiRequestBody: any;
 
     switch (action) {
       case 'pay-bill':
         endpoint = '/api/partner-yem/bill';
+        apiRequestBody = { data: payload };
         break;
       case 'get-balance':
         endpoint = '/api/partner-yem/bill-balance';
-        apiRequestBody = { // a different structure for get-balance
-            mobile: payload.mobile
-        }
+        apiRequestBody = {
+            data: {
+                mobile: payload.mobile
+            }
+        };
         break;
       case 'get-offers':
         endpoint = '/api/partner-yem/bill-offer';
-        apiRequestBody = { // and another for offers
-            mobile: payload.mobile
-        }
+        apiRequestBody = {
+             data: {
+                mobile: payload.mobile
+            }
+        };
         break;
       default:
         return new NextResponse(JSON.stringify({ message: 'Invalid action provided.' }), { status: 400 });

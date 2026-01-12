@@ -183,7 +183,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
             });
 
         } catch (error: any) {
-            setQueryError(error.message || 'حدث خطأ أثناء الاستعلام.');
+            setQueryError(error.message || 'لم تظهر السلفة ولا بيانات الرقم');
         } finally {
             setIsQuerying(false);
         }
@@ -379,7 +379,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                 </div>
                             ) : queryError ? (
                                 <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                   <Info className="h-4 w-4" /> {queryError}
+                                   <Info className="h-4 w-4" /> لم تظهر السلفة ولا بيانات الرقم
                                 </div>
                             ) : (
                                 <div className="divide-y divide-border">

@@ -15,12 +15,14 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'pay-bill':
-        endpoint = '/bill'; // Updated endpoint for paying bills
-        apiRequestBody = { data: payload }; // Send payload directly in data object
+        endpoint = '/bill-balance';
+        // The user specified the body should contain both mobile and amount
+        apiRequestBody = { data: { mobile: payload.mobile, amount: payload.amount } };
         break;
       
       case 'get-balance':
-        endpoint = '/bill-balance'; // Endpoint for getting balance
+        endpoint = '/bill-balance'; // This endpoint is used for both getting balance and paying
+        // For getting balance, only mobile number is needed
         apiRequestBody = { data: { mobile: payload.mobile } };
         break;
 

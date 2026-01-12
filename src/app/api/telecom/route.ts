@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://api.baitynet.com';
+const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem';
 const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
 
 export async function POST(request: Request) {
@@ -15,13 +15,15 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'pay-bill':
-        endpoint = '/partner-yem/bill';
+        endpoint = '/bill-balance'; // As per user instruction
         apiRequestBody = { data: payload };
         break;
-      case 'query':
-        endpoint = '/partner-yem/query';
-        apiRequestBody = { data: payload };
+      
+      case 'get-balance':
+        endpoint = '/bill-balance'; // As per user instruction
+        apiRequestBody = { data: { mobile: payload.mobile } };
         break;
+
       default:
         return new NextResponse(JSON.stringify({ message: 'Invalid action provided.' }), { status: 400 });
     }

@@ -152,14 +152,49 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         setIsQuerying(true);
         setQueryError(null);
         setPhoneInfo(null);
-        // This functionality is temporarily disabled as the backing API route is removed.
-        setIsQuerying(false);
-        setQueryError("خدمة الاستعلام عن الرقم معطلة مؤقتاً.");
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'get-balance',
+                    mobile: phoneNumber,
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'فشل الاستعلام عن معلومات الرقم.');
+            }
+
+            // Assuming the successful response has `data.balance`, `data.type`, `data.loan`
+            if (data.data) {
+                setPhoneInfo({
+                    balance: data.data.balance || 'غير متوفر',
+                    type: data.data.type || 'غير متوفر',
+                    loan: data.data.loan || 'غير متوفر'
+                });
+            } else {
+                 setPhoneInfo({
+                    balance: data.balance || 'غير متوفر',
+                    type: data.type || 'غير متوفر',
+                    loan: data.loan || 'غير متوفر'
+                });
+            }
+
+        } catch (error: any) {
+            setQueryError(error.message || 'حدث خطأ أثناء الاستعلام.');
+        } finally {
+            setIsQuerying(false);
+        }
     }, [phoneNumber]);
 
     useEffect(() => {
-        queryPhoneInfo();
-    }, [queryPhoneInfo]);
+        if (phoneNumber.length === 9) {
+            queryPhoneInfo();
+        }
+    }, [phoneNumber, queryPhoneInfo]);
 
 
     const subscriptions = [
@@ -170,42 +205,76 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     ];
     
     const handlePayment = async () => {
-      const numericAmount = parseFloat(amount);
-      if (isNaN(numericAmount) || numericAmount <= 0) {
-        toast({
-          variant: 'destructive',
-          title: 'خطأ',
-          description: 'الرجاء إدخال مبلغ صالح للتسديد.'
-        });
-        return;
-      }
-    
-      if (!user || !userProfile || !firestore || !userDocRef) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن التحقق من المستخدم. الرجاء إعادة المحاولة.' });
-        return;
-      }
-    
-      if ((userProfile.balance ?? 0) < numericAmount) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
-        return;
-      }
-    
-      setIsProcessing(true);
-    
-       try {
-        // This functionality is temporarily disabled.
-        throw new Error("خدمة السداد معطلة مؤقتاً.");
-    
-      } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'فشلت عملية السداد',
-          description: error.message,
-        });
-      } finally {
-        setIsProcessing(false);
-        setIsConfirming(false);
-      }
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صالح للتسديد.' });
+            return;
+        }
+
+        if (!user || !userProfile || !firestore || !userDocRef) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن التحقق من المستخدم. الرجاء إعادة المحاولة.' });
+            return;
+        }
+
+        if ((userProfile.balance ?? 0) < numericAmount) {
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
+            return;
+        }
+
+        setIsProcessing(true);
+
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'pay-bill',
+                    mobile: phoneNumber,
+                    amount: numericAmount,
+                    method: '1' // Assuming '1' is always the method for this UI
+                })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'فشلت عملية السداد.');
+            }
+
+            const currentBalance = userProfile.balance ?? 0;
+            const newBalance = currentBalance - numericAmount;
+
+            const batch = writeBatch(firestore);
+
+            // 1. Deduct balance
+            batch.update(userDocRef, { balance: increment(-numericAmount) });
+
+            // 2. Create transaction record
+            const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+            batch.set(transactionRef, {
+                userId: user.uid,
+                transactionDate: new Date().toISOString(),
+                amount: numericAmount,
+                transactionType: 'سداد يمن موبايل',
+                notes: `إلى رقم: ${phoneNumber}`,
+                recipientPhoneNumber: phoneNumber,
+            });
+
+            await batch.commit();
+            
+            setFinalBalance(newBalance);
+            setShowSuccess(true);
+
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'فشلت عملية السداد',
+                description: error.message,
+            });
+        } finally {
+            setIsProcessing(false);
+            setIsConfirming(false);
+        }
     };
     
     if (showSuccess) {

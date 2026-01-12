@@ -1,0 +1,65 @@
+'use server';
+
+import { NextResponse } from 'next/server';
+
+const API_BASE_URL = 'https://apis.okamel.org';
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { action, ...payload } = body;
+
+    let endpoint = '';
+    let apiRequestBody: any = { data: payload };
+
+    switch (action) {
+      case 'pay-bill':
+        endpoint = '/api/partner-yem/bill';
+        break;
+      case 'get-balance':
+        endpoint = '/api/partner-yem/bill-balance';
+        apiRequestBody = { // a different structure for get-balance
+            mobile: payload.mobile
+        }
+        break;
+      case 'get-offers':
+        endpoint = '/api/partner-yem/bill-offer';
+        apiRequestBody = { // and another for offers
+            mobile: payload.mobile
+        }
+        break;
+      default:
+        return new NextResponse(JSON.stringify({ message: 'Invalid action provided.' }), { status: 400 });
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(apiRequestBody),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        // Use the Arabic error message if available
+        const errorMessage = data?.message?.ar || data?.message || 'An unknown error occurred.';
+        return new NextResponse(JSON.stringify({ message: errorMessage }), {
+          status: response.status,
+          headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    return NextResponse.json(data);
+
+  } catch (error: any) {
+    console.error(`Error in /api/telecom for action:`, error);
+    return new NextResponse(
+      JSON.stringify({ message: `Internal Server Error: ${error.message}` }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}

@@ -88,6 +88,7 @@ const getCompanyFromNumber = (phone: string): Company | null => {
 type PhoneInfo = {
     balance?: string;
     solfa?: string;
+    isLoaned?: boolean;
 };
 
 const BalanceDisplay = () => {
@@ -151,13 +152,13 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         setIsQuerying(true);
         setQueryError(null);
         setPhoneInfo({});
-    
-        const fetchQuery = async (type: 'balance' | 'solfa') => {
+
+        const fetchQuery = async (type: 'get-balance' | 'solfa', endpointAction: 'get-balance' | 'query' ) => {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'query',
+                    action: endpointAction,
                     mobile: phoneNumber,
                     type: type,
                 })
@@ -168,24 +169,26 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
             }
             return data;
         };
-    
+
         try {
             const [balanceRes, solfaRes] = await Promise.all([
-                fetchQuery('balance'),
-                fetchQuery('solfa')
+                fetchQuery('get-balance', 'get-balance'),
+                fetchQuery('solfa', 'query')
             ]);
             
             setPhoneInfo({
-                balance: balanceRes.bill?.resultDesc || 'غير متوفر',
-                solfa: solfaRes.bill?.resultDesc || 'غير متوفر',
+                balance: balanceRes.bill?.resultDesc || balanceRes.resultDesc || 'غير متوفر',
+                solfa: solfaRes.message || 'غير متوفر',
+                isLoaned: solfaRes.status === '1'
             });
-    
+
         } catch (error: any) {
             setQueryError(error.message || 'حدث خطأ أثناء الاستعلام.');
         } finally {
             setIsQuerying(false);
         }
     }, [phoneNumber]);
+
 
     useEffect(() => {
         if (phoneNumber.length === 9) {
@@ -205,6 +208,11 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صالح للتسديد.' });
+            return;
+        }
+
+        if (numericAmount < 21) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'أقل مبلغ للسداد هو 21 ريال.' });
             return;
         }
 
@@ -381,7 +389,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     </div>}
                                      {phoneInfo.solfa && <div className="flex justify-between items-center p-3 text-sm">
                                         <span className="text-muted-foreground">حالة السلفة</span>
-                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.solfa}</span>
+                                        <span className={`font-semibold ${phoneInfo.isLoaned ? 'text-destructive' : 'text-green-600'}`}>{phoneInfo.solfa}</span>
                                     </div>}
                                 </div>
                             ) }

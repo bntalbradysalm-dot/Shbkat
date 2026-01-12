@@ -16,15 +16,18 @@ export async function POST(request: Request) {
     switch (action) {
       case 'pay-bill':
         endpoint = '/bill-balance';
-        // The user specified the body should contain both mobile and amount
         apiRequestBody = { data: { mobile: payload.mobile, amount: payload.amount } };
         break;
       
       case 'get-balance':
-        endpoint = '/bill-balance'; // This endpoint is used for both getting balance and paying
-        // For getting balance, only mobile number is needed
+        endpoint = '/bill-balance';
         apiRequestBody = { data: { mobile: payload.mobile } };
         break;
+
+      case 'query':
+         endpoint = '/query'; // Assuming a unified query endpoint
+         apiRequestBody = { data: { mobile: payload.mobile, type: payload.type }};
+         break;
 
       default:
         return new NextResponse(JSON.stringify({ message: 'Invalid action provided.' }), { status: 400 });
@@ -42,7 +45,7 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-        const errorMessage = data?.message?.ar || data?.message || data?.resultDesc || 'An unknown error occurred.';
+        const errorMessage = data?.resultDesc || data?.message?.ar || data?.message || 'An unknown error occurred.';
         return new NextResponse(JSON.stringify({ message: errorMessage }), {
           status: response.status,
           headers: { 'Content-Type': 'application/json' },

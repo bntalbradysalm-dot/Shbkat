@@ -35,7 +35,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Tabs,
@@ -152,23 +151,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         setIsQuerying(true);
         setQueryError(null);
         setPhoneInfo(null);
-        try {
-            const response = await fetch(`/api/echehanly?action=query&mobile=${phoneNumber}`);
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'فشل الاستعلام عن بيانات الرقم.');
-            }
-            
-            setPhoneInfo({
-                balance: data.amounts?.amount1 || 'N/A',
-                type: data.type || 'N/A',
-                loan: data.isLoan === "1" ? 'عليه سلفة' : 'غير متسلف',
-            });
-        } catch (error: any) {
-            setQueryError(error.message);
-        } finally {
-            setIsQuerying(false);
-        }
+        // This functionality is temporarily disabled as the backing API route is removed.
+        setIsQuerying(false);
+        setQueryError("خدمة الاستعلام عن الرقم معطلة مؤقتاً.");
     }, [phoneNumber]);
 
     useEffect(() => {
@@ -206,39 +191,9 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     
       setIsProcessing(true);
     
-      try {
-        // Step 1: Call the external API
-        const apiResponse = await fetch(`/api/echehanly?action=bill&mobile=${phoneNumber}&amount=${numericAmount}`);
-        const apiData = await apiResponse.json();
-    
-        if (!apiResponse.ok) {
-          throw new Error(apiData.message || 'فشلت عملية السداد لدى المزود.');
-        }
-    
-        // Step 2: On successful API call, perform Firestore operations
-        const batch = writeBatch(firestore);
-        
-        // Deduct balance
-        batch.update(userDocRef, {
-          balance: increment(-numericAmount)
-        });
-    
-        // Create transaction record
-        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-        batch.set(transactionRef, {
-          userId: user.uid,
-          transactionDate: new Date().toISOString(),
-          amount: numericAmount,
-          transactionType: 'سداد يمن موبايل',
-          recipientPhoneNumber: phoneNumber,
-          notes: `سداد فاتورة إلى رقم: ${phoneNumber}`
-        });
-
-        // Commit all changes
-        await batch.commit();
-
-        setFinalBalance((userProfile.balance ?? 0) - numericAmount);
-        setShowSuccess(true);
+       try {
+        // This functionality is temporarily disabled.
+        throw new Error("خدمة السداد معطلة مؤقتاً.");
     
       } catch (error: any) {
         toast({
@@ -576,5 +531,3 @@ export default function TelecomPage() {
     </>
   );
 }
-
-    

@@ -85,10 +85,9 @@ const getCompanyFromNumber = (phone: string): Company | null => {
   return null;
 };
 
-type YemenMobileInfo = {
-    balance: string;
-    type: string;
-    loan: string;
+type PhoneInfo = {
+    balance?: string;
+    solfa?: string;
 };
 
 const BalanceDisplay = () => {
@@ -126,7 +125,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const [finalBalance, setFinalBalance] = useState(0);
     const [isConfirming, setIsConfirming] = useState(false);
     const [isQuerying, setIsQuerying] = useState(false);
-    const [phoneInfo, setPhoneInfo] = useState<YemenMobileInfo | null>(null);
+    const [phoneInfo, setPhoneInfo] = useState<PhoneInfo>({});
     const [queryError, setQueryError] = useState<string | null>(null);
 
     const { user } = useUser();
@@ -151,38 +150,36 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     const queryPhoneInfo = useCallback(async () => {
         setIsQuerying(true);
         setQueryError(null);
-        setPhoneInfo(null);
-        try {
+        setPhoneInfo({});
+    
+        const fetchQuery = async (type: 'balance' | 'solfa') => {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'get-balance',
+                    action: 'query',
                     mobile: phoneNumber,
+                    type: type,
                 })
             });
-
             const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message || 'فشل الاستعلام عن معلومات الرقم.');
+                throw new Error(data.message || `فشل الاستعلام عن ${type}`);
             }
-
-            // Assuming the successful response has `data.balance`, `data.type`, `data.loan`
-            if (data.data) {
-                setPhoneInfo({
-                    balance: data.data.balance || 'غير متوفر',
-                    type: data.data.type || 'غير متوفر',
-                    loan: data.data.loan || 'غير متوفر'
-                });
-            } else {
-                 setPhoneInfo({
-                    balance: data.balance || 'غير متوفر',
-                    type: data.type || 'غير متوفر',
-                    loan: data.loan || 'غير متوفر'
-                });
-            }
-
+            return data;
+        };
+    
+        try {
+            const [balanceRes, solfaRes] = await Promise.all([
+                fetchQuery('balance'),
+                fetchQuery('solfa')
+            ]);
+            
+            setPhoneInfo({
+                balance: balanceRes.bill?.resultDesc || 'غير متوفر',
+                solfa: solfaRes.bill?.resultDesc || 'غير متوفر',
+            });
+    
         } catch (error: any) {
             setQueryError(error.message || 'حدث خطأ أثناء الاستعلام.');
         } finally {
@@ -231,7 +228,6 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                     action: 'pay-bill',
                     mobile: phoneNumber,
                     amount: numericAmount,
-                    method: '1' // Assuming '1' is always the method for this UI
                 })
             });
 
@@ -246,10 +242,8 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
 
             const batch = writeBatch(firestore);
 
-            // 1. Deduct balance
             batch.update(userDocRef, { balance: increment(-numericAmount) });
 
-            // 2. Create transaction record
             const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
             batch.set(transactionRef, {
                 userId: user.uid,
@@ -258,6 +252,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 transactionType: 'سداد يمن موبايل',
                 notes: `إلى رقم: ${phoneNumber}`,
                 recipientPhoneNumber: phoneNumber,
+                transid: data.bill?.transid
             });
 
             await batch.commit();
@@ -369,7 +364,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 </TabsContent>
                 <TabsContent value="packages" className="mt-4 space-y-4">
                     <Card>
-                        <CardContent className="p-0">
+                         <CardContent className="p-0">
                             {isQuerying ? (
                                 <div className="p-4 text-center">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
@@ -378,22 +373,18 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                 <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
                                    <Info className="h-4 w-4" /> {queryError}
                                 </div>
-                            ) : phoneInfo ? (
+                            ) : (
                                 <div className="divide-y divide-border">
-                                    <div className="flex justify-between items-center p-3 text-sm">
+                                    {phoneInfo.balance && <div className="flex justify-between items-center p-3 text-sm">
                                         <span className="text-muted-foreground">رصيد الرقم</span>
                                         <span className="font-bold text-primary dark:text-primary-foreground">{phoneInfo.balance}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 text-sm">
-                                        <span className="text-muted-foreground">نوع الرقم</span>
-                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.type}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 text-sm">
+                                    </div>}
+                                     {phoneInfo.solfa && <div className="flex justify-between items-center p-3 text-sm">
                                         <span className="text-muted-foreground">حالة السلفة</span>
-                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.loan}</span>
-                                    </div>
+                                        <span className="font-semibold text-primary dark:text-primary-foreground">{phoneInfo.solfa}</span>
+                                    </div>}
                                 </div>
-                            ) : null }
+                            ) }
                         </CardContent>
                     </Card>
                     <Card>

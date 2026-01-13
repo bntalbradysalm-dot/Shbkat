@@ -59,7 +59,8 @@ export async function POST(request: Request) {
     }
 
     const url = `${API_BASE_URL}${endpoint}`;
-    const fullUrl = `${url}?${new URLSearchParams(apiRequestBody)}`;
+    const params = new URLSearchParams(apiRequestBody);
+    const fullUrl = `${url}?${params.toString()}`;
 
     const response = await fetch(fullUrl, {
       method: 'GET', // echehanly uses GET
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     
-    if (data.resultCode !== "0") {
+    if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
       const errorMessage = data.resultDesc || 'An unknown error occurred.';
       return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
         status: 400,
@@ -82,6 +83,13 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error(`Error in /api/telecom for action:`, error);
+    // Check if the error is a JSON parsing error
+    if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
+       return new NextResponse(
+        JSON.stringify({ message: 'فشل الخادم في الاستجابة بشكل صحيح. قد يكون هناك ضغط على الشبكة.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     return new NextResponse(
       JSON.stringify({ message: `Internal Server Error: ${error.message}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

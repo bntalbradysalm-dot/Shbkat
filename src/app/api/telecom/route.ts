@@ -25,7 +25,9 @@ export async function POST(request: Request) {
         break;
 
       case 'query':
-         endpoint = '/query'; // Assuming a unified query endpoint
+         // This case needs to be adapted or removed if okamel.org doesn't support a generic query endpoint
+         // For now, let's assume it might be used for other services and keep it flexible, but it won't be used by the current telecom-services page.
+         endpoint = '/query'; 
          apiRequestBody = { data: { mobile: payload.mobile, type: payload.type }};
          break;
 

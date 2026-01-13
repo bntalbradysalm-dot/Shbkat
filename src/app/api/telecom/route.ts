@@ -40,9 +40,9 @@ export async function POST(request: Request) {
 
     switch(action) {
         case 'query':
-        case 'bill':
         case 'queryoffer':
         case 'solfa':
+        case 'bill':
             endpoint = '/yem';
             apiRequestBody.action = action;
             break;

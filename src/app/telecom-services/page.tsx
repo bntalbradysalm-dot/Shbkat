@@ -455,7 +455,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                                     </div>
                                 ) : queryInfoError ? (
                                     <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                       <Info className="h-4 w-4" /> ياخي هذي الرسالة مزعجة.. التطبيق لم يعمل نهائيا أين معلومات الرقم !
+                                       <Info className="h-4 w-4" /> {queryInfoError}
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border">

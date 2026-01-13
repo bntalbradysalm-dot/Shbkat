@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-const API_BASE_URL = 'https://echehanlyw.yrbso.net';
+const API_BASE_URL = 'https://echehanlyw.yrbso.net/';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     
     // Use the correct endpoint for offer activation
     if (action === 'billover') {
-        endpoint = '/yem?';
+        endpoint = '/offeryem?';
     }
 
 

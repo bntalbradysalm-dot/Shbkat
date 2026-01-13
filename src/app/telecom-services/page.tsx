@@ -81,12 +81,12 @@ type UserProfile = {
 };
 
 const getCompanyFromNumber = (phone: string): Company | null => {
-  if (!phone || phone.length < 8) return null;
+  if (!phone) return null;
 
   if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
       return companyMap['yemen-mobile'];
   }
-   if (phone.length === 8 && phone.startsWith('1')) {
+   if (phone.length === 9 && phone.startsWith('10')) {
       return companyMap['yemen-4g'];
   }
   
@@ -158,52 +158,33 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
         return finalAmount.toFixed(2);
     }, [amount]);
     
-    const queryPhoneInfo = useCallback(async () => {
+     const queryPhoneInfo = useCallback(async () => {
         if (!isYemenMobile) return;
         setIsQuerying(true);
         setQueryError(null);
         setPhoneInfo({});
 
         try {
-             const [balanceRes, solfaRes] = await Promise.all([
-                fetch('/api/telecom', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'get-balance',
-                        mobile: phoneNumber,
-                    })
-                }),
-                 fetch('/api/telecom', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'query',
-                        mobile: phoneNumber,
-                        type: 'solfa'
-                    })
+             const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'query',
+                    mobile: phoneNumber,
                 })
-            ]);
+            });
 
-            const balanceData = await balanceRes.json();
-            if (!balanceRes.ok) {
-                throw new Error(balanceData.message || 'فشل الاستعلام عن الرصيد');
-            }
-
-            const solfaData = await solfaRes.json();
-            if (!solfaRes.ok) {
-                // Don't throw, just log it, as it's less critical.
-                console.error("Failed to fetch solfa:", solfaData.message);
+            const data = await response.json();
+            if (!response.ok || data.resultCode !== "0") {
+                throw new Error(data.message || data.resultDesc || 'فشل الاستعلام عن الرصيد');
             }
             
             setPhoneInfo({
-                balance: balanceData.bill?.resultDesc || balanceData.resultDesc || balanceData.message || 'غير متوفر',
-                solfa: solfaData.message || undefined,
-                isLoaned: solfaData.status === '1'
+                balance: data.balance || 'غير متوفر',
             });
 
         } catch (error: any) {
-            setQueryError(error.message || 'لم تظهر السلفة ولا بيانات الرقم');
+            setQueryError(error.message || 'لم تظهر بيانات الرقم');
         } finally {
             setIsQuerying(false);
         }
@@ -253,7 +234,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'pay-bill',
+                    action: 'bill',
                     mobile: phoneNumber,
                     amount: numericAmount,
                 })
@@ -261,8 +242,8 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
 
             const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(data.message || 'فشلت عملية السداد.');
+            if (!response.ok || data.resultCode !== "0") {
+                throw new Error(data.message || data.resultDesc || 'فشلت عملية السداد.');
             }
 
             const currentBalance = userProfile.balance ?? 0;
@@ -280,7 +261,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                 transactionType: `سداد ${company.name}`,
                 notes: `إلى رقم: ${phoneNumber}`,
                 recipientPhoneNumber: phoneNumber,
-                transid: data.bill?.transid || data.transid
+                transid: data.transid
             });
 
             await batch.commit();
@@ -402,7 +383,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                                     </div>
                                 ) : queryError ? (
                                     <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                       <Info className="h-4 w-4" /> لم تظهر السلفة ولا بيانات الرقم
+                                       <Info className="h-4 w-4" /> {queryError}
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border">

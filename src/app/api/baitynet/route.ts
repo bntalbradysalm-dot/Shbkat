@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://api.baitynet.com/partner-yem/bill';
+const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem/bill-balance';
 // It's better to store API keys in environment variables, but for now, we'll use it directly.
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
 

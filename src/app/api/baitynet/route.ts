@@ -4,22 +4,21 @@ import { NextResponse } from 'next/server';
 
 const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem/bill-balance';
 // It's better to store API keys in environment variables, but for now, we'll use it directly.
-const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { mobile, amount, type } = body;
+    const { mobile, amount } = body;
 
-    if (!mobile || !amount || !type) {
-      return new NextResponse(JSON.stringify({ message: 'البيانات المطلوبة غير مكتملة (رقم الهاتف، المبلغ، النوع).' }), { status: 400 });
+    if (!mobile || !amount) {
+      return new NextResponse(JSON.stringify({ message: 'البيانات المطلوبة غير مكتملة (رقم الهاتف، المبلغ).' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     const apiRequestBody = {
       data: {
-        mobile,
+        mobile: String(mobile),
         amount: Number(amount),
-        type,
       },
     };
 

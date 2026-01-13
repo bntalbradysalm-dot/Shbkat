@@ -40,9 +40,9 @@ export async function POST(request: Request) {
 
     switch(action) {
         case 'query':
-        case 'queryoffer':
         case 'solfa':
         case 'bill':
+        case 'queryoffer':
             endpoint = '/yem';
             apiRequestBody.action = action;
             break;
@@ -58,9 +58,8 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'Invalid action' }), { status: 400 });
     }
 
-    const url = `${API_BASE_URL}${endpoint}`;
     const params = new URLSearchParams(apiRequestBody);
-    const fullUrl = `${url}?${params.toString()}`;
+    const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
     const response = await fetch(fullUrl, {
       method: 'GET', // echehanly uses GET

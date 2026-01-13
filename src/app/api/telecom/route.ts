@@ -2,8 +2,8 @@
 
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem';
-const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+const API_BASE_URL = 'https://echehanly.com/api/v1';
+const API_KEY = 'YT92511';
 
 export async function POST(request: Request) {
   try {
@@ -11,50 +11,61 @@ export async function POST(request: Request) {
     const { action, ...payload } = body;
 
     let endpoint = '';
-    let apiRequestBody: any;
+    let apiRequestBody: any = {
+      ...payload,
+      token: API_KEY,
+    };
+    let url = '';
 
     switch (action) {
       case 'pay-bill':
-        endpoint = '/bill-balance';
-        apiRequestBody = { data: { mobile: payload.mobile, amount: payload.amount } };
+        endpoint = '/yem?';
+        url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
         break;
       
       case 'get-balance':
-        endpoint = '/bill-balance';
-        apiRequestBody = { data: { mobile: payload.mobile } };
+         endpoint = '/yem?';
+         apiRequestBody.type = 'balance';
+         url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
         break;
 
       case 'query':
-         // This case needs to be adapted or removed if okamel.org doesn't support a generic query endpoint
-         // For now, let's assume it might be used for other services and keep it flexible, but it won't be used by the current telecom-services page.
-         endpoint = '/query'; 
-         apiRequestBody = { data: { mobile: payload.mobile, type: payload.type }};
+         endpoint = '/yem?';
+         url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
          break;
 
       default:
         return new NextResponse(JSON.stringify({ message: 'Invalid action provided.' }), { status: 400 });
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
+    const response = await fetch(url, {
+      method: 'GET', // echehanly uses GET
       headers: {
-        'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(apiRequestBody),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        const errorMessage = data?.resultDesc || data?.message?.ar || data?.message || 'An unknown error occurred.';
-        return new NextResponse(JSON.stringify({ message: errorMessage }), {
-          status: response.status,
-          headers: { 'Content-Type': 'application/json' },
-        });
+    
+    const textData = await response.text();
+    try {
+        const data = JSON.parse(textData);
+         if (!response.ok) {
+            const errorMessage = data?.resultDesc || data?.message?.ar || data?.message || 'An unknown error occurred.';
+            return new NextResponse(JSON.stringify({ message: errorMessage }), {
+              status: response.status,
+              headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        return NextResponse.json(data);
+    } catch(e) {
+        // Handle non-JSON responses from echehanly
+        if (!response.ok) {
+            return new NextResponse(JSON.stringify({ message: textData }), {
+              status: response.status,
+              headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        return NextResponse.json({ message: textData });
     }
-
-    return NextResponse.json(data);
 
   } catch (error: any) {
     console.error(`Error in /api/telecom for action:`, error);

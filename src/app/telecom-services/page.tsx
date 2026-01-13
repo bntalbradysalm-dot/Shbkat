@@ -81,12 +81,12 @@ type UserProfile = {
 };
 
 const getCompanyFromNumber = (phone: string): Company | null => {
-  if (!phone || phone.length !== 9) return null;
+  if (!phone || phone.length < 8) return null;
 
-  if (phone.startsWith('77') || phone.startsWith('78')) {
+  if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
       return companyMap['yemen-mobile'];
   }
-   if (phone.startsWith('10')) {
+   if (phone.length === 8 && phone.startsWith('1')) {
       return companyMap['yemen-4g'];
   }
   
@@ -197,7 +197,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
             }
             
             setPhoneInfo({
-                balance: balanceData.bill?.resultDesc || balanceData.resultDesc || 'غير متوفر',
+                balance: balanceData.bill?.resultDesc || balanceData.resultDesc || balanceData.message || 'غير متوفر',
                 solfa: solfaData.message || undefined,
                 isLoaned: solfaData.status === '1'
             });
@@ -211,10 +211,10 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
 
 
     useEffect(() => {
-        if (phoneNumber.length === 9) {
+        if (phoneNumber.length === 9 && isYemenMobile) {
             queryPhoneInfo();
         }
-    }, [phoneNumber, queryPhoneInfo]);
+    }, [phoneNumber, queryPhoneInfo, isYemenMobile]);
 
 
     const subscriptions = [
@@ -280,7 +280,7 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                 transactionType: `سداد ${company.name}`,
                 notes: `إلى رقم: ${phoneNumber}`,
                 recipientPhoneNumber: phoneNumber,
-                transid: data.bill?.transid
+                transid: data.bill?.transid || data.transid
             });
 
             await batch.commit();

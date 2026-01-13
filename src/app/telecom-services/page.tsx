@@ -66,6 +66,11 @@ const companyMap: Record<string, Company> = {
         icon: 'https://i.postimg.cc/52nxCtk5/images.png',
         theme: 'yemen-mobile'
     },
+    'yemen-4g': {
+        name: 'يمن فورجي',
+        icon: 'https://i.postimg.cc/d1qWc06N/Yemen-4g-logo.png',
+        theme: 'yemen-4g'
+    }
 };
 
 
@@ -80,6 +85,9 @@ const getCompanyFromNumber = (phone: string): Company | null => {
 
   if (phone.startsWith('77') || phone.startsWith('78')) {
       return companyMap['yemen-mobile'];
+  }
+   if (phone.startsWith('10')) {
+      return companyMap['yemen-4g'];
   }
   
   return null;
@@ -119,7 +127,7 @@ const BalanceDisplay = () => {
     );
 }
 
-const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
+const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Company }) => {
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -139,6 +147,8 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         [firestore, user]
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+    
+    const isYemenMobile = company.name === 'يمن موبايل';
 
     const netAmount = useMemo(() => {
         const numericAmount = parseFloat(amount);
@@ -149,37 +159,47 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
     }, [amount]);
     
     const queryPhoneInfo = useCallback(async () => {
+        if (!isYemenMobile) return;
         setIsQuerying(true);
         setQueryError(null);
         setPhoneInfo({});
 
-        const fetchQuery = async (type: 'get-balance' | 'solfa', endpointAction: 'get-balance' | 'query' ) => {
-            const response = await fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: endpointAction,
-                    mobile: phoneNumber,
-                    type: type,
-                })
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || `فشل الاستعلام عن ${type}`);
-            }
-            return data;
-        };
-
         try {
-            const [balanceRes, solfaRes] = await Promise.all([
-                fetchQuery('get-balance', 'get-balance'),
-                fetchQuery('solfa', 'query')
+             const [balanceRes, solfaRes] = await Promise.all([
+                fetch('/api/telecom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get-balance',
+                        mobile: phoneNumber,
+                    })
+                }),
+                 fetch('/api/telecom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'query',
+                        mobile: phoneNumber,
+                        type: 'solfa'
+                    })
+                })
             ]);
+
+            const balanceData = await balanceRes.json();
+            if (!balanceRes.ok) {
+                throw new Error(balanceData.message || 'فشل الاستعلام عن الرصيد');
+            }
+
+            const solfaData = await solfaRes.json();
+            if (!solfaRes.ok) {
+                // Don't throw, just log it, as it's less critical.
+                console.error("Failed to fetch solfa:", solfaData.message);
+            }
             
             setPhoneInfo({
-                balance: balanceRes.bill?.resultDesc || balanceRes.resultDesc || 'غير متوفر',
-                solfa: solfaRes.message || 'غير متوفر',
-                isLoaned: solfaRes.status === '1'
+                balance: balanceData.bill?.resultDesc || balanceData.resultDesc || 'غير متوفر',
+                solfa: solfaData.message || undefined,
+                isLoaned: solfaData.status === '1'
             });
 
         } catch (error: any) {
@@ -187,7 +207,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
         } finally {
             setIsQuerying(false);
         }
-    }, [phoneNumber]);
+    }, [phoneNumber, isYemenMobile]);
 
 
     useEffect(() => {
@@ -211,7 +231,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
             return;
         }
 
-        if (numericAmount < 21) {
+        if (isYemenMobile && numericAmount < 21) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'أقل مبلغ للسداد هو 21 ريال.' });
             return;
         }
@@ -257,7 +277,7 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
                 amount: numericAmount,
-                transactionType: 'سداد يمن موبايل',
+                transactionType: `سداد ${company.name}`,
                 notes: `إلى رقم: ${phoneNumber}`,
                 recipientPhoneNumber: phoneNumber,
                 transid: data.bill?.transid
@@ -333,16 +353,18 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                                     onChange={(e) => setAmount(e.target.value)}
                                 />
                              </div>
-                             <div className="text-right space-y-1">
-                                <Label htmlFor="netAmount" className="text-muted-foreground">صافي الرصيد بعد خصم الضريبة</Label>
-                                <Input
-                                    id="netAmount"
-                                    type="text"
-                                    readOnly
-                                    value={netAmount}
-                                    className="text-right mt-1 bg-muted font-bold text-primary"
-                                />
-                             </div>
+                             {isYemenMobile && (
+                                <div className="text-right space-y-1">
+                                    <Label htmlFor="netAmount" className="text-muted-foreground">صافي الرصيد بعد خصم الضريبة</Label>
+                                    <Input
+                                        id="netAmount"
+                                        type="text"
+                                        readOnly
+                                        value={netAmount}
+                                        className="text-right mt-1 bg-muted font-bold text-primary"
+                                    />
+                                </div>
+                             )}
                              <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>
                                   <Button className="w-full" disabled={isProcessing || !amount}>
@@ -371,30 +393,32 @@ const YemenMobileUI = ({ phoneNumber }: { phoneNumber: string }) => {
                     </Card>
                 </TabsContent>
                 <TabsContent value="packages" className="mt-4 space-y-4">
-                    <Card>
-                         <CardContent className="p-0">
-                            {isQuerying ? (
-                                <div className="p-4 text-center">
-                                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                                </div>
-                            ) : queryError ? (
-                                <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                   <Info className="h-4 w-4" /> لم تظهر السلفة ولا بيانات الرقم
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-border">
-                                    {phoneInfo.balance && <div className="flex justify-between items-center p-3 text-sm">
-                                        <span className="text-muted-foreground">رصيد الرقم</span>
-                                        <span className="font-bold text-primary dark:text-primary-foreground">{phoneInfo.balance}</span>
-                                    </div>}
-                                     {phoneInfo.solfa && <div className="flex justify-between items-center p-3 text-sm">
-                                        <span className="text-muted-foreground">حالة السلفة</span>
-                                        <span className={`font-semibold ${phoneInfo.isLoaned ? 'text-destructive' : 'text-green-600'}`}>{phoneInfo.solfa}</span>
-                                    </div>}
-                                </div>
-                            ) }
-                        </CardContent>
-                    </Card>
+                    {isYemenMobile && (
+                        <Card>
+                             <CardContent className="p-0">
+                                {isQuerying ? (
+                                    <div className="p-4 text-center">
+                                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                                    </div>
+                                ) : queryError ? (
+                                    <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
+                                       <Info className="h-4 w-4" /> لم تظهر السلفة ولا بيانات الرقم
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-border">
+                                        {phoneInfo.balance && <div className="flex justify-between items-center p-3 text-sm">
+                                            <span className="text-muted-foreground">رصيد الرقم</span>
+                                            <span className="font-bold text-primary dark:text-primary-foreground">{phoneInfo.balance}</span>
+                                        </div>}
+                                         {phoneInfo.solfa && <div className="flex justify-between items-center p-3 text-sm">
+                                            <span className="text-muted-foreground">حالة السلفة</span>
+                                            <span className={`font-semibold ${phoneInfo.isLoaned ? 'text-destructive' : 'text-green-600'}`}>{phoneInfo.solfa}</span>
+                                        </div>}
+                                    </div>
+                                ) }
+                            </CardContent>
+                        </Card>
+                    )}
                     <Card>
                         <CardContent className="p-0">
                             <div className="bg-muted text-foreground text-center font-bold p-2 text-sm">
@@ -478,7 +502,7 @@ export default function TelecomPage() {
   const transactionsQuery = useMemoFirebase(
     () => user ? query(
         collection(firestore, `users/${user.uid}/transactions`),
-        where('transactionType', 'in', ['سداد يمن موبايل', 'سداد YOU', 'سداد سبأفون'])
+        where('transactionType', 'in', ['سداد يمن موبايل', 'سداد YOU', 'سداد سبأفون', 'سداد يمن فورجي'])
     ) : null,
     [user, firestore]
   );
@@ -592,7 +616,7 @@ export default function TelecomPage() {
             </CardContent>
         </Card>
         
-        {isUiVisible && identifiedCompany?.name === 'يمن موبايل' && <YemenMobileUI phoneNumber={phoneNumber} />}
+        {isUiVisible && identifiedCompany && <ServiceUI phoneNumber={phoneNumber} company={identifiedCompany}/>}
         
       </div>
     </div>

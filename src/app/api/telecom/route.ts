@@ -43,15 +43,15 @@ export async function POST(request: Request) {
         case 'bill':
         case 'queryoffer':
         case 'solfa':
-            endpoint = '/yem?';
+            endpoint = '/yem';
             apiRequestBody.action = action;
             break;
         case 'billover':
-            endpoint = '/offeryem?';
+            endpoint = '/offeryem';
             apiRequestBody.action = action;
             break;
         case 'status':
-            endpoint = '/info?';
+            endpoint = '/info';
             apiRequestBody.action = action;
             break;
         default:
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
 
-    const url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
+    const url = `${API_BASE_URL}${endpoint}?${new URLSearchParams(apiRequestBody)}`;
 
     const response = await fetch(url, {
       method: 'GET', // echehanly uses GET

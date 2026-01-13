@@ -58,10 +58,10 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'Invalid action' }), { status: 400 });
     }
 
+    const url = `${API_BASE_URL}${endpoint}`;
+    const fullUrl = `${url}?${new URLSearchParams(apiRequestBody)}`;
 
-    const url = `${API_BASE_URL}${endpoint}?${new URLSearchParams(apiRequestBody)}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(fullUrl, {
       method: 'GET', // echehanly uses GET
       headers: {
         'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     
     if (data.resultCode !== "0") {
       const errorMessage = data.resultDesc || 'An unknown error occurred.';
-      return new NextResponse(JSON.stringify({ message: errorMessage }), {
+      return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });

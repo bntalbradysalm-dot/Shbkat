@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-const API_BASE_URL = 'https://echehanlyw.yrbso.net/';
+const API_BASE_URL = 'https://echehanlyw.yrbso.net';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
@@ -24,21 +24,36 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    const transid = Date.now().toString();
+    const transid = payload.transid || Date.now().toString();
     const token = generateToken(transid, payload.mobile);
 
-    let endpoint = '/yem?';
+    let endpoint = '';
     let apiRequestBody: any = {
-      action,
       userid: USERID,
       transid,
       token,
       ...payload
     };
     
-    // Use the correct endpoint for offer activation
-    if (action === 'billover') {
-        endpoint = '/offeryem?';
+    delete apiRequestBody.action;
+
+    switch(action) {
+        case 'query':
+        case 'bill':
+        case 'queryoffer':
+            endpoint = '/yem?';
+            apiRequestBody.action = action;
+            break;
+        case 'billover':
+            endpoint = '/offeryem?';
+            apiRequestBody.action = action;
+            break;
+        case 'status':
+            endpoint = '/info?';
+            apiRequestBody.action = action;
+            break;
+        default:
+            return new NextResponse(JSON.stringify({ message: 'Invalid action' }), { status: 400 });
     }
 
 

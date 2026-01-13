@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr';
+const API_BASE_URL = 'https://echehanlyw.yrbso.net';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
@@ -20,7 +20,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, ...payload } = body;
     
-    // mobile number is required for almost all actions
     if (!payload.mobile) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
     const url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
 
     const response = await fetch(url, {
-      method: 'GET', // The doc specifies GET requests with params in URL
+      method: 'GET', // echehanly uses GET
       headers: {
         'Content-Type': 'application/json',
       },
@@ -48,11 +47,10 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     
-    // The API uses resultCode for status
     if (data.resultCode !== "0") {
       const errorMessage = data.resultDesc || 'An unknown error occurred.';
       return new NextResponse(JSON.stringify({ message: errorMessage }), {
-        status: 400, // Use a client error status for API-level errors
+        status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }

@@ -179,20 +179,19 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'query',
+                    action: 'solfa',
                     mobile: phoneNumber,
                 })
             });
 
             const data = await response.json();
             if (!response.ok || data.resultCode !== "0") {
-                throw new Error(data.message || data.resultDesc || 'فشل الاستعلام عن الرصيد');
+                throw new Error(data.message || data.resultDesc || 'فشل الاستعلام عن السلفة');
             }
             
             setPhoneInfo({
-                balance: data.balance || 'غير متوفر',
-                solfa: data.isLoaned ? 'متسلف' : 'غير متسلف',
-                isLoaned: data.isLoaned
+                solfa: data.status === "1" ? `متسلف (${data.loan_amount} ريال)` : 'غير متسلف',
+                isLoaned: data.status === "1"
             });
 
         } catch (error: any) {
@@ -456,14 +455,10 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                                     </div>
                                 ) : queryInfoError ? (
                                     <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                       <Info className="h-4 w-4" /> لم تظهر السلفة ولا بينانتات رقم
+                                       <Info className="h-4 w-4" /> لم تظهر السلفة ولا بيانات الرقم
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border">
-                                        {phoneInfo.balance && <div className="flex justify-between items-center p-3 text-sm">
-                                            <span className="text-muted-foreground">رصيد الرقم</span>
-                                            <span className="font-bold text-primary dark:text-primary-foreground">{phoneInfo.balance}</span>
-                                        </div>}
                                          {phoneInfo.solfa && <div className="flex justify-between items-center p-3 text-sm">
                                             <span className="text-muted-foreground">حالة السلفة</span>
                                             <span className={`font-semibold ${phoneInfo.isLoaned ? 'text-destructive' : 'text-green-600'}`}>{phoneInfo.solfa}</span>

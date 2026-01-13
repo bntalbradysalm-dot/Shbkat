@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     let endpoint = '';
     let apiRequestBody: any = {
       userid: USERID,
+      username: USERNAME,
       transid,
       token,
       ...payload
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
         case 'query':
         case 'bill':
         case 'queryoffer':
+        case 'solfa':
             endpoint = '/yem?';
             apiRequestBody.action = action;
             break;

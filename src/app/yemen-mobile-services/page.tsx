@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Smartphone, Building, Wifi, Phone } from 'lucide-react';
+import { ChevronLeft, Smartphone, Phone, Wifi } from 'lucide-react';
 import Image from 'next/image';
 
 type Company = {
@@ -13,44 +14,50 @@ type Company = {
   icon: string | React.ElementType;
   prefixes: string[];
   length: number;
-  href: string;
+  servicePage: string;
+  type: 'mobile' | 'line' | 'adsl';
 };
 
 const companies: Company[] = [
   {
     name: 'يمن موبايل',
     icon: 'https://i.postimg.cc/52nxCtk5/images.png',
-    prefixes: ['77', '78'],
+    prefixes: ['77'],
     length: 9,
-    href: '/yemen-mobile-services',
+    servicePage: '/telecom-services',
+    type: 'mobile'
   },
   {
     name: 'YOU',
     icon: 'https://i.postimg.cc/W3t9tD5B/Yo-Logo.png',
-    prefixes: ['73'],
+    prefixes: ['73', '71', '70'],
     length: 9,
-    href: '/you-services',
+    servicePage: '/telecom-services', // Assuming same page for now
+    type: 'mobile'
   },
   {
     name: 'يمن فورجي',
     icon: 'https://i.postimg.cc/d1qWc06N/Yemen-4g-logo.png',
-    prefixes: [''], // Handled by length
+    prefixes: [],
     length: 8,
-    href: '/yemen-4g-services',
+    servicePage: '/telecom-services',
+    type: 'mobile'
   },
   {
     name: 'الهاتف الثابت',
     icon: Phone,
     prefixes: ['0'], 
-    length: 8, // e.g., 05333333
-    href: '/landline-services',
+    length: 8,
+    servicePage: '/landline-services',
+    type: 'line'
   },
    {
     name: 'نت ADSL',
     icon: Wifi,
-    prefixes: [''], // Handled by length
+    prefixes: [''],
     length: 8,
-    href: '/landline-services',
+    servicePage: '/landline-services',
+    type: 'adsl'
   },
 ];
 
@@ -58,24 +65,29 @@ const getCompanyFromNumber = (phone: string): Company | null => {
     if (!phone) return null;
 
     for (const company of companies) {
-        if (company.length === phone.length) {
+        const phoneLength = phone.length;
+
+        if (company.name === 'الهاتف الثابت') {
+            if (phoneLength >= 2 && phone.startsWith('0')) return company;
+        } else if (company.name === 'نت ADSL') {
+            if (phoneLength >= 1 && !isNaN(Number(phone))) return company; // Very generic for ADSL
+        } else if (company.length === phoneLength) {
             if (company.prefixes.length > 0 && company.prefixes.some(p => phone.startsWith(p))) {
                 return company;
             }
-            if (company.prefixes.length === 0 || company.prefixes.includes('')) {
-                 // For Yemen4G/ADSL which are identified by length
-                 if (company.name === 'يمن فورجي' && /^\d{8}$/.test(phone)) return company;
-                 if (company.name === 'نت ADSL' && /^\d{8}$/.test(phone)) return company;
-                 if (company.name === 'الهاتف الثابت' && phone.startsWith('0')) return company;
+            if (company.prefixes.length === 0) { // For companies identified by length alone like Yemen 4G
+                 return company;
             }
         }
     }
     return null;
 };
 
-export default function TelecomPage() {
+
+export default function TelecomRedirectPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [identifiedCompany, setIdentifiedCompany] = useState<Company | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const company = getCompanyFromNumber(phoneNumber);
@@ -84,8 +96,8 @@ export default function TelecomPage() {
 
   const handleNext = () => {
     if (identifiedCompany) {
-      // In a real app, you would navigate to the specific service page
-      console.log(`Navigating to ${identifiedCompany.href} for number ${phoneNumber}`);
+      const typeParam = identifiedCompany.type === 'line' ? 'line' : 'internet';
+      router.push(`${identifiedCompany.servicePage}?phone=${phoneNumber}&type=${typeParam}`);
     }
   };
 
@@ -124,8 +136,8 @@ export default function TelecomPage() {
 
             <Card>
                 <CardContent className="p-3 text-xs text-muted-foreground space-y-2">
-                    <p>• <span className="font-semibold text-primary">يمن موبايل:</span> يبدأ بـ 77 أو 78 (9 أرقام)</p>
-                    <p>• <span className="font-semibold text-primary">YOU:</span> يبدأ بـ 73 أو 71 أو 70 (9 أرقام)</p>
+                    <p>• <span className="font-semibold text-primary">يمن موبايل:</span> يبدأ بـ 77 (9 أرقام)</p>
+                    <p>• <span className="font-semibold text-primary">YOU/سبأفون:</span> يبدأ بـ 73/71/70 (9 أرقام)</p>
                     <p>• <span className="font-semibold text-primary">يمن فورجي / نت:</span> رقم المشترك (8 أرقام)</p>
                     <p>• <span className="font-semibold text-primary">الهاتف الثابت:</span> يبدأ بـ 0 (8 أرقام)</p>
                 </CardContent>

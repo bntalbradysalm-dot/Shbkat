@@ -40,8 +40,8 @@ export async function POST(request: Request) {
 
     switch(action) {
         case 'query':
-        case 'solfa':
         case 'bill':
+        case 'solfa':
         case 'queryoffer':
             endpoint = '/yem';
             apiRequestBody.action = action;
@@ -67,28 +67,30 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
     });
-
-    const data = await response.json();
     
-    if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
-      const errorMessage = data.resultDesc || 'An unknown error occurred.';
-      return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const responseText = await response.text();
+    
+    try {
+      const data = JSON.parse(responseText);
+      if (!response.ok || (data.resultCode && data.resultCode !== "0")) {
+        const errorMessage = data.resultDesc || 'An unknown error occurred.';
+        return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return NextResponse.json(data);
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError);
+      console.error('Response text:', responseText);
+      return new NextResponse(
+        JSON.stringify({ message: 'فشل الخادم في الاستجابة بشكل صحيح. قد يكون هناك ضغط على الشبكة.' }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-
-    return NextResponse.json(data);
 
   } catch (error: any) {
     console.error(`Error in /api/telecom for action:`, error);
-    // Check if the error is a JSON parsing error
-    if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
-       return new NextResponse(
-        JSON.stringify({ message: 'فشل الخادم في الاستجابة بشكل صحيح. قد يكون هناك ضغط على الشبكة.' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
     return new NextResponse(
       JSON.stringify({ message: `Internal Server Error: ${error.message}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

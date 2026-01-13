@@ -35,6 +35,12 @@ export async function POST(request: Request) {
       token,
       ...payload
     };
+    
+    // Use the correct endpoint for offer activation
+    if (action === 'billover') {
+        endpoint = '/yem?';
+    }
+
 
     const url = `${API_BASE_URL}${endpoint}${new URLSearchParams(apiRequestBody)}`;
 

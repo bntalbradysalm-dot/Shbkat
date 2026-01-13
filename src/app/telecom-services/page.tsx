@@ -4,18 +4,12 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Contact, Wallet, Phone, RefreshCw, Loader2, CheckCircle, Info } from 'lucide-react';
+import { Heart, Contact, Wallet, Phone, RefreshCw, Loader2, CheckCircle, Info, Tag, Package, AlertCircle } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, doc, query, where, writeBatch, increment } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -99,6 +93,13 @@ type PhoneInfo = {
     isLoaned?: boolean;
 };
 
+type Offer = {
+    offerName: string;
+    offerId: string;
+    offerStartDate: string;
+    offerEndDate: string;
+};
+
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -133,9 +134,18 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
     const [showSuccess, setShowSuccess] = useState(false);
     const [finalBalance, setFinalBalance] = useState(0);
     const [isConfirming, setIsConfirming] = useState(false);
-    const [isQuerying, setIsQuerying] = useState(false);
+    
+    // State for phone info queries
+    const [isQueryingInfo, setIsQueryingInfo] = useState(false);
     const [phoneInfo, setPhoneInfo] = useState<PhoneInfo>({});
-    const [queryError, setQueryError] = useState<string | null>(null);
+    const [queryInfoError, setQueryInfoError] = useState<string | null>(null);
+
+    // State for offers query
+    const [isQueryingOffers, setIsQueryingOffers] = useState(false);
+    const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
+    const [queryOffersError, setQueryOffersError] = useState<string | null>(null);
+    const [isActivatingOffer, setIsActivatingOffer] = useState<string | null>(null);
+
 
     const { user } = useUser();
     const firestore = useFirestore();
@@ -158,10 +168,10 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
         return finalAmount.toFixed(2);
     }, [amount]);
     
-     const queryPhoneInfo = useCallback(async () => {
+    const queryPhoneInfo = useCallback(async () => {
         if (!isYemenMobile) return;
-        setIsQuerying(true);
-        setQueryError(null);
+        setIsQueryingInfo(true);
+        setQueryInfoError(null);
         setPhoneInfo({});
 
         try {
@@ -181,30 +191,93 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
             
             setPhoneInfo({
                 balance: data.balance || 'غير متوفر',
+                solfa: data.isLoaned ? 'متسلف' : 'غير متسلف',
+                isLoaned: data.isLoaned
             });
 
         } catch (error: any) {
-            setQueryError(error.message || 'لم تظهر بيانات الرقم');
+            setQueryInfoError('لم تظهر السلفة ولا بيانات الرقم');
         } finally {
-            setIsQuerying(false);
+            setIsQueryingInfo(false);
         }
     }, [phoneNumber, isYemenMobile]);
+    
+    const queryOffers = useCallback(async () => {
+        if (!isYemenMobile) return;
+        setIsQueryingOffers(true);
+        setQueryOffersError(null);
+        setAvailableOffers([]);
+        
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'queryoffer',
+                    mobile: phoneNumber,
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.resultCode !== "0") {
+                 throw new Error(data.message || data.resultDesc || 'فشل جلب العروض');
+            }
+            setAvailableOffers(data.offers || []);
+        } catch (error: any) {
+            setQueryOffersError(error.message);
+        } finally {
+            setIsQueryingOffers(false);
+        }
 
+    }, [phoneNumber, isYemenMobile]);
 
     useEffect(() => {
         if (phoneNumber.length === 9 && isYemenMobile) {
             queryPhoneInfo();
+            queryOffers();
         }
-    }, [phoneNumber, queryPhoneInfo, isYemenMobile]);
+    }, [phoneNumber, queryPhoneInfo, queryOffers, isYemenMobile]);
+
+    const handleActivateOffer = async (offer: Offer) => {
+        if (!user || !userProfile || !firestore || !userDocRef) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'لا يمكن التحقق من المستخدم.' });
+            return;
+        }
+        
+        setIsActivatingOffer(offer.offerId);
+
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'billover',
+                    mobile: phoneNumber,
+                    offerid: offer.offerId,
+                    method: 'new'
+                })
+            });
+
+            const data = await response.json();
+             if (!response.ok || data.resultCode !== "0") {
+                throw new Error(data.message || data.resultDesc || 'فشل تفعيل العرض');
+            }
+            
+            toast({
+                title: 'نجاح',
+                description: `تم تفعيل عرض "${offer.offerName}" بنجاح.`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'فشل التفعيل',
+                description: error.message,
+            });
+        } finally {
+            setIsActivatingOffer(null);
+        }
+    };
 
 
-    const subscriptions = [
-        { name: 'تفعيل خدمة الانترنت - شريحة (3G)', subscribedAt: '21:23:47 2022-07-07', expiresAt: '00:00:00 2037-01-01', canRenew: true },
-        { name: 'تفعيل خدمة الانترنت (4G)', subscribedAt: '19:35:51 2023-07-19', expiresAt: '00:00:00 2037-01-01', canRenew: false },
-        { name: 'Internet', subscribedAt: '19:35:51 2023-07-19', expiresAt: '00:00:00 2037-01-01', canRenew: false },
-        { name: 'باقة مزايا فورجي الشهرية', subscribedAt: '19:36:37 2025-12-17', expiresAt: '23:59:59 2026-01-15', canRenew: true },
-    ];
-    
     const handlePayment = async () => {
         const numericAmount = parseFloat(amount);
         if (isNaN(numericAmount) || numericAmount <= 0) {
@@ -374,16 +447,16 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                     </Card>
                 </TabsContent>
                 <TabsContent value="packages" className="mt-4 space-y-4">
-                    {isYemenMobile && (
+                     {isYemenMobile && (
                         <Card>
                              <CardContent className="p-0">
-                                {isQuerying ? (
+                                {isQueryingInfo ? (
                                     <div className="p-4 text-center">
                                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                     </div>
-                                ) : queryError ? (
+                                ) : queryInfoError ? (
                                     <div className="p-3 text-center text-destructive text-sm flex items-center justify-center gap-2">
-                                       <Info className="h-4 w-4" /> {queryError}
+                                       <Info className="h-4 w-4" /> لم تظهر السلفة ولا بينانتات رقم
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border">
@@ -400,70 +473,46 @@ const ServiceUI = ({ phoneNumber, company }: { phoneNumber: string, company: Com
                             </CardContent>
                         </Card>
                     )}
+
                     <Card>
-                        <CardContent className="p-0">
+                         <CardContent className="p-0">
                             <div className="bg-muted text-foreground text-center font-bold p-2 text-sm">
-                                الاشتراكات الحالية
+                                العروض والباقات المتاحة
                             </div>
-                            <div className="p-3 space-y-3">
-                                {subscriptions.map((sub, index) => (
-                                    <Card key={index} className="bg-muted/50 p-3">
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex-1 text-right">
-                                                <p className="font-bold text-sm">{sub.name}</p>
-                                                <p className="text-xs text-green-600 mt-1">الإشتراك: {sub.subscribedAt}</p>
-                                                <p className="text-xs text-red-600">الإنتهاء: {sub.expiresAt}</p>
-                                            </div>
-                                            {sub.canRenew && (
-                                                <div className="text-center ml-2">
-                                                    <Button variant="ghost" className="h-12 w-12 rounded-full flex flex-col items-center justify-center bg-primary/10 hover:bg-primary/20">
-                                                        <RefreshCw className="h-5 w-5 text-primary" />
-                                                    </Button>
-                                                    <span className="text-xs font-semibold text-primary">تجديد</span>
+                             {isQueryingOffers ? (
+                                <div className="p-6 text-center">
+                                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                                </div>
+                            ) : queryOffersError ? (
+                                <div className="p-4 text-center text-destructive text-sm flex items-center justify-center gap-2">
+                                   <AlertCircle className="h-4 w-4" /> {queryOffersError}
+                                </div>
+                            ) : availableOffers.length === 0 ? (
+                                <p className="text-center text-muted-foreground text-sm p-4">لا توجد عروض متاحة حالياً لهذا الرقم.</p>
+                            ) : (
+                                <div className="p-3 space-y-2 max-h-80 overflow-y-auto">
+                                    {availableOffers.map((offer) => (
+                                        <Card key={offer.offerId} className="bg-muted/50 p-3">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex-1 text-right">
+                                                    <p className="font-bold text-sm">{offer.offerName}</p>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        </CardContent>
+                                                <Button 
+                                                    size="sm" 
+                                                    onClick={() => handleActivateOffer(offer)} 
+                                                    disabled={isActivatingOffer === offer.offerId}
+                                                    className="shrink-0"
+                                                >
+                                                     {isActivatingOffer === offer.offerId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4 ml-2" />}
+                                                    {isActivatingOffer === offer.offerId ? '...' : 'تفعيل'}
+                                                </Button>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
+                         </CardContent>
                     </Card>
-                    
-                    <Accordion type="single" collapsible className="w-full space-y-3">
-                    <AccordionItem value="item-1" className="border-0">
-                        <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
-                            <div className="flex justify-between items-center w-full">
-                            <span className="font-bold">باقات مزايا</span>
-                            <div className="bg-white/30 text-white rounded-md px-2 py-1 text-xs font-bold">3G</div>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-3 bg-card mt-2 rounded-lg">
-                            محتوى باقات مزايا هنا.
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2" className="border-0">
-                        <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
-                            <div className="flex justify-between items-center w-full">
-                            <span className="font-bold">باقات فورجي</span>
-                            <div className="bg-white/30 text-white rounded-md px-2 py-1 text-xs font-bold">4G</div>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-3 bg-card mt-2 rounded-lg">
-                            محتوى باقات فورجي هنا.
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-3" className="border-0">
-                        <AccordionTrigger className="p-3 bg-primary text-primary-foreground rounded-lg hover:no-underline hover:bg-primary/90">
-                            <div className="flex justify-between items-center w-full">
-                            <span className="font-bold">باقات فولتي VOLTE</span>
-                            <div className="bg-white/30 text-white rounded-md px-2 py-1 text-xs font-bold">4G</div>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-3 bg-card mt-2 rounded-lg">
-                            محتوى باقات فولتي هنا.
-                        </AccordionContent>
-                    </AccordionItem>
-                    </Accordion>
                 </TabsContent>
             </Tabs>
         </div>

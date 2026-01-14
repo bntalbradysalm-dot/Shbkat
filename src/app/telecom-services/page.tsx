@@ -118,10 +118,8 @@ export default function TelecomServicesPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              data: {
-                mobile: phone,
-                type: 'balance',
-              },
+              mobile: phone,
+              type: 'balance',
             }),
           });
           const result = await response.json();

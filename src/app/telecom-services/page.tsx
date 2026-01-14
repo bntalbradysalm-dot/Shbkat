@@ -123,7 +123,7 @@ export default function TelecomServicesPage() {
 
   useEffect(() => {
     const handleSearch = async () => {
-      if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
+      if ((phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')))) {
         setShowTabs(true);
         setIsCheckingBilling(true);
         setBillingInfo(null);
@@ -264,10 +264,13 @@ export default function TelecomServicesPage() {
     }
     setIs4GQuerying(true);
     try {
-        const response = await fetch('/api/yem-query', {
+        const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: { mobile: yemen4GPhone, type: 'balance' } }),
+            body: JSON.stringify({
+                action: 'query',
+                mobile: yemen4GPhone,
+            }),
         });
         const result = await response.json();
         if (!response.ok) {
@@ -275,7 +278,7 @@ export default function TelecomServicesPage() {
         }
         toast({
             title: 'نتيجة الاستعلام',
-            description: `رصيد الرقم ${yemen4GPhone} هو: ${result.data?.balance ?? 0} ريال.`,
+            description: result.resultDesc || 'تم إرسال الطلب بنجاح.',
         });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });

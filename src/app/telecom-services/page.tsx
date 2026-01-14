@@ -44,9 +44,6 @@ type SolfaApiResponse = {
     loan_amount?: string;
 };
 
-const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
-
-
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -131,12 +128,11 @@ export default function TelecomServicesPage() {
         setIsCheckingBilling(true);
         setBillingInfo(null);
         try {
-          const balanceData = { data: { mobile: phone, type: 'balance' } };
           const [balanceResponse, solfaResponse] = await Promise.all([
-            fetch('https://apis.okamel.org/api/partner-yem/query', {
+            fetch('/api/yem-query', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-              body: JSON.stringify(balanceData),
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phone, type: 'balance' }),
             }),
             fetch('/api/telecom', {
               method: 'POST',
@@ -149,10 +145,15 @@ export default function TelecomServicesPage() {
           ]);
   
           const balanceResult = await balanceResponse.json();
-          const solfaResult: SolfaApiResponse = await solfaResponse.json();
+          const solfaResult = await solfaResponse.json();
   
           if (!balanceResponse.ok) {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
+          }
+
+          if (!solfaResponse.ok) {
+            // Non-critical, so we just log it and continue
+            console.error("Solfa query failed:", (solfaResult as any).message);
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -220,11 +221,14 @@ export default function TelecomServicesPage() {
     setIsProcessing(true);
 
     try {
-        const data = { data: { mobile: phone, amount: numericAmount } };
-        const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
+        const response = await fetch('/api/baitynet', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-            body: JSON.stringify(data)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mobile: phone,
+                amount: numericAmount,
+                type: 'balance',
+            })
         });
         
         const result = await response.json();
@@ -306,14 +310,14 @@ export default function TelecomServicesPage() {
 
     setIs4GProcessing(true);
     try {
-        const data = {
-            type: 'line',
-            mobile: yemen4GPhone,
-        };
-        const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
+        const response = await fetch('/api/baitynet', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-            body: JSON.stringify({ data: { mobile: yemen4GPhone, amount: numericAmount } })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mobile: yemen4GPhone,
+                amount: numericAmount,
+                type: 'line',
+            })
         });
         const result = await response.json();
         if (!response.ok) {
@@ -472,8 +476,8 @@ export default function TelecomServicesPage() {
                     inputMode='numeric'
                     placeholder="7xxxxxxx"
                     value={yemen4GPhone}
-                    onChange={(e) => setYemen4GPhone(e.target.value.replace(/\D/g, ''))}
-                    maxLength={10}
+                    onChange={(e) => setYemen4GPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    maxLength={9}
                     className="text-right font-semibold"
                   />
                 </div>

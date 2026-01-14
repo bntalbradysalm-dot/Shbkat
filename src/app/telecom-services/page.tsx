@@ -111,6 +111,9 @@ export default function TelecomServicesPage() {
   // Yemen 4G states
   const [yemen4GPhone, setYemen4GPhone] = useState('');
   const [yemen4GAmount, setYemen4GAmount] = useState('');
+  const [is4GQuerying, setIs4GQuerying] = useState(false);
+  const [is4GProcessing, setIs4GProcessing] = useState(false);
+  const [is4GConfirming, setIs4GConfirming] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -130,8 +133,10 @@ export default function TelecomServicesPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                mobile: phone,
-                type: 'balance',
+                data: {
+                  mobile: phone,
+                  type: 'balance',
+                }
               }),
             }),
             fetch('/api/telecom', {
@@ -151,7 +156,7 @@ export default function TelecomServicesPage() {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
           if (!solfaResponse.ok) {
-            // console.error("Solfa query failed:", (solfaResult as any).message);
+            // Non-critical, so we just log it and continue
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -249,6 +254,81 @@ export default function TelecomServicesPage() {
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
+    }
+  };
+
+  const handle4GQuery = async () => {
+    if (!yemen4GPhone) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف.'});
+        return;
+    }
+    setIs4GQuerying(true);
+    try {
+        const response = await fetch('/api/yem-query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: { mobile: yemen4GPhone, type: 'balance' } }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'فشل الاستعلام.');
+        }
+        toast({
+            title: 'نتيجة الاستعلام',
+            description: `رصيد الرقم ${yemen4GPhone} هو: ${result.data?.balance ?? 0} ريال.`,
+        });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
+    } finally {
+        setIs4GQuerying(false);
+    }
+  };
+
+  const handle4GPayment = async () => {
+    if (!yemen4GPhone || !yemen4GAmount || !user || !userProfile || !firestore || !userDocRef) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات المستخدم أو الطلب غير مكتملة.' });
+        return;
+    }
+    const numericAmount = parseFloat(yemen4GAmount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.' });
+        return;
+    }
+    if ((userProfile.balance ?? 0) < numericAmount) {
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
+        return;
+    }
+
+    setIs4GProcessing(true);
+    try {
+        const response = await fetch('/api/baitynet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: yemen4GPhone, amount: numericAmount })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+        }
+        const batch = writeBatch(firestore);
+        batch.update(userDocRef, { balance: increment(-numericAmount) });
+        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        batch.set(transactionRef, {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: numericAmount,
+            transactionType: 'سداد يمن فورجي',
+            notes: `إلى رقم: ${yemen4GPhone}`,
+            recipientPhoneNumber: yemen4GPhone
+        });
+        await batch.commit();
+        setAmount(yemen4GAmount);
+        setShowSuccess(true);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'فشل السداد', description: error.message });
+    } finally {
+        setIs4GProcessing(false);
+        setIs4GConfirming(false);
     }
   };
   
@@ -404,12 +484,32 @@ export default function TelecomServicesPage() {
                     />
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handle4GQuery} disabled={is4GQuerying || !yemen4GPhone}>
+                       {is4GQuerying ? <Loader2 className="h-4 w-4 animate-spin ml-2"/> : null}
                         استعلام
                     </Button>
-                     <Button>
-                        تسديد
-                    </Button>
+                    <AlertDialog open={is4GConfirming} onOpenChange={setIs4GConfirming}>
+                        <AlertDialogTrigger asChild>
+                            <Button disabled={is4GProcessing || !yemen4GPhone || !yemen4GAmount}>
+                                {is4GProcessing ? <Loader2 className="h-4 w-4 animate-spin ml-2"/> : null}
+                                تسديد
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>تأكيد السداد</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    هل أنت متأكد من رغبتك في تسديد مبلغ {Number(yemen4GAmount).toLocaleString('en-US')} ريال للرقم {yemen4GPhone}؟
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={is4GProcessing}>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={handle4GPayment} disabled={is4GProcessing}>
+                                    {is4GProcessing ? 'جاري السداد...' : 'تأكيد'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </CardContent>
           </TabsContent>

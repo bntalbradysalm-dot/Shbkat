@@ -117,7 +117,12 @@ export default function TelecomServicesPage() {
           const response = await fetch('/api/yem-query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile: phone })
+            body: JSON.stringify({
+              data: {
+                mobile: phone,
+                type: 'balance',
+              },
+            }),
           });
           const result = await response.json();
           if (!response.ok) {
@@ -148,9 +153,7 @@ export default function TelecomServicesPage() {
   useEffect(() => {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
-      const tax = 0.174;
-      const net = numericAmount * (1 - tax);
-      setNetAmount(parseFloat(net.toFixed(2)));
+      setNetAmount(numericAmount - (numericAmount * 0.174));
     } else {
       setNetAmount(0);
     }
@@ -263,8 +266,8 @@ export default function TelecomServicesPage() {
                 <div className="pt-2 animate-in fade-in-0 duration-300">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                             <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
                              <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
+                             <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
                         </TabsList>
                         <TabsContent value="packages" className="pt-4 space-y-4">
                             <Card className="bg-muted/50">
@@ -292,7 +295,7 @@ export default function TelecomServicesPage() {
                            </div>
                            <div className='text-right'>
                                 <Label htmlFor="netAmount" className="flex items-center justify-end gap-2 mb-1">صافي الرصيد</Label>
-                                <Input id="netAmount" type="text" value={netAmount.toLocaleString('en-US')} readOnly className="bg-muted focus:ring-0 text-right" />
+                                <Input id="netAmount" type="text" value={netAmount.toFixed(2)} readOnly className="bg-muted focus:ring-0 text-right" />
                            </div>
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>

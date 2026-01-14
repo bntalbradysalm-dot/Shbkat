@@ -208,7 +208,7 @@ export default function TelecomServicesPage() {
         <BalanceDisplay />
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center text-lg font-normal">تسديد شبكات الاتصالات اليمنية</CardTitle>
+            <CardTitle className="text-center text-lg font-normal">سداد الرصيد والباقات</CardTitle>
              <div className="flex justify-center items-center gap-3 pt-4">
                 {companyLogos.map((logo) => (
                     <div key={logo.name} className="p-1 bg-muted rounded-full">

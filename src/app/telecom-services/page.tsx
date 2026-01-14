@@ -106,7 +106,11 @@ export default function TelecomServicesPage() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState("balance");
+  const [activeTab, setActiveTab] = useState("yemen_mobile");
+
+  // Yemen 4G states
+  const [yemen4GPhone, setYemen4GPhone] = useState('');
+  const [yemen4GAmount, setYemen4GAmount] = useState('');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -121,9 +125,8 @@ export default function TelecomServicesPage() {
         setIsCheckingBilling(true);
         setBillingInfo(null);
         try {
-          // Perform balance and solfa queries concurrently
           const [balanceResponse, solfaResponse] = await Promise.all([
-            fetch('/api/yem-query', { // For balance from okamel.org
+            fetch('/api/yem-query', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -131,7 +134,7 @@ export default function TelecomServicesPage() {
                 type: 'balance',
               }),
             }),
-            fetch('/api/telecom', { // For solfa from echehanly
+            fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -148,7 +151,6 @@ export default function TelecomServicesPage() {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
           if (!solfaResponse.ok) {
-            // Non-critical, so we just log it and continue
             // console.error("Solfa query failed:", (solfaResult as any).message);
           }
           
@@ -175,7 +177,6 @@ export default function TelecomServicesPage() {
       }
     };
     
-    // Debounce search
     const timerId = setTimeout(() => {
         handleSearch();
     }, 500);
@@ -276,8 +277,15 @@ export default function TelecomServicesPage() {
         <BalanceDisplay />
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center text-lg font-normal">سداد الرصيد والباقات</CardTitle>
+             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="yemen_mobile">يمن موبايل</TabsTrigger>
+                  <TabsTrigger value="yemen_4g">يمن فورجي</TabsTrigger>
+              </TabsList>
+             </Tabs>
           </CardHeader>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsContent value="yemen_mobile">
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="phone" className="flex items-center gap-2 mb-1">
@@ -298,7 +306,7 @@ export default function TelecomServicesPage() {
             
             {showTabs && (
                 <div className="pt-2 animate-in fade-in-0 duration-300">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <Tabs defaultValue="balance" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                              <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
                              <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
@@ -361,6 +369,51 @@ export default function TelecomServicesPage() {
                 </div>
             )}
           </CardContent>
+          </TabsContent>
+          <TabsContent value="yemen_4g">
+            <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="yemen-4g-phone" className="flex items-center gap-2 mb-1">
+                    <Phone className="h-4 w-4" />
+                    ادخل رقم الهاتف
+                  </Label>
+                  <Input
+                    id="yemen-4g-phone"
+                    type="tel"
+                    inputMode='numeric'
+                    placeholder="7xxxxxxx"
+                    value={yemen4GPhone}
+                    onChange={(e) => setYemen4GPhone(e.target.value.replace(/\D/g, ''))}
+                    maxLength={10}
+                    className="text-right font-semibold"
+                  />
+                </div>
+                 <div>
+                    <Label htmlFor="yemen-4g-amount" className="flex items-center gap-2 mb-1">
+                        <Wallet className="h-4 w-4" />
+                        المبلغ
+                    </Label>
+                    <Input
+                        id="yemen-4g-amount"
+                        type="number"
+                        inputMode='numeric'
+                        placeholder="0.00"
+                        value={yemen4GAmount}
+                        onChange={(e) => setYemen4GAmount(e.target.value)}
+                        className="text-right"
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                    <Button variant="outline">
+                        استعلام
+                    </Button>
+                     <Button>
+                        تسديد
+                    </Button>
+                </div>
+            </CardContent>
+          </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

@@ -34,8 +34,15 @@ type UserProfile = {
 type BillingInfo = {
     balance: number;
     customer_type: string;
-    solfa_status: 'متسلف' | 'غير متسلف';
+    solfa_status: 'متسلف' | 'غير متسلف' | 'غير معروف';
 };
+
+type SolfaApiResponse = {
+    status: '1' | '0'; // 1 for active loan, 0 for no loan
+    message: string;
+    loan_amount?: string;
+};
+
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -116,7 +123,7 @@ export default function TelecomServicesPage() {
         try {
           // Perform balance and solfa queries concurrently
           const [balanceResponse, solfaResponse] = await Promise.all([
-            fetch('/api/yem-query', {
+            fetch('/api/yem-query', { // For balance from okamel.org
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -124,30 +131,36 @@ export default function TelecomServicesPage() {
                 type: 'balance',
               }),
             }),
-            fetch('/api/yem-query', {
+            fetch('/api/telecom', { // For solfa from echehanly
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 mobile: phone,
-                type: 'solfa',
+                action: 'solfa',
               }),
             })
           ]);
   
           const balanceResult = await balanceResponse.json();
-          const solfaResult = await solfaResponse.json();
+          const solfaResult: SolfaApiResponse = await solfaResponse.json();
   
           if (!balanceResponse.ok) {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
           if (!solfaResponse.ok) {
             // Non-critical, so we just log it and continue
-            console.error("Solfa query failed:", solfaResult.message);
+            console.error("Solfa query failed:", (solfaResult as any).message);
+          }
+          
+          let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
+          if (solfaResponse.ok && solfaResult.status) {
+            finalSolfaStatus = solfaResult.status === '1' ? 'متسلف' : 'غير متسلف';
           }
   
           setBillingInfo({
-            ...balanceResult.data,
-            solfa_status: solfaResult.ok ? solfaResult.data?.solfa_status : 'غير معروف'
+            balance: balanceResult.data?.balance,
+            customer_type: balanceResult.data?.customer_type,
+            solfa_status: finalSolfaStatus
           });
 
         } catch (error: any) {

@@ -131,16 +131,12 @@ export default function TelecomServicesPage() {
         setIsCheckingBilling(true);
         setBillingInfo(null);
         try {
+          const balanceData = { data: { mobile: phone, type: 'balance' } };
           const [balanceResponse, solfaResponse] = await Promise.all([
             fetch('https://apis.okamel.org/api/partner-yem/query', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-              body: JSON.stringify({
-                data: {
-                  mobile: phone,
-                  type: 'balance',
-                }
-              }),
+              body: JSON.stringify(balanceData),
             }),
             fetch('/api/telecom', {
               method: 'POST',
@@ -157,9 +153,6 @@ export default function TelecomServicesPage() {
   
           if (!balanceResponse.ok) {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
-          }
-          if (!solfaResponse.ok) {
-             // Non-critical, so we just continue
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -227,10 +220,11 @@ export default function TelecomServicesPage() {
     setIsProcessing(true);
 
     try {
+        const data = { data: { mobile: phone, amount: numericAmount } };
         const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-            body: JSON.stringify({ data: { mobile: phone, amount: numericAmount } })
+            body: JSON.stringify(data)
         });
         
         const result = await response.json();
@@ -312,6 +306,10 @@ export default function TelecomServicesPage() {
 
     setIs4GProcessing(true);
     try {
+        const data = {
+            type: 'line',
+            mobile: yemen4GPhone,
+        };
         const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },

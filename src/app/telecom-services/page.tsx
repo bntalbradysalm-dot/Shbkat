@@ -260,14 +260,18 @@ export default function TelecomServicesPage() {
 
   const handle4GQuery = async () => {
     if (!yemen4GPhone) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف.'});
+        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف.' });
         return;
     }
+
     setIs4GQuerying(true);
+
     try {
         const response = await fetch('/api/telecom', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
                 action: 'query',
                 mobile: yemen4GPhone,
@@ -275,6 +279,7 @@ export default function TelecomServicesPage() {
         });
 
         const result = await response.json();
+
         if (!response.ok) {
             throw new Error(result.message || 'فشل الاستعلام.');
         }
@@ -287,11 +292,15 @@ export default function TelecomServicesPage() {
         });
 
     } catch (error: any) {
-        toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
+        toast({
+            variant: 'destructive',
+            title: 'فشل الاستعلام',
+            description: error.message
+        });
     } finally {
         setIs4GQuerying(false);
     }
-  };
+};
 
   const handle4GPayment = async () => {
     if (!yemen4GPhone || !yemen4GAmount || !user || !userProfile || !firestore || !userDocRef) {
@@ -310,14 +319,15 @@ export default function TelecomServicesPage() {
 
     setIs4GProcessing(true);
     try {
+        const data = {
+            mobile: yemen4GPhone,
+            amount: numericAmount,
+            type: 'line',
+        };
         const response = await fetch('/api/baitynet', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                mobile: yemen4GPhone,
-                amount: numericAmount,
-                type: 'line',
-            })
+            body: JSON.stringify(data)
         });
         const result = await response.json();
         if (!response.ok) {

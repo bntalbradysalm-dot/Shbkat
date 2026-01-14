@@ -235,7 +235,7 @@ export default function TelecomServicesPage() {
                            </div>
                            <div className='text-right'>
                                 <Label htmlFor="netAmount" className="flex items-center justify-end gap-2 mb-1">صافي الرصيد</Label>
-                                <Input id="netAmount" type="text" value={`${netAmount.toLocaleString('en-US')}`} readOnly className="bg-muted focus:ring-0 text-right" />
+                                <Input id="netAmount" type="text" value={netAmount.toLocaleString('en-US')} readOnly className="bg-muted focus:ring-0 text-right" />
                            </div>
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>

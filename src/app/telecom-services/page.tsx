@@ -152,8 +152,7 @@ export default function TelecomServicesPage() {
           }
 
           if (!solfaResponse.ok) {
-            // Non-critical, so we just log it and continue
-            console.error("Solfa query failed:", (solfaResult as any).message);
+            console.error((solfaResult as any).message);
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -267,14 +266,12 @@ export default function TelecomServicesPage() {
     setIs4GQuerying(true);
 
     try {
-        const response = await fetch('/api/telecom', {
+        const response = await fetch('/api/yem-query', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'query',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
                 mobile: yemen4GPhone,
+                type: 'yemen4G' 
             })
         });
 
@@ -319,15 +316,14 @@ export default function TelecomServicesPage() {
 
     setIs4GProcessing(true);
     try {
-        const data = {
-            mobile: yemen4GPhone,
-            amount: numericAmount,
-            type: 'line',
-        };
         const response = await fetch('/api/baitynet', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                mobile: yemen4GPhone,
+                amount: numericAmount,
+                type: 'line',
+            })
         });
         const result = await response.json();
         if (!response.ok) {

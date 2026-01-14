@@ -110,8 +110,8 @@ export default function TelecomServicesPage() {
   useEffect(() => {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
-      const tax = 0.174;
-      const net = numericAmount - (numericAmount * tax);
+      const taxRate = 0.174;
+      const net = numericAmount - (numericAmount * taxRate);
       setNetAmount(parseFloat(net.toFixed(2)));
     } else {
       setNetAmount(0);
@@ -223,11 +223,30 @@ export default function TelecomServicesPage() {
             
             {showTabs && (
                 <div className="pt-2 animate-in fade-in-0 duration-300">
-                    <Tabs defaultValue="balance" className="w-full">
+                    <Tabs defaultValue="packages" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
                             <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
+                            <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
                         </TabsList>
+                        <TabsContent value="packages" className="pt-4 space-y-4">
+                            <Card className="bg-muted/50">
+                                <CardContent className="grid grid-cols-3 gap-2 p-2 text-center">
+                                    <div className='p-2 bg-background rounded-md'>
+                                        <p className="text-xs text-muted-foreground">رصيد الرقم</p>
+                                        <p className="font-bold text-sm">... ريال</p>
+                                    </div>
+                                    <div className='p-2 bg-background rounded-md'>
+                                        <p className="text-xs text-muted-foreground">نوع الرقم</p>
+                                        <p className="font-bold text-sm">دفع مسبق</p>
+                                    </div>
+                                     <div className='p-2 bg-background rounded-md'>
+                                        <p className="text-xs text-muted-foreground">فحص السلفة</p>
+                                        <p className="font-bold text-sm">غير متسلف</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <PackagesPlaceholder />
+                        </TabsContent>
                         <TabsContent value="balance" className="pt-4 space-y-4">
                            <div className='text-right'>
                                 <Label htmlFor="amount" className="flex items-center justify-end gap-2 mb-1">المبلغ</Label>
@@ -263,25 +282,6 @@ export default function TelecomServicesPage() {
                                 </AlertDialogContent>
                             </AlertDialog>
                         </TabsContent>
-                        <TabsContent value="packages" className="pt-4 space-y-4">
-                            <Card className="bg-muted/50">
-                                <CardContent className="grid grid-cols-3 gap-2 p-2 text-center">
-                                    <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">رصيد الرقم</p>
-                                        <p className="font-bold text-sm">... ريال</p>
-                                    </div>
-                                    <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">نوع الرقم</p>
-                                        <p className="font-bold text-sm">دفع مسبق</p>
-                                    </div>
-                                     <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">فحص السلفة</p>
-                                        <p className="font-bold text-sm">غير متسلف</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <PackagesPlaceholder />
-                        </TabsContent>
                     </Tabs>
                 </div>
             )}
@@ -293,3 +293,5 @@ export default function TelecomServicesPage() {
     </>
   );
 }
+
+    

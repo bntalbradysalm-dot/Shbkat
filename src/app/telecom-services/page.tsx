@@ -223,7 +223,7 @@ export default function TelecomServicesPage() {
             
             {showTabs && (
                 <div className="pt-2 animate-in fade-in-0 duration-300">
-                    <Tabs defaultValue="packages" className="w-full">
+                    <Tabs defaultValue="balance" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
                             <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
@@ -293,5 +293,3 @@ export default function TelecomServicesPage() {
     </>
   );
 }
-
-    

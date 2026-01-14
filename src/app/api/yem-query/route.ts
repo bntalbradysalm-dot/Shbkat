@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const apiRequestBody = {
       data: {
         mobile: String(mobile),
-        type: 'all' // Added type as per API requirement for a general query
+        type: 'balance' 
       },
     };
 

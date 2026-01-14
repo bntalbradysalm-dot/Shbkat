@@ -44,6 +44,8 @@ type SolfaApiResponse = {
     loan_amount?: string;
 };
 
+const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -130,9 +132,9 @@ export default function TelecomServicesPage() {
         setBillingInfo(null);
         try {
           const [balanceResponse, solfaResponse] = await Promise.all([
-            fetch('/api/yem-query', {
+            fetch('https://apis.okamel.org/api/partner-yem/query', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
               body: JSON.stringify({
                 data: {
                   mobile: phone,
@@ -225,10 +227,10 @@ export default function TelecomServicesPage() {
     setIsProcessing(true);
 
     try {
-        const response = await fetch('/api/baitynet', {
+        const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile: phone, amount: numericAmount })
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+            body: JSON.stringify({ data: { mobile: phone, amount: numericAmount } })
         });
         
         const result = await response.json();
@@ -310,10 +312,10 @@ export default function TelecomServicesPage() {
 
     setIs4GProcessing(true);
     try {
-        const response = await fetch('/api/baitynet', {
+        const response = await fetch('https://apis.okamel.org/api/partner-yem/bill-balance', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile: yemen4GPhone, amount: numericAmount })
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+            body: JSON.stringify({ data: { mobile: yemen4GPhone, amount: numericAmount } })
         });
         const result = await response.json();
         if (!response.ok) {

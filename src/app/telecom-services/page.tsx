@@ -114,19 +114,42 @@ export default function TelecomServicesPage() {
         setIsCheckingBilling(true);
         setBillingInfo(null);
         try {
-          const response = await fetch('/api/yem-query', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              mobile: phone,
-              type: 'balance',
+          // Perform balance and solfa queries concurrently
+          const [balanceResponse, solfaResponse] = await Promise.all([
+            fetch('/api/yem-query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mobile: phone,
+                type: 'balance',
+              }),
             }),
-          });
-          const result = await response.json();
-          if (!response.ok) {
-            throw new Error(result.message || 'فشل الاستعلام عن الفاتورة.');
+            fetch('/api/yem-query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mobile: phone,
+                type: 'solfa',
+              }),
+            })
+          ]);
+  
+          const balanceResult = await balanceResponse.json();
+          const solfaResult = await solfaResponse.json();
+  
+          if (!balanceResponse.ok) {
+            throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
-          setBillingInfo(result.data);
+          if (!solfaResponse.ok) {
+            // Non-critical, so we just log it and continue
+            console.error("Solfa query failed:", solfaResult.message);
+          }
+  
+          setBillingInfo({
+            ...balanceResult.data,
+            solfa_status: solfaResult.ok ? solfaResult.data?.solfa_status : 'غير معروف'
+          });
+
         } catch (error: any) {
           toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
           setBillingInfo(null);

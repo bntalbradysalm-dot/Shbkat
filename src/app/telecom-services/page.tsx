@@ -149,7 +149,7 @@ export default function TelecomServicesPage() {
           }
           if (!solfaResponse.ok) {
             // Non-critical, so we just log it and continue
-            console.error("Solfa query failed:", (solfaResult as any).message);
+            // console.error("Solfa query failed:", (solfaResult as any).message);
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';

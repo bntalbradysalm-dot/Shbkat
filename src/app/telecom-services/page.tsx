@@ -157,7 +157,7 @@ export default function TelecomServicesPage() {
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
           if (!solfaResponse.ok) {
-            // Non-critical, so we just log it and continue
+             // Non-critical, so we just continue
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -265,30 +265,27 @@ export default function TelecomServicesPage() {
     }
     setIs4GQuerying(true);
     try {
-        const response = await fetch('/api/yem-query', {
+        const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                data: {
-                    mobile: yemen4GPhone,
-                    type: 'balance',
-                }
-            }),
+                action: 'query',
+                mobile: yemen4GPhone,
+            })
         });
+
         const result = await response.json();
         if (!response.ok) {
             throw new Error(result.message || 'فشل الاستعلام.');
         }
-        
-        let description = `الرصيد: ${result.data?.balance || 'غير معروف'}`;
-        if(result.data?.customer_type) {
-            description += ` | نوع العميل: ${result.data.customer_type}`;
-        }
+
+        const description = `الرصيد: ${result.R_CardBalance || 'غير معروف'}`;
 
         toast({
             title: 'نتيجة الاستعلام',
             description: description,
         });
+
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
     } finally {

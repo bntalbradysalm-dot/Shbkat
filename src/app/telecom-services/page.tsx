@@ -231,6 +231,7 @@ export default function TelecomServicesPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
+                className="text-right"
               />
             </div>
             
@@ -244,11 +245,11 @@ export default function TelecomServicesPage() {
                         <TabsContent value="balance" className="pt-4 space-y-4">
                            <div>
                                 <Label htmlFor="amount" className="flex items-center gap-2 mb-1">المبلغ</Label>
-                                <Input id="amount" type="number" inputMode='numeric' placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                                <Input id="amount" type="number" inputMode='numeric' placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-right" />
                            </div>
                            <div>
                                 <Label htmlFor="netAmount" className="flex items-center gap-2 mb-1">صافي الرصيد</Label>
-                                <Input id="netAmount" type="text" value={`${netAmount.toLocaleString('en-US')} ريال`} readOnly className="bg-muted focus:ring-0" />
+                                <Input id="netAmount" type="text" value={`${netAmount.toLocaleString('en-US')} ريال`} readOnly className="bg-muted focus:ring-0 text-right" />
                            </div>
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>

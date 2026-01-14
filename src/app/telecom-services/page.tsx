@@ -10,6 +10,7 @@ import { Wallet, Send, Phone, CheckCircle, Smartphone, Wifi, Zap, Building, Help
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
+  AlertDialogTrigger,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
@@ -17,7 +18,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
@@ -29,6 +29,12 @@ import Image from 'next/image';
 
 type UserProfile = {
   balance?: number;
+};
+
+type BillingInfo = {
+    balance: number;
+    customer_type: string;
+    solfa_status: 'متسلف' | 'غير متسلف';
 };
 
 const BalanceDisplay = () => {
@@ -85,12 +91,15 @@ export default function TelecomServicesPage() {
 
   const [phone, setPhone] = useState('');
   const [showTabs, setShowTabs] = useState(false);
+  const [isCheckingBilling, setIsCheckingBilling] = useState(false);
+  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
 
   const [amount, setAmount] = useState('');
   const [netAmount, setNetAmount] = useState(0);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("balance");
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -99,18 +108,48 @@ export default function TelecomServicesPage() {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
-      setShowTabs(true);
-    } else {
-      setShowTabs(false);
-    }
-  }, [phone]);
+    const handleSearch = async () => {
+      if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
+        setShowTabs(true);
+        setIsCheckingBilling(true);
+        setBillingInfo(null);
+        try {
+          const response = await fetch('/api/yem-query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: phone })
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.message || 'فشل الاستعلام عن الفاتورة.');
+          }
+          setBillingInfo(result.data);
+        } catch (error: any) {
+          toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
+          setBillingInfo(null);
+        } finally {
+          setIsCheckingBilling(false);
+        }
+      } else {
+        setShowTabs(false);
+        setBillingInfo(null);
+      }
+    };
+    
+    // Debounce search
+    const timerId = setTimeout(() => {
+        handleSearch();
+    }, 500);
+
+    return () => clearTimeout(timerId);
+
+  }, [phone, toast]);
 
   useEffect(() => {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
       const tax = 0.174;
-      const net = numericAmount - (numericAmount * tax);
+      const net = numericAmount * (1 - tax);
       setNetAmount(parseFloat(net.toFixed(2)));
     } else {
       setNetAmount(0);
@@ -222,25 +261,25 @@ export default function TelecomServicesPage() {
             
             {showTabs && (
                 <div className="pt-2 animate-in fade-in-0 duration-300">
-                    <Tabs defaultValue="balance" className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
-                            <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
+                             <TabsTrigger value="balance"><Wallet className="ml-2 h-4 w-4" /> الرصيد</TabsTrigger>
+                             <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
                         </TabsList>
                         <TabsContent value="packages" className="pt-4 space-y-4">
                             <Card className="bg-muted/50">
                                 <CardContent className="grid grid-cols-3 gap-2 p-2 text-center">
                                     <div className='p-2 bg-background rounded-md'>
                                         <p className="text-xs text-muted-foreground">رصيد الرقم</p>
-                                        <p className="font-bold text-sm">... ريال</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{(billingInfo?.balance ?? 0).toLocaleString()} ريال</p>}
                                     </div>
                                     <div className='p-2 bg-background rounded-md'>
                                         <p className="text-xs text-muted-foreground">نوع الرقم</p>
-                                        <p className="font-bold text-sm">دفع مسبق</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{billingInfo?.customer_type ?? '...'}</p>}
                                     </div>
                                      <div className='p-2 bg-background rounded-md'>
                                         <p className="text-xs text-muted-foreground">فحص السلفة</p>
-                                        <p className="font-bold text-sm">غير متسلف</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{billingInfo?.solfa_status ?? '...'}</p>}
                                     </div>
                                 </CardContent>
                             </Card>

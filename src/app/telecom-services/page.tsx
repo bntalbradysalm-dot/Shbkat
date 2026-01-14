@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -30,14 +31,6 @@ import Image from 'next/image';
 type UserProfile = {
   balance?: number;
 };
-
-const companyLogos = [
-    { name: 'Yemen Mobile', src: 'https://i.postimg.cc/tCRHwB0c/yemen-mobile-logo.png' },
-    { name: 'YOU', src: 'https://i.postimg.cc/j5tN8p3p/you-logo.png' },
-    { name: 'Sabafon', src: 'https://i.postimg.cc/fRqFSmb8/sabafon-logo.png' },
-    { name: 'Y', src: 'https://i.postimg.cc/L5qjY0sP/y-logo.png' },
-    { name: 'Aden Net', src: 'https://i.postimg.cc/PqgXhL1k/aden-net-logo.png' },
-];
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -209,13 +202,6 @@ export default function TelecomServicesPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-center text-lg font-normal">سداد الرصيد والباقات</CardTitle>
-             <div className="flex justify-center items-center gap-3 pt-4">
-                {companyLogos.map((logo) => (
-                    <div key={logo.name} className="p-1 bg-muted rounded-full">
-                        <Image src={logo.src} alt={logo.name} width={28} height={28} className="object-contain" />
-                    </div>
-                ))}
-            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

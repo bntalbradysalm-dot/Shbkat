@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -264,21 +265,29 @@ export default function TelecomServicesPage() {
     }
     setIs4GQuerying(true);
     try {
-        const response = await fetch('/api/telecom', {
+        const response = await fetch('/api/yem-query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                action: 'query',
-                mobile: yemen4GPhone,
+                data: {
+                    mobile: yemen4GPhone,
+                    type: 'balance',
+                }
             }),
         });
         const result = await response.json();
         if (!response.ok) {
             throw new Error(result.message || 'فشل الاستعلام.');
         }
+        
+        let description = `الرصيد: ${result.data?.balance || 'غير معروف'}`;
+        if(result.data?.customer_type) {
+            description += ` | نوع العميل: ${result.data.customer_type}`;
+        }
+
         toast({
             title: 'نتيجة الاستعلام',
-            description: result.resultDesc || 'تم إرسال الطلب بنجاح.',
+            description: description,
         });
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });

@@ -111,7 +111,7 @@ export default function TelecomServicesPage() {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
       const tax = 0.174;
-      const net = numericAmount / (1 + tax);
+      const net = numericAmount - (numericAmount * tax);
       setNetAmount(parseFloat(net.toFixed(2)));
     } else {
       setNetAmount(0);

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
     const apiRequestBody = {
       data: {
         mobile: String(mobile),
+        type: 'all' // Added type as per API requirement for a general query
       },
     };
 

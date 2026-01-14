@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -110,8 +109,8 @@ export default function TelecomServicesPage() {
   useEffect(() => {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
-      const taxRate = 0.174;
-      const net = numericAmount - (numericAmount * taxRate);
+      const tax = 0.174;
+      const net = numericAmount - (numericAmount * tax);
       setNetAmount(parseFloat(net.toFixed(2)));
     } else {
       setNetAmount(0);
@@ -217,7 +216,7 @@ export default function TelecomServicesPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-right"
+                className="text-right font-semibold"
               />
             </div>
             

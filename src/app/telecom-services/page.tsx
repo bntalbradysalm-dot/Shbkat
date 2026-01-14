@@ -229,13 +229,13 @@ export default function TelecomServicesPage() {
                             <TabsTrigger value="packages"><Wifi className="ml-2 h-4 w-4" /> الباقات</TabsTrigger>
                         </TabsList>
                         <TabsContent value="balance" className="pt-4 space-y-4">
-                           <div>
-                                <Label htmlFor="amount" className="flex items-center gap-2 mb-1">المبلغ</Label>
+                           <div className='text-right'>
+                                <Label htmlFor="amount" className="flex items-center justify-end gap-2 mb-1">المبلغ</Label>
                                 <Input id="amount" type="number" inputMode='numeric' placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-right" />
                            </div>
-                           <div>
-                                <Label htmlFor="netAmount" className="flex items-center gap-2 mb-1">صافي الرصيد</Label>
-                                <Input id="netAmount" type="text" value={`${netAmount.toLocaleString('en-US')} ريال`} readOnly className="bg-muted focus:ring-0 text-right" />
+                           <div className='text-right'>
+                                <Label htmlFor="netAmount" className="flex items-center justify-end gap-2 mb-1">صافي الرصيد</Label>
+                                <Input id="netAmount" type="text" value={`${netAmount.toLocaleString('en-US')}`} readOnly className="bg-muted focus:ring-0 text-right" />
                            </div>
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>

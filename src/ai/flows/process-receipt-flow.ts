@@ -10,6 +10,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getFirestore, doc, getDoc, writeBatch, increment, collection } from 'firebase/firestore';
+import { initializeServerFirebase } from '@/firebase/server-init';
 
 const ReceiptInputSchema = z.object({
   receiptImage: z
@@ -67,7 +69,66 @@ const processReceiptFlow = ai.defineFlow(
     outputSchema: ReceiptOutputSchema,
   },
   async (input) => {
+    // Step 1: Analyze the receipt image with the AI model
     const { output } = await prompt(input);
-    return output!;
+
+    if (!output) {
+      throw new Error("Failed to get a response from the AI model.");
+    }
+    
+    // Step 2: Validate the extracted information
+    if (!output.isReceipt) {
+      throw new Error("The uploaded image does not appear to be a valid receipt.");
+    }
+    if (!output.isNameMatch) {
+      throw new Error(`Recipient name mismatch. Expected something like "${input.expectedRecipientName}", but found "${output.recipientName}".`);
+    }
+    if (!output.isAccountNumberMatch) {
+        throw new Error(`Recipient account number mismatch. Expected "${input.expectedAccountNumber}", but found "${output.accountNumber}".`);
+    }
+    if (!output.transactionReference) {
+      throw new Error("Could not find a transaction reference number on the receipt.");
+    }
+
+    const { firestore } = initializeServerFirebase();
+
+    // Step 3: Check for duplicate transaction reference
+    const receiptRef = doc(firestore, 'processedReceipts', output.transactionReference);
+    const receiptDoc = await getDoc(receiptRef);
+    if (receiptDoc.exists()) {
+      throw new Error(`This receipt has already been processed on ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
+    }
+
+    // Step 4: Perform Firestore operations in a batch
+    const userRef = doc(firestore, 'users', input.userId);
+    const userTransactionRef = doc(collection(firestore, 'users', input.userId, 'transactions'));
+    const now = new Date().toISOString();
+
+    const batch = writeBatch(firestore);
+
+    // 1. Update user's balance
+    batch.update(userRef, { balance: increment(output.amount) });
+
+    // 2. Create a transaction record
+    batch.set(userTransactionRef, {
+      userId: input.userId,
+      transactionDate: now,
+      amount: output.amount,
+      transactionType: `تغذية رصيد (إيصال)`,
+      notes: `رقم مرجع العملية: ${output.transactionReference}`,
+    });
+
+    // 3. Mark receipt as processed to prevent duplicates
+    batch.set(receiptRef, {
+      id: output.transactionReference,
+      userId: input.userId,
+      processedAt: now,
+      amount: output.amount,
+    });
+    
+    // Commit the batch
+    await batch.commit();
+
+    return output;
   }
 );

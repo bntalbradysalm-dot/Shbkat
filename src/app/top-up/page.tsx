@@ -1,19 +1,20 @@
-
 'use client';
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send } from 'lucide-react';
+import { Copy, Send, Upload, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { processReceipt } from '@/ai/flows/process-receipt-flow';
 
 type PaymentMethod = {
   id: string;
@@ -26,10 +27,6 @@ type PaymentMethod = {
 type UserProfile = {
     displayName?: string;
     phoneNumber?: string;
-};
-
-type AppSettings = {
-    supportPhoneNumber?: string;
 };
 
 const getLogoSrc = (url?: string) => {
@@ -56,14 +53,13 @@ export default function TopUpPage() {
         [firestore]
     );
     const { data: paymentMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
-    
-    const settingsDocRef = useMemoFirebase(
-        () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
-        [firestore]
-    );
-    const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [processedAmount, setProcessedAmount] = useState(0);
+
     
     useEffect(() => {
         if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
@@ -78,32 +74,87 @@ export default function TopUpPage() {
             description: "تم نسخ رقم الحساب بنجاح.",
         });
     };
+    
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+          setReceiptFile(e.target.files[0]);
+        }
+    };
+    
+    const fileToDataUri = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+    };
 
-    const handleSendReceipt = () => {
-        if (!selectedMethod || !userProfile || !appSettings?.supportPhoneNumber) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'معلومات الدعم أو المستخدم غير متوفرة. لا يمكن إرسال الرسالة.',
-            });
+    const handleProcessReceipt = async () => {
+        if (!receiptFile || !selectedMethod || !user || !userProfile?.displayName || !userProfile?.phoneNumber) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار إيصال وطريقة دفع أولاً.' });
             return;
         }
 
-        const userName = userProfile.displayName || 'غير معروف';
-        const userPhone = userProfile.phoneNumber || 'غير معروف';
-        const bankName = selectedMethod.name;
+        setIsProcessing(true);
+        try {
+            const receiptImageUri = await fileToDataUri(receiptFile);
+            
+            const result = await processReceipt({
+                receiptImage: receiptImageUri,
+                userId: user.uid,
+                userName: userProfile.displayName,
+                userPhoneNumber: userProfile.phoneNumber,
+                expectedRecipientName: selectedMethod.accountHolderName,
+                expectedAccountNumber: selectedMethod.accountNumber
+            });
 
-        const message = `مرحباً، أود تأكيد عملية إيداع.
-- اسمي: ${userName}
-- رقمي: ${userPhone}
-- البنك: ${bankName}
-- الإيصال مرفق.`;
+            if (!result.isReceipt) {
+                throw new Error("الملف المرفق لا يبدو كإيصال صحيح.");
+            }
+            if (!result.isNameMatch || !result.isAccountNumberMatch) {
+                throw new Error("اسم أو رقم حساب المستلم في الإيصال لا يطابق الحساب المحدد.");
+            }
 
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}&text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            setProcessedAmount(result.amount);
+            setShowSuccess(true);
+            
+            toast({
+                title: 'تمت المعالجة بنجاح!',
+                description: `تم إيداع مبلغ ${result.amount.toLocaleString('en-US')} ريال في حسابك.`,
+            });
+            
+        } catch (error: any) {
+            console.error("Receipt processing failed:", error);
+            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const isLoading = isLoadingMethods;
+    
+    if (showSuccess) {
+      return (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <Card className="w-full max-w-sm text-center shadow-2xl">
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
+                            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h2 className="text-xl font-bold">تم الإيداع بنجاح</h2>
+                        <p className="text-lg font-semibold text-primary">{processedAmount.toLocaleString('en-US')} ريال يمني</p>
+                        <p className="text-sm text-muted-foreground">تمت إضافة المبلغ إلى رصيدك بنجاح.</p>
+                        <div className="w-full pt-4">
+                            <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      );
+    }
 
     const renderPaymentMethods = () => {
         if (isLoading) {
@@ -202,13 +253,24 @@ export default function TopUpPage() {
                     
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
-                           <h2 className="text-lg font-bold">3. إرسال الإيصال</h2>
-                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل، أرسل الإيصال عبر واتساب لتأكيد الإيداع.</p>
+                           <h2 className="text-lg font-bold">3. إرفاق الإيصال</h2>
+                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل، ارفع صورة الإيصال هنا ليتم التحقق منها وإضافة الرصيد.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
-                                    <Button className="w-full h-12 text-base" onClick={handleSendReceipt} disabled={!appSettings?.supportPhoneNumber}>
-                                        <Send className="ml-2 h-4 w-4" />
-                                        إرسال الإيصال عبر واتساب
+                                    <div>
+                                        <label htmlFor="receipt-upload" className="block text-sm font-medium text-muted-foreground mb-2">اختر صورة الإيصال</label>
+                                        <Input
+                                            id="receipt-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                        />
+                                        {receiptFile && <p className="text-xs text-muted-foreground mt-2">الملف المحدد: {receiptFile.name}</p>}
+                                    </div>
+                                    <Button className="w-full h-12 text-base" onClick={handleProcessReceipt} disabled={isProcessing || !receiptFile}>
+                                        {isProcessing ? <Loader2 className="ml-2 h-5 w-5 animate-spin" /> : <Upload className="ml-2 h-5 w-5" />}
+                                        {isProcessing ? 'جاري المعالجة...' : 'رفع وتأكيد الإيداع'}
                                     </Button>
                                </CardContent>
                            </Card>

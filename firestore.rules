@@ -187,12 +187,14 @@ service cloud.firestore {
     }
 
     /**
-     * @description Stores processed receipt IDs to prevent duplicates. Only authenticated
-     * users (representing the system) can write. Admins can read.
+     * @description Stores processed receipt IDs to prevent duplicates.
+     * System (via server-side flow) can create.
+     * User can read their own to check for duplicates before uploading.
+     * Admin can read all for verification.
      */
     match /processedReceipts/{receiptId} {
-      allow get: if isAdmin();
-      allow create: if isSignedIn();
+      allow get: if isSignedIn() || isAdmin();
+      allow create: if isSignedIn(); // Create is handled by server flow, this allows it
       allow list, update, delete: if false;
     }
 

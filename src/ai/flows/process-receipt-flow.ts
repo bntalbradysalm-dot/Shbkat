@@ -40,7 +40,10 @@ const prompt = ai.definePrompt({
   output: {schema: ReceiptOutputSchema},
   prompt: `Analyze the bank transfer receipt image. Extract the transaction amount, recipient name, recipient account number, transaction date (YYYY-MM-DD), and a unique transaction reference number.
   
-- If it's not a valid receipt, set isReceipt to false.
+- If the image does not seem to be a receipt, set isReceipt to false and other fields to their default values (0 for amount, empty string for others).
+- Extract the recipient's name as accurately as possible.
+- Extract the recipient's bank account number as accurately as possible.
+- Extract the transaction reference number, which could be labeled as 'رقم العملية' or 'رقم المرجع' or similar.
 
 Receipt Image: {{media url=receiptImage}}`,
 });
@@ -70,3 +73,4 @@ const processReceiptFlow = ai.defineFlow(
     return output;
   }
 );
+

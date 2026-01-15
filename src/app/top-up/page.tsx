@@ -98,11 +98,10 @@ export default function TopUpPage() {
         }
 
         setIsProcessing(true);
-        let result: ReceiptOutput | null = null;
-
+        
         try {
             const dataUri = await fileToDataUri(receiptFile);
-            result = await processReceipt({
+            const result = await processReceipt({
                 receiptImage: dataUri,
             });
 
@@ -157,11 +156,6 @@ export default function TopUpPage() {
 
             setProcessedAmount(result.amount);
             setShowSuccess(true);
-            
-            toast({
-                title: 'تمت المعالجة بنجاح!',
-                description: `تم إيداع مبلغ ${result.amount.toLocaleString('en-US')} ريال في حسابك.`,
-            });
             
         } catch (error: any) {
             console.error("Receipt processing failed:", error);

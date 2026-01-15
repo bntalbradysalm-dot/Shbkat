@@ -61,13 +61,18 @@ export default function PaymentManagementPage() {
   
   const handleSave = (id: string) => {
     if (!firestore) return;
+    const editedData = editingValues[id];
+
+    if (!editedData.name || !editedData.accountHolderName || !editedData.accountNumber) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء تعبئة جميع الحقول المطلوبة.",
+      });
+      return;
+    }
+
     const docRef = doc(firestore, 'paymentMethods', id);
-    const editedData = {
-        name: editingValues[id].name,
-        accountHolderName: editingValues[id].accountHolderName,
-        accountNumber: editingValues[id].accountNumber,
-        logoUrl: editingValues[id].logoUrl,
-    };
     updateDocumentNonBlocking(docRef, editedData);
     setEditingId(null);
     toast({ title: "تم الحفظ", description: "تم تحديث طريقة الدفع بنجاح." });
@@ -147,10 +152,10 @@ export default function PaymentManagementPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <Image src={getLogoSrc(method.logoUrl)} alt={method.name} width={40} height={40} className="rounded-full object-contain bg-muted" />
-                          <div>
+                          <div className='text-right'>
                             <p className="font-semibold">{method.name}</p>
                             <p className="text-sm text-muted-foreground">{method.accountHolderName}</p>
-                            <p className="text-sm text-primary dark:text-primary-foreground">{method.accountNumber}</p>
+                            <p className="text-sm font-mono tracking-wider text-primary dark:text-primary-foreground">{method.accountNumber}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">

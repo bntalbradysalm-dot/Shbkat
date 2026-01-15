@@ -45,17 +45,11 @@ const prompt = ai.definePrompt({
   name: 'processReceiptPrompt',
   input: {schema: ReceiptInputSchema},
   output: {schema: ReceiptOutputSchema},
-  prompt: `You are an expert financial assistant specialized in processing bank transfer receipts from Yemen.
-Your task is to analyze the provided receipt image and extract key information.
-
-1.  **Extract Transaction Amount**: Find the total amount of the transaction in Yemeni Rial (YER).
-2.  **Extract Recipient's Name**: Find the name of the person or entity who received the money.
-3.  **Extract Recipient's Account Number**: Find the account number of the recipient.
-4.  **Extract Transaction Date**: Find the date of the transaction in YYYY-MM-DD format.
-5.  **Extract Transaction Reference**: Find the unique transaction reference number. It might be labeled "رقم العملية", "رقم المرجع", "Transaction ID", or something similar. This is crucial for preventing duplicate entries.
-6.  **Verify Recipient Name**: Compare the extracted recipient name with the provided expected recipient name: \`{{{expectedRecipientName}}}\`. The names might have slight variations, so be flexible (e.g., "محمد راضي باشادي" is the same as "محمد باشادي"). Set \`isNameMatch\` to true if they match, otherwise set it to false.
-7.  **Verify Account Number**: Compare the extracted account number with the provided expected account number: \`{{{expectedAccountNumber}}}\`. Account numbers must match exactly. Set \`isAccountNumberMatch\` to true if they match, otherwise set it to false.
-8.  **Validate Receipt**: If the image does not appear to be a valid bank transfer receipt or if the required information (especially transaction reference) cannot be found, set \`isReceipt\` to false and other fields to their defaults.
+  prompt: `Analyze the bank transfer receipt image. Extract the transaction amount, recipient name, recipient account number, transaction date (YYYY-MM-DD), and a unique transaction reference number.
+  
+- Compare extracted recipient name with "{{{expectedRecipientName}}}". Set isNameMatch to true if they match, otherwise false.
+- Compare extracted account number with "{{{expectedAccountNumber}}}". Set isAccountNumberMatch to true if they match, otherwise false.
+- If it's not a valid receipt, set isReceipt to false.
 
 Receipt Image: {{media url=receiptImage}}`,
 });
@@ -82,20 +76,7 @@ const processReceiptFlow = ai.defineFlow(
       throw new Error("Failed to get a response from the AI model.");
     }
     
-    if (!output.isReceipt) {
-      throw new Error("The uploaded image does not appear to be a valid receipt.");
-    }
-    if (!output.isNameMatch) {
-      throw new Error(`Recipient name mismatch. Expected something like "${input.expectedRecipientName}", but found "${output.recipientName}".`);
-    }
-    if (!output.isAccountNumberMatch) {
-        throw new Error(`Recipient account number mismatch. Expected "${input.expectedAccountNumber}", but found "${output.accountNumber}".`);
-    }
-    if (!output.transactionReference) {
-      throw new Error("Could not find a transaction reference number on the receipt.");
-    }
-
-    // Return the validated output. The client will handle the database transaction.
+    // The client will handle all validation now.
     return output;
   }
 );

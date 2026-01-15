@@ -101,13 +101,20 @@ export default function TopUpPage() {
         
         try {
             const dataUri = await fileToDataUri(receiptFile);
-            const result = await processReceipt({
-                receiptImage: dataUri,
-            });
-
-            if (!result || !result.isReceipt) {
-                throw new Error("الصورة التي تم رفعها لا تبدو كإيصال صحيح.");
+            
+            // First, check if the receipt reference is a duplicate before calling the AI
+            const tempResultForRef = await processReceipt({ receiptImage: dataUri });
+            if (!tempResultForRef.transactionReference) {
+              throw new Error("لم يتمكن النظام من استخراج رقم مرجعي من الإيصال للتحقق من التكرار.");
             }
+            const receiptRefCheck = doc(firestore, 'processedReceipts', tempResultForRef.transactionReference);
+            const receiptDocCheck = await getDoc(receiptRefCheck);
+            if (receiptDocCheck.exists()) {
+                throw new Error(`هذا الإيصال تم استخدامه مسبقًا في تاريخ ${new Date(receiptDocCheck.data().processedAt).toLocaleString()}.`);
+            }
+
+            // If not a duplicate, proceed with full processing and validation
+            const result = tempResultForRef;
 
             if (result.recipientName.toLowerCase() !== selectedMethod.accountHolderName.toLowerCase()) {
                 throw new Error(`اسم المستلم في الإيصال (${result.recipientName}) لا يطابق الاسم المتوقع (${selectedMethod.accountHolderName}).`);
@@ -115,16 +122,6 @@ export default function TopUpPage() {
 
             if (result.accountNumber.replace(/\s/g, '') !== selectedMethod.accountNumber.replace(/\s/g, '')) {
                 throw new Error(`رقم الحساب في الإيصال (${result.accountNumber}) لا يطابق الرقم المتوقع.`);
-            }
-
-            if (!result.transactionReference) {
-                throw new Error("لم يتمكن النظام من استخراج رقم مرجعي من الإيصال للتحقق من التكرار.");
-            }
-            
-            const receiptRef = doc(firestore, 'processedReceipts', result.transactionReference);
-            const receiptDoc = await getDoc(receiptRef);
-            if (receiptDoc.exists()) {
-                throw new Error(`هذا الإيصال تم استخدامه مسبقًا في تاريخ ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
             }
 
             // If all checks pass, proceed with database operations
@@ -145,7 +142,7 @@ export default function TopUpPage() {
             });
         
             // 3. Mark receipt as processed to prevent duplicates
-            batch.set(receiptRef, {
+            batch.set(receiptRefCheck, {
               id: result.transactionReference,
               userId: user.uid,
               processedAt: now,

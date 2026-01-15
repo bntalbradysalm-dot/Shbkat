@@ -21,7 +21,6 @@ const ReceiptInputSchema = z.object({
 export type ReceiptInput = z.infer<typeof ReceiptInputSchema>;
 
 const ReceiptOutputSchema = z.object({
-  isReceipt: z.boolean().describe('Whether the image appears to be a valid receipt.'),
   amount: z.number().describe('The numeric amount of the transaction found in the receipt.'),
   recipientName: z.string().describe('The name of the recipient of the transfer found on the receipt.'),
   accountNumber: z.string().describe('The account number of the recipient found on the receipt.'),
@@ -39,8 +38,7 @@ const prompt = ai.definePrompt({
   input: {schema: ReceiptInputSchema},
   output: {schema: ReceiptOutputSchema},
   prompt: `Analyze the bank transfer receipt image. Extract the transaction amount, recipient name, recipient account number, transaction date (YYYY-MM-DD), and a unique transaction reference number.
-  
-- If the image does not seem to be a receipt, set isReceipt to false and other fields to their default values (0 for amount, empty string for others).
+
 - Extract the recipient's name as accurately as possible.
 - Extract the recipient's bank account number as accurately as possible.
 - Extract the transaction reference number, which could be labeled as 'رقم العملية' or 'رقم المرجع' or similar.
@@ -70,7 +68,8 @@ const processReceiptFlow = ai.defineFlow(
       throw new Error("Failed to get a response from the AI model.");
     }
     
+    // The output should conform to ReceiptOutputSchema due to the prompt configuration.
+    // No further validation is needed here as it's handled by Genkit.
     return output;
   }
 );
-

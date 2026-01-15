@@ -69,8 +69,17 @@ const processReceiptFlow = ai.defineFlow(
     outputSchema: ReceiptOutputSchema,
   },
   async (input) => {
-    // Step 1: Analyze the receipt image with the AI model
-    const { output } = await prompt(input);
+    let output;
+    try {
+        // Step 1: Analyze the receipt image with the AI model
+        const response = await prompt(input);
+        output = response.output;
+    } catch (e: any) {
+        if (e.message && (e.message.includes('503') || e.message.toLowerCase().includes('overloaded'))) {
+            throw new Error('الخدمة مشغولة حاليًا بسبب كثرة الطلبات. الرجاء المحاولة مرة أخرى بعد لحظات.');
+        }
+        throw new Error('فشل تحليل صورة الإيصال. الرجاء التأكد من وضوح الصورة والمحاولة مرة أخرى.');
+    }
 
     if (!output) {
       throw new Error("Failed to get a response from the AI model.");

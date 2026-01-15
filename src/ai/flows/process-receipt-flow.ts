@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getFirestore, doc, getDoc, writeBatch, increment, collection } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { initializeServerFirebase } from '@/firebase/server-init';
 
 const ReceiptInputSchema = z.object({
@@ -51,7 +51,7 @@ Your task is to analyze the provided receipt image and extract key information.
 1.  **Extract Transaction Amount**: Find the total amount of the transaction in Yemeni Rial (YER).
 2.  **Extract Recipient's Name**: Find the name of the person or entity who received the money.
 3.  **Extract Recipient's Account Number**: Find the account number of the recipient.
-4.  **Extract Transaction Date**: Find the date of the transaction and format it as YYYY-MM-DD.
+4.  **Extract Transaction Date**: Find the date of the transaction in YYYY-MM-DD format.
 5.  **Extract Transaction Reference**: Find the unique transaction reference number. It might be labeled "رقم العملية", "رقم المرجع", "Transaction ID", or something similar. This is crucial for preventing duplicate entries.
 6.  **Verify Recipient Name**: Compare the extracted recipient name with the provided expected recipient name: \`{{{expectedRecipientName}}}\`. The names might have slight variations, so be flexible (e.g., "محمد راضي باشادي" is the same as "محمد باشادي"). Set \`isNameMatch\` to true if they match, otherwise set it to false.
 7.  **Verify Account Number**: Compare the extracted account number with the provided expected account number: \`{{{expectedAccountNumber}}}\`. Account numbers must match exactly. Set \`isAccountNumberMatch\` to true if they match, otherwise set it to false.
@@ -93,15 +93,6 @@ const processReceiptFlow = ai.defineFlow(
     }
     if (!output.transactionReference) {
       throw new Error("Could not find a transaction reference number on the receipt.");
-    }
-
-    const { firestore } = initializeServerFirebase();
-
-    // Check for duplicate transaction reference
-    const receiptRef = doc(firestore, 'processedReceipts', output.transactionReference);
-    const receiptDoc = await getDoc(receiptRef);
-    if (receiptDoc.exists()) {
-      throw new Error(`This receipt has already been processed on ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
     }
 
     // Return the validated output. The client will handle the database transaction.

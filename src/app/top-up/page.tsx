@@ -4,7 +4,7 @@
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, increment } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { processReceipt } from '@/ai/flows/process-receipt-flow';
+import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -100,11 +100,31 @@ export default function TopUpPage() {
         }
 
         setIsProcessing(true);
+        let result: ReceiptOutput | null = null;
+
         try {
-            const receiptImageUri = await fileToDataUri(receiptFile);
+            // First, just get the transaction reference without full processing
+            const quickScanResult = await processReceipt({
+                receiptImage: await fileToDataUri(receiptFile),
+                userId: user.uid,
+                expectedRecipientName: 'any', // Bypass name/account checks for now
+                expectedAccountNumber: 'any'
+            });
+
+            if (!quickScanResult || !quickScanResult.transactionReference) {
+                throw new Error("Could not extract a transaction reference from the receipt.");
+            }
             
-            const result = await processReceipt({
-                receiptImage: receiptImageUri,
+            // Now check for duplicates on the client side
+            const receiptRef = doc(firestore, 'processedReceipts', quickScanResult.transactionReference);
+            const receiptDoc = await getDoc(receiptRef);
+            if (receiptDoc.exists()) {
+                throw new Error(`This receipt has already been processed on ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
+            }
+
+            // If not a duplicate, proceed with full validation and processing
+            result = await processReceipt({
+                receiptImage: await fileToDataUri(receiptFile),
                 userId: user.uid,
                 expectedRecipientName: selectedMethod.accountHolderName,
                 expectedAccountNumber: selectedMethod.accountNumber
@@ -128,7 +148,6 @@ export default function TopUpPage() {
             });
         
             // 3. Mark receipt as processed to prevent duplicates
-            const receiptRef = doc(firestore, 'processedReceipts', result.transactionReference);
             batch.set(receiptRef, {
               id: result.transactionReference,
               userId: user.uid,
@@ -152,20 +171,9 @@ export default function TopUpPage() {
                 errorMessage = 'الخدمة مشغولة حاليًا. يرجى المحاولة مرة أخرى بعد لحظات.';
             }
 
-            if (error.message.includes('permission')) {
-                const permissionError = new FirestorePermissionError({
-                    operation: 'write',
-                    path: `[BATCH WRITE] /processedReceipts, /users/${user.uid}`,
-                    requestResourceData: {
-                        receiptImage: '...',
-                        userId: user.uid,
-                    },
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            } else {
-                console.error("Receipt processing failed:", error);
-                toast({ variant: 'destructive', title: 'فشلت المعالجة', description: errorMessage });
-            }
+            console.error("Receipt processing failed:", error);
+            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: errorMessage });
+
         } finally {
             setIsProcessing(false);
         }

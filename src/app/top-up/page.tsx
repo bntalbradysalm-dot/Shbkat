@@ -103,34 +103,35 @@ export default function TopUpPage() {
         let result: ReceiptOutput | null = null;
 
         try {
-            // First, just get the transaction reference without full processing
-            const quickScanResult = await processReceipt({
-                receiptImage: await fileToDataUri(receiptFile),
+            const dataUri = await fileToDataUri(receiptFile);
+            result = await processReceipt({
+                receiptImage: dataUri,
                 userId: user.uid,
-                expectedRecipientName: 'any', // Bypass name/account checks for now
-                expectedAccountNumber: 'any'
             });
 
-            if (!quickScanResult || !quickScanResult.transactionReference) {
-                throw new Error("Could not extract a transaction reference from the receipt.");
+            if (!result || !result.isReceipt) {
+                throw new Error("الصورة التي تم رفعها لا تبدو كإيصال صحيح.");
+            }
+
+            if (result.recipientName.toLowerCase() !== selectedMethod.accountHolderName.toLowerCase()) {
+                throw new Error(`اسم المستلم في الإيصال (${result.recipientName}) لا يطابق الاسم المتوقع (${selectedMethod.accountHolderName}).`);
+            }
+
+            if (result.accountNumber.replace(/\s/g, '') !== selectedMethod.accountNumber.replace(/\s/g, '')) {
+                throw new Error(`رقم الحساب في الإيصال (${result.accountNumber}) لا يطابق الرقم المتوقع.`);
+            }
+
+            if (!result.transactionReference) {
+                throw new Error("لم يتمكن النظام من استخراج رقم مرجعي من الإيصال للتحقق من التكرار.");
             }
             
-            // Now check for duplicates on the client side
-            const receiptRef = doc(firestore, 'processedReceipts', quickScanResult.transactionReference);
+            const receiptRef = doc(firestore, 'processedReceipts', result.transactionReference);
             const receiptDoc = await getDoc(receiptRef);
             if (receiptDoc.exists()) {
-                throw new Error(`This receipt has already been processed on ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
+                throw new Error(`هذا الإيصال تم استخدامه مسبقًا في تاريخ ${new Date(receiptDoc.data().processedAt).toLocaleString()}.`);
             }
 
-            // If not a duplicate, proceed with full validation and processing
-            result = await processReceipt({
-                receiptImage: await fileToDataUri(receiptFile),
-                userId: user.uid,
-                expectedRecipientName: selectedMethod.accountHolderName,
-                expectedAccountNumber: selectedMethod.accountNumber
-            });
-
-            // The client now handles the database write operation
+            // If all checks pass, proceed with database operations
             const batch = writeBatch(firestore);
             const now = new Date().toISOString();
 
@@ -166,14 +167,8 @@ export default function TopUpPage() {
             });
             
         } catch (error: any) {
-            let errorMessage = error.message;
-            if (errorMessage.includes('503') || errorMessage.toLowerCase().includes('overloaded')) {
-                errorMessage = 'الخدمة مشغولة حاليًا. يرجى المحاولة مرة أخرى بعد لحظات.';
-            }
-
             console.error("Receipt processing failed:", error);
-            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: errorMessage });
-
+            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
         } finally {
             setIsProcessing(false);
         }
@@ -301,7 +296,7 @@ export default function TopUpPage() {
                     {selectedMethod && (
                        <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
                            <h2 className="text-lg font-bold">3. إرفاق الإيصال</h2>
-                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل، ارفع صورة الإيصال هنا ليتم التحقق منها وإضافة الرصيد.</p>
+                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل, ارفع صورة الإيصال ليتم التحقق منها وإضافة الرصيد.</p>
                            <Card className="mt-4">
                                <CardContent className="p-4 space-y-4">
                                     <div>

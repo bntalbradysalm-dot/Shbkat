@@ -127,6 +127,11 @@ export default function TopUpPage() {
             });
             
         } catch (error: any) {
+            let errorMessage = error.message;
+            if (errorMessage.includes('503') || errorMessage.toLowerCase().includes('overloaded')) {
+                errorMessage = 'الخدمة مشغولة حاليًا. يرجى المحاولة مرة أخرى بعد لحظات.';
+            }
+
             // Check if it's a permission error from our server action
             if (error.message.includes('permission')) {
                 const permissionError = new FirestorePermissionError({
@@ -141,7 +146,7 @@ export default function TopUpPage() {
                 errorEmitter.emit('permission-error', permissionError);
             } else {
                 console.error("Receipt processing failed:", error);
-                toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+                toast({ variant: 'destructive', title: 'فشلت المعالجة', description: errorMessage });
             }
         } finally {
             setIsProcessing(false);

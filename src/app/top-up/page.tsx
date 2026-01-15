@@ -16,8 +16,6 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 type PaymentMethod = {
   id: string;
@@ -94,7 +92,7 @@ export default function TopUpPage() {
     };
 
     const handleProcessReceipt = async () => {
-        if (!receiptFile || !selectedMethod || !user || !userProfile?.displayName || !userProfile?.phoneNumber || !firestore || !userDocRef) {
+        if (!receiptFile || !selectedMethod || !user || !firestore || !userDocRef) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار إيصال وطريقة دفع أولاً.' });
             return;
         }
@@ -106,7 +104,6 @@ export default function TopUpPage() {
             const dataUri = await fileToDataUri(receiptFile);
             result = await processReceipt({
                 receiptImage: dataUri,
-                userId: user.uid,
             });
 
             if (!result || !result.isReceipt) {

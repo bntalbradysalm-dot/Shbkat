@@ -204,7 +204,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isSignedIn();
+      allow update: if isOwner(userId) || isSignedIn();
       allow delete: if isAdmin();
 
       /**
@@ -231,7 +231,7 @@ service cloud.firestore {
       match /notifications/{notificationId} {
           allow read: if isOwner(userId);
           allow create: if isAdmin() || isSignedIn();
-          allow delete: if isOwner(userId);
+          delete: if isOwner(userId);
           allow update: if false;
       }
     }

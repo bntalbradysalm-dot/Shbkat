@@ -206,7 +206,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isSignedIn();
+      allow update: if isOwner(userId);
       allow delete: if isAdmin();
 
       /**

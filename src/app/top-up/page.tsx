@@ -136,11 +136,10 @@ export default function TopUpPage() {
             if (error.message.includes('permission')) {
                 const permissionError = new FirestorePermissionError({
                     operation: 'write',
-                    path: `processedReceipts and users/${user.uid}`,
+                    path: `[BATCH WRITE] /processedReceipts, /users/${user.uid}`,
                     requestResourceData: {
                         receiptImage: '...',
                         userId: user.uid,
-                        // Not including all data for brevity
                     },
                 });
                 errorEmitter.emit('permission-error', permissionError);

@@ -194,7 +194,7 @@ service cloud.firestore {
      */
     match /processedReceipts/{receiptId} {
       allow get: if isSignedIn() || isAdmin();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
       allow list, update, delete: if false;
     }
 

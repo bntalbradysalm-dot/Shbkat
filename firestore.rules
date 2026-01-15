@@ -213,7 +213,7 @@ service cloud.firestore {
        * @description Manages a user's private transaction history.
        */
       match /transactions/{transactionId} {
-        allow create: if isSignedIn();
+        allow create: if isOwner(userId);
         allow read: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }

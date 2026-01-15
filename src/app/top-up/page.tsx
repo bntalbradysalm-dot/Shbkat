@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ export default function TopUpPage() {
     };
 
     const handleProcessReceipt = async () => {
-        if (!receiptFile || !selectedMethod || !user || !userProfile?.displayName || !userProfile?.phoneNumber) {
+        if (!receiptFile || !selectedMethod || !user || !userProfile?.displayName || !userProfile?.phoneNumber || !firestore || !userDocRef) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار إيصال وطريقة دفع أولاً.' });
             return;
         }
@@ -105,18 +106,37 @@ export default function TopUpPage() {
             const result = await processReceipt({
                 receiptImage: receiptImageUri,
                 userId: user.uid,
-                userName: userProfile.displayName,
-                userPhoneNumber: userProfile.phoneNumber,
                 expectedRecipientName: selectedMethod.accountHolderName,
                 expectedAccountNumber: selectedMethod.accountNumber
             });
 
-            if (!result.isReceipt) {
-                throw new Error("الملف المرفق لا يبدو كإيصال صحيح.");
-            }
-            if (!result.isNameMatch || !result.isAccountNumberMatch) {
-                throw new Error("اسم أو رقم حساب المستلم في الإيصال لا يطابق الحساب المحدد.");
-            }
+            // The client now handles the database write operation
+            const batch = writeBatch(firestore);
+            const now = new Date().toISOString();
+
+            // 1. Update user's balance
+            batch.update(userDocRef, { balance: increment(result.amount) });
+
+            // 2. Create a transaction record
+            const userTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+            batch.set(userTransactionRef, {
+              userId: user.uid,
+              transactionDate: now,
+              amount: result.amount,
+              transactionType: `تغذية رصيد (إيصال)`,
+              notes: `رقم مرجع العملية: ${result.transactionReference}`,
+            });
+        
+            // 3. Mark receipt as processed to prevent duplicates
+            const receiptRef = doc(firestore, 'processedReceipts', result.transactionReference);
+            batch.set(receiptRef, {
+              id: result.transactionReference,
+              userId: user.uid,
+              processedAt: now,
+              amount: result.amount,
+            });
+            
+            await batch.commit();
 
             setProcessedAmount(result.amount);
             setShowSuccess(true);
@@ -132,7 +152,6 @@ export default function TopUpPage() {
                 errorMessage = 'الخدمة مشغولة حاليًا. يرجى المحاولة مرة أخرى بعد لحظات.';
             }
 
-            // Check if it's a permission error from our server action
             if (error.message.includes('permission')) {
                 const permissionError = new FirestorePermissionError({
                     operation: 'write',

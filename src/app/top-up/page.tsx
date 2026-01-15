@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { processReceipt } from '@/ai/flows/process-receipt-flow';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type PaymentMethod = {
   id: string;
@@ -125,8 +127,22 @@ export default function TopUpPage() {
             });
             
         } catch (error: any) {
-            console.error("Receipt processing failed:", error);
-            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+            // Check if it's a permission error from our server action
+            if (error.message.includes('permission')) {
+                const permissionError = new FirestorePermissionError({
+                    operation: 'write',
+                    path: `processedReceipts and users/${user.uid}`,
+                    requestResourceData: {
+                        receiptImage: '...',
+                        userId: user.uid,
+                        // Not including all data for brevity
+                    },
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                console.error("Receipt processing failed:", error);
+                toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+            }
         } finally {
             setIsProcessing(false);
         }

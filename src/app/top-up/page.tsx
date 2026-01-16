@@ -121,7 +121,7 @@ export default function TopUpPage() {
             }
 
             if (result.accountNumber.replace(/\s/g, '') !== selectedMethod.accountNumber.replace(/\s/g, '')) {
-                throw new Error(`رقم الحساب في الإيصال (${result.accountNumber}) لا يطابق الرقم المتوقع.`);
+                throw new Error(`رقم الحساب في الإيصال (${result.accountNumber}) لا يطابق الرقم المتوقع (${selectedMethod.accountNumber}).`);
             }
 
             // If all checks pass, proceed with database operations

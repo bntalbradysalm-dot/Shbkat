@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, errorEmitter } from '@/firebase';
 import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 type PaymentMethod = {
   id: string;
@@ -101,7 +102,6 @@ export default function TopUpPage() {
         
         try {
             const dataUri = await fileToDataUri(receiptFile);
-            
             const result = await processReceipt({ receiptImage: dataUri });
 
             // Validate that we got all necessary parts from the AI
@@ -109,7 +109,6 @@ export default function TopUpPage() {
               throw new Error("فشل تحليل الإيصال. لم يتمكن النظام من استخراج كل البيانات اللازمة للتحقق.");
             }
 
-            // Create a more unique ID for the check to prevent collisions
             const uniqueCheckId = `${result.transactionReference}-${result.amount}-${result.transactionDate}`;
             const receiptRefCheck = doc(firestore, 'processedReceipts', uniqueCheckId);
             
@@ -135,32 +134,47 @@ export default function TopUpPage() {
 
             // 2. Create a transaction record
             const userTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-            batch.set(userTransactionRef, {
+            const transactionData = {
               userId: user.uid,
               transactionDate: now,
               amount: result.amount,
               transactionType: `تغذية رصيد (إيصال)`,
               notes: `رقم مرجع العملية: ${result.transactionReference}`,
-            });
+            }
+            batch.set(userTransactionRef, transactionData);
         
             // 3. Mark receipt as processed to prevent duplicates
-            batch.set(receiptRefCheck, {
+            const processedReceiptData = {
               id: uniqueCheckId,
               userId: user.uid,
               processedAt: now,
               amount: result.amount,
               originalReference: result.transactionReference,
-            });
+            };
+            batch.set(receiptRefCheck, processedReceiptData);
             
-            await batch.commit();
-
-            setProcessedAmount(result.amount);
-            setShowSuccess(true);
+            batch.commit()
+                .then(() => {
+                    setProcessedAmount(result.amount);
+                    setShowSuccess(true);
+                })
+                .catch((serverError) => {
+                    // This is the crucial part. We emit a detailed error.
+                    const permissionError = new FirestorePermissionError({
+                        operation: 'write',
+                        path: `[BATCH WRITE] /processedReceipts, /users/${user.uid}`,
+                        requestResourceData: { 
+                            receiptImage: '...', // Don't log the full image data
+                            userId: user.uid,
+                        },
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                    setIsProcessing(false);
+                });
             
         } catch (error: any) {
-            console.error("Receipt processing failed:", error);
+             // This will catch AI errors, getDoc permission errors, or validation errors
             toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
-        } finally {
             setIsProcessing(false);
         }
     };

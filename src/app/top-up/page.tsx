@@ -102,19 +102,21 @@ export default function TopUpPage() {
         try {
             const dataUri = await fileToDataUri(receiptFile);
             
-            // First, check if the receipt reference is a duplicate before calling the AI
-            const tempResultForRef = await processReceipt({ receiptImage: dataUri });
-            if (!tempResultForRef.transactionReference) {
-              throw new Error("لم يتمكن النظام من استخراج رقم مرجعي من الإيصال للتحقق من التكرار.");
+            const result = await processReceipt({ receiptImage: dataUri });
+
+            // Validate that we got all necessary parts from the AI
+            if (!result.transactionReference || !result.amount || !result.transactionDate) {
+              throw new Error("فشل تحليل الإيصال. لم يتمكن النظام من استخراج كل البيانات اللازمة للتحقق.");
             }
-            const receiptRefCheck = doc(firestore, 'processedReceipts', tempResultForRef.transactionReference);
+
+            // Create a more unique ID for the check to prevent collisions
+            const uniqueCheckId = `${result.transactionReference}-${result.amount}-${result.transactionDate}`;
+            const receiptRefCheck = doc(firestore, 'processedReceipts', uniqueCheckId);
+            
             const receiptDocCheck = await getDoc(receiptRefCheck);
             if (receiptDocCheck.exists()) {
                 throw new Error(`هذا الإيصال تم استخدامه مسبقًا في تاريخ ${new Date(receiptDocCheck.data().processedAt).toLocaleString()}.`);
             }
-
-            // If not a duplicate, proceed with full processing and validation
-            const result = tempResultForRef;
 
             if (result.recipientName.toLowerCase() !== selectedMethod.accountHolderName.toLowerCase()) {
                 throw new Error(`اسم المستلم في الإيصال (${result.recipientName}) لا يطابق الاسم المتوقع (${selectedMethod.accountHolderName}).`);
@@ -143,10 +145,11 @@ export default function TopUpPage() {
         
             // 3. Mark receipt as processed to prevent duplicates
             batch.set(receiptRefCheck, {
-              id: result.transactionReference,
+              id: uniqueCheckId,
               userId: user.uid,
               processedAt: now,
               amount: result.amount,
+              originalReference: result.transactionReference,
             });
             
             await batch.commit();

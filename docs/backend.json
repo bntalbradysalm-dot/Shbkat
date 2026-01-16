@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -492,7 +493,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "The transaction reference number from the receipt."
+          "description": "A unique composite ID generated from receipt data to prevent duplicates (ref-amount-date)."
         },
         "userId": {
           "type": "string",
@@ -506,9 +507,13 @@
         "amount": {
           "type": "number",
           "description": "The amount that was deposited."
+        },
+        "originalReference": {
+          "type": "string",
+          "description": "The original transaction reference extracted from the receipt."
         }
       },
-      "required": ["userId", "processedAt", "amount"]
+      "required": ["id", "userId", "processedAt", "amount", "originalReference"]
     }
   },
   "auth": {
@@ -776,7 +781,7 @@
           "params": [
             {
               "name": "receiptId",
-              "description": "The unique identifier from the receipt."
+              "description": "A unique composite ID generated from receipt data (e.g., ref-amount-date)."
             }
           ]
         }

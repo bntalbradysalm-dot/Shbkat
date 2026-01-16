@@ -188,13 +188,11 @@ service cloud.firestore {
 
     /**
      * @description Stores processed receipt IDs to prevent duplicates.
-     * System (via server-side flow) can create.
-     * User can read their own to check for duplicates before uploading.
-     * Admin can read all for verification.
      */
     match /processedReceipts/{receiptId} {
       allow get: if isSignedIn() || isAdmin();
-      allow create: if isSignedIn();
+      // Users can only create a processed receipt record for themselves.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow list, update, delete: if false;
     }
 

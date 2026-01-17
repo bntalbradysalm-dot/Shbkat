@@ -28,9 +28,10 @@ export async function POST(request: Request) {
     const result = await response.json();
 
     if (!response.ok) {
-        // Forward the error from the external API
+        // Forward the error from the external API, including details
+        console.error("External API error from /api/yem-query:", result);
         return new NextResponse(
-            JSON.stringify({ message: result.message || 'فشل الاستعلام من المصدر.' }),
+            JSON.stringify({ message: result.message || 'فشل الاستعلام من المصدر.', details: result }),
             { status: response.status, headers: { 'Content-Type': 'application/json' } }
         );
     }

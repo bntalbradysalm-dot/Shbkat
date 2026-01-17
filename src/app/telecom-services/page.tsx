@@ -148,11 +148,12 @@ export default function TelecomServicesPage() {
           const solfaResult = await solfaResponse.json();
   
           if (!balanceResponse.ok) {
+            console.error("Balance query error details:", balanceResult);
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
 
           if (!solfaResponse.ok) {
-            console.error((solfaResult as any).message);
+            console.error("Solfa query error details:", solfaResult);
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -167,6 +168,7 @@ export default function TelecomServicesPage() {
           });
 
         } catch (error: any) {
+          console.error("Full error object:", error);
           toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
           setBillingInfo(null);
         } finally {

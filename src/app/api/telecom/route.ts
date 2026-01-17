@@ -70,6 +70,9 @@ export async function POST(request: Request) {
     
     const responseText = await response.text();
     
+    // Log the raw response text for debugging
+    console.log(`[TELECOM API RESPONSE] Action: ${action}, Phone: ${payload.mobile}, Raw Text:`, responseText);
+
     try {
       const data = JSON.parse(responseText);
       if (!response.ok || (data.resultCode && data.resultCode !== "0")) {

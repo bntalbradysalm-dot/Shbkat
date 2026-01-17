@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 
 const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem/bill-balance';
 const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
+const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzY4NjU4MDAyLCJleHAiOjE3NzEyNTAwMDJ9.rbU_VSMJIV487W6ekxwqXaMM0xrBSMqSGT8Gtzc2OMk';
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,8 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY
+        'x-api-key': API_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`
       },
       body: JSON.stringify(externalApiBody)
     });
@@ -45,3 +47,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

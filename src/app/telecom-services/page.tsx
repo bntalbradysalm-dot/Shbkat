@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -153,7 +152,9 @@ export default function TelecomServicesPage() {
           }
 
           if (!solfaResponse.ok) {
-            console.error("Solfa query error details:", solfaResult);
+            if (solfaResult && Object.keys(solfaResult).length > 0) {
+              console.error("Solfa query error details:", solfaResult);
+            }
           }
           
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -507,7 +508,7 @@ export default function TelecomServicesPage() {
                 <div className="grid grid-cols-2 gap-2 pt-2">
                     <Button variant="outline" onClick={handle4GQuery} disabled={is4GQuerying || !yemen4GPhone}>
                        {is4GQuerying ? <Loader2 className="h-4 w-4 animate-spin ml-2"/> : null}
-                        استعلام
+                        استعلام يمن فورجي
                     </Button>
                     <AlertDialog open={is4GConfirming} onOpenChange={setIs4GConfirming}>
                         <AlertDialogTrigger asChild>

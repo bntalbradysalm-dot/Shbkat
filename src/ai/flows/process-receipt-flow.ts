@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Processes a receipt image to extract transaction details.

@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Separator } from '@/components/ui/separator';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type CardCategory = {
     id: number;
@@ -192,6 +193,10 @@ function NetworkPurchasePageComponent() {
         });
     }
   };
+
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري تجهيز طلبك..." />;
+  }
 
   if (purchasedCard) {
     const hasPassword = purchasedCard.cardPass && purchasedCard.cardPass !== purchasedCard.cardID;

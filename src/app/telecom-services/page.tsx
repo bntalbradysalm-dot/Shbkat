@@ -26,6 +26,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
@@ -353,6 +354,10 @@ export default function TelecomServicesPage() {
         setIs4GConfirming(false);
     }
   };
+
+  if (isProcessing || is4GProcessing) {
+    return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+  }
   
   if (showSuccess) {
     return (

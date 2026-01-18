@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 
 type PaymentMethod = {
@@ -180,6 +181,10 @@ export default function TopUpPage() {
     };
 
     const isLoading = isLoadingMethods;
+
+    if (isProcessing) {
+        return <ProcessingOverlay message="جاري تحليل الإيصال..." />;
+    }
     
     if (showSuccess) {
       return (

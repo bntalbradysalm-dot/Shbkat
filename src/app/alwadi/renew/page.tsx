@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
@@ -142,6 +143,10 @@ function RenewPageComponent() {
         setShowDialog(false);
     });
   };
+
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري إرسال طلبك..." />;
+  }
   
   if (showSuccessOverlay) {
     return (

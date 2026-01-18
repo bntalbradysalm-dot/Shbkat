@@ -23,6 +23,7 @@ import { collection, doc, query, where, getDocs, updateDoc, increment, writeBatc
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 
 type UserProfile = {
@@ -193,6 +194,10 @@ export default function TransferPage() {
         setIsConfirming(false);
     }
   };
+
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري تنفيذ التحويل..." />;
+  }
   
   if (showSuccess) {
     return (

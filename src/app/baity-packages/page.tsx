@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
@@ -143,6 +144,10 @@ export default function BaityPackagesPage() {
         setIsConfirming(false);
     }
   };
+
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+  }
   
   if (showSuccess) {
     return (

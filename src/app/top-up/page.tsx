@@ -7,7 +7,7 @@ import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firesto
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send, Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { Copy, Send, Upload, CheckCircle, Loader2, Banknote, Wallet, Calendar, Hash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -17,6 +17,16 @@ import { Input } from '@/components/ui/input';
 import { processReceipt, ReceiptOutput } from '@/ai/flows/process-receipt-flow';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 type PaymentMethod = {
@@ -62,6 +72,8 @@ export default function TopUpPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [processedAmount, setProcessedAmount] = useState(0);
+    const [processedData, setProcessedData] = useState<ReceiptOutput | null>(null);
+    const [isConfirming, setIsConfirming] = useState(false);
 
     
     useEffect(() => {
@@ -94,7 +106,7 @@ export default function TopUpPage() {
     };
 
     const handleProcessReceipt = async () => {
-        if (!receiptFile || !selectedMethod || !user || !firestore || !userDocRef) {
+        if (!receiptFile || !selectedMethod || !user || !firestore) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء اختيار إيصال وطريقة دفع أولاً.' });
             return;
         }
@@ -105,7 +117,6 @@ export default function TopUpPage() {
             const dataUri = await fileToDataUri(receiptFile);
             const result = await processReceipt({ receiptImage: dataUri });
 
-            // Validate that we got all necessary parts from the AI
             if (!result.transactionReference || !result.amount || !result.transactionDate) {
               throw new Error("فشل تحليل الإيصال. لم يتمكن النظام من استخراج كل البيانات اللازمة للتحقق.");
             }
@@ -121,64 +132,75 @@ export default function TopUpPage() {
             if (result.recipientName.toLowerCase() !== selectedMethod.accountHolderName.toLowerCase()) {
                 throw new Error(`اسم المستلم في الإيصال (${result.recipientName}) لا يطابق الاسم المتوقع (${selectedMethod.accountHolderName}).`);
             }
-
+            
             if (result.accountNumber.replace(/\s/g, '') !== selectedMethod.accountNumber.replace(/\s/g, '')) {
                 throw new Error(`رقم الحساب في الإيصال (${result.accountNumber}) لا يطابق الرقم المتوقع (${selectedMethod.accountNumber}).`);
             }
 
-            // If all checks pass, proceed with database operations
+            setProcessedData(result);
+            setIsConfirming(true);
+            
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+        } finally {
+             setIsProcessing(false);
+        }
+    };
+    
+    const handleFinalDeposit = async () => {
+        if (!processedData || !selectedMethod || !user || !firestore || !userDocRef) {
+            return;
+        }
+        setIsConfirming(false);
+        setIsProcessing(true);
+
+        try {
+            const uniqueCheckId = `${processedData.transactionReference}-${processedData.amount}-${processedData.transactionDate}`;
+            const receiptRefCheck = doc(firestore, 'processedReceipts', uniqueCheckId);
+
             const batch = writeBatch(firestore);
             const now = new Date().toISOString();
 
-            // 1. Update user's balance
-            batch.update(userDocRef, { balance: increment(result.amount) });
+            batch.update(userDocRef, { balance: increment(processedData.amount) });
 
-            // 2. Create a transaction record
             const userTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-            const transactionData = {
-              userId: user.uid,
-              transactionDate: now,
-              amount: result.amount,
-              transactionType: `تغذية رصيد (إيصال)`,
-              notes: `رقم مرجع العملية: ${result.transactionReference}`,
-            }
-            batch.set(userTransactionRef, transactionData);
-        
-            // 3. Mark receipt as processed to prevent duplicates
-            const processedReceiptData = {
-              id: uniqueCheckId,
-              userId: user.uid,
-              processedAt: now,
-              amount: result.amount,
-              originalReference: result.transactionReference,
-            };
-            batch.set(receiptRefCheck, processedReceiptData);
-            
-            batch.commit()
-                .then(() => {
-                    setProcessedAmount(result.amount);
-                    setShowSuccess(true);
-                })
-                .catch((serverError) => {
-                    // This is the crucial part. We emit a detailed error.
-                    const permissionError = new FirestorePermissionError({
-                        operation: 'write',
-                        path: `[BATCH WRITE] /processedReceipts, /users/${user.uid}`,
-                        requestResourceData: { 
-                            receiptImage: '...', // Don't log the full image data
-                            userId: user.uid,
-                        },
-                    });
-                    errorEmitter.emit('permission-error', permissionError);
-                    setIsProcessing(false);
-                });
-            
-        } catch (error: any) {
-             // This will catch AI errors, getDoc permission errors, or validation errors
-            toast({ variant: 'destructive', title: 'فشلت المعالجة', description: error.message });
+            batch.set(userTransactionRef, {
+                userId: user.uid,
+                transactionDate: now,
+                amount: processedData.amount,
+                transactionType: `تغذية رصيد (إيصال)`,
+                notes: `رقم مرجع العملية: ${processedData.transactionReference}`,
+            });
+
+            batch.set(receiptRefCheck, {
+                id: uniqueCheckId,
+                userId: user.uid,
+                processedAt: now,
+                amount: processedData.amount,
+                originalReference: processedData.transactionReference,
+            });
+
+            await batch.commit();
+            setProcessedAmount(processedData.amount);
+            setShowSuccess(true);
+        } catch (error) {
+            const permissionError = new FirestorePermissionError({
+                operation: 'write',
+                path: `[BATCH WRITE] /processedReceipts, /users/${user.uid}`,
+                requestResourceData: { receiptFile: '...' },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            toast({
+                variant: 'destructive',
+                title: 'فشل إتمام العملية',
+                description: 'حدث خطأ في صلاحيات الكتابة على قاعدة البيانات.',
+            });
+        } finally {
             setIsProcessing(false);
+            setProcessedData(null);
         }
     };
+
 
     const isLoading = isLoadingMethods;
 
@@ -207,6 +229,13 @@ export default function TopUpPage() {
         </div>
       );
     }
+    
+    const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | React.ReactNode }) => (
+        <div className="flex justify-between items-center py-2 border-b border-border/50 last:border-b-0">
+            <span className="text-muted-foreground flex items-center gap-2"><Icon className="h-4 w-4" /> {label}:</span>
+            <span className="font-semibold text-right">{value}</span>
+        </div>
+    );
 
     const renderPaymentMethods = () => {
         if (isLoading) {
@@ -331,6 +360,29 @@ export default function TopUpPage() {
                 </div>
             </div>
             <Toaster />
+            
+            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>تأكيد بيانات الإيصال</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            الرجاء مراجعة البيانات المستخرجة من الإيصال قبل تأكيد الإيداع.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    {processedData && selectedMethod && (
+                        <div className="space-y-3 py-2 text-sm">
+                            <InfoRow icon={Banknote} label="اسم البنك" value={selectedMethod.name} />
+                            <InfoRow icon={Wallet} label="المبلغ" value={`${processedData.amount.toLocaleString('en-US')} ريال`} />
+                            <InfoRow icon={Calendar} label="تاريخ العملية" value={processedData.transactionDate} />
+                            <InfoRow icon={Hash} label="رقم العملية" value={processedData.transactionReference} />
+                        </div>
+                    )}
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setProcessedData(null)}>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleFinalDeposit}>تأكيد الإيداع</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

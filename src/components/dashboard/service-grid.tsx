@@ -24,7 +24,6 @@ type Service = {
 const services: Service[] = [
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'باقات بيتي', icon: Building2, href: '/baity-packages' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },

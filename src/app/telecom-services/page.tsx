@@ -10,7 +10,7 @@ import Image from 'next/image';
 const telecomServices = [
   {
     name: 'يمن موبايل',
-    logo: 'https://i.postimg.cc/SNwT9Vz4/yemen-mobile-logo.png',
+    logo: 'https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg',
     href: '/yemen-mobile',
     description: 'سداد فواتير، باقات، وشحن رصيد',
   },

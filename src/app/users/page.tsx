@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import {
   User as UserIcon,
+  Users,
   Search,
   Trash2,
   Edit,
@@ -557,26 +558,45 @@ export default function UsersPage() {
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-           {/* Total Balance Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-32" />
-              ) : (
-                <div className="text-2xl font-bold text-primary">
-                  {totalBalance.toLocaleString('en-US')}
-                  <span className="text-base ml-1"> ريال</span>
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground">
-                مجموع أرصدة جميع المستخدمين في التطبيق.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-32" />
+                ) : (
+                  <div className="text-2xl font-bold text-primary">
+                    {totalBalance.toLocaleString('en-US')}
+                    <span className="text-base ml-1"> ريال</span>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  مجموع أرصدة المستخدمين.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <div className="text-2xl font-bold">
+                    {(users?.length ?? 0).toLocaleString('en-US')}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  إجمالي الحسابات المسجلة.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
           
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

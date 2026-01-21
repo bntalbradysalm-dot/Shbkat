@@ -43,6 +43,7 @@ import {
   PlusCircle,
   Crown,
   Wallet,
+  Banknote,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -73,6 +74,8 @@ export default function UsersPage() {
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [isManualDepositOpen, setIsManualDepositOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   const { toast } = useToast();
@@ -263,6 +266,64 @@ export default function UsersPage() {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (!selectedUser || !withdrawAmount || !firestore) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صالح." });
+      return;
+    }
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صالح." });
+      return;
+    }
+    if ((selectedUser.balance ?? 0) < amount) {
+        toast({
+            variant: "destructive",
+            title: "رصيد غير كافٍ",
+            description: `رصيد العميل (${(selectedUser.balance ?? 0).toLocaleString('en-US')}) غير كافٍ لسحب مبلغ ${amount.toLocaleString('en-US')}.`,
+        });
+        return;
+    }
+  
+    const userDocRef = doc(firestore, 'users', selectedUser.id);
+    const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
+  
+    try {
+      const batch = writeBatch(firestore);
+      
+      batch.update(userDocRef, { balance: increment(-amount) });
+      
+      const transactionDoc = doc(userTransactionsRef);
+      batch.set(transactionDoc, {
+        userId: selectedUser.id,
+        transactionDate: new Date().toISOString(),
+        amount: amount,
+        transactionType: 'سحب نقدي',
+        notes: 'سحب نقدي من قبل الإدارة',
+      });
+        
+      await batch.commit();
+
+      toast({
+        title: "نجاح",
+        description: `تم سحب ${amount.toLocaleString('en-US')} ريال من حساب ${selectedUser.displayName}.`,
+      });
+
+      setIsWithdrawDialogOpen(false);
+      setWithdrawAmount('');
+      setSelectedUser(null);
+
+    } catch (e) {
+      console.error('Error during withdrawal:', e);
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "فشلت عملية السحب.",
+      });
+    }
+  };
+
+
   const openWhatsAppWithMessage = (phoneNumber: string) => {
     const message = encodeURIComponent('السلام عليكم');
     const whatsappUrl = `https://api.whatsapp.com/send?phone=967${phoneNumber}&text=${message}`;
@@ -356,6 +417,43 @@ export default function UsersPage() {
                     <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
                       <Edit className="h-4 w-4" />
                     </Button>
+                    
+                    <Dialog open={isWithdrawDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                      if (!isOpen) {
+                          setIsWithdrawDialogOpen(false);
+                          setSelectedUser(null);
+                          setWithdrawAmount('');
+                      }
+                    }}>
+                      <DialogTrigger asChild>
+                          <Button variant="destructive" size="sm" onClick={() => {
+                              setSelectedUser(user);
+                              setIsWithdrawDialogOpen(true);
+                          }}>
+                              <Banknote className="ml-1 h-4 w-4" />
+                              سحب
+                          </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                              <DialogTitle>سحب نقدي</DialogTitle>
+                              <DialogDescription>
+                                  أدخل المبلغ المراد سحبه من حساب {selectedUser?.displayName}. رصيده الحالي: {(selectedUser?.balance ?? 0).toLocaleString('en-US')} ريال.
+                              </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="withdraw-amount" className="text-right col-span-1">المبلغ</Label>
+                                  <Input id="withdraw-amount" type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
+                              </div>
+                          </div>
+                          <DialogFooter>
+                              <Button type="submit" onClick={handleWithdraw}>تأكيد السحب</Button>
+                              <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                          </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
 
                     <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
                       if (!isOpen) {

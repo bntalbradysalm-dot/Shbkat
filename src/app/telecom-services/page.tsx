@@ -22,7 +22,7 @@ const telecomServices = [
   },
   {
     name: 'يمن فورجي',
-    logo: 'https://i.postimg.cc/0jWzZJJd/yemen-4g-logo.png',
+    logo: 'https://i.postimg.cc/FsmGqt98/1768999789252.jpg',
     href: '/yemen-4g',
     description: 'استعلام وسداد باقات يمن فورجي',
   },

@@ -39,7 +39,7 @@ export default function TelecomServicesPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="خدمات الاتصالات والانترنت" />
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-4">
+        <div className="space-y-6">
           {telecomServices.map((service, index) => (
             <Link href={service.href} key={service.name}>
               <Card

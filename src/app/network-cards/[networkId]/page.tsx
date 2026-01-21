@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type CardCategory = {
     id: string;
@@ -74,6 +76,8 @@ function NetworkPurchasePageComponent() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
+  const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
+  const [smsRecipient, setSmsRecipient] = useState('');
 
   const userDocRef = useMemo(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -211,13 +215,28 @@ function NetworkPurchasePageComponent() {
 
   const handleCopyCardDetails = () => {
     if (purchasedCard) {
-        const cardDetails = `رقم الكرت: ${purchasedCard.cardNumber}\nكلمة المرور: ${purchasedCard.cardNumber}`;
-        navigator.clipboard.writeText(cardDetails);
+        navigator.clipboard.writeText(purchasedCard.cardNumber);
         toast({
             title: "تم النسخ",
-            description: "تم نسخ تفاصيل الكرت بنجاح.",
+            description: "تم نسخ رقم الكرت بنجاح.",
         });
     }
+  };
+  
+  const handleSendSms = () => {
+    if (!purchasedCard || !selectedCategory || !smsRecipient || !networkName) {
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "الرجاء إدخال رقم هاتف صحيح."
+        });
+        return;
+    }
+
+    const messageBody = `شبكة: ${networkName}\nفئة: ${selectedCategory.name}\nرقم الكرت: ${purchasedCard.cardNumber}`;
+    const smsUri = `sms:${smsRecipient}?body=${encodeURIComponent(messageBody)}`;
+    window.location.href = smsUri;
+    setIsSmsDialogOpen(false);
   };
 
   if (isProcessing) {
@@ -226,6 +245,7 @@ function NetworkPurchasePageComponent() {
 
   if (purchasedCard) {
     return (
+      <>
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
                 <CardContent className="p-6">
@@ -234,17 +254,22 @@ function NetworkPurchasePageComponent() {
                             <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
                         </div>
                         <h2 className="text-xl font-bold">تم الشراء بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">هذه هي تفاصيل الكرت الخاص بك. يمكنك نسخها الآن.</p>
+                        <p className="text-sm text-muted-foreground">هذا هو رقم الكرت الخاص بك.</p>
                         
-                        <div className="w-full text-right space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono">
-                           <p>ID: {purchasedCard.cardNumber}</p>
-                           <p>Pass: {purchasedCard.cardNumber}</p>
+                        <div className="w-full text-center space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono text-xl">
+                           <p>{purchasedCard.cardNumber}</p>
                         </div>
                         
-                         <Button className="w-full" onClick={handleCopyCardDetails}>
-                             <Copy className="ml-2 h-4 w-4" />
-                             نسخ التفاصيل
-                         </Button>
+                         <div className="w-full grid grid-cols-2 gap-3 pt-2">
+                             <Button className="w-full" onClick={handleCopyCardDetails}>
+                                 <Copy className="ml-2 h-4 w-4" />
+                                 نسخ رقم الكرت
+                             </Button>
+                             <Button variant="outline" className="w-full" onClick={() => setIsSmsDialogOpen(true)}>
+                                <MessageSquare className="ml-2 h-4 w-4" />
+                                إرسال SMS
+                            </Button>
+                         </div>
 
                         <div className="w-full pt-4">
                             <Button variant="outline" className="w-full" onClick={() => {
@@ -256,6 +281,33 @@ function NetworkPurchasePageComponent() {
                 </CardContent>
             </Card>
         </div>
+        <AlertDialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>إرسال الكرت عبر SMS</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        يمكنك إرسال معلومات الكرت برسالة نصية SMS إلى أي رقم. يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-2">
+                    <Label htmlFor="sms-recipient" className="sr-only">
+                        رقم الجوال
+                    </Label>
+                    <Input
+                        id="sms-recipient"
+                        type="tel"
+                        placeholder="ادخل الرقم..."
+                        value={smsRecipient}
+                        onChange={(e) => setSmsRecipient(e.target.value)}
+                    />
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSendSms}>إرسال</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 

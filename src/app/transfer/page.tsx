@@ -67,6 +67,7 @@ export default function TransferPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+  const commission = 100;
 
   const [recipientPhone, setRecipientPhone] = useState('');
   const [amount, setAmount] = useState('');
@@ -134,9 +135,9 @@ export default function TransferPage() {
       toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صحيح." });
       return;
     }
-    if ((senderProfile?.balance ?? 0) < numericAmount) {
-      toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
-      return;
+    if ((senderProfile?.balance ?? 0) < numericAmount + commission) {
+        toast({ variant: "destructive", title: "رصيد غير كاف!", description: `رصيدك غير كافٍ لإتمام التحويل. المبلغ المطلوب شامل العمولة هو ${(numericAmount + commission).toLocaleString('en-US')} ريال.` });
+        return;
     }
     setIsConfirming(true);
   };
@@ -146,12 +147,20 @@ export default function TransferPage() {
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
+    const totalDeduction = numericAmount + commission;
+    
+    if ((senderProfile.balance ?? 0) < totalDeduction) {
+        toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك لم يعد كافياً لإتمام هذه العملية." });
+        setIsProcessing(false);
+        setIsConfirming(false);
+        return;
+    }
 
     try {
       const batch = writeBatch(firestore);
 
       // 1. Decrement sender's balance
-      batch.update(senderDocRef, { balance: increment(-numericAmount) });
+      batch.update(senderDocRef, { balance: increment(-totalDeduction) });
 
       // 2. Increment recipient's balance
       const recipientDocRef = doc(firestore, 'users', recipient.id);
@@ -159,14 +168,14 @@ export default function TransferPage() {
 
       const now = new Date().toISOString();
 
-      // 3. Create transaction log for sender
+      // 3. Create transaction log for sender for the whole amount
       const senderTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(senderTransactionRef, {
         userId: user.uid,
         transactionDate: now,
-        amount: numericAmount,
+        amount: totalDeduction,
         transactionType: `تحويل إلى ${recipient.displayName}`,
-        notes: `إلى رقم: ${recipient.phoneNumber}`
+        notes: `شامل عمولة خدمات ${commission} ريال`
       });
 
       // 4. Create transaction log for recipient
@@ -210,14 +219,22 @@ export default function TransferPage() {
                     </div>
                     <h2 className="text-2xl font-bold">تم التحويل بنجاح</h2>
                      <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح.</p>
-                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
+                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2 text-right">
                        <div className="flex justify-between">
                             <span className="text-muted-foreground">المستلم:</span>
                             <span className="font-semibold">{recipient?.displayName}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-semibold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</span>
+                            <span className="text-muted-foreground">المبلغ المحول:</span>
+                            <span className="font-semibold">{Number(amount).toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">عمولة خدمات:</span>
+                            <span className="font-semibold">{commission.toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2 mt-2">
+                            <span className="text-muted-foreground">الإجمالي المخصوم:</span>
+                            <span className="font-bold text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
                         </div>
                     </div>
                     <div className="w-full grid grid-cols-2 gap-3 pt-4">
@@ -303,12 +320,24 @@ export default function TransferPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle className="text-center">تأكيد عملية التحويل</AlertDialogTitle>
                 <AlertDialogDescription asChild>
-                    <div className="space-y-4 pt-4 text-base text-foreground text-center">
-                         <p className="text-sm text-center text-muted-foreground pb-2">سيتم خصم المبلغ من رصيدك وتحويله للمستلم فوراً.</p>
-                         <p className="text-2xl font-bold text-destructive">{Number(amount).toLocaleString('en-US')} ريال</p>
-                         <p className="text-sm text-center text-muted-foreground">إلى</p>
-                         <p className="font-bold">{recipient?.displayName}</p>
-                         <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>
+                   <div className="space-y-2 pt-4 text-sm text-right">
+                        <div className="flex justify-between items-center">
+                            <span>المبلغ المراد تحويله:</span>
+                            <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span>عمولة خدمات:</span>
+                            <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between items-center text-base pt-2 border-t mt-2">
+                            <span className="font-semibold">الإجمالي المخصوم:</span>
+                            <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
+                        </div>
+                         <div className="text-center pt-4">
+                            <p className="text-sm text-muted-foreground">إلى المستلم:</p>
+                            <p className="font-bold text-base">{recipient?.displayName}</p>
+                            <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>
+                        </div>
                     </div>
                 </AlertDialogDescription>
             </AlertDialogHeader>

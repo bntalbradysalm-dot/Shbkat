@@ -174,6 +174,17 @@ export default function Yemen4GPage() {
         }
     };
 
+    const formatData = (balance: string | undefined) => {
+        if (!balance) return 'غير متوفر';
+        const numericBalance = parseFloat(balance);
+        if (isNaN(numericBalance)) return 'غير متوفر';
+
+        if (numericBalance >= 1024) {
+            return `${(numericBalance / 1024).toFixed(2)} GB`;
+        }
+        return `${numericBalance.toFixed(0)} MB`;
+    };
+
     if (isProcessing) {
         return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
     }
@@ -241,12 +252,12 @@ export default function Yemen4GPage() {
                                         {queryResult.balance || queryResult.packName || queryResult.expireDate ? (
                                             <div className="grid grid-cols-3 gap-2 text-center">
                                                  <div className='p-2 bg-background rounded-md space-y-1'>
-                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Wallet className="w-3 h-3"/>الرصيد</p>
-                                                    <p className="font-bold text-sm">{queryResult.balance ? `${queryResult.balance} ريال` : 'غير متوفر'}</p>
-                                                </div>
-                                                <div className='p-2 bg-background rounded-md space-y-1'>
                                                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Database className="w-3 h-3"/>الباقة</p>
                                                     <p className="font-bold text-sm truncate" title={queryResult.packName}>{queryResult.packName || 'غير متوفر'}</p>
+                                                </div>
+                                                <div className='p-2 bg-background rounded-md space-y-1'>
+                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Wallet className="w-3 h-3"/>البيانات</p>
+                                                    <p className="font-bold text-sm">{formatData(queryResult.balance)}</p>
                                                 </div>
                                                 <div className='p-2 bg-background rounded-md space-y-1'>
                                                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Calendar className="w-3 h-3"/>الانتهاء</p>

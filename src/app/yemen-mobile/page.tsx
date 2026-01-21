@@ -38,10 +38,11 @@ type BillingInfo = {
     solfa_status: 'متسلف' | 'غير متسلف' | 'غير معروف';
 };
 
-type SolfaApiResponse = {
-    status: '1' | '0'; // 1 for active loan, 0 for no loan
-    message: string;
-    loan_amount?: string;
+type Offer = {
+    offerName: string;
+    offerId: string;
+    offerStartDate: string;
+    offerEndDate: string;
 };
 
 const BalanceDisplay = () => {
@@ -72,24 +73,6 @@ const BalanceDisplay = () => {
     );
 }
 
-const PackagesPlaceholder = () => (
-    <div className="space-y-4">
-        <div className="p-4 border rounded-lg bg-background">
-            <h4 className="font-bold mb-2 text-center">الاشتراكات الحالية</h4>
-            <p className="text-sm text-center text-muted-foreground">لا توجد اشتراكات حالية.</p>
-        </div>
-        <div className='space-y-2'>
-            {['باقات مزايا', 'باقات فورجي', 'باقات فولتي', 'باقات الانترنت الشهرية', 'باقات الانترنت 10 ايام'].map(pkg => (
-                <Button key={pkg} variant="outline" className="w-full justify-between">
-                    {pkg}
-                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                </Button>
-            ))}
-        </div>
-    </div>
-);
-
-
 export default function YemenMobilePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -100,6 +83,12 @@ export default function YemenMobilePage() {
   const [showTabs, setShowTabs] = useState(false);
   const [isCheckingBilling, setIsCheckingBilling] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
+  
+  const [offers, setOffers] = useState<Offer[] | null>(null);
+  const [isQueryingOffers, setIsQueryingOffers] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [isConfirmingOffer, setIsConfirmingOffer] = useState(false);
+  const [isActivatingOffer, setIsActivatingOffer] = useState(false);
 
   const [amount, setAmount] = useState('');
   const [netAmount, setNetAmount] = useState(0);
@@ -125,9 +114,11 @@ export default function YemenMobilePage() {
       if ((phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')))) {
         setShowTabs(true);
         setIsCheckingBilling(true);
+        setIsQueryingOffers(true);
         setBillingInfo(null);
+        setOffers(null);
         try {
-          const [balanceResponse, solfaResponse] = await Promise.all([
+          const [balanceResponse, solfaResponse, offersResponse] = await Promise.all([
             fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -140,23 +131,23 @@ export default function YemenMobilePage() {
                 mobile: phone,
                 action: 'solfa',
               }),
+            }),
+            fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
             })
           ]);
   
           const balanceResult = await balanceResponse.json();
           const solfaResult = await solfaResponse.json();
+          const offersResult = await offersResponse.json();
   
           if (!balanceResponse.ok) {
             console.error("Balance query error details:", balanceResult);
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
 
-          if (!solfaResponse.ok) {
-            if (solfaResult && Object.keys(solfaResult).length > 0) {
-              console.error("Solfa query error details:", solfaResult);
-            }
-          }
-          
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
           if (solfaResponse.ok && solfaResult.status) {
             finalSolfaStatus = solfaResult.status === '1' ? 'متسلف' : 'غير متسلف';
@@ -168,16 +159,26 @@ export default function YemenMobilePage() {
             solfa_status: finalSolfaStatus
           });
 
+          if (!offersResponse.ok) {
+            console.error("Offers query error details:", offersResult);
+            setOffers([]);
+          } else {
+            setOffers(offersResult.offers || []);
+          }
+
         } catch (error: any) {
           console.error("Full error object:", error);
           toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
           setBillingInfo(null);
+          setOffers(null);
         } finally {
           setIsCheckingBilling(false);
+          setIsQueryingOffers(false);
         }
       } else {
         setShowTabs(false);
         setBillingInfo(null);
+        setOffers(null);
       }
     };
     
@@ -261,6 +262,45 @@ export default function YemenMobilePage() {
         setIsConfirming(false);
     }
   };
+  
+    const handleOfferClick = (offer: Offer) => {
+        setSelectedOffer(offer);
+        setIsConfirmingOffer(true);
+    };
+
+    const handleActivateOffer = async () => {
+        if (!selectedOffer || !phone) return;
+        
+        setIsActivatingOffer(true);
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mobile: phone,
+                    action: 'billover',
+                    offertype: selectedOffer.offerId
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || `فشل تفعيل باقة: ${selectedOffer.offerName}.`);
+            }
+
+            toast({
+                title: "نجاح",
+                description: `تم إرسال طلب تفعيل باقة "${selectedOffer.offerName}" بنجاح.`
+            });
+
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "فشل تفعيل الباقة", description: error.message });
+        } finally {
+            setIsActivatingOffer(false);
+            setIsConfirmingOffer(false);
+            setSelectedOffer(null);
+        }
+    };
 
 
   if (isProcessing) {
@@ -339,7 +379,28 @@ export default function YemenMobilePage() {
                                     </div>
                                 </CardContent>
                             </Card>
-                            <PackagesPlaceholder />
+                             {isQueryingOffers ? (
+                                <div className="space-y-2">
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                </div>
+                            ) : offers && offers.length > 0 ? (
+                                <div className="space-y-2">
+                                    <h4 className="font-bold mb-2 text-center text-sm">الباقات المتاحة للاشتراك</h4>
+                                    {offers.map((offer: Offer) => (
+                                        <Button key={offer.offerId} variant="outline" className="w-full justify-between h-auto py-3" onClick={() => handleOfferClick(offer)}>
+                                            <span className="text-right whitespace-normal">{offer.offerName}</span>
+                                            <Zap className="w-4 h-4 text-primary" />
+                                        </Button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-4 border rounded-lg bg-background">
+                                    <h4 className="font-bold mb-2 text-center">الباقات المتاحة</h4>
+                                    <p className="text-sm text-center text-muted-foreground">لا توجد باقات متاحة لهذا الرقم حالياً.</p>
+                                </div>
+                            )}
                         </TabsContent>
                         <TabsContent value="balance" className="pt-4 space-y-4">
                            <div className='text-right'>
@@ -384,6 +445,25 @@ export default function YemenMobilePage() {
       </div>
     </div>
     <Toaster />
+
+    <AlertDialog open={isConfirmingOffer} onOpenChange={setIsConfirmingOffer}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
+                <AlertDialogDescription>
+                    هل أنت متأكد من تفعيل باقة "{selectedOffer?.offerName}" للرقم {phone}؟ سيتم خصم قيمة الباقة من رصيد الشريحة مباشرة.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel disabled={isActivatingOffer}>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleActivateOffer} disabled={isActivatingOffer}>
+                    {isActivatingOffer ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : null}
+                    {isActivatingOffer ? 'جاري التفعيل...' : 'تأكيد'}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
     </>
   );
 }

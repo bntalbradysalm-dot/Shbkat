@@ -16,7 +16,7 @@ const telecomServices = [
   },
   {
     name: 'YOU',
-    logo: 'https://i.postimg.cc/d1y34P1t/you-logo.png',
+    logo: 'https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg',
     href: '/you-services',
     description: 'سداد فواتير وباقات شركة YOU',
   },

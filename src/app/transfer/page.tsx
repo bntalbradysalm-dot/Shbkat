@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,12 +76,19 @@ export default function TransferPage() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const senderDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: senderProfile } = useDoc<UserProfile>(senderDocRef);
+
+  useEffect(() => {
+    if (showSuccess && audioRef.current) {
+        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    }
+  }, [showSuccess]);
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -210,6 +217,8 @@ export default function TransferPage() {
   
   if (showSuccess) {
     return (
+      <>
+        <audio ref={audioRef} src="https://mobidrive.com/sharelink/m/6w56Yqa0e3ulWWsThEigol7Fr2jv9diAJWSVG75frJTD" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
         <Card className="w-full max-w-sm text-center shadow-2xl">
             <CardContent className="p-6">
@@ -252,6 +261,7 @@ export default function TransferPage() {
             </CardContent>
         </Card>
       </div>
+    </>
     )
   }
 

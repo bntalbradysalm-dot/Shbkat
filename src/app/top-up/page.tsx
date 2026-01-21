@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
+import React, { useState, useMemo, ChangeEvent, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, errorEmitter } from '@/firebase';
 import { collection, doc, writeBatch, increment, getDoc } from 'firebase/firestore';
@@ -74,6 +74,7 @@ export default function TopUpPage() {
     const [processedAmount, setProcessedAmount] = useState(0);
     const [processedData, setProcessedData] = useState<ReceiptOutput | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     
     useEffect(() => {
@@ -81,6 +82,12 @@ export default function TopUpPage() {
             setSelectedMethod(paymentMethods[0]);
         }
     }, [paymentMethods, selectedMethod]);
+
+    useEffect(() => {
+        if (showSuccess && audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        }
+    }, [showSuccess]);
 
     const handleCopy = (accountNumber: string) => {
         navigator.clipboard.writeText(accountNumber);
@@ -210,23 +217,26 @@ export default function TopUpPage() {
     
     if (showSuccess) {
       return (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-            <Card className="w-full max-w-sm text-center shadow-2xl">
-                <CardContent className="p-6">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
-                            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+        <>
+            <audio ref={audioRef} src="https://mobidrive.com/sharelink/m/6w56Yqa0e3ulWWsThEigol7Fr2jv9diAJWSVG75frJTD" preload="auto" />
+            <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                <Card className="w-full max-w-sm text-center shadow-2xl">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
+                                <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                            </div>
+                            <h2 className="text-xl font-bold">تم الإيداع بنجاح</h2>
+                            <p className="text-lg font-semibold text-primary">{processedAmount.toLocaleString('en-US')} ريال يمني</p>
+                            <p className="text-sm text-muted-foreground">تمت إضافة المبلغ إلى رصيدك بنجاح.</p>
+                            <div className="w-full pt-4">
+                                <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                            </div>
                         </div>
-                        <h2 className="text-xl font-bold">تم الإيداع بنجاح</h2>
-                        <p className="text-lg font-semibold text-primary">{processedAmount.toLocaleString('en-US')} ريال يمني</p>
-                        <p className="text-sm text-muted-foreground">تمت إضافة المبلغ إلى رصيدك بنجاح.</p>
-                        <div className="w-full pt-4">
-                            <Button variant="outline" className="w-full" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </>
       );
     }
     

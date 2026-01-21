@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense, useMemo } from 'react';
+import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -78,12 +78,19 @@ function NetworkPurchasePageComponent() {
   const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemo(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    if (purchasedCard && audioRef.current) {
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+    }
+  }, [purchasedCard]);
   
   const handlePurchase = async () => {
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) {
@@ -246,6 +253,7 @@ function NetworkPurchasePageComponent() {
   if (purchasedCard) {
     return (
       <>
+        <audio ref={audioRef} src="https://mobidrive.com/sharelink/m/6w56Yqa0e3ulWWsThEigol7Fr2jv9diAJWSVG75frJTD" preload="auto" />
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
                 <CardContent className="p-6">

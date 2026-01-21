@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -72,12 +72,19 @@ function LandlinePageComponent() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    if (showSuccess && audioRef.current) {
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+    }
+  }, [showSuccess]);
   
   const handlePayment = async () => {
     if (!phone || !type || !user || !userProfile || !firestore || !userDocRef) {
@@ -154,18 +161,21 @@ function LandlinePageComponent() {
   
   if (showSuccess) {
     return (
-        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-            <Card className="w-full max-w-sm text-center shadow-2xl">
-                <CardContent className="p-6">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="bg-green-100 p-4 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
-                        <h2 className="text-2xl font-bold">تم السداد بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح.</p>
-                        <Button className="w-full mt-4" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+        <>
+            <audio ref={audioRef} src="https://mobidrive.com/sharelink/m/6w56Yqa0e3ulWWsThEigol7Fr2jv9diAJWSVG75frJTD" preload="auto" />
+            <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                <Card className="w-full max-w-sm text-center shadow-2xl">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="bg-green-100 p-4 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
+                            <h2 className="text-2xl font-bold">تم السداد بنجاح</h2>
+                            <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح.</p>
+                            <Button className="w-full mt-4" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </>
     );
   }
 

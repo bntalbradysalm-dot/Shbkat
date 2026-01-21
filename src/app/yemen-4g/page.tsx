@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Loader2 } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Loader2, Database, Calendar } from 'lucide-react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
@@ -18,6 +18,13 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
+};
+
+type QueryResult = {
+    balance?: string;
+    packName?: string;
+    expireDate?: string;
+    message?: string;
 };
 
 const BalanceDisplay = () => {
@@ -57,6 +64,7 @@ export default function Yemen4GPage() {
     const [phone, setPhone] = useState('');
     const [amount, setAmount] = useState('');
     const [isQuerying, setIsQuerying] = useState(false);
+    const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isConfirming, setIsConfirming] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -74,12 +82,17 @@ export default function Yemen4GPage() {
         }
     }, [showSuccess]);
 
+    useEffect(() => {
+        setQueryResult(null);
+    }, [phone]);
+
     const handleQuery = async () => {
         if (!phone) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم هاتف.' });
             return;
         }
         setIsQuerying(true);
+        setQueryResult(null);
         try {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
@@ -87,10 +100,19 @@ export default function Yemen4GPage() {
                 body: JSON.stringify({ mobile: phone, action: 'query', service: 'yem4g' })
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'فشل الاستعلام.');
+            if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام.');
             
-            const description = `تم الاستعلام بنجاح.`;
-            toast({ title: 'نتيجة الاستعلام', description, duration: 9000 });
+            if (result.resultCode === '0' || result.resultCode === '-2' || result.resultDesc) {
+                 setQueryResult({
+                    balance: result.balance,
+                    packName: result.packName,
+                    expireDate: result.expireDate,
+                    message: result.resultDesc
+                });
+                toast({ title: 'تم الاستعلام بنجاح', description: result.resultDesc || 'تم عرض بيانات الرقم.' });
+            } else {
+                throw new Error('استجابة غير معروفة من الخادم.');
+            }
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
@@ -203,7 +225,42 @@ export default function Yemen4GPage() {
                                     className="text-right font-semibold"
                                 />
                             </div>
-                            <div>
+
+                            {isQuerying && (
+                                <div className="pt-4">
+                                    <Skeleton className="h-24 w-full" />
+                                </div>
+                            )}
+
+                            {queryResult && !isQuerying && (
+                                <Card className="mt-4 bg-muted/50 animate-in fade-in-0">
+                                    <CardHeader>
+                                        <CardTitle className="text-sm text-center">نتيجة الاستعلام</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-3">
+                                        {queryResult.balance || queryResult.packName || queryResult.expireDate ? (
+                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                 <div className='p-2 bg-background rounded-md space-y-1'>
+                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Wallet className="w-3 h-3"/>الرصيد</p>
+                                                    <p className="font-bold text-sm">{queryResult.balance ? `${queryResult.balance} ريال` : 'غير متوفر'}</p>
+                                                </div>
+                                                <div className='p-2 bg-background rounded-md space-y-1'>
+                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Database className="w-3 h-3"/>الباقة</p>
+                                                    <p className="font-bold text-sm truncate" title={queryResult.packName}>{queryResult.packName || 'غير متوفر'}</p>
+                                                </div>
+                                                <div className='p-2 bg-background rounded-md space-y-1'>
+                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Calendar className="w-3 h-3"/>الانتهاء</p>
+                                                    <p className="font-bold text-sm">{queryResult.expireDate || 'غير متوفر'}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-center text-muted-foreground p-4">{queryResult.message || 'لا توجد تفاصيل إضافية.'}</p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            <div className="pt-4">
                                 <Label htmlFor="yemen-4g-amount" className="flex items-center gap-2 mb-1">
                                     <Wallet className="h-4 w-4" />
                                     المبلغ

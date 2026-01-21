@@ -426,12 +426,11 @@ export default function UsersPage() {
                       }
                     }}>
                       <DialogTrigger asChild>
-                          <Button variant="destructive" size="sm" onClick={() => {
+                          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => {
                               setSelectedUser(user);
                               setIsWithdrawDialogOpen(true);
                           }}>
-                              <Banknote className="ml-1 h-4 w-4" />
-                              سحب
+                              <Banknote className="h-4 w-4" />
                           </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">

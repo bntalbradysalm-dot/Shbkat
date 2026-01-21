@@ -81,15 +81,17 @@ export default function Yemen4GPage() {
         }
         setIsQuerying(true);
         try {
-            const response = await fetch('/api/yem-query', {
+            const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, type: 'yemen4G' })
+                body: JSON.stringify({ mobile: phone, action: 'query', service: 'yem4g' })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام.');
-            const description = `الرصيد: ${result.R_CardBalance || 'غير معروف'}`;
-            toast({ title: 'نتيجة الاستعلام', description });
+            
+            const description = `تم الاستعلام بنجاح.`;
+            toast({ title: 'نتيجة الاستعلام', description, duration: 9000 });
+
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
         } finally {
@@ -113,10 +115,18 @@ export default function Yemen4GPage() {
         }
         setIsProcessing(true);
         try {
-            const response = await fetch('/api/baitynet', {
+            const transid = Date.now().toString();
+            const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, amount: numericAmount, type: 'line' }) // Assuming 'line' is correct for Yemen 4G based on old code
+                body: JSON.stringify({ 
+                    mobile: phone, 
+                    amount: numericAmount, 
+                    action: 'bill',
+                    service: 'yem4g',
+                    type: '2', // 2 For Balance
+                    transid: transid,
+                })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
@@ -129,7 +139,7 @@ export default function Yemen4GPage() {
                 transactionDate: new Date().toISOString(),
                 amount: numericAmount,
                 transactionType: 'سداد يمن فورجي',
-                notes: `إلى رقم: ${phone}`,
+                notes: `إلى رقم: ${phone}. رقم العملية: ${result.sequenceId || transid}`,
                 recipientPhoneNumber: phone
             });
             await batch.commit();

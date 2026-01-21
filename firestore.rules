@@ -212,7 +212,14 @@ service cloud.firestore {
        */
       match /transactions/{transactionId} {
         allow create: if isOwner(userId);
-        allow read, update, delete: if isOwner(userId) || isAdmin();
+        // Explicitly grant access to documents
+        allow get: if isOwner(userId) || isAdmin();
+        allow update, delete: if isOwner(userId) || isAdmin();
+      }
+
+      // Explicitly grant list access to the collection for owner or admin
+      match /transactions {
+          allow list: if isOwner(userId) || isAdmin();
       }
 
       /**

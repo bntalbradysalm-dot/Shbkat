@@ -11,6 +11,7 @@ import {
   Smartphone,
   Gamepad2,
   Building2,
+  Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,6 +26,7 @@ const services: Service[] = [
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },

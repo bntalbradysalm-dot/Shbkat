@@ -253,7 +253,7 @@ function NetworkPurchasePageComponent() {
   if (purchasedCard) {
     return (
       <>
-        <audio ref={audioRef} src="https://mobidrive.com/sharelink/m/6w56Yqa0e3ulWWsThEigol7Fr2jv9diAJWSVG75frJTD" preload="auto" />
+        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
                 <CardContent className="p-6">

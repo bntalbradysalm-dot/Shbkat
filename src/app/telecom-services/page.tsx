@@ -28,7 +28,7 @@ const telecomServices = [
   },
   {
     name: 'الهاتف الثابت و ADSL',
-    logo: 'https://i.postimg.cc/tJn0r3rV/yemennet-logo.png',
+    logo: 'https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg',
     href: '/internet-landline',
     description: 'سداد فواتير الهاتف الثابت ونت ADSL',
   },

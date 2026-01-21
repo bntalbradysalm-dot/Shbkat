@@ -214,10 +214,10 @@ service cloud.firestore {
        */
       match /transactions/{transactionId} {
         allow create: if isOwner(userId);
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow update, delete: if isOwner(userId);
       }
-
+      
       /**
        * @description Manages a user's private list of favorites.
        */

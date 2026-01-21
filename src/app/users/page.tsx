@@ -390,107 +390,104 @@ export default function UsersPage() {
                       {(user.balance ?? 0).toLocaleString('en-US')} ريال
                   </div>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <div className="flex gap-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-8 w-8">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            هل تريد بالتأكيد حذف المستخدم "{user.displayName}"؟ لا يمكن التراجع عن هذا الإجراء.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
-                            حذف
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
-                      <Edit className="h-4 w-4" />
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon" className="h-8 w-8">
+                        <Trash2 className="h-4 w-4" />
                     </Button>
-                    
-                    <Dialog open={isWithdrawDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
-                      if (!isOpen) {
-                          setIsWithdrawDialogOpen(false);
-                          setSelectedUser(null);
-                          setWithdrawAmount('');
-                      }
-                    }}>
-                      <DialogTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => {
-                              setSelectedUser(user);
-                              setIsWithdrawDialogOpen(true);
-                          }}>
-                              <Banknote className="h-4 w-4" />
-                          </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                              <DialogTitle>سحب نقدي</DialogTitle>
-                              <DialogDescription>
-                                  أدخل المبلغ المراد سحبه من حساب {selectedUser?.displayName}. رصيده الحالي: {(selectedUser?.balance ?? 0).toLocaleString('en-US')} ريال.
-                              </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="withdraw-amount" className="text-right col-span-1">المبلغ</Label>
-                                  <Input id="withdraw-amount" type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
-                              </div>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        هل تريد بالتأكيد حذف المستخدم "{user.displayName}"؟ لا يمكن التراجع عن هذا الإجراء.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                
+                <Dialog open={isWithdrawDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                      setIsWithdrawDialogOpen(false);
+                      setSelectedUser(null);
+                      setWithdrawAmount('');
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                      <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => {
+                          setSelectedUser(user);
+                          setIsWithdrawDialogOpen(true);
+                      }}>
+                          <Banknote className="h-4 w-4" />
+                      </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                          <DialogTitle>سحب نقدي</DialogTitle>
+                          <DialogDescription>
+                              أدخل المبلغ المراد سحبه من حساب {selectedUser?.displayName}. رصيده الحالي: {(selectedUser?.balance ?? 0).toLocaleString('en-US')} ريال.
+                          </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="withdraw-amount" className="text-right col-span-1">المبلغ</Label>
+                              <Input id="withdraw-amount" type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
                           </div>
-                          <DialogFooter>
-                              <Button type="submit" onClick={handleWithdraw}>تأكيد السحب</Button>
-                              <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
-                          </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                      </div>
+                      <DialogFooter>
+                          <Button type="submit" onClick={handleWithdraw}>تأكيد السحب</Button>
+                          <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                      </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
 
-                    <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
-                      if (!isOpen) {
-                          setIsManualDepositOpen(false);
-                          setSelectedUser(null);
-                          setTopUpAmount('');
-                      }
+                <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                      setIsManualDepositOpen(false);
+                      setSelectedUser(null);
+                      setTopUpAmount('');
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                        setSelectedUser(user);
+                        setIsManualDepositOpen(true);
                     }}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => {
-                            setSelectedUser(user);
-                            setIsManualDepositOpen(true);
-                        }}>
-                            <Wallet className="ml-1 h-4 w-4" />
-                            إيداع مع إبلاغ
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                              <DialogTitle>إيداع مع إبلاغ</DialogTitle>
-                              <DialogDescription>
-                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
-                              </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="deposit-amount" className="text-right col-span-1">المبلغ</Label>
-                                  <Input id="deposit-amount" type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
-                              </div>
+                        <Wallet className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                          <DialogTitle>إيداع مع إبلاغ</DialogTitle>
+                          <DialogDescription>
+                              أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
+                          </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="deposit-amount" className="text-right col-span-1">المبلغ</Label>
+                              <Input id="deposit-amount" type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
                           </div>
-                          <DialogFooter>
-                              <Button type="submit" onClick={handleManualDeposit}>تأكيد الإيداع</Button>
-                              <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
-                          </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                      </div>
+                      <DialogFooter>
+                          <Button type="submit" onClick={handleManualDeposit}>تأكيد الإيداع</Button>
+                          <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                      </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
-                </div>
                  <Dialog open={isTopUpDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
                     if (!isOpen) {
                         setIsTopUpDialogOpen(false);
@@ -499,12 +496,11 @@ export default function UsersPage() {
                     }
                  }}>
                     <DialogTrigger asChild>
-                        <Button variant="default" size="sm" onClick={() => {
+                        <Button variant="default" size="icon" className="h-8 w-8" onClick={() => {
                             setSelectedUser(user);
                             setIsTopUpDialogOpen(true);
                         }}>
-                            <PlusCircle className="ml-1 h-4 w-4" />
-                            تغذية
+                            <PlusCircle className="h-4 w-4" />
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">

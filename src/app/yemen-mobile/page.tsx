@@ -223,21 +223,9 @@ export default function YemenMobilePage() {
     setIsProcessing(true);
 
     try {
-        const response = await fetch('/api/baitynet', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                mobile: phone,
-                amount: numericAmount,
-                type: 'balance',
-            })
-        });
-        
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
-        }
+        // External API call removed as requested.
+        // The logic will now proceed to deduct balance and log the transaction
+        // as if the payment was successful.
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-numericAmount) });
@@ -253,7 +241,7 @@ export default function YemenMobilePage() {
         await batch.commit();
         setShowSuccess(true);
     } catch (error: any) {
-        toast({ variant: "destructive", title: "فشلت عملية السداد", description: error.message || "حدث خطأ غير متوقع." });
+        toast({ variant: "destructive", title: "فشلت عملية السداد", description: "حدث خطأ أثناء تحديث رصيدك." });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);

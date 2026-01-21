@@ -128,10 +128,10 @@ export default function YemenMobilePage() {
         setBillingInfo(null);
         try {
           const [balanceResponse, solfaResponse] = await Promise.all([
-            fetch('/api/yem-query', {
+            fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mobile: phone, type: 'balance' }),
+              body: JSON.stringify({ mobile: phone, action: 'query' }),
             }),
             fetch('/api/telecom', {
               method: 'POST',
@@ -163,8 +163,8 @@ export default function YemenMobilePage() {
           }
   
           setBillingInfo({
-            balance: balanceResult.data?.balance,
-            customer_type: balanceResult.data?.customer_type,
+            balance: balanceResult.balance,
+            customer_type: balanceResult.mobileTy,
             solfa_status: finalSolfaStatus
           });
 
@@ -223,9 +223,23 @@ export default function YemenMobilePage() {
     setIsProcessing(true);
 
     try {
-        // External API call removed as requested.
-        // The logic will now proceed to deduct balance and log the transaction
-        // as if the payment was successful.
+        const transid = Date.now().toString();
+        const response = await fetch('/api/telecom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mobile: phone,
+                amount: numericAmount,
+                action: 'bill',
+                transid: transid,
+            })
+        });
+        
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+        }
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-numericAmount) });
@@ -235,13 +249,13 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(),
             amount: numericAmount,
             transactionType: `سداد رصيد وباقات`,
-            notes: `إلى رقم: ${phone}`,
+            notes: `إلى رقم: ${phone}. رقم العملية: ${result.transid || transid}`,
             recipientPhoneNumber: phone
         });
         await batch.commit();
         setShowSuccess(true);
     } catch (error: any) {
-        toast({ variant: "destructive", title: "فشلت عملية السداد", description: "حدث خطأ أثناء تحديث رصيدك." });
+        toast({ variant: "destructive", title: "فشلت عملية السداد", description: error.message });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);

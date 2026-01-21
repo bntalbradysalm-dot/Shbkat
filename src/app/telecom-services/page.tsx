@@ -37,7 +37,7 @@ const telecomServices = [
 export default function TelecomServicesPage() {
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="خدمات الاتصالات والانترنت" />
+      <SimpleHeader title="رصيد وباقات" />
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col gap-4">
           {telecomServices.map((service, index) => (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -86,6 +86,11 @@ export default function UsersPage() {
   );
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
+
+  const totalBalance = useMemo(() => {
+    if (!users) return 0;
+    return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
+  }, [users]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -347,7 +352,11 @@ export default function UsersPage() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <p className="text-center">جاري تحميل المستخدمين...</p>;
+      return <div className="space-y-3">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>;
     }
     if (error) {
       // The FirebaseErrorListener will catch and display the error overlay
@@ -548,6 +557,27 @@ export default function UsersPage() {
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+           {/* Total Balance Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <div className="text-2xl font-bold text-primary">
+                  {totalBalance.toLocaleString('en-US')}
+                  <span className="text-base ml-1"> ريال</span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                مجموع أرصدة جميع المستخدمين في التطبيق.
+              </p>
+            </CardContent>
+          </Card>
+          
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input

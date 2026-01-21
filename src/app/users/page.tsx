@@ -45,6 +45,7 @@ import {
   Crown,
   Wallet,
   Banknote,
+  FileText,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +55,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 
 // Define the User type based on your backend.json schema
@@ -401,6 +403,11 @@ export default function UsersPage() {
                   </div>
               </div>
               <div className="mt-3 flex items-center justify-end gap-2">
+                <Link href={`/users/${user.id}/report`} title="عرض التقرير">
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                        <FileText className="h-4 w-4" />
+                    </Button>
+                </Link>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="icon" className="h-8 w-8">

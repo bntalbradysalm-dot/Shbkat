@@ -1,10 +1,11 @@
+
 'use client';
 
 import './globals.css';
 import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { ThemeProvider } from '@/components/theme-provider';
-import { FirebaseClientProvider } from '@/firebase';
+import { FirebaseProvider } from '@/firebase';
 import { useEffect, useState } from 'react';
 
 export default function RootLayout({
@@ -30,7 +31,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background">
-        <FirebaseClientProvider>
+        <FirebaseProvider>
           <ThemeProvider>
             <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
               <div className="flex-1 flex flex-col relative">
@@ -41,7 +42,7 @@ export default function RootLayout({
               </div>
             </div>
           </ThemeProvider>
-        </FirebaseClientProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );

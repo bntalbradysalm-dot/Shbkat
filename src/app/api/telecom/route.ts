@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     const response = await fetch(fullUrl, {
       method: 'GET', // echehanly uses GET
       headers: {
-        'Content-Type': 'application/json',
+        // Content-Type is not needed for GET requests with URL params
       },
     });
     
@@ -92,9 +92,10 @@ export async function POST(request: Request) {
       return NextResponse.json(data);
     } catch (jsonError) {
       console.error('JSON parsing error:', jsonError);
-      console.error('Response text:', responseText);
+      console.error('Response text from external API:', responseText);
+      // Return the raw text from the server for better debugging.
       return new NextResponse(
-        JSON.stringify({ message: 'فشل الخادم في الاستجابة بشكل صحيح. قد يكون هناك ضغط على الشبكة.' }),
+        JSON.stringify({ message: `فشل تحليل استجابة الخادم. النص الخام من الخادم: "${responseText}"` }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }

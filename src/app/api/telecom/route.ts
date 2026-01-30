@@ -3,7 +3,6 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-const API_BASE_URL = 'https://echehanly.yrbso.net';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
@@ -29,6 +28,7 @@ export async function POST(request: Request) {
     const token = generateToken(transid, payload.mobile);
 
     let endpoint = '';
+    let apiBaseUrl = ''; // Will be set dynamically based on the service
     let apiRequestBody: any = {
       userid: USERID,
       username: USERNAME,
@@ -41,9 +41,11 @@ export async function POST(request: Request) {
     delete apiRequestBody.service;
 
     if (service === 'yem4g') {
+        apiBaseUrl = 'https://echehanly.yrbso.net';
         endpoint = '/api/yr/yem4g';
         apiRequestBody.action = action;
     } else { // Default to yemen mobile
+        apiBaseUrl = 'https://echehanlyw.yrbso.net';
         switch(action) {
             case 'query':
             case 'bill':
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     const params = new URLSearchParams(apiRequestBody);
-    const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
+    const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
     const response = await fetch(fullUrl, {
       method: 'GET', // echehanly uses GET

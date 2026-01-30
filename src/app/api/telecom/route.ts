@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
-        endpoint = '/api/yr/yem4g';
+        endpoint = '/api/yr/'; // Corrected endpoint based on documentation
         apiRequestBody.action = action;
     } else { // Default to yemen mobile
         apiBaseUrl = 'https://echehanlyw.yrbso.net';
@@ -84,7 +84,11 @@ export async function POST(request: Request) {
 
     try {
       const data = JSON.parse(responseText);
-      if (!response.ok || (data.resultCode && data.resultCode !== "0" && data.resultCode !== "-2")) {
+      const isSuccess = data.resultCode === "0";
+      const isPending = data.resultCode === "-2";
+
+      // Consider any response that is not OK, or does not have a success/pending code, as an error.
+      if (!response.ok || (data.resultCode && !isSuccess && !isPending)) {
         const errorMessage = data.resultDesc || 'An unknown error occurred.';
         return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
           status: 400,

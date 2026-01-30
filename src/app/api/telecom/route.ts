@@ -59,6 +59,7 @@ export async function POST(request: Request) {
                 apiRequestBody.action = action;
                 break;
             case 'status':
+            case 'balance':
                 endpoint = '/info';
                 apiRequestBody.action = action;
                 break;

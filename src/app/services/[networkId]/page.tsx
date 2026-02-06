@@ -221,31 +221,6 @@ function NetworkPurchasePageComponent() {
     setIsSmsDialogOpen(false);
   };
 
-  const renderAvailabilityBadge = (count: number | undefined) => {
-    // We treat undefined as 0 to be safe, or simply check the value
-    const effectiveCount = count ?? 0; 
-    
-    if (effectiveCount >= 10) {
-      return (
-        <Badge className="bg-green-500 hover:bg-green-600 text-white border-none text-[10px] py-0 px-2 h-5">
-          متوفر
-        </Badge>
-      );
-    } else if (effectiveCount > 0) {
-      return (
-        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black border-none text-[10px] py-0 px-2 h-5">
-          الكمية محدودة
-        </Badge>
-      );
-    } else {
-      return (
-        <Badge className="bg-red-500 hover:bg-red-600 text-white border-none text-[10px] py-0 px-2 h-5">
-          انتهت
-        </Badge>
-      );
-    }
-  };
-
   const renderContent = () => {
     if (isLoadingCategories) {
         return (
@@ -293,10 +268,7 @@ function NetworkPurchasePageComponent() {
                             <div className="flex-grow p-3">
                                 <div className='flex items-start justify-between gap-2'>
                                     <div className='space-y-1 text-right'>
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-base">{category.name}</h3>
-                                            {renderAvailabilityBadge(count)}
-                                        </div>
+                                        <h3 className="font-bold text-base">{category.name}</h3>
                                         <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
                                     </div>
                                     <Button 

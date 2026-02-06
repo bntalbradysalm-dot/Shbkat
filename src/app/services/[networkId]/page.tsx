@@ -222,7 +222,9 @@ function NetworkPurchasePageComponent() {
   };
 
   const renderAvailabilityBadge = (count: number | undefined) => {
-    const effectiveCount = count ?? 15; // Fallback to "Available" if no count provided by BaityNet API
+    // We treat undefined as 0 to be safe, or simply check the value
+    const effectiveCount = count ?? 0; 
+    
     if (effectiveCount >= 10) {
       return (
         <Badge className="bg-green-500 hover:bg-green-600 text-white border-none text-[10px] py-0 px-2 h-5">
@@ -244,6 +246,84 @@ function NetworkPurchasePageComponent() {
     }
   };
 
+  const renderContent = () => {
+    if (isLoadingCategories) {
+        return (
+            <div className="space-y-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+             <div className="flex flex-col items-center justify-center text-center h-64">
+                <AlertCircle className="h-16 w-16 text-destructive" />
+                <h3 className="mt-4 text-lg font-semibold">حدث خطأ</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            </div>
+        );
+    }
+
+    if (!categories || categories.length === 0) {
+        return (
+             <div className="flex flex-col items-center justify-center text-center h-64">
+                <AlertCircle className="h-16 w-16 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">لا توجد فئات كروت</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    لم يقم المسؤول بإضافة أي فئات كروت لهذه الشبكة بعد.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {categories.map((category, index) => {
+                const count = category.count ?? 0;
+                return (
+                    <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
+                        <CardContent className="p-0 flex">
+                            <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
+                            <Database className="w-8 h-8 text-primary/80" />
+                            {category.dataLimit && (
+                                    <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.dataLimit}</span>
+                            )}
+                            </div>
+                            <div className="flex-grow p-3">
+                                <div className='flex items-start justify-between gap-2'>
+                                    <div className='space-y-1 text-right'>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-base">{category.name}</h3>
+                                            {renderAvailabilityBadge(count)}
+                                        </div>
+                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+                                    </div>
+                                    <Button 
+                                        size="default" 
+                                        className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
+                                        disabled={count === 0}
+                                        onClick={() => {
+                                            setSelectedCategory(category);
+                                            setIsConfirming(true);
+                                        }}
+                                    >
+                                        شراء
+                                    </Button>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
+                                    {category.expirationDate && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.expirationDate}</span>}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })}
+        </div>
+    );
+  };
+  
   if (isProcessing) {
     return <ProcessingOverlay message="جاري تجهيز طلبك..." />;
   }
@@ -317,81 +397,6 @@ function NetworkPurchasePageComponent() {
     );
   }
 
-  const renderContent = () => {
-    if (isLoadingCategories) {
-        return (
-            <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-             <div className="flex flex-col items-center justify-center text-center h-64">
-                <AlertCircle className="h-16 w-16 text-destructive" />
-                <h3 className="mt-4 text-lg font-semibold">حدث خطأ</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
-            </div>
-        );
-    }
-
-    if (!categories || categories.length === 0) {
-        return (
-             <div className="flex flex-col items-center justify-center text-center h-64">
-                <AlertCircle className="h-16 w-16 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">لا توجد فئات كروت</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    لم يقم المسؤول بإضافة أي فئات كروت لهذه الشبكة بعد.
-                </p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-4">
-            {categories.map((category, index) => (
-                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
-                    <CardContent className="p-0 flex">
-                        <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
-                           <Database className="w-8 h-8 text-primary/80" />
-                           {category.dataLimit && (
-                                <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.dataLimit}</span>
-                           )}
-                        </div>
-                        <div className="flex-grow p-3">
-                             <div className='flex items-start justify-between gap-2'>
-                                <div className='space-y-1 text-right'>
-                                     <div className="flex items-center gap-2">
-                                        <h3 className="font-bold text-base">{category.name}</h3>
-                                        {renderAvailabilityBadge(category.count)}
-                                     </div>
-                                     <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
-                                </div>
-                                <Button 
-                                    size="default" 
-                                    className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
-                                    disabled={category.count === 0}
-                                    onClick={() => {
-                                        setSelectedCategory(category);
-                                        setIsConfirming(true);
-                                    }}
-                                >
-                                    شراء
-                                </Button>
-                             </div>
-                             <Separator className="my-2" />
-                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
-                                 {category.expirationDate && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.expirationDate}</span>}
-                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
-  };
-  
   return (
     <>
         <div className="flex flex-col h-full bg-background">

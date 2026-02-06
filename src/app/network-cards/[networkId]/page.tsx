@@ -74,20 +74,6 @@ function NetworkPurchasePageComponent() {
   ), [firestore, networkId]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<CardCategory>(categoriesQuery);
 
-  // Fetch all available cards to count them per category
-  const cardsQuery = useMemoFirebase(() => (
-    firestore && networkId ? query(collection(firestore, `networks/${networkId}/cards`), where('status', '==', 'available')) : null
-  ), [firestore, networkId]);
-  const { data: availableCards } = useCollection<NetworkCard>(cardsQuery);
-
-  const availableCounts = useMemo(() => {
-    if (!availableCards) return {};
-    return availableCards.reduce((acc, card) => {
-      acc[card.categoryId] = (acc[card.categoryId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [availableCards]);
-
   const [selectedCategory, setSelectedCategory] = useState<CardCategory | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -119,7 +105,6 @@ function NetworkPurchasePageComponent() {
       return;
     }
   
-    // Prevent owner from buying from their own network
     if (user.uid === networkData.ownerId) {
       toast({
         variant: "destructive",
@@ -165,20 +150,15 @@ function NetworkPurchasePageComponent() {
         const commission = categoryPrice * 0.10;
         const payoutAmount = categoryPrice - commission;
   
-        // 1. Update card status to 'sold'
         batch.update(cardToPurchaseDoc.ref, {
             status: 'sold',
             soldTo: user.uid,
             soldTimestamp: now,
         });
         
-        // 2. Deduct balance from buyer
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
-
-        // 3. Add payoutAmount to network owner's balance
         batch.update(ownerDocRef, { balance: increment(payoutAmount) });
   
-        // 4. Create transaction for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -189,7 +169,6 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. Create transaction log for owner (optional but good for tracking)
         const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
         batch.set(ownerTransactionRef, {
             userId: ownerId,
@@ -199,7 +178,6 @@ function NetworkPurchasePageComponent() {
             notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
         });
 
-        // 6. Create a record in soldCards for the admin to track sales
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -216,11 +194,10 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName,
             buyerPhoneNumber: userProfile.phoneNumber,
             soldTimestamp: now,
-            payoutStatus: 'completed' // Marked as completed since it's an auto-transfer
+            payoutStatus: 'completed'
         });
         
         await batch.commit();
-  
         setPurchasedCard(cardToPurchaseData);
   
     } catch (error: any) {
@@ -287,7 +264,7 @@ function NetworkPurchasePageComponent() {
                          <div className="w-full grid grid-cols-2 gap-3 pt-2">
                              <Button className="w-full" onClick={handleCopyCardDetails}>
                                  <Copy className="ml-2 h-4 w-4" />
-                                 نسخ رقم الكرت
+                                 نسخ
                              </Button>
                              <Button variant="outline" className="w-full" onClick={() => setIsSmsDialogOpen(true)}>
                                 <MessageSquare className="ml-2 h-4 w-4" />
@@ -310,7 +287,7 @@ function NetworkPurchasePageComponent() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>إرسال الكرت عبر SMS</AlertDialogTitle>
                     <AlertDialogDescription>
-                        يمكنك إرسال معلومات الكرت برسالة نصية SMS إلى أي رقم. يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
+                        يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-2">
@@ -320,7 +297,7 @@ function NetworkPurchasePageComponent() {
                     <Input
                         id="sms-recipient"
                         type="tel"
-                        placeholder="ادخل الرقم..."
+                        placeholder="7xxxxxxxx"
                         value={smsRecipient}
                         onChange={(e) => setSmsRecipient(e.target.value)}
                     />
@@ -350,7 +327,7 @@ function NetworkPurchasePageComponent() {
                 <AlertCircle className="h-16 w-16 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">لا توجد فئات كروت</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    لم يقم مالك الشبكة بإضافة أي فئات كروت بعد.
+                    لم يتم إضافة أي فئات كروت بعد.
                 </p>
             </div>
         );
@@ -359,7 +336,6 @@ function NetworkPurchasePageComponent() {
     return (
         <div className="space-y-4">
             {categories.map((category, index) => {
-                const count = availableCounts[category.id] || 0;
                 return (
                     <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                         <CardContent className="p-0 flex">
@@ -373,12 +349,11 @@ function NetworkPurchasePageComponent() {
                                 <div className='flex items-start justify-between gap-2'>
                                     <div className='space-y-1 text-right'>
                                         <h3 className="font-bold text-base">{category.name}</h3>
-                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال</p>
                                     </div>
                                     <Button 
                                         size="default" 
                                         className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
-                                        disabled={count === 0}
                                         onClick={() => {
                                             setSelectedCategory(category);
                                             setIsConfirming(true);

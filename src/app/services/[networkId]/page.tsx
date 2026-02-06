@@ -153,14 +153,11 @@ function NetworkPurchasePageComponent() {
         const result: OrderResponse = await response.json();
         const cardData = result.data.order.card;
         
-        // Firestore batch write
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
 
-        // 1. Deduct balance from user
         batch.update(userDocRef!, { balance: increment(-categoryPrice) });
 
-        // 2. Create a transaction record for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         const transactionPayload: any = {
             userId: user.uid,
@@ -171,15 +168,12 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardData.cardID,
         };
 
-        // Only add cardPassword if it's different from cardID
         if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
             transactionPayload.cardPassword = cardData.cardPass;
         }
         
         batch.set(buyerTransactionRef, transactionPayload);
-        
         await batch.commit();
-
         setPurchasedCard(cardData);
 
     } catch (error: any) {
@@ -246,7 +240,7 @@ function NetworkPurchasePageComponent() {
                 <AlertCircle className="h-16 w-16 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">لا توجد فئات كروت</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    لم يقم المسؤول بإضافة أي فئات كروت لهذه الشبكة بعد.
+                    لم يتم العثور على فئات لهذه الشبكة.
                 </p>
             </div>
         );
@@ -255,7 +249,6 @@ function NetworkPurchasePageComponent() {
     return (
         <div className="space-y-4">
             {categories.map((category, index) => {
-                const count = category.count ?? 0;
                 return (
                     <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                         <CardContent className="p-0 flex">
@@ -269,12 +262,11 @@ function NetworkPurchasePageComponent() {
                                 <div className='flex items-start justify-between gap-2'>
                                     <div className='space-y-1 text-right'>
                                         <h3 className="font-bold text-base">{category.name}</h3>
-                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال</p>
                                     </div>
                                     <Button 
                                         size="default" 
                                         className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
-                                        disabled={count === 0}
                                         onClick={() => {
                                             setSelectedCategory(category);
                                             setIsConfirming(true);
@@ -321,7 +313,7 @@ function NetworkPurchasePageComponent() {
                          <div className="w-full grid grid-cols-2 gap-3 pt-2">
                              <Button className="w-full" onClick={handleCopyCardDetails}>
                                  <Copy className="ml-2 h-4 w-4" />
-                                 نسخ رقم الكرت
+                                 نسخ
                              </Button>
                              <Button variant="outline" className="w-full" onClick={() => setIsSmsDialogOpen(true)}>
                                 <MessageSquare className="ml-2 h-4 w-4" />
@@ -344,7 +336,7 @@ function NetworkPurchasePageComponent() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>إرسال الكرت عبر SMS</AlertDialogTitle>
                     <AlertDialogDescription>
-                        يمكنك إرسال معلومات الكرت برسالة نصية SMS إلى أي رقم. يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
+                        يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-2">
@@ -354,7 +346,7 @@ function NetworkPurchasePageComponent() {
                     <Input
                         id="sms-recipient"
                         type="tel"
-                        placeholder="ادخل الرقم..."
+                        placeholder="7xxxxxxxx"
                         value={smsRecipient}
                         onChange={(e) => setSmsRecipient(e.target.value)}
                     />

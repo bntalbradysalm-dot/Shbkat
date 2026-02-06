@@ -25,6 +25,8 @@ import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type CardCategory = {
     id: string;
@@ -71,6 +73,20 @@ function NetworkPurchasePageComponent() {
     firestore && networkId ? collection(firestore, `networks/${networkId}/cardCategories`) : null
   ), [firestore, networkId]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<CardCategory>(categoriesQuery);
+
+  // Fetch all available cards to count them per category
+  const cardsQuery = useMemoFirebase(() => (
+    firestore && networkId ? query(collection(firestore, `networks/${networkId}/cards`), where('status', '==', 'available')) : null
+  ), [firestore, networkId]);
+  const { data: availableCards } = useCollection<NetworkCard>(cardsQuery);
+
+  const availableCounts = useMemo(() => {
+    if (!availableCards) return {};
+    return availableCards.reduce((acc, card) => {
+      acc[card.categoryId] = (acc[card.categoryId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [availableCards]);
 
   const [selectedCategory, setSelectedCategory] = useState<CardCategory | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -319,6 +335,28 @@ function NetworkPurchasePageComponent() {
     );
   }
 
+  const renderAvailabilityBadge = (count: number) => {
+    if (count >= 10) {
+      return (
+        <Badge className="bg-green-500 hover:bg-green-600 text-white border-none text-[10px] py-0 px-2 h-5">
+          متوفر
+        </Badge>
+      );
+    } else if (count > 0 && count < 10) {
+      return (
+        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black border-none text-[10px] py-0 px-2 h-5">
+          الكمية محدودة
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-red-500 hover:bg-red-600 text-white border-none text-[10px] py-0 px-2 h-5">
+          انتهت
+        </Badge>
+      );
+    }
+  };
+
   const renderContent = () => {
     if (isLoadingCategories) {
         return (
@@ -342,40 +380,47 @@ function NetworkPurchasePageComponent() {
 
     return (
         <div className="space-y-4">
-            {categories.map((category, index) => (
-                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
-                    <CardContent className="p-0 flex">
-                        <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
-                           <Database className="w-8 h-8 text-primary/80" />
-                           {category.capacity && (
-                                <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.capacity}</span>
-                           )}
-                        </div>
-                        <div className="flex-grow p-3">
-                             <div className='flex items-start justify-between gap-2'>
-                                <div className='space-y-1 text-right'>
-                                     <h3 className="font-bold text-base">{category.name}</h3>
-                                     <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+            {categories.map((category, index) => {
+                const count = availableCounts[category.id] || 0;
+                return (
+                    <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
+                        <CardContent className="p-0 flex">
+                            <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
+                            <Database className="w-8 h-8 text-primary/80" />
+                            {category.capacity && (
+                                    <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.capacity}</span>
+                            )}
+                            </div>
+                            <div className="flex-grow p-3">
+                                <div className='flex items-start justify-between gap-2'>
+                                    <div className='space-y-1 text-right'>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-base">{category.name}</h3>
+                                            {renderAvailabilityBadge(count)}
+                                        </div>
+                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+                                    </div>
+                                    <Button 
+                                        size="default" 
+                                        className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
+                                        disabled={count === 0}
+                                        onClick={() => {
+                                            setSelectedCategory(category);
+                                            setIsConfirming(true);
+                                        }}
+                                    >
+                                        شراء
+                                    </Button>
                                 </div>
-                                <Button 
-                                    size="default" 
-                                    className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
-                                    onClick={() => {
-                                        setSelectedCategory(category);
-                                        setIsConfirming(true);
-                                    }}
-                                >
-                                    شراء
-                                </Button>
-                             </div>
-                             <Separator className="my-2" />
-                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
-                                 {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
-                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
+                                <Separator className="my-2" />
+                                <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
+                                    {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })}
         </div>
     );
   };

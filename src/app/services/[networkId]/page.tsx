@@ -25,6 +25,8 @@ import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type CardCategory = {
     id: number;
@@ -32,6 +34,7 @@ type CardCategory = {
     price: number;
     dataLimit?: string;
     expirationDate?: string;
+    count?: number;
 };
 
 type NetworkCard = {
@@ -218,6 +221,29 @@ function NetworkPurchasePageComponent() {
     setIsSmsDialogOpen(false);
   };
 
+  const renderAvailabilityBadge = (count: number | undefined) => {
+    const effectiveCount = count ?? 15; // Fallback to "Available" if no count provided by BaityNet API
+    if (effectiveCount >= 10) {
+      return (
+        <Badge className="bg-green-500 hover:bg-green-600 text-white border-none text-[10px] py-0 px-2 h-5">
+          متوفر
+        </Badge>
+      );
+    } else if (effectiveCount > 0) {
+      return (
+        <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black border-none text-[10px] py-0 px-2 h-5">
+          الكمية محدودة
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-red-500 hover:bg-red-600 text-white border-none text-[10px] py-0 px-2 h-5">
+          انتهت
+        </Badge>
+      );
+    }
+  };
+
   if (isProcessing) {
     return <ProcessingOverlay message="جاري تجهيز طلبك..." />;
   }
@@ -336,12 +362,16 @@ function NetworkPurchasePageComponent() {
                         <div className="flex-grow p-3">
                              <div className='flex items-start justify-between gap-2'>
                                 <div className='space-y-1 text-right'>
-                                     <h3 className="font-bold text-base">{category.name}</h3>
+                                     <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-base">{category.name}</h3>
+                                        {renderAvailabilityBadge(category.count)}
+                                     </div>
                                      <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
                                 </div>
                                 <Button 
                                     size="default" 
                                     className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
+                                    disabled={category.count === 0}
                                     onClick={() => {
                                         setSelectedCategory(category);
                                         setIsConfirming(true);

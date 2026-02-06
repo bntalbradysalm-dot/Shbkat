@@ -342,7 +342,7 @@ function NetworkPurchasePageComponent() {
           متوفر
         </Badge>
       );
-    } else if (count > 0 && count < 10) {
+    } else if (count > 0) {
       return (
         <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black border-none text-[10px] py-0 px-2 h-5">
           الكمية محدودة

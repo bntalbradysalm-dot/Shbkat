@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Smartphone, Wifi, Zap, Building, HelpCircle, Loader2 } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -20,12 +20,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
@@ -111,26 +110,30 @@ export default function YemenMobilePage() {
 
   useEffect(() => {
     const handleSearch = async () => {
-      if ((phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')))) {
+      if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
         setShowTabs(true);
         setIsCheckingBilling(true);
         setIsQueryingOffers(true);
         setBillingInfo(null);
         setOffers(null);
+        
         try {
-          const [balanceResponse, solfaResponse, offersResponse] = await Promise.all([
+          // استعلام الرصيد أولاً
+          const balanceRes = await fetch('/api/telecom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: phone, action: 'query' }),
+          });
+          const balanceResult = await balanceRes.json();
+
+          if (!balanceRes.ok) throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
+
+          // ثم استعلام السلفة والعروض
+          const [solfaRes, offersRes] = await Promise.all([
             fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mobile: phone, action: 'query' }),
-            }),
-            fetch('/api/telecom', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                mobile: phone,
-                action: 'solfa',
-              }),
+              body: JSON.stringify({ mobile: phone, action: 'solfa' }),
             }),
             fetch('/api/telecom', {
                 method: 'POST',
@@ -138,36 +141,25 @@ export default function YemenMobilePage() {
                 body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
             })
           ]);
-  
-          const balanceResult = await balanceResponse.json();
-          const solfaResult = await solfaResponse.json();
-          const offersResult = await offersResponse.json();
-  
-          if (!balanceResponse.ok) {
-            throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
-          }
+
+          const solfaResult = await solfaRes.json();
+          const offersResult = await offersRes.json();
 
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
-          if (solfaResponse.ok && solfaResult.status) {
+          if (solfaRes.ok && solfaResult.status) {
             finalSolfaStatus = solfaResult.status === '1' ? 'متسلف' : 'غير متسلف';
           }
   
           setBillingInfo({
-            balance: balanceResult.balance,
-            customer_type: balanceResult.mobileTy,
+            balance: balanceResult.balance || 0,
+            customer_type: balanceResult.mobileTy || 'غير معروف',
             solfa_status: finalSolfaStatus
           });
 
-          if (!offersResponse.ok) {
-            setOffers([]);
-          } else {
-            setOffers(offersResult.offers || []);
-          }
+          setOffers(offersResult.offers || []);
 
         } catch (error: any) {
-          toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
-          setBillingInfo(null);
-          setOffers(null);
+          toast({ variant: "destructive", title: "خطأ", description: error.message });
         } finally {
           setIsCheckingBilling(false);
           setIsQueryingOffers(false);
@@ -179,12 +171,8 @@ export default function YemenMobilePage() {
       }
     };
     
-    const timerId = setTimeout(() => {
-        handleSearch();
-    }, 500);
-
+    const timerId = setTimeout(handleSearch, 800);
     return () => clearTimeout(timerId);
-
   }, [phone, toast]);
 
   useEffect(() => {
@@ -198,30 +186,25 @@ export default function YemenMobilePage() {
 
   const handlePayment = async () => {
     if (!phone || !amount || !user || !userProfile || !firestore || !userDocRef) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات المستخدم أو الطلب غير مكتملة.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات غير مكتملة.' });
         return;
     }
 
     const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.' });
-        return;
-    }
-    
-    if (numericAmount < 21) {
+    if (isNaN(numericAmount) || numericAmount < 21) {
         toast({ variant: 'destructive', title: 'خطأ', description: 'أقل مبلغ للسداد هو 21 ريال.' });
         return;
     }
 
     if ((userProfile.balance ?? 0) < numericAmount) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام العملية.' });
         return;
     }
 
     setIsProcessing(true);
 
     try {
-        const transid = Date.now().toString();
+        const transid = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -236,7 +219,7 @@ export default function YemenMobilePage() {
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+            throw new Error(result.message || 'فشلت عملية السداد.');
         }
 
         const batch = writeBatch(firestore);
@@ -247,62 +230,59 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(),
             amount: numericAmount,
             transactionType: `سداد رصيد وباقات`,
-            notes: `إلى رقم: ${phone}. رقم العملية: ${result.transid || transid}`,
+            notes: `إلى رقم: ${phone}. مرجع: ${result.transid || transid}`,
             recipientPhoneNumber: phone
         });
         await batch.commit();
         setShowSuccess(true);
     } catch (error: any) {
-        toast({ variant: "destructive", title: "فشلت عملية السداد", description: error.message });
+        toast({ variant: "destructive", title: "فشل العملية", description: error.message });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
     }
   };
   
-    const handleOfferClick = (offer: Offer) => {
-        setSelectedOffer(offer);
-        setIsConfirmingOffer(true);
-    };
+  const handleOfferClick = (offer: Offer) => {
+      setSelectedOffer(offer);
+      setIsConfirmingOffer(true);
+  };
 
-    const handleActivateOffer = async () => {
-        if (!selectedOffer || !phone) return;
-        
-        setIsActivatingOffer(true);
-        try {
-            const response = await fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    mobile: phone,
-                    action: 'billover',
-                    offertype: selectedOffer.offerId
-                })
-            });
+  const handleActivateOffer = async () => {
+      if (!selectedOffer || !phone) return;
+      
+      setIsActivatingOffer(true);
+      try {
+          const response = await fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  mobile: phone,
+                  action: 'billover',
+                  offertype: selectedOffer.offerId
+              })
+          });
 
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || `فشل تفعيل باقة: ${selectedOffer.offerName}.`);
-            }
+          const result = await response.json();
+          if (!response.ok) {
+              throw new Error(result.message || 'فشل تفعيل الباقة.');
+          }
 
-            toast({
-                title: "نجاح",
-                description: `تم إرسال طلب تفعيل باقة "${selectedOffer.offerName}" بنجاح.`
-            });
+          toast({
+              title: "نجاح",
+              description: `تم إرسال طلب تفعيل باقة "${selectedOffer.offerName}" بنجاح.`
+          });
 
-        } catch (error: any) {
-            toast({ variant: "destructive", title: "فشل تفعيل الباقة", description: error.message });
-        } finally {
-            setIsActivatingOffer(false);
-            setIsConfirmingOffer(false);
-            setSelectedOffer(null);
-        }
-    };
+      } catch (error: any) {
+          toast({ variant: "destructive", title: "خطأ", description: error.message });
+      } finally {
+          setIsActivatingOffer(false);
+          setIsConfirmingOffer(false);
+          setSelectedOffer(null);
+      }
+  };
 
-
-  if (isProcessing) {
-    return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-  }
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
   
   if (showSuccess) {
     return (
@@ -380,23 +360,19 @@ export default function YemenMobilePage() {
                                 <div className="space-y-2">
                                     <Skeleton className="h-12 w-full" />
                                     <Skeleton className="h-12 w-full" />
-                                    <Skeleton className="h-12 w-full" />
                                 </div>
                             ) : offers && offers.length > 0 ? (
                                 <div className="space-y-2">
-                                    <h4 className="font-bold mb-2 text-center text-sm">الباقات المتاحة للاشتراك</h4>
+                                    <h4 className="font-bold mb-2 text-center text-sm">الباقات المتاحة</h4>
                                     {offers.map((offer: Offer) => (
-                                        <Button key={offer.offerId} variant="outline" className="w-full justify-between h-auto py-3" onClick={() => handleOfferClick(offer)}>
-                                            <span className="text-right whitespace-normal">{offer.offerName}</span>
-                                            <Zap className="w-4 h-4 text-primary" />
+                                        <Button key={offer.offerId} variant="outline" className="w-full justify-between h-auto py-3 text-right" onClick={() => handleOfferClick(offer)}>
+                                            <span className="whitespace-normal">{offer.offerName}</span>
+                                            <Zap className="w-4 h-4 text-primary shrink-0" />
                                         </Button>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="p-4 border rounded-lg bg-background">
-                                    <h4 className="font-bold mb-2 text-center">الباقات المتاحة</h4>
-                                    <p className="text-sm text-center text-muted-foreground">لا توجد باقات متاحة لهذا الرقم حالياً.</p>
-                                </div>
+                                <p className="text-sm text-center text-muted-foreground p-4">لا توجد باقات متاحة حالياً.</p>
                             )}
                         </TabsContent>
                         <TabsContent value="balance" className="pt-4 space-y-4">
@@ -419,10 +395,9 @@ export default function YemenMobilePage() {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle className="text-center">تأكيد السداد</AlertDialogTitle>
                                     <AlertDialogDescription className="text-center pt-2">
-                                    هل أنت متأكد من رغبتك في تسديد مبلغ{' '}
+                                    هل أنت متأكد من تسديد مبلغ{' '}
                                     <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>{' '}
-                                    إلى الرقم{' '}
-                                    <span className="font-bold text-primary">{phone}</span>؟
+                                    إلى الرقم <span className="font-bold text-primary">{phone}</span>؟
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -448,19 +423,17 @@ export default function YemenMobilePage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
                 <AlertDialogDescription>
-                    هل أنت متأكد من تفعيل باقة "{selectedOffer?.offerName}" للرقم {phone}؟ سيتم خصم قيمة الباقة من رصيد الشريحة مباشرة.
+                    هل أنت متأكد من تفعيل باقة "{selectedOffer?.offerName}" للرقم {phone}؟ سيتم خصم القيمة من رصيدك.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel disabled={isActivatingOffer}>إلغاء</AlertDialogCancel>
                 <AlertDialogAction onClick={handleActivateOffer} disabled={isActivatingOffer}>
-                    {isActivatingOffer ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : null}
-                    {isActivatingOffer ? 'جاري التفعيل...' : 'تأكيد'}
+                    {isActivatingOffer ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : 'تأكيد التفعيل'}
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
-
     </>
   );
 }

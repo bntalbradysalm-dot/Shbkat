@@ -7,33 +7,31 @@ const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
 
-// Function to generate the required token based on the documentation:
-// hashPassword = md5(Password);
-// token = md5(hashPassword + transid + Username + mobile);
+// وظيفة لتوليد التوقيع (Token) حسب توثيق اشحن لي
 const generateToken = (transid: string, mobile: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
+  // التوقيع هو MD5 لـ (كلمة المرور المشفرة + رقم العملية + اسم المستخدم + رقم الهاتف)
   const token = CryptoJS.MD5(hashPassword + transid + USERNAME + mobile).toString();
   return token;
 };
 
 export async function POST(request: Request) {
-  let body: any = {};
   try {
-    body = await request.json();
+    const body = await request.json();
     const { action, service, ...payload } = body;
     
     if (!payload.mobile) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    // Ensure transid is unique and not too long
-    const transid = payload.transid || Date.now().toString().slice(-8);
+    // توليد رقم عملية فريد جداً لتجنب التداخل عند الاستعلامات المتعددة
+    const transid = payload.transid || `${Date.now()}${Math.floor(Math.random() * 10000)}`;
     const token = generateToken(transid, payload.mobile);
 
     let endpoint = '';
     let apiBaseUrl = ''; 
     
-    // Construct the base request body with ONLY required parameters according to docs
+    // إعداد المعايير المرسلة للـ API
     let apiRequestParams: any = {
       action: action,
       userid: USERID,
@@ -42,14 +40,14 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // Remove service from params as it's internal to our app
+    // إزالة المعايير الداخلية التي لا يحتاجها الـ API الخارجي
     delete apiRequestParams.service;
 
-    // Route to correct Domain and Endpoint based on service type
+    // توجيه الطلب إلى النطاق الصحيح بناءً على نوع الخدمة
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
         endpoint = '/api/yr/'; 
-    } else { // Default to Yemen Mobile (yem)
+    } else { 
         apiBaseUrl = 'https://echehanlyw.yrbso.net';
         switch(action) {
             case 'query':
@@ -73,35 +71,41 @@ export async function POST(request: Request) {
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
-    // Use a timeout to prevent hanging requests
+    // تعيين مهلة اتصال 20 ثانية
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+    const id = setTimeout(() => controller.abort(), 20000);
 
     try {
         const response = await fetch(fullUrl, {
             method: 'GET',
             signal: controller.signal,
-            headers: {
-                'Accept': 'application/json',
-            },
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
         });
         
         clearTimeout(id);
         const responseText = await response.text();
         
-        console.log(`[TELECOM API] URL: ${fullUrl}`);
-        console.log(`[TELECOM API RESPONSE] Raw:`, responseText);
+        // تسجيل العمليات في السيرفر للمتابعة عند حدوث مشاكل (غير مرئي للمستخدم)
+        console.log(`[API CALL] Action: ${action}, Mobile: ${payload.mobile}, URL: ${fullUrl}`);
 
-        const data = JSON.parse(responseText);
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("[API ERROR] Could not parse response:", responseText);
+            return new NextResponse(JSON.stringify({ message: 'استجابة غير صالحة من المزود.' }), { status: 502 });
+        }
         
-        // Success codes based on docs
+        // رموز النجاح حسب النظام
         const isSuccess = data.resultCode === "0";
-        const isPending = data.resultCode === "-2" || (data.resultDesc && data.resultDesc.includes('under process'));
+        // التعامل مع حالة "تحت التنفيذ" كاستجابة مقبولة للاستعلام
+        const isPending = data.resultCode === "-2" || (data.resultDesc && data.resultDesc.toLowerCase().includes('under process'));
 
         if (!response.ok || (data.resultCode && !isSuccess && !isPending)) {
-            const errorMessage = data.resultDesc || 'حدث خطأ في الخادم الخارجي.';
+            const errorMessage = data.resultDesc || 'حدث خطأ في النظام الخارجي.';
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-                status: response.status === 200 ? 400 : response.status,
+                status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
@@ -111,7 +115,7 @@ export async function POST(request: Request) {
     } catch (fetchError: any) {
         clearTimeout(id);
         if (fetchError.name === 'AbortError') {
-            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالخادم الخارجي.' }), { status: 504 });
+            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود، يرجى المحاولة لاحقاً.' }), { status: 504 });
         }
         throw fetchError;
     }
@@ -119,7 +123,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error(`Error in /api/telecom:`, error);
     return new NextResponse(
-      JSON.stringify({ message: `خطأ في الاتصال بالخدمة: ${error.message}` }),
+      JSON.stringify({ message: `خطأ داخلي: ${error.message}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

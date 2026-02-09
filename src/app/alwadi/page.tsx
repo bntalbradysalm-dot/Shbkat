@@ -244,7 +244,7 @@ export default function AlwadiPage() {
                 </Label>
                 <Input
                   id="subscriberName"
-                  placeholder="مثال: محمد راضي"
+                  placeholder="اسم المشترك"
                   value={subscriberName}
                   onChange={(e) => setSubscriberName(e.target.value)}
                   className="rounded-xl"
@@ -258,10 +258,10 @@ export default function AlwadiPage() {
                 <Input
                   id="cardNumber"
                   inputMode="numeric"
-                  placeholder="ادخل رقم الكرت المكتوب خلف الكرت"
+                  placeholder="ادخل رقم الكرت"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="rounded-xl font-mono"
+                  className="rounded-xl"
                 />
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function AlwadiPage() {
                       </div>
                       <div className="flex justify-between items-center py-2 border-b">
                         <span className="text-muted-foreground">رقم الكرت:</span>
-                        <span className="font-bold font-mono">{cardNumber}</span>
+                        <span className="font-bold">{cardNumber}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-b">
                         <span className="text-muted-foreground">الفئة:</span>

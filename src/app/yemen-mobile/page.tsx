@@ -118,7 +118,7 @@ export default function YemenMobilePage() {
         setOffers(null);
         
         try {
-          // استعلام الرصيد أولاً
+          // 1. استعلام الرصيد (Query Balance)
           const balanceRes = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -128,21 +128,20 @@ export default function YemenMobilePage() {
 
           if (!balanceRes.ok) throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
 
-          // ثم استعلام السلفة والعروض
-          const [solfaRes, offersRes] = await Promise.all([
-            fetch('/api/telecom', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mobile: phone, action: 'solfa' }),
-            }),
-            fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
-            })
-          ]);
-
+          // 2. استعلام السلفة (Solfa)
+          const solfaRes = await fetch('/api/telecom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: phone, action: 'solfa' }),
+          });
           const solfaResult = await solfaRes.json();
+
+          // 3. استعلام العروض (Query Offers)
+          const offersRes = await fetch('/api/telecom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
+          });
           const offersResult = await offersRes.json();
 
           let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
@@ -151,15 +150,15 @@ export default function YemenMobilePage() {
           }
   
           setBillingInfo({
-            balance: balanceResult.balance || 0,
-            customer_type: balanceResult.mobileTy || 'غير معروف',
+            balance: parseFloat(balanceResult.balance || balanceResult.availableCredit || "0"),
+            customer_type: balanceResult.mobileTy || balanceResult.mobileType || 'غير معروف',
             solfa_status: finalSolfaStatus
           });
 
           setOffers(offersResult.offers || []);
 
         } catch (error: any) {
-          toast({ variant: "destructive", title: "خطأ", description: error.message });
+          toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
         } finally {
           setIsCheckingBilling(false);
           setIsQueryingOffers(false);
@@ -178,6 +177,7 @@ export default function YemenMobilePage() {
   useEffect(() => {
     const numericAmount = parseFloat(amount);
     if (!isNaN(numericAmount) && numericAmount > 0) {
+      // حساب الصافي (مثال: خصم 17.4% ضرائب ورسوم)
       setNetAmount(numericAmount - (numericAmount * 0.174));
     } else {
       setNetAmount(0);
@@ -230,7 +230,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(),
             amount: numericAmount,
             transactionType: `سداد رصيد وباقات`,
-            notes: `إلى رقم: ${phone}. مرجع: ${result.transid || transid}`,
+            notes: `إلى رقم: ${phone}. مرجع: ${result.sequenceId || transid}`,
             recipientPhoneNumber: phone
         });
         await batch.commit();

@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    // توليد رقم عملية فريد (12-15 رقم)
+    // توليد رقم عملية فريد (12-15 رقم) لضمان عدم التكرار
     const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
     const token = generateToken(transid, payload.mobile);
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     // إزالة المعايير الداخلية التي لا يحتاجها الـ API الخارجي
     delete apiRequestParams.service;
 
-    // تحديد النطاق والمسار بناءً على نوع الخدمة
+    // تحديد النطاق والمسار بناءً على نوع الخدمة والوثائق المزودة
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
         endpoint = '/api/yr/'; 
@@ -92,10 +92,13 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود.' }), { status: 502 });
+            return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود. تأكد من صحة البيانات.' }), { status: 502 });
         }
         
-        // رموز النجاح (0 للنجاح، -2 قيد التنفيذ)
+        // رموز الاستجابة حسب الوثائق:
+        // "0" للنجاح
+        // "-2" قيد التنفيذ (Pending)
+        // "10xx" خطأ
         const isSuccess = data.resultCode === "0" || data.resultCode === 0;
         const isPending = data.resultCode === "-2" || data.resultCode === -2;
 
@@ -107,6 +110,7 @@ export async function POST(request: Request) {
             });
         }
         
+        // في حال النجاح أو الانتظار، نرجع البيانات كما هي
         return NextResponse.json(data);
 
     } catch (fetchError: any) {

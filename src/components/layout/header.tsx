@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
-import Link from 'next/link';
+import Link from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -45,11 +45,11 @@ const Header = () => {
     const hour = now.getHours();
 
     if (day === 5) {
-      setGreeting('جمعة مباركة');
+      setGreeting('جمعة مباركة 👋');
     } else if (hour < 12) {
-      setGreeting('صباحك جميل');
+      setGreeting('صباحك جميل 👋');
     } else {
-      setGreeting('مساءك جميل');
+      setGreeting('مساءك جميل 👋');
     }
   }, []);
 

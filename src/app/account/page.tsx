@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -100,18 +99,37 @@ type AppSettings = {
     supportPhoneNumber: string;
 };
 
+const CustomLoader = () => (
+  <div className="bg-card p-6 rounded-[2rem] shadow-xl flex items-center justify-center w-32 h-32">
+    <div className="relative w-16 h-16">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.5s' }}
+      >
+        <path
+          d="M15 25 A10 10 0 0 0 35 25"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40 15 A15 15 0 0 1 40 35"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className="opacity-40"
+        />
+      </svg>
+    </div>
+  </div>
+);
+
 const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center h-screen bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <Image
-        src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png"
-        alt="logo"
-        width={160}
-        height={160}
-        className="object-contain"
-      />
-      <Loader2 className="h-6 w-6 animate-spin text-black dark:text-white" />
-    </div>
+    <CustomLoader />
   </div>
 );
 

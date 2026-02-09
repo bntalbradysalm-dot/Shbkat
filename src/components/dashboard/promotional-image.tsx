@@ -3,7 +3,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,17 +23,16 @@ type Advertisement = {
 
 export function PromotionalImage() {
     const firestore = useFirestore();
-    const { user } = useUser();
     
     const adsCollection = useMemoFirebase(
-      () => (firestore && user ? collection(firestore, 'advertisements') : null),
-      [firestore, user]
+      () => (firestore ? collection(firestore, 'advertisements') : null),
+      [firestore]
     );
 
     const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
 
     const promoImage = (ad: Advertisement) => (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-lg border-none">
             <div className="relative aspect-[16/9] w-full">
                 <Image
                     src={ad.imageUrl}
@@ -54,11 +53,23 @@ export function PromotionalImage() {
     }
     
     if (!ads || ads.length === 0) {
-        return null;
+        // Return a default logo if no ads are available
+        return (
+            <div className="flex justify-center mb-6">
+                <Image 
+                    src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png" 
+                    alt="Shabakat Wallet Logo" 
+                    width={120} 
+                    height={120} 
+                    className="object-contain"
+                    priority
+                />
+            </div>
+        );
     }
 
     return (
-        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
+        <div className="animate-in fade-in-0 zoom-in-95 duration-500">
           <div className="px-4">
             <Carousel
                 className="w-full"

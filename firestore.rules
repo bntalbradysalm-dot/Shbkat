@@ -68,7 +68,7 @@ service cloud.firestore {
     }
 
     match /alwadiOptions/{optionId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /advertisements/{adId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /advertisements/{adId} { allow read: if true; allow write: if isAdmin(); }
     match /notifications/{notificationId} { allow read: if isSignedIn(); allow create, delete: if isAdmin(); allow update: if false; }
     match /renewalRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
     match /billPaymentRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }

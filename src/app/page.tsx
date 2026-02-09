@@ -14,6 +14,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PromotionalImage } from '@/components/dashboard/promotional-image';
 
 const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center h-screen bg-background">
@@ -88,12 +89,10 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // التحقق من وجود مستند للمستخدم في Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
       
       if (!docSnap.exists()) {
-        // إنشاء ملف شخصي جديد إذا لم يكن موجوداً
         const nameParts = (user.displayName || 'مستخدم جديد').trim().split(/\s+/);
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ') || '';
@@ -136,19 +135,12 @@ export default function LoginPage() {
   return (
     <>
       <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
-        <div className="flex-1 flex flex-col justify-center text-center">
-          <div className="mb-10 flex flex-col items-center">
-             <Image 
-                  src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png" 
-                  alt="Shabakat Wallet Logo" 
-                  width={140} 
-                  height={140} 
-                  className="object-contain"
-                  priority
-              />
-              <div className="text-center mt-4">
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="mb-8">
+             <PromotionalImage />
+              <div className="text-center mt-6">
                 <h1 className="text-2xl font-bold">أهلاً بك</h1>
-                <p className="text-muted-foreground">تسجيل الدخول</p>
+                <p className="text-muted-foreground">سجل دخولك للبدء</p>
               </div>
           </div>
 
@@ -232,7 +224,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <footer className="text-center text-xs text-muted-foreground pb-4">
+        <footer className="text-center text-xs text-muted-foreground pb-4 pt-10">
           <p>تم التطوير بواسطة محمد راضي باشادي</p>
         </footer>
       </div>

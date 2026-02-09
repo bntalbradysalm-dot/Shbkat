@@ -23,33 +23,29 @@ service cloud.firestore {
     match /storeOrders/{orderId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow read, update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin();
     }
 
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow list: if isAdmin(); 
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
       match /transactions/{transactionId} {
-        allow create: if isOwner(userId);
-        allow get: if isOwner(userId) || isAdmin();
-        allow update, delete: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin();
       }
-      match /transactions { allow list: if isOwner(userId) || isAdmin(); }
       
       match /favorites/{favoriteId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId);
       }
       
       match /notifications/{notificationId} {
-          allow read: if isOwner(userId);
+          allow read: if isOwner(userId) || isAdmin();
           allow create: if isAdmin() || isSignedIn();
-          allow delete: if isOwner(userId);
+          allow delete: if isOwner(userId) || isAdmin();
           allow update: if false;
       }
     }

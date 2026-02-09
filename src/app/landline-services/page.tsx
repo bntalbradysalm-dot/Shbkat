@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Wifi } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Wifi, Loader2, Calendar, CreditCard } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,12 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
+};
+
+type QueryResult = {
+    balance?: string;
+    resultDesc?: string;
+    remainAmount?: number;
 };
 
 const BalanceDisplay = () => {
@@ -69,6 +75,8 @@ function LandlinePageComponent() {
   const typeName = type === 'line' ? 'هاتف ثابت' : 'نت ADSL';
   
   const [amount, setAmount] = useState('');
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -81,14 +89,48 @@ function LandlinePageComponent() {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
+    if (phone) {
+        handleQuery();
+    }
+  }, [phone]);
+
+  useEffect(() => {
     if (showSuccess && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+      audioRef.current.play().catch(e => {});
     }
   }, [showSuccess]);
+
+  const handleQuery = async () => {
+    if (!phone) return;
+    setIsQuerying(true);
+    setQueryResult(null);
+    try {
+        const response = await fetch('/api/telecom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                mobile: phone, 
+                action: 'query', 
+                service: 'post' 
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'فشل الاستعلام.');
+        
+        setQueryResult(result);
+        if (result.balance) {
+            setAmount(result.balance.toString().replace('-', '')); // لو المبلغ بالسالب يعني مديونية
+        }
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
+    } finally {
+        setIsQuerying(false);
+    }
+  };
   
   const handlePayment = async () => {
     if (!phone || !type || !user || !userProfile || !firestore || !userDocRef) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات المستخدم أو الطلب غير مكتملة.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'بيانات ناقصة.' });
         return;
     }
 
@@ -99,65 +141,57 @@ function LandlinePageComponent() {
     }
 
     if ((userProfile.balance ?? 0) < numericAmount) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام هذه العملية.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام العملية.' });
         return;
     }
 
     setIsProcessing(true);
 
     try {
-        const response = await fetch('/api/baitynet', {
+        const transid = Date.now().toString();
+        const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 mobile: phone,
                 amount: numericAmount,
-                type: type,
+                action: 'bill',
+                service: 'post',
+                type: type // adsl or line
             })
         });
         
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+            throw new Error(result.message || 'فشلت عملية السداد.');
         }
 
         const batch = writeBatch(firestore);
-        
-        // 1. Deduct balance
         batch.update(userDocRef, { balance: increment(-numericAmount) });
 
-        // 2. Create transaction record
         const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
         batch.set(transactionRef, {
             userId: user.uid,
             transactionDate: new Date().toISOString(),
             amount: numericAmount,
             transactionType: `سداد ${typeName}`,
-            notes: `إلى رقم: ${phone}`,
+            notes: `إلى رقم: ${phone}. رقم المرجع: ${result.sequenceId || transid}`,
             recipientPhoneNumber: phone
         });
         
         await batch.commit();
-
         setShowSuccess(true);
 
     } catch (error: any) {
-        console.error("Payment failed:", error);
-        toast({
-            variant: "destructive",
-            title: "فشلت عملية السداد",
-            description: error.message || "حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.",
-        });
+        toast({ variant: "destructive", title: "فشل السداد", description: error.message });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
     }
   };
 
-  if (isProcessing) {
-    return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-  }
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
   
   if (showSuccess) {
     return (
@@ -169,7 +203,7 @@ function LandlinePageComponent() {
                         <div className="flex flex-col items-center justify-center gap-4">
                             <div className="bg-green-100 p-4 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
                             <h2 className="text-2xl font-bold">تم السداد بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح.</p>
+                            <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح لخدمة {typeName}.</p>
                             <Button className="w-full mt-4" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </div>
                     </CardContent>
@@ -185,6 +219,25 @@ function LandlinePageComponent() {
       <SimpleHeader title={`سداد ${typeName}`} />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <BalanceDisplay />
+        
+        {isQuerying ? (
+            <Card className="bg-muted/30"><CardContent className="p-10 flex flex-col items-center gap-2"><Loader2 className="animate-spin text-primary" /><p className="text-sm">جاري جلب تفاصيل الفاتورة...</p></CardContent></Card>
+        ) : queryResult ? (
+            <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-2"><CardTitle className="text-center text-sm">تفاصيل الفاتورة للرقم {phone}</CardTitle></CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-background p-2 rounded-lg border">
+                        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><CreditCard className="w-3 h-3"/> المبلغ المستحق</p>
+                        <p className="font-bold text-lg text-primary">{Math.abs(parseFloat(queryResult.balance || '0')).toLocaleString()} ريال</p>
+                    </div>
+                    <div className="bg-background p-2 rounded-lg border">
+                        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><CheckCircle className="w-3 h-3"/> حالة الخدمة</p>
+                        <p className="font-bold text-sm">{queryResult.resultDesc || 'نشط'}</p>
+                    </div>
+                </CardContent>
+            </Card>
+        ) : null}
+
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-center">تسديد فاتورة</CardTitle>
@@ -193,7 +246,7 @@ function LandlinePageComponent() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="amount" className="flex items-center gap-2 mb-1">
-                {type === 'line' ? <Phone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+                <Wallet className="h-4 w-4" />
                 المبلغ
               </Label>
               <Input
@@ -203,13 +256,14 @@ function LandlinePageComponent() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                className="text-right font-bold text-lg"
               />
             </div>
             <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                 <AlertDialogTrigger asChild>
                   <Button className="w-full" disabled={isProcessing || !amount}>
                     <Send className="ml-2 h-4 w-4" />
-                    تسديد
+                    تسديد الآن
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

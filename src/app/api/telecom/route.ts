@@ -27,12 +27,12 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    // توليد رقم عملية فريد (12-15 رقم) لضمان عدم التكرار
+    // توليد رقم عملية فريد
     const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
     const token = generateToken(transid, payload.mobile);
 
-    let apiBaseUrl = ''; 
-    let endpoint = '';
+    let apiBaseUrl = 'https://echehanlyw.yrbso.net'; 
+    let endpoint = '/yem';
     
     // إعداد المعايير المرسلة للـ API
     let apiRequestParams: any = {
@@ -43,24 +43,31 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // إزالة المعايير الداخلية التي لا يحتاجها الـ API الخارجي
-    delete apiRequestParams.service;
-
     // تحديد النطاق والمسار بناءً على نوع الخدمة والوثائق المزودة
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
         endpoint = '/api/yr/'; 
+    } else if (service === 'post') {
+        endpoint = '/post';
     } else { 
-        apiBaseUrl = 'https://echehanlyw.yrbso.net';
         switch(action) {
             case 'query':
             case 'bill':
             case 'solfa':
             case 'queryoffer':
+            case 'billoffer':
                 endpoint = '/yem';
                 break;
-            case 'billover':
+            case 'billover': 
+                // تفعيل باقة (One-step activation)
                 endpoint = '/offeryem';
+                apiRequestParams.action = 'billoffer';
+                if (apiRequestParams.offertype) {
+                    apiRequestParams.offerkey = apiRequestParams.offertype;
+                    delete apiRequestParams.offertype;
+                }
+                if (!apiRequestParams.method) apiRequestParams.method = 'New';
+                if (!apiRequestParams.solfa) apiRequestParams.solfa = 'N';
                 break;
             case 'status':
             case 'balance':
@@ -70,6 +77,9 @@ export async function POST(request: Request) {
                 endpoint = '/yem';
         }
     }
+
+    // إزالة المعايير الداخلية
+    delete apiRequestParams.service;
 
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
@@ -98,7 +108,6 @@ export async function POST(request: Request) {
         // رموز الاستجابة حسب الوثائق:
         // "0" للنجاح
         // "-2" قيد التنفيذ (Pending)
-        // "10xx" خطأ
         const isSuccess = data.resultCode === "0" || data.resultCode === 0;
         const isPending = data.resultCode === "-2" || data.resultCode === -2;
 
@@ -110,7 +119,6 @@ export async function POST(request: Request) {
             });
         }
         
-        // في حال النجاح أو الانتظار، نرجع البيانات كما هي
         return NextResponse.json(data);
 
     } catch (fetchError: any) {

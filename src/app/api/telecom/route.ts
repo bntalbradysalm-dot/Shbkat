@@ -7,12 +7,15 @@ const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
 
-// وظيفة لتوليد التوقيع (Token) حسب توثيق اشحن لي
+/**
+ * وظيفة إنشاء الرمز المميز (Token) بناءً على المواصفات:
+ * hashPassword = md5(Password)
+ * token = md5(hashPassword + transid + Username + mobile)
+ */
 const generateToken = (transid: string, mobile: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  // التوقيع هو MD5 لـ (كلمة المرور المشفرة + رقم العملية + اسم المستخدم + رقم الهاتف)
-  const token = CryptoJS.MD5(hashPassword + transid + USERNAME + mobile).toString();
-  return token;
+  const tokenString = hashPassword + transid + USERNAME + mobile;
+  return CryptoJS.MD5(tokenString).toString();
 };
 
 export async function POST(request: Request) {
@@ -24,12 +27,12 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    // توليد رقم عملية فريد جداً لتجنب التداخل عند الاستعلامات المتعددة
-    const transid = payload.transid || `${Date.now()}${Math.floor(Math.random() * 10000)}`;
+    // توليد رقم عملية فريد (12-15 رقم)
+    const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
     const token = generateToken(transid, payload.mobile);
 
-    let endpoint = '';
     let apiBaseUrl = ''; 
+    let endpoint = '';
     
     // إعداد المعايير المرسلة للـ API
     let apiRequestParams: any = {
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
     // إزالة المعايير الداخلية التي لا يحتاجها الـ API الخارجي
     delete apiRequestParams.service;
 
-    // توجيه الطلب إلى النطاق الصحيح بناءً على نوع الخدمة
+    // تحديد النطاق والمسار بناءً على نوع الخدمة
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
         endpoint = '/api/yr/'; 
@@ -64,16 +67,15 @@ export async function POST(request: Request) {
                 endpoint = '/info';
                 break;
             default:
-                return new NextResponse(JSON.stringify({ message: 'الإجراء المطلوب غير صالح.' }), { status: 400 });
+                endpoint = '/yem';
         }
     }
 
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
-    // تعيين مهلة اتصال 20 ثانية
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 20000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
         const response = await fetch(fullUrl, {
@@ -83,27 +85,22 @@ export async function POST(request: Request) {
             cache: 'no-store'
         });
         
-        clearTimeout(id);
+        clearTimeout(timeoutId);
         const responseText = await response.text();
         
-        // تسجيل العمليات في السيرفر للمتابعة عند حدوث مشاكل (غير مرئي للمستخدم)
-        console.log(`[API CALL] Action: ${action}, Mobile: ${payload.mobile}, URL: ${fullUrl}`);
-
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            console.error("[API ERROR] Could not parse response:", responseText);
-            return new NextResponse(JSON.stringify({ message: 'استجابة غير صالحة من المزود.' }), { status: 502 });
+            return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود.' }), { status: 502 });
         }
         
-        // رموز النجاح حسب النظام
-        const isSuccess = data.resultCode === "0";
-        // التعامل مع حالة "تحت التنفيذ" كاستجابة مقبولة للاستعلام
-        const isPending = data.resultCode === "-2" || (data.resultDesc && data.resultDesc.toLowerCase().includes('under process'));
+        // رموز النجاح (0 للنجاح، -2 قيد التنفيذ)
+        const isSuccess = data.resultCode === "0" || data.resultCode === 0;
+        const isPending = data.resultCode === "-2" || data.resultCode === -2;
 
-        if (!response.ok || (data.resultCode && !isSuccess && !isPending)) {
-            const errorMessage = data.resultDesc || 'حدث خطأ في النظام الخارجي.';
+        if (!response.ok || (!isSuccess && !isPending)) {
+            const errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
@@ -113,7 +110,7 @@ export async function POST(request: Request) {
         return NextResponse.json(data);
 
     } catch (fetchError: any) {
-        clearTimeout(id);
+        clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
             return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود، يرجى المحاولة لاحقاً.' }), { status: 504 });
         }
@@ -121,9 +118,8 @@ export async function POST(request: Request) {
     }
 
   } catch (error: any) {
-    console.error(`Error in /api/telecom:`, error);
     return new NextResponse(
-      JSON.stringify({ message: `خطأ داخلي: ${error.message}` }),
+      JSON.stringify({ message: `خطأ في المعالجة: ${error.message}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

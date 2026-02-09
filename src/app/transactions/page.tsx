@@ -6,7 +6,28 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Undo2, Wifi, Building, Copy, Smartphone } from 'lucide-react';
+import { 
+  ArrowDownToLine, 
+  ArrowUpFromLine, 
+  FileText, 
+  SatelliteDish, 
+  User as UserIcon, 
+  CreditCard, 
+  Trash2, 
+  Calendar, 
+  Clock, 
+  Archive, 
+  Undo2, 
+  Wifi, 
+  Building, 
+  Copy, 
+  Smartphone,
+  ShoppingBag,
+  Send,
+  Wallet,
+  TrendingUp,
+  Banknote
+} from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -53,25 +74,34 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    if (type.startsWith('استرجاع')) {
+    if (type.includes('استرجاع')) {
         return <Undo2 className="h-6 w-6 text-orange-500" />;
     }
-    if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
-        return <ArrowDownToLine className="h-6 w-6 text-green-500" />;
+    if (type.includes('تغذية') || type.includes('إيداع') || type.includes('استلام')) {
+        return <Wallet className="h-6 w-6 text-green-500" />;
     }
-    if (type.startsWith('تحويل') || type.startsWith('سحب')) {
+    if (type.includes('تحويل')) {
+        return <Send className="h-6 w-6 text-blue-500" />;
+    }
+    if (type.includes('سحب')) {
         return <ArrowUpFromLine className="h-6 w-6 text-destructive" />;
     }
-    if (type.startsWith('شراء كرت')) {
-        return <CreditCard className="h-6 w-6 text-primary" />;
+    if (type.includes('شراء كرت')) {
+        return <Wifi className="h-6 w-6 text-primary" />;
     }
-    if (type.startsWith('سداد')) {
+    if (type.includes('سداد')) {
         return <Smartphone className="h-6 w-6 text-primary" />;
     }
-    if (type.startsWith('تجديد')) {
+    if (type.includes('تجديد') || type.includes('باقة')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
     }
-    return <SatelliteDish className="h-6 w-6 text-primary" />;
+    if (type.includes('متجر') || type.includes('منتج')) {
+        return <ShoppingBag className="h-6 w-6 text-pink-500" />;
+    }
+    if (type.includes('أرباح')) {
+        return <TrendingUp className="h-6 w-6 text-green-600" />;
+    }
+    return <FileText className="h-6 w-6 text-muted-foreground" />;
 };
 
 // Simple hashing function to convert a string to a positive number string
@@ -211,7 +241,7 @@ export default function TransactionsPage() {
                             </div>
                         </div>
                         <div className="text-left">
-                            <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') || tx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
+                            <p className={`font-bold text-sm ${tx.transactionType.includes('تغذية') || tx.transactionType.includes('استلام') || tx.transactionType.includes('أرباح') || tx.transactionType.includes('استرجاع') || tx.transactionType.includes('إيداع') ? 'text-green-600' : 'text-destructive'}`}>
                               {tx.amount.toLocaleString('en-US')} ريال
                             </p>
                             {tx.notes && (
@@ -236,7 +266,7 @@ export default function TransactionsPage() {
                                 <span className="text-muted-foreground">النوع:</span>
                                 <span className="font-semibold">{selectedTx.transactionType}</span>
                             </div>
-                             {selectedTx.notes && (selectedTx.transactionType.startsWith('شراء كرت') || selectedTx.transactionType.startsWith('تجديد')) && (
+                             {selectedTx.notes && (selectedTx.transactionType.includes('شراء كرت') || selectedTx.transactionType.includes('تجديد')) && (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wifi className="h-4 w-4"/> الشبكة:</span>
                                     <span className="font-semibold">{selectedTx.notes.replace('شبكة: ', '')}</span>
@@ -250,7 +280,7 @@ export default function TransactionsPage() {
                             )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">المبلغ:</span>
-                                <span className={`font-bold ${selectedTx.transactionType.startsWith('تغذية') || selectedTx.transactionType.startsWith('استلام') || selectedTx.transactionType.startsWith('أرباح') || selectedTx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
+                                <span className={`font-bold ${selectedTx.transactionType.includes('تغذية') || selectedTx.transactionType.includes('استلام') || selectedTx.transactionType.includes('أرباح') || selectedTx.transactionType.includes('استرجاع') || selectedTx.transactionType.includes('إيداع') ? 'text-green-600' : 'text-destructive'}`}>
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>

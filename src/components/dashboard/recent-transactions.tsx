@@ -5,7 +5,21 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft, Undo2, CreditCard } from 'lucide-react';
+import { 
+  ArrowDownToLine, 
+  ArrowUpFromLine, 
+  FileText, 
+  SatelliteDish, 
+  ChevronLeft, 
+  Undo2, 
+  CreditCard,
+  Wifi,
+  Smartphone,
+  ShoppingBag,
+  Send,
+  Wallet,
+  TrendingUp
+} from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Link from 'next/link';
@@ -18,22 +32,34 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    if (type.startsWith('استرجاع')) {
+    if (type.includes('استرجاع')) {
         return <Undo2 className="h-5 w-5 text-orange-500" />;
     }
-    if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
-        return <ArrowDownToLine className="h-5 w-5 text-green-500" />;
+    if (type.includes('تغذية') || type.includes('إيداع') || type.includes('استلام')) {
+        return <Wallet className="h-5 w-5 text-green-500" />;
     }
-    if (type.startsWith('تحويل') || type.startsWith('سحب')) {
+    if (type.includes('تحويل')) {
+        return <Send className="h-5 w-5 text-blue-500" />;
+    }
+    if (type.includes('سحب')) {
         return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
     }
-    if (type.startsWith('شراء كرت')) {
-        return <CreditCard className="h-5 w-5 text-primary" />;
+    if (type.includes('شراء كرت')) {
+        return <Wifi className="h-5 w-5 text-primary" />;
     }
-    if (type.startsWith('تجديد')) {
+    if (type.includes('سداد')) {
+        return <Smartphone className="h-5 w-5 text-primary" />;
+    }
+    if (type.includes('تجديد') || type.includes('باقة')) {
         return <SatelliteDish className="h-5 w-5 text-primary" />;
     }
-    return <SatelliteDish className="h-5 w-5 text-primary" />;
+    if (type.includes('متجر') || type.includes('منتج')) {
+        return <ShoppingBag className="h-5 w-5 text-pink-500" />;
+    }
+    if (type.includes('أرباح')) {
+        return <TrendingUp className="h-5 w-5 text-green-600" />;
+    }
+    return <FileText className="h-5 w-5 text-muted-foreground" />;
 };
 
 export function RecentTransactions() {
@@ -102,7 +128,7 @@ export function RecentTransactions() {
               </div>
             </div>
             <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') || tx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
+              <p className={`font-bold text-sm ${tx.transactionType.includes('تغذية') || tx.transactionType.includes('إيداع') || tx.transactionType.includes('استلام') || tx.transactionType.includes('أرباح') || tx.transactionType.includes('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
                 {tx.amount.toLocaleString('en-US')} ريال
               </p>
             </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -12,6 +13,7 @@ import {
   Gamepad2,
   Building2,
   Heart,
+  ShoppingBag,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,6 +28,7 @@ const services: Service[] = [
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { name: 'متجر ستار ميديا', icon: ShoppingBag, href: '/store' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },

@@ -1,40 +1,8 @@
 
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-
- * related data, including profiles, transactions, and favorites, is private. A user
- * can only access and manage their own data; they have no visibility into the data
- * of other users.
- *
- * Data Structure: The data is organized hierarchically. All user-specific information,
- * such as transactions and favorites, is stored in subcollections directly under that
- * user's document at `/users/{userId}`. This structure is fundamental to the
- * security model, as it allows rules to leverage the document path for authorization.
- *
- * Key Security Decisions:
- * - User Isolation: Users are strictly isolated from one another. A user can only
- *   ever interact with documents within their own data tree (i.e., `/users/{their_own_uid}/...`).
- * - No User Enumeration: Listing the top-level `/users` collection is explicitly
- *   disallowed to prevent any user from discovering the existence of other users.
- * - Ownership by Path: Authorization is determined by matching the `userId` in the
- *   path with the authenticated user's UID (`request.auth.uid`). This is efficient
- *   and avoids costly database reads (`get()` calls) within the rules.
- * - Prototyping Flexibility: While authorization is strict, data validation is
- *   minimal. The rules only validate fields critical for establishing ownership and
- *   maintaining relational integrity (e.g., ensuring a new transaction's `userId` field
- *   matches the user creating it). All other data fields can be changed freely to
- *   support rapid development.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // -------------------------------------------------------------------------
-    // Helper Functions
-    // -------------------------------------------------------------------------
-
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
@@ -43,163 +11,21 @@ service cloud.firestore {
       return request.auth.token.email == '770326828@shabakat.com';
     }
     
-    function isNetworkOwner(networkId) {
-      return isSignedIn() && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
-    }
-
-
-    /**
-     * Checks if the currently signed-in user's UID matches the provided userId.
-     * This is the primary function for enforcing document ownership.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * On create, validates that the incoming document's 'userId' field matches
-     * the user's UID from the path, ensuring relational integrity for subcollections.
-     */
-    function incomingSubcollectionDataMatchesUser(userId) {
-      return request.resource.data.userId == userId;
-    }
-    
-    /**
-     * On create, validates that the incoming RenewalRequest's 'userId' field matches
-     * the authenticated user's UID.
-     */
-    function isRequestOwner() {
-        return request.resource.data.userId == request.auth.uid;
-    }
-    
-    function isBuyer() {
-      return request.resource.data.buyerId == request.auth.uid;
-    }
-    
-    function isWithdrawalRequestOwner() {
-      return request.resource.data.ownerId == request.auth.uid;
-    }
-
-
-    // -------------------------------------------------------------------------
-    // Collection Rules
-    // -------------------------------------------------------------------------
-    
-     /**
-     * @description Manages Al-Wadi renewal options. Anyone can read, but only
-     * admins can write (create, update, delete).
-     */
-    match /alwadiOptions/{optionId} {
+    match /products/{productId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
-    
-    /**
-     * @description Manages the promotional advertisement. Anyone can read, but
-     * only admins can write (create, update, delete).
-     */
-    match /advertisements/{adId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-    
-    /**
-     * @description Manages global notifications. Anyone can read, but only
-     * admins can write (create). Updates and deletes are disallowed for all.
-     */
-    match /notifications/{notificationId} {
-        allow read: if isSignedIn();
-        allow create, delete: if isAdmin();
-        allow update: if false; // Notifications are immutable
-    }
-    
-    /**
-     * @description Manages subscription renewal requests. Authenticated users can
-     * create their own requests. Admins can read all requests and update their status.
-     */
-    match /renewalRequests/{requestId} {
-      allow create: if isSignedIn() && isRequestOwner();
-      allow read, update, delete: if isAdmin();
-    }
-    
-     /**
-     * @description Manages bill payment requests. Authenticated users can create
-     * their own requests. Admins can read all requests and update their status.
-     */
-    match /billPaymentRequests/{requestId} {
-        allow create: if isSignedIn() && isRequestOwner();
-        allow read, update, delete: if isAdmin();
-    }
-    
-    match /billPaymentRequests {
-        allow list: if isAdmin();
-    }
 
-
-    /**
-     * @description Manages withdrawal requests from network owners.
-     */
-    match /withdrawalRequests/{requestId} {
-      allow create: if isSignedIn() && isWithdrawalRequestOwner();
-      allow read, update, delete: if isAdmin();
-    }
-    
-    /**
-     * @description Manages available payment methods. Any authenticated user can read
-     * them (including server-side functions), but only admins can modify them.
-     */
-    match /paymentMethods/{methodId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-    
-    /**
-     * @description Manages global application settings.
-     */
-    match /appSettings/{settingsId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-    
-    /**
-     * @description Stores records of sold cards for reporting. Users create upon purchase.
-     * Admins can read for payout processing.
-     */
-    match /soldCards/{cardId} {
-      allow create: if isSignedIn();
-      allow get: if isAdmin() || isBuyer();
-      allow list: if isAdmin();
-      allow update: if isAdmin(); // Admin can update payoutStatus
-      allow delete: if false;
-    }
-    
-    /**
-     * @description Manages transfer requests between users. Only admins can list/read them.
-     */
-    match /transferRequests/{requestId} {
-      allow read: if isAdmin();
-      // Write permissions are handled by server-side logic (transactions)
-      allow write: if false;
-    }
-
-    match /transferRequests {
-        allow list: if isAdmin();
-    }
-
-    /**
-     * @description Stores processed receipt IDs to prevent duplicates.
-     */
-    match /processedReceipts/{receiptId} {
-      allow get: if isSignedIn() || isAdmin();
-      // Users can only create a processed receipt record for themselves.
+    match /storeOrders/{orderId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow list, update, delete: if false;
+      allow read, update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin();
     }
 
-
-    /**
-     * @description Manages user profile documents.
-     */
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
@@ -207,65 +33,53 @@ service cloud.firestore {
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
-      /**
-       * @description Manages a user's private transaction history.
-       */
       match /transactions/{transactionId} {
         allow create: if isOwner(userId);
         allow get: if isOwner(userId) || isAdmin();
         allow update, delete: if isOwner(userId);
       }
-
-      match /transactions {
-          allow list: if isOwner(userId) || isAdmin();
-      }
-
-      /**
-       * @description Manages a user's private list of favorites.
-       */
+      match /transactions { allow list: if isOwner(userId) || isAdmin(); }
+      
       match /favorites/{favoriteId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && incomingSubcollectionDataMatchesUser(userId);
+        allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
       
-      /**
-       * @description Manages personal notifications for a user.
-       */
       match /notifications/{notificationId} {
           allow read: if isOwner(userId);
           allow create: if isAdmin() || isSignedIn();
-          delete: if isOwner(userId);
+          allow delete: if isOwner(userId);
           allow update: if false;
       }
     }
-    
-    /**
-     * @description Manages WiFi network information.
-     */
+
     match /networks/{networkId} {
       allow read: if isSignedIn();
       allow create: if isAdmin() || request.resource.data.ownerId == request.auth.uid;
-      allow update: if isAdmin() || isNetworkOwner(networkId);
-      allow delete: if isAdmin() || isNetworkOwner(networkId);
+      allow update, delete: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
 
-      /**
-       * @description Manages card categories for a network.
-       */
       match /cardCategories/{categoryId} {
         allow read: if isSignedIn() || isAdmin();
-        allow write: if isAdmin() || isNetworkOwner(networkId);
+        allow write: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
       }
 
-      /**
-       * @description Manages individual WiFi cards.
-       */
       match /cards/{cardId} {
         allow read: if isSignedIn() || isAdmin();
-        allow create, delete: if isAdmin() || isNetworkOwner(networkId);
-        // Allow any signed in user to update card status (for purchasing)
+        allow create, delete: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
         allow update: if isSignedIn();
       }
     }
+
+    match /alwadiOptions/{optionId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /advertisements/{adId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /notifications/{notificationId} { allow read: if isSignedIn(); allow create, delete: if isAdmin(); allow update: if false; }
+    match /renewalRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
+    match /billPaymentRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
+    match /withdrawalRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
+    match /paymentMethods/{methodId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /appSettings/{settingsId} { allow read: if true; allow write: if isAdmin(); }
+    match /soldCards/{cardId} { allow create: if isSignedIn(); allow get: if isAdmin() || resource.data.buyerId == request.auth.uid; allow list, update: if isAdmin(); allow delete: if false; }
+    match /processedReceipts/{receiptId} { allow get: if isSignedIn() || isAdmin(); allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid; allow list, update, delete: if false; }
   }
 }

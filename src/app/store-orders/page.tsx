@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { User, Tag, Phone, MapPin, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle, ShoppingBag, Truck, CheckCircle2 } from 'lucide-react';
+import { User, Tag, Phone, MapPin, Calendar, Check, X, Archive, Inbox, Trash2, MessageCircle, ShoppingBag, Truck, CheckCircle2, Wallet, MessageSquare } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';

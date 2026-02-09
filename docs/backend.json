@@ -52,7 +52,7 @@
     }
   },
   "auth": {
-    "providers": ["password", "anonymous"]
+    "providers": ["password", "anonymous", "google"]
   },
   "firestore": {
     "structure": [

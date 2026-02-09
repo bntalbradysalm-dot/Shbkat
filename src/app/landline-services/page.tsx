@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Wallet, Send, Phone, CheckCircle, Wifi, Loader2, Calendar, CreditCard } from 'lucide-react';
 import {
   AlertDialog,
+  AlertDialogTrigger,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,

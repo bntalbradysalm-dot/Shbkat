@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, writeBatch, increment, collection } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -105,7 +105,7 @@ export default function YemenMobilePage() {
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+      audioRef.current.play().catch(e => {});
     }
   }, [showSuccess]);
 
@@ -144,7 +144,6 @@ export default function YemenMobilePage() {
           const offersResult = await offersResponse.json();
   
           if (!balanceResponse.ok) {
-            console.error("Balance query error details:", balanceResult);
             throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
           }
 
@@ -160,14 +159,12 @@ export default function YemenMobilePage() {
           });
 
           if (!offersResponse.ok) {
-            console.error("Offers query error details:", offersResult);
             setOffers([]);
           } else {
             setOffers(offersResult.offers || []);
           }
 
         } catch (error: any) {
-          console.error("Full error object:", error);
           toast({ variant: "destructive", title: "خطأ في الاستعلام", description: error.message });
           setBillingInfo(null);
           setOffers(null);
@@ -244,7 +241,7 @@ export default function YemenMobilePage() {
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-numericAmount) });
-        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        const transactionRef = doc(firestoreCollection(firestore, 'users', user.uid, 'transactions'));
         batch.set(transactionRef, {
             userId: user.uid,
             transactionDate: new Date().toISOString(),

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -22,6 +21,13 @@ type Product = {
   description: string;
   price: number;
   imageUrl: string;
+};
+
+const getSafeImageUrl = (url: string) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return 'https://picsum.photos/seed/product/400/400';
+  }
+  return url;
 };
 
 export default function StoreManagementPage() {
@@ -101,7 +107,13 @@ export default function StoreManagementPage() {
             <Card key={product.id}>
               <CardContent className="p-4 flex gap-4">
                 <div className="relative h-20 w-20 rounded-lg overflow-hidden shrink-0 bg-muted">
-                  <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                  <Image 
+                    src={getSafeImageUrl(product.imageUrl)} 
+                    alt={product.name} 
+                    fill 
+                    className="object-cover" 
+                    data-ai-hint="product image"
+                  />
                 </div>
                 <div className="flex-1 space-y-1">
                   {editingId === product.id ? (

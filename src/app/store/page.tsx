@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -39,6 +38,13 @@ type UserProfile = {
   balance?: number;
   displayName?: string;
   phoneNumber?: string;
+};
+
+const getSafeImageUrl = (url: string) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return 'https://picsum.photos/seed/product/400/400';
+  }
+  return url;
 };
 
 export default function StorePage() {
@@ -193,10 +199,11 @@ export default function StorePage() {
               <Card key={product.id} className="overflow-hidden border-none shadow-md group">
                 <div className="relative aspect-square">
                   <Image 
-                    src={product.imageUrl} 
+                    src={getSafeImageUrl(product.imageUrl)} 
                     alt={product.name} 
                     fill 
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    data-ai-hint="store product"
                   />
                   <div className="absolute top-2 left-2">
                     <Badge className="bg-primary/90 backdrop-blur-sm">{product.price.toLocaleString()} ريال</Badge>
@@ -226,7 +233,13 @@ export default function StorePage() {
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-4 bg-muted p-3 rounded-xl">
                 <div className="relative h-16 w-16 rounded-lg overflow-hidden shrink-0">
-                  <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" />
+                  <Image 
+                    src={getSafeImageUrl(selectedProduct.imageUrl)} 
+                    alt={selectedProduct.name} 
+                    fill 
+                    className="object-cover" 
+                    data-ai-hint="product preview"
+                  />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-sm">{selectedProduct.name}</p>

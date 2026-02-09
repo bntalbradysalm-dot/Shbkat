@@ -7,7 +7,9 @@ const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
 
-// Function to generate the required token
+// Function to generate the required token based on the documentation:
+// hashPassword = md5(Password);
+// token = md5(hashPassword + transid + Username + mobile);
 const generateToken = (transid: string, mobile: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
   const token = CryptoJS.MD5(hashPassword + transid + USERNAME + mobile).toString();
@@ -24,27 +26,30 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    const transid = payload.transid || Date.now().toString();
+    // Ensure transid is unique and not too long
+    const transid = payload.transid || Date.now().toString().slice(-8);
     const token = generateToken(transid, payload.mobile);
 
     let endpoint = '';
-    let apiBaseUrl = ''; // Will be set dynamically based on the service
-    let apiRequestBody: any = {
+    let apiBaseUrl = ''; 
+    
+    // Construct the base request body with ONLY required parameters according to docs
+    let apiRequestParams: any = {
+      action: action,
       userid: USERID,
-      username: USERNAME,
-      transid,
-      token,
+      transid: transid,
+      token: token,
       ...payload
     };
     
-    delete apiRequestBody.action;
-    delete apiRequestBody.service;
+    // Remove service from params as it's internal to our app
+    delete apiRequestParams.service;
 
+    // Route to correct Domain and Endpoint based on service type
     if (service === 'yem4g') {
         apiBaseUrl = 'https://echehanly.yrbso.net';
-        endpoint = '/api/yr/'; // Corrected endpoint based on documentation
-        apiRequestBody.action = action;
-    } else { // Default to yemen mobile
+        endpoint = '/api/yr/'; 
+    } else { // Default to Yemen Mobile (yem)
         apiBaseUrl = 'https://echehanlyw.yrbso.net';
         switch(action) {
             case 'query':
@@ -52,65 +57,69 @@ export async function POST(request: Request) {
             case 'solfa':
             case 'queryoffer':
                 endpoint = '/yem';
-                apiRequestBody.action = action;
                 break;
             case 'billover':
                 endpoint = '/offeryem';
-                apiRequestBody.action = action;
                 break;
             case 'status':
             case 'balance':
                 endpoint = '/info';
-                apiRequestBody.action = action;
                 break;
             default:
-                return new NextResponse(JSON.stringify({ message: 'Invalid action' }), { status: 400 });
+                return new NextResponse(JSON.stringify({ message: 'الإجراء المطلوب غير صالح.' }), { status: 400 });
         }
     }
 
-    const params = new URLSearchParams(apiRequestBody);
+    const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
-    const response = await fetch(fullUrl, {
-      method: 'GET', // echehanly uses GET
-      headers: {
-        // Content-Type is not needed for GET requests with URL params
-      },
-    });
-    
-    const responseText = await response.text();
-    
-    // Log the raw response text for debugging
-    console.log(`[TELECOM API RESPONSE] Action: ${action}, Service: ${service || 'yem'}, Phone: ${payload.mobile}, Raw Text:`, responseText);
+    // Use a timeout to prevent hanging requests
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
 
     try {
-      const data = JSON.parse(responseText);
-      const isSuccess = data.resultCode === "0";
-      const isPending = data.resultCode === "-2";
-
-      // Consider any response that is not OK, or does not have a success/pending code, as an error.
-      if (!response.ok || (data.resultCode && !isSuccess && !isPending)) {
-        const errorMessage = data.resultDesc || 'An unknown error occurred.';
-        return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch(fullUrl, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+            },
         });
-      }
-      return NextResponse.json(data);
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError);
-      console.error('Response text from external API:', responseText);
-      // Return the raw text from the server for better debugging.
-      return new NextResponse(
-        JSON.stringify({ message: `فشل تحليل استجابة الخادم. النص الخام من الخادم: "${responseText}"` }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+        
+        clearTimeout(id);
+        const responseText = await response.text();
+        
+        console.log(`[TELECOM API] URL: ${fullUrl}`);
+        console.log(`[TELECOM API RESPONSE] Raw:`, responseText);
+
+        const data = JSON.parse(responseText);
+        
+        // Success codes based on docs
+        const isSuccess = data.resultCode === "0";
+        const isPending = data.resultCode === "-2" || (data.resultDesc && data.resultDesc.includes('under process'));
+
+        if (!response.ok || (data.resultCode && !isSuccess && !isPending)) {
+            const errorMessage = data.resultDesc || 'حدث خطأ في الخادم الخارجي.';
+            return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
+                status: response.status === 200 ? 400 : response.status,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        
+        return NextResponse.json(data);
+
+    } catch (fetchError: any) {
+        clearTimeout(id);
+        if (fetchError.name === 'AbortError') {
+            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالخادم الخارجي.' }), { status: 504 });
+        }
+        throw fetchError;
     }
 
   } catch (error: any) {
-    console.error(`Error in /api/telecom for action: ${body.action}:`, error);
+    console.error(`Error in /api/telecom:`, error);
     return new NextResponse(
-      JSON.stringify({ message: `Internal Server Error: ${error.message}` }),
+      JSON.stringify({ message: `خطأ في الاتصال بالخدمة: ${error.message}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

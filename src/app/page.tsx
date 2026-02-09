@@ -16,12 +16,12 @@ import Link from 'next/link';
 import { PromotionalImage } from '@/components/dashboard/promotional-image';
 
 const CustomLoader = () => (
-  <div className="bg-white dark:bg-card p-6 rounded-[2rem] shadow-xl flex items-center justify-center w-32 h-32">
-    <div className="relative w-16 h-16">
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
       <svg
         viewBox="0 0 50 50"
         className="absolute inset-0 w-full h-full animate-spin"
-        style={{ animationDuration: '1.5s' }}
+        style={{ animationDuration: '1.2s' }}
       >
         <path
           d="M15 25 A10 10 0 0 0 35 25"
@@ -36,7 +36,7 @@ const CustomLoader = () => (
           stroke="hsl(var(--primary))"
           strokeWidth="5"
           strokeLinecap="round"
-          className="opacity-40"
+          className="opacity-30"
         />
       </svg>
     </div>
@@ -44,7 +44,7 @@ const CustomLoader = () => (
 );
 
 const LoadingSpinner = () => (
-  <div className="flex flex-col justify-center items-center h-screen bg-background">
+  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
     <CustomLoader />
   </div>
 );
@@ -246,6 +246,7 @@ export default function LoginPage() {
           <p>تم التطوير بواسطة محمد راضي باشادي</p>
         </footer>
       </div>
+      {isLoading && <LoadingSpinner />}
       <Toaster />
     </>
   );

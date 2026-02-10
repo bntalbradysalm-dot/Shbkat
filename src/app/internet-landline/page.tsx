@@ -121,6 +121,12 @@ export default function LandlineRedesignPage() {
         }
     }, [showSuccess]);
 
+    useEffect(() => {
+        if (phone.length !== 8) {
+            setQueryResult(null);
+        }
+    }, [phone]);
+
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 8 أرقام' });
@@ -176,7 +182,6 @@ export default function LandlineRedesignPage() {
             });
             const result = await response.json();
             
-            // resultCode "0" is success, "-2" is pending
             const isSuccess = result.resultCode === "0" || result.resultCode === 0;
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
@@ -340,7 +345,6 @@ export default function LandlineRedesignPage() {
                 )}
             </div>
 
-            {/* Confirmation for Fixed Line Payment */}
             <AlertDialog open={isConfirmingPayment} onOpenChange={setIsConfirmingPayment}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
@@ -360,7 +364,6 @@ export default function LandlineRedesignPage() {
                 </AlertDialogContent>
             </AlertDialog>
             
-            {/* Confirmation for Internet Package */}
             <AlertDialog open={!!selectedPackage} onOpenChange={() => setSelectedPackage(null)}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>

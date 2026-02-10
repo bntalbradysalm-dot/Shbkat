@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, getDocs, writeBatch, increment, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet } from 'lucide-react';
+import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet, Smartphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -472,13 +472,33 @@ export default function FavoritesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-3xl max-w-xs">
-            <DialogHeader><DialogTitle className="text-center text-base">إرسال كرت لزبون</DialogTitle></DialogHeader>
-            <div className="space-y-4 py-4">
-                <Label>رقم جوال الزبون</Label>
-                <Input placeholder="7xxxxxxxx" type="tel" value={smsRecipient} onChange={e => setSmsRecipient(e.target.value)} className="text-center text-lg font-bold h-12 rounded-xl" />
+        <DialogContent className="rounded-[32px] max-w-sm p-6">
+            <DialogHeader>
+                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Smartphone className="text-primary h-6 w-6" />
+                </div>
+                <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                <DialogDescription className="text-center">
+                    أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-6">
+                <div className="space-y-2">
+                    <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
+                    <Input 
+                        id="sms-phone"
+                        placeholder="7xxxxxxxx" 
+                        type="tel" 
+                        value={smsRecipient} 
+                        onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest" 
+                    />
+                </div>
             </div>
-            <DialogFooter><Button onClick={handleSendSms} className="w-full rounded-xl">إرسال الآن</Button></DialogFooter>
+            <DialogFooter className="flex gap-3">
+                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+                <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 

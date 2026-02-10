@@ -23,7 +23,7 @@ type UserProfile = {
 };
 
 const availableServices = [
-  { id: 'pay-bills', name: 'مدفوعات', icon: CreditCard, href: '/telecom-services' },
+  { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'transfer', name: 'حوالات', icon: Send, href: '/transfer' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
@@ -53,7 +53,7 @@ export function BalanceCard() {
         if (service) setLeftAction(service);
     }
     if (savedRightId) {
-        const service = availableServices.find(s => s.id === rightAction.id);
+        const service = availableServices.find(s => s.id === savedRightId);
         if (service) setRightAction(service);
     }
   }, []);

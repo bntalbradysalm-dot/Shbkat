@@ -23,7 +23,7 @@ type Service = {
 };
 
 const services: Service[] = [
-  { name: 'مدفوعات', icon: CreditCard, href: '/telecom-services' },
+  { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { name: 'حوالات', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -118,39 +119,41 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <div className="w-full flex flex-col items-center justify-center pt-2 pb-4 relative">
-        
-        <div className="w-full relative flex flex-col items-center justify-center mb-4">
-          <div className="absolute left-0 top-0">
-              <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-                  className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground"
-              >
-                  {isBalanceVisible ? <Eye size={18} /> : <EyeOff size={18} />}
-              </Button>
+      <Card className="overflow-hidden border-none shadow-lg bg-card rounded-[32px]">
+        <CardContent className="p-6 flex flex-col items-center justify-center relative">
+          
+          <div className="w-full relative flex flex-col items-center justify-center mb-4">
+            <div className="absolute left-0 top-0">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                    className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground"
+                >
+                    {isBalanceVisible ? <Eye size={18} /> : <EyeOff size={18} />}
+                </Button>
+            </div>
+
+            <div className="flex flex-col items-center justify-center gap-1">
+                <h2 className="text-5xl font-black tracking-tight text-primary">
+                {isLoading ? (
+                    <Skeleton className="h-12 w-32" />
+                ) : isBalanceVisible ? (
+                    balance.toLocaleString('en-US')
+                ) : (
+                    "******"
+                )}
+                </h2>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">ريال يمني</span>
+            </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-1">
-              <h2 className="text-5xl font-black tracking-tight text-primary">
-              {isLoading ? (
-                  <Skeleton className="h-12 w-32" />
-              ) : isBalanceVisible ? (
-                  balance.toLocaleString('en-US')
-              ) : (
-                  "******"
-              )}
-              </h2>
-              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">ريال يمني</span>
+          <div className="flex gap-2 w-full max-w-[280px]">
+            <ActionButton service={leftAction} side="left" />
+            <ActionButton service={rightAction} side="right" />
           </div>
-        </div>
-
-        <div className="flex gap-2 w-full max-w-[280px]">
-          <ActionButton service={leftAction} side="left" />
-          <ActionButton service={rightAction} side="right" />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="rounded-[32px] max-w-sm">

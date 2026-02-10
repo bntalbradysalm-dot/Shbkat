@@ -102,6 +102,35 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
+// Approved Custom Loader Component
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path
+          d="M15 25 A10 10 0 0 0 35 25"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40 15 A15 15 0 0 1 40 35"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className="opacity-30"
+        />
+      </svg>
+    </div>
+  </div>
+);
+
 export default function ServicesPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -404,9 +433,10 @@ export default function ServicesPage() {
         
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
           {isLoading ? (
-            [...Array(6)].map((_, i) => (
-              <Card key={i} className="p-4 animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
-            ))
+            <div className="flex flex-col items-center justify-center py-20 animate-in fade-in-0">
+                <CustomLoader />
+                <p className="mt-4 text-sm font-bold text-muted-foreground animate-pulse text-center">جاري تحميل الشبكات...</p>
+            </div>
           ) : filteredNetworks.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground"><Wifi className="mx-auto h-16 w-16 opacity-20" /><p className="mt-4 font-bold">لا توجد شبكات متاحة</p></div>
           ) : (
@@ -454,8 +484,9 @@ export default function ServicesPage() {
 
               <div className="flex-1 overflow-y-auto p-4 bg-background">
                 {isLoadingCategories ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <CustomLoader />
+                    <p className="mt-4 text-xs font-bold text-muted-foreground animate-pulse">جاري تحميل الفئات...</p>
                   </div>
                 ) : categoryError ? (
                   <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div>

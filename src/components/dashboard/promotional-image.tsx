@@ -60,14 +60,15 @@ export function PromotionalImage({ disableLink = false }: PromotionalImageProps)
         // Return a default logo if no ads are available
         return (
             <div className="flex justify-center mb-6">
-                <Image 
-                    src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png" 
-                    alt="Shabakat Wallet Logo" 
-                    width={120} 
-                    height={120} 
-                    className="object-contain"
-                    priority
-                />
+                <div className="relative w-[140px] h-[140px] overflow-hidden rounded-3xl shadow-xl border border-border/50">
+                    <Image 
+                        src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                        alt="Shabakat Wallet Logo" 
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                </div>
             </div>
         );
     }

@@ -178,13 +178,14 @@ export default function SignupPage() {
         <SimpleHeader title="سجل الآن" />
         <div className="flex-1 flex flex-col justify-center text-center px-6">
           <div className="mb-8 flex flex-col items-center">
-             <Image 
-                src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png" 
-                alt="Shabakat Wallet Logo" 
-                width={100} 
-                height={100} 
-                className="object-contain mb-4"
-            />
+             <div className="relative w-24 h-24 overflow-hidden rounded-3xl shadow-lg border border-border/50 mb-4">
+                <Image 
+                    src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                    alt="Shabakat Wallet Logo" 
+                    fill
+                    className="object-cover"
+                />
+             </div>
             <h1 className="text-3xl font-bold text-primary">انشاء حساب جديد</h1>
             <p className="text-md text-muted-foreground mt-2">
               ادخل معلوماتك لإنشاء حساب جديد
@@ -317,5 +318,3 @@ export default function SignupPage() {
     </>
   );
 }
-
-    

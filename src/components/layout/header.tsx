@@ -6,6 +6,7 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 type Notification = {
   id: string;
@@ -105,18 +106,28 @@ const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
-      <div className="flex flex-col items-start justify-center flex-1 px-2">
-        {isUserLoading ? (
-          <div className="space-y-2 text-right">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-6 w-32" />
-          </div>
-        ) : (
-          <>
-            <p className="text-primary font-normal text-sm opacity-80">{greeting}</p>
-            <h1 className="font-black text-foreground text-lg mt-0.5 tracking-tight">{displayName}</h1>
-          </>
-        )}
+      <div className="flex items-center gap-3 flex-1 px-2">
+        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-border/50 shadow-sm shrink-0">
+          <Image 
+            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+            alt="Logo" 
+            fill 
+            className="object-cover"
+          />
+        </div>
+        <div className="flex flex-col items-start justify-center">
+          {isUserLoading ? (
+            <div className="space-y-2 text-right">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-28" />
+            </div>
+          ) : (
+            <>
+              <p className="text-primary font-normal text-[10px] opacity-70 leading-tight">{greeting}</p>
+              <h1 className="font-black text-foreground text-base tracking-tight leading-tight">{displayName}</h1>
+            </>
+          )}
+        </div>
       </div>
 
       <button 

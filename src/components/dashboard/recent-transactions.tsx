@@ -6,19 +6,9 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  ArrowDownToLine, 
-  ArrowUpFromLine, 
   FileText, 
-  SatelliteDish, 
   ChevronLeft, 
-  Undo2, 
   CreditCard,
-  Wifi,
-  Smartphone,
-  ShoppingBag,
-  Send,
-  Wallet,
-  TrendingUp
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -31,37 +21,6 @@ type Transaction = {
   transactionType: string;
 };
 
-const getTransactionIcon = (type: string) => {
-    if (type.includes('استرجاع')) {
-        return <Undo2 className="h-5 w-5 text-orange-500" />;
-    }
-    if (type.includes('تغذية') || type.includes('إيداع') || type.includes('استلام')) {
-        return <Wallet className="h-5 w-5 text-green-500" />;
-    }
-    if (type.includes('تحويل')) {
-        return <Send className="h-5 w-5 text-blue-500" />;
-    }
-    if (type.includes('سحب')) {
-        return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
-    }
-    if (type.includes('شراء كرت')) {
-        return <Wifi className="h-5 w-5 text-primary" />;
-    }
-    if (type.includes('سداد')) {
-        return <Smartphone className="h-5 w-5 text-primary" />;
-    }
-    if (type.includes('تجديد') || type.includes('باقة')) {
-        return <SatelliteDish className="h-5 w-5 text-primary" />;
-    }
-    if (type.includes('متجر') || type.includes('منتج')) {
-        return <ShoppingBag className="h-5 w-5 text-pink-500" />;
-    }
-    if (type.includes('أرباح')) {
-        return <TrendingUp className="h-5 w-5 text-green-600" />;
-    }
-    return <FileText className="h-5 w-5 text-muted-foreground" />;
-};
-
 export function RecentTransactions() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -72,7 +31,7 @@ export function RecentTransactions() {
         ? query(
             collection(firestore, 'users', user.uid, 'transactions'),
             orderBy('transactionDate', 'desc'),
-            limit(4)
+            limit(2)
           )
         : null,
     [user, firestore]
@@ -80,78 +39,46 @@ export function RecentTransactions() {
 
   const { data: transactions, isLoading } = useCollection<Transaction>(transactionsQuery);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          {[...Array(2)].map((_, i) => (
-             <div key={i} className="flex items-center justify-between p-3 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </div>
-                <Skeleton className="h-4 w-20" />
-              </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (!transactions || transactions.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center py-10">
-          <FileText className="h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-md font-semibold">لا توجد عمليات بعد</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            ستظهر عملياتك الأخيرة هنا.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-2">
-        {transactions.map((tx) => (
-          <div key={tx.id} className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-full">
-                {getTransactionIcon(tx.transactionType)}
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{tx.transactionType}</p>
-                <p className="text-xs text-muted-foreground">
-                  {format(parseISO(tx.transactionDate), 'd MMM', { locale: ar })}
-                </p>
-              </div>
-            </div>
-            <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType.includes('تغذية') || tx.transactionType.includes('إيداع') || tx.transactionType.includes('استلام') || tx.transactionType.includes('أرباح') || tx.transactionType.includes('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
-                {tx.amount.toLocaleString('en-US')} ريال
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="px-4 pt-6 animate-in fade-in-0 duration-500">
-        <div className="flex justify-between items-center mb-3 px-2">
-            <h3 className="text-md font-bold">آخر العمليات</h3>
-            <Link href="/transactions" className="flex items-center text-sm text-primary dark:text-primary-foreground font-semibold">
+    <div className="px-4 pt-8 pb-10 animate-in fade-in-0 duration-500">
+        <div className="flex justify-between items-center mb-4 px-2">
+            <h3 className="text-lg font-bold text-primary">آخر العمليات</h3>
+            <Link href="/transactions" className="flex items-center text-sm text-primary font-bold">
                 <span>الكل</span>
                 <ChevronLeft className="h-4 w-4"/>
             </Link>
         </div>
-        <Card>
-            <CardContent className="p-2">
-                 {renderContent()}
-            </CardContent>
-        </Card>
+        
+        <div className="space-y-3">
+            {isLoading ? (
+                [1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-3xl" />)
+            ) : transactions && transactions.length > 0 ? (
+                transactions.map((tx) => (
+                    <Card key={tx.id} className="rounded-3xl border-border/50 shadow-sm overflow-hidden">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div className="text-right">
+                                <p className="text-destructive font-bold text-base">{tx.amount.toLocaleString('en-US')} ر.ي</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">منذ 14 يوم</p>
+                            </div>
+
+                            <div className="flex-1 text-center mr-4">
+                                <p className="font-bold text-primary text-sm">{tx.transactionType}</p>
+                                <p className="text-[10px] text-primary/70 font-semibold">ناجحة</p>
+                            </div>
+
+                            <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50">
+                                <CreditCard className="h-6 w-6 text-primary" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))
+            ) : (
+                <div className="text-center py-10 bg-muted/10 rounded-3xl">
+                    <FileText className="mx-auto h-10 w-10 text-muted-foreground opacity-30" />
+                    <p className="mt-2 text-xs text-muted-foreground">لا توجد عمليات بعد</p>
+                </div>
+            )}
+        </div>
     </div>
   );
 }

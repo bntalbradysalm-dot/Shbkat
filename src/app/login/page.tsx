@@ -7,9 +7,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Wifi, Banknote } from 'lucide-react';
-import { PromotionalImage } from '@/components/dashboard/promotional-image';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -19,31 +18,28 @@ type UserProfile = {
 };
 
 const OwnerDashboard = () => (
-  <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
-      <div className="px-4 pt-6 animate-in fade-in-0 duration-500">
-          <div className="flex justify-between items-center mb-3 px-2">
-              <h3 className="text-md font-bold">لوحة تحكم مالك الشبكة</h3>
+  <div className="relative bg-background rounded-t-[40px] pt-4 pb-4">
+      <div className="px-6 animate-in fade-in-0 duration-500">
+          <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-primary">لوحة تحكم المالك</h3>
           </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 px-4 py-2">
-          <Link href="/my-network/manage">
-              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
+      <div className="grid grid-cols-2 gap-4 px-6 py-2">
+          <Link href="/my-network/manage" className="block">
+              <Card className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center rounded-3xl border-border/50 shadow-sm">
                   <Wifi className="w-10 h-10 text-primary" />
-                  <p className="font-bold">إدارة شبكتي</p>
-                  <p className="text-xs text-muted-foreground">الفئات والكروت</p>
+                  <p className="font-bold text-primary text-sm">إدارة شبكتي</p>
               </Card>
           </Link>
-          <Link href="/my-network/withdraw">
-              <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center">
+          <Link href="/my-network/withdraw" className="block">
+              <Card className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center rounded-3xl border-border/50 shadow-sm">
                   <Banknote className="w-10 h-10 text-primary" />
-                  <p className="font-bold">سحب</p>
-                  <p className="text-xs text-muted-foreground">سحب الارباح</p>
+                  <p className="font-bold text-primary text-sm">سحب الأرباح</p>
               </Card>
           </Link>
       </div>
-       <div className="pt-4">
+       <div className="mt-4">
         <ServiceGrid />
-        <PromotionalImage />
         <RecentTransactions />
       </div>
   </div>
@@ -52,11 +48,9 @@ const OwnerDashboard = () => (
 const UserDashboard = () => (
   <>
     <ServiceGrid />
-    <PromotionalImage />
     <RecentTransactions />
   </>
 );
-
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -77,23 +71,25 @@ export default function DashboardPage() {
 
   if (isLoading || isUserLoading) {
     return (
-       <>
+       <div className="flex flex-col h-screen bg-background">
         <Header />
         <div className="p-4 space-y-4">
-          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full rounded-[40px]" />
+          <div className="grid grid-cols-3 gap-4 pt-8">
+            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+          </div>
         </div>
-        <Skeleton className="h-full w-full rounded-t-3xl" />
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-background pb-20">
       <Header />
-      <div className="p-4 space-y-4">
+      <div className="flex-1 space-y-4">
         <BalanceCard />
+        {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
       </div>
-      {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
-    </>
+    </div>
   );
 }

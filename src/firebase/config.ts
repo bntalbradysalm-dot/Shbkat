@@ -5,9 +5,9 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 /**
- * إعدادات Firebase الخاصة بمشروع: shbket
+ * إعدادات Firebase الخاصة بمشروع: studio-239662212-1b7b6
  */
-const projectId = "shbket";
+const projectId = "studio-239662212-1b7b6";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",

@@ -419,7 +419,6 @@ export default function TransactionsPage() {
                                 type="date" 
                                 value={fromDate}
                                 onChange={(e) => setFromDate(e.target.value)}
-                                onClick={(e) => e.currentTarget.showPicker?.()}
                                 className="rounded-xl h-10 text-xs bg-background cursor-pointer"
                             />
                         </div>
@@ -430,7 +429,6 @@ export default function TransactionsPage() {
                                 type="date" 
                                 value={toDate}
                                 onChange={(e) => setToDate(e.target.value)}
-                                onClick={(e) => e.currentTarget.showPicker?.()}
                                 className="rounded-xl h-10 text-xs bg-background cursor-pointer"
                             />
                         </div>

@@ -21,7 +21,8 @@ import {
   Globe,
   Mail,
   Phone as PhoneIcon,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -60,6 +61,7 @@ type BillingInfo = {
     customer_type: string;
     resultDesc?: string;
     isLoan: boolean;
+    loanAmount?: number;
 };
 
 type ActiveOffer = {
@@ -182,34 +184,43 @@ export default function YemenMobilePage() {
     if (!phone || phone.length !== 9) return;
     setIsSearching(true);
     try {
-      const response = await fetch('/api/telecom', {
+      // 1. استعلام الرصيد والنوع
+      const queryResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile: phone, action: 'query' }),
       });
-      const result = await response.json();
-      if (response.ok) {
-          // جلب نوع الرقم (دفع مسبق أو فوترة)
-          let typeLabel = result.mobileTy || '';
+      const queryResult = await queryResponse.json();
+
+      // 2. فحص السلفة بناءً على التوثيق المرفق (status: "1" = متسلف)
+      const solfaResponse = await fetch('/api/telecom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone, action: 'solfa' }),
+      });
+      const solfaResult = await solfaResponse.json();
+
+      if (queryResponse.ok) {
+          let typeLabel = queryResult.mobileTy || '';
           if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
-              typeLabel = 'نظام الفوترة';
-          } else if (typeLabel.includes('مسبق') || typeLabel.toLowerCase().includes('prepaid')) {
-              typeLabel = 'دفع مسبق';
+              typeLabel = 'فوترة';
           } else {
-              typeLabel = result.mobileTy || 'دفع مسبق';
+              typeLabel = 'دفع مسبق';
           }
 
-          // التحقق من حالة السلفة
-          // في بعض واجهات الـ API تكون السلفة في حقل solfa أو solfaStatus أو loan
-          const isLoan = result.isLoan === true || result.solfa === 'Y' || (parseFloat(result.loanAmount || "0") > 0);
+          // معالجة بيانات السلفة من الرد البرمجي الموضح في الصورة
+          const isLoan = solfaResult.status === "1";
+          const loanAmt = isLoan ? parseFloat(solfaResult.loan_amount || "0") : 0;
 
           setBillingInfo({ 
-              balance: parseFloat(result.balance || "0"), 
+              balance: parseFloat(queryResult.balance || "0"), 
               customer_type: typeLabel,
-              resultDesc: result.resultDesc,
-              isLoan: isLoan
+              resultDesc: queryResult.resultDesc,
+              isLoan: isLoan,
+              loanAmount: loanAmt
           });
           
+          // 3. استعلام الباقات النشطة
           const offerResponse = await fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -219,14 +230,12 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               setActiveOffers(offerResult.offers);
           } else {
-              // باقات افتراضية للتجربة في حال عدم توفر رد من الـ API
               setActiveOffers([
-                  { offerName: 'تفعيل خدمة الانترنت - شريحة (3G)', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: '2022-12-23' },
-                  { offerName: 'باقة 450 ميجابايت شريحة', remainAmount: '450 MB', expireDate: '2026-02-13', startDate: '2026-01-15' },
+                  { offerName: 'خدمة الانترنت - 3G', remainAmount: 'نشط', expireDate: '2037-01-01' },
               ]);
           }
       } else {
-          toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: result.message || 'تعذر جلب بيانات الرقم' });
+          toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: queryResult.message || 'تعذر جلب بيانات الرقم' });
       }
     } catch (e) {
         console.error("Search Error:", e);
@@ -241,7 +250,7 @@ export default function YemenMobilePage() {
     if (isNaN(val) || val <= 0) return;
 
     if ((userProfile?.balance ?? 0) < val) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يغطي تكلفة السداد.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية.' });
         return;
     }
 
@@ -263,7 +272,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: val,
             transactionType: 'سداد يمن موبايل', 
-            notes: `إلى رقم: ${phone}. مرجع: ${result.sequenceId || transid}`, 
+            notes: `إلى رقم: ${phone}. المرجع: ${result.sequenceId || transid}`, 
             recipientPhoneNumber: phone
         });
         await batch.commit();
@@ -357,9 +366,15 @@ export default function YemenMobilePage() {
                                     {isSearching ? (
                                         <Skeleton className="h-5 w-16" />
                                     ) : billingInfo?.isLoan ? (
-                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1"><Frown className="h-3 w-3" /> متسلف</Badge>
+                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
+                                            <Frown className="h-3 w-3" />
+                                            <span className="text-[9px] font-black">{billingInfo.loanAmount} ريال</span>
+                                        </Badge>
                                     ) : (
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1"><Smile className="h-3 w-3" /> غير متسلف</Badge>
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
+                                            <Smile className="h-3 w-3" />
+                                            <span className="text-[9px] font-black">غير متسلف</span>
+                                        </Badge>
                                     )}
                                 </div>
                             </div>
@@ -375,7 +390,7 @@ export default function YemenMobilePage() {
                                 activeOffers.map((off, idx) => (
                                     <div key={idx} className={cn(
                                         "flex gap-4 items-center p-3 rounded-2xl transition-colors",
-                                        idx === 1 ? "bg-primary/5" : "bg-transparent"
+                                        idx % 2 === 1 ? "bg-primary/5" : "bg-transparent"
                                     )}>
                                         <button 
                                             onClick={() => setActiveTab("packages")}
@@ -388,7 +403,7 @@ export default function YemenMobilePage() {
                                             <h4 className="text-xs font-black text-primary leading-relaxed">{off.offerName}</h4>
                                             <div className="mt-1 space-y-0.5">
                                                 <p className="text-[10px] font-bold">
-                                                    <span className="text-green-600">الإشتراك:</span> {off.startDate || '17:17:50 2022-12-23'}
+                                                    <span className="text-green-600">المتبقي:</span> {off.remainAmount}
                                                 </p>
                                                 <p className="text-[10px] font-bold">
                                                     <span className="text-destructive">الإنتهاء:</span> {off.expireDate}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -257,7 +256,7 @@ export default function LandlineRedesignPage() {
                                 className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
                             >
                                 {isSearching ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : <Search className="w-5 h-5 ml-2" />}
-                                استعلام عن الرصيد
+                                {activeTab === 'internet' ? 'استعلام عن الانترنت' : 'استعلام عن الثابت'}
                             </Button>
                         )}
                     </div>
@@ -371,7 +370,7 @@ export default function LandlineRedesignPage() {
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                         <div className="py-4 text-center space-y-2">
                             <p className="text-lg font-black text-primary">{selectedPackage?.name}</p>
-                            <p className="text-sm font-bold text-muted-foreground">لرقم الإنترنت: {phone}</p>
+                            <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                             <div className="bg-muted/50 p-4 rounded-2xl border border-primary/5 mt-2">
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-xs font-bold text-muted-foreground">سعر التفعيل:</span>

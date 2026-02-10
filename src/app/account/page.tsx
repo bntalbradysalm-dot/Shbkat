@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -11,7 +11,6 @@ import {
   Users,
   Wifi,
   CreditCard,
-  ImageIcon,
   BarChart3,
   Wallet,
   Megaphone,
@@ -24,15 +23,10 @@ import {
   Sun,
   Moon,
   SatelliteDish,
-  Users2,
-  Loader2,
-  ListChecks,
-  Repeat,
-  ClipboardList,
-  Banknote,
-  Upload,
   ShoppingBag,
   PackageCheck,
+  ListChecks,
+  Banknote,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -50,13 +44,9 @@ import {
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
@@ -72,12 +62,6 @@ const managementLinks = [
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
   { title: 'إعدادات التطبيق', icon: Settings, href: '/app-settings' },
-];
-
-const appSettingsLinks = [
-    { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
-    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=' },
 ];
 
 const userAppSettingsLinks = [
@@ -215,29 +199,30 @@ export default function AccountPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-primary-foreground border-none">
           <CardContent className="p-6 flex items-center gap-4">
-             <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10">
+            <div className="flex-grow text-right">
+              <h2 className="text-lg font-black">{userProfile?.displayName || 'مستخدم جديد'}</h2>
+              <div className="text-xs text-white/80 mt-1.5 space-y-1.5">
+                <div className="flex items-center justify-start gap-2">
+                  <Phone className="h-3.5 w-3.5 opacity-70" />
+                  <span className="font-bold">{userProfile?.phoneNumber || '...'}</span>
+                </div>
+                <div className="flex items-center justify-start gap-2">
+                  <MapPin className="h-3.5 w-3.5 opacity-70" />
+                  <span className="font-bold">{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
+                </div>
+              </div>
+            </div>
+            <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl">
+                <AvatarImage src={userProfile?.photoURL} />
                 <AvatarFallback>
                     <User className="h-8 w-8 text-white" />
                 </AvatarFallback>
             </Avatar>
-            <div className="flex-grow text-right">
-              <h2 className="text-base font-black">{userProfile?.displayName || 'مستخدم جديد'}</h2>
-              <div className="text-xs text-white/80 mt-2 space-y-1">
-                <div className="flex items-center justify-end gap-2">
-                  <span>{userProfile?.phoneNumber || '...'}</span>
-                  <Phone className="h-3 w-3" />
-                </div>
-                <div className="flex items-center justify-end gap-2">
-                  <span>{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
-                  <MapPin className="h-3 w-3" />
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
         
         <div>
-            <h3 className="text-xs font-black text-muted-foreground text-center mb-3">الوضع المفضل</h3>
+            <h3 className="text-xs font-black text-muted-foreground text-center mb-3 uppercase tracking-widest">الوضع المفضل</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleThemeChange('light')}
@@ -271,7 +256,7 @@ export default function AccountPage() {
             <div>
               <div className="flex items-center justify-center gap-2 mb-3">
                 <LayoutGrid className="h-4 w-4 text-primary" />
-                <h3 className="text-xs font-black text-primary">
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">
                   لوحة التحكم
                 </h3>
               </div>
@@ -302,13 +287,13 @@ export default function AccountPage() {
           
             <div>
               <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                <h3 className="text-xs font-black text-muted-foreground">
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                   إعدادات الواجهة والتطبيق
                 </h3>
               </div>
                <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                  <CardContent className="p-0">
-                    {appSettingsLinks.map((link, index) => {
+                    {userAppSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
                       const isShareButton = link.id === 'share-app';
                       const isHelpButton = link.id === 'help-center';
@@ -319,7 +304,7 @@ export default function AccountPage() {
                         key={link.id}
                         onClick={isShareButton ? handleShare : undefined}
                         className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
-                            index < appSettingsLinks.length - 1 ? 'border-b border-muted' : ''
+                            index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
                         }`}
                         >
                         <div className="flex items-center gap-3">
@@ -361,7 +346,7 @@ export default function AccountPage() {
         {!isUserAdmin && (
             <div>
                 <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                    <h3 className="text-xs font-black text-muted-foreground">
+                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                     الإعدادات
                     </h3>
                 </div>
@@ -424,7 +409,7 @@ export default function AccountPage() {
                       <button className="group flex items-center justify-center p-4 w-full">
                         <div className="flex items-center gap-3 text-destructive">
                             <LogOut className="h-5 w-5" />
-                            <span className="text-sm font-black uppercase tracking-wider">تسجيل الخروج</span>
+                            <span className="text-sm font-black uppercase tracking-widest">تسجيل الخروج</span>
                         </div>
                       </button>
                   </CardContent>

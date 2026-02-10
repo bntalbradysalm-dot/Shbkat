@@ -107,9 +107,9 @@ export function BalanceCard() {
           onMouseLeave={clearTimer}
           onTouchStart={startTimer}
           onTouchEnd={clearTimer}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white/10 hover:bg-white/20 transition-colors rounded-2xl text-white text-xs font-bold border border-white/5 backdrop-blur-sm"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/10 hover:bg-white/20 transition-colors rounded-xl text-white text-[10px] font-bold border border-white/5 backdrop-blur-sm"
         >
-          <Icon size={14} />
+          <Icon size={12} />
           <span>{service.name}</span>
         </button>
       </Link>
@@ -118,36 +118,36 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-white shadow-xl border-none">
-        <CardContent className="p-6 flex flex-col items-center justify-center min-h-[170px] relative">
+      <Card className="w-full overflow-hidden rounded-[28px] bg-mesh-gradient text-white shadow-lg border-none">
+        <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px] relative">
           
-          <div className="w-full relative flex flex-col items-center justify-center mt-16 mb-4">
+          <div className="w-full relative flex flex-col items-center justify-center mt-8 mb-2">
             <div className="absolute left-0 top-0">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-                    className="h-8 w-8 rounded-full hover:bg-white/20 text-white"
+                    className="h-7 w-7 rounded-full hover:bg-white/20 text-white"
                 >
-                    {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                    {isBalanceVisible ? <Eye size={16} /> : <EyeOff size={16} />}
                 </Button>
             </div>
 
-            <div className="flex items-baseline gap-2 pt-4">
-                <h2 className="text-4xl font-bold tracking-tight text-white">
+            <div className="flex items-baseline gap-1.5 pt-2">
+                <h2 className="text-3xl font-black tracking-tight text-white">
                 {isLoading ? (
-                    <Skeleton className="h-10 w-28 bg-white/20" />
+                    <Skeleton className="h-8 w-24 bg-white/20" />
                 ) : isBalanceVisible ? (
                     balance.toLocaleString('en-US')
                 ) : (
                     "******"
                 )}
                 </h2>
-                <span className="text-xs font-medium opacity-90 text-white">ريال يمني</span>
+                <span className="text-[10px] font-bold opacity-80 text-white">ريال يمني</span>
             </div>
           </div>
 
-          <div className="mt-8 flex gap-3 w-full">
+          <div className="mt-6 flex gap-2 w-full">
             <ActionButton service={leftAction} side="left" />
             <ActionButton service={rightAction} side="right" />
           </div>

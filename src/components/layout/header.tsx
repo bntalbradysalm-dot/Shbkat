@@ -1,4 +1,3 @@
-
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -29,8 +28,8 @@ const Header = () => {
   useEffect(() => {
     const now = new Date();
     const hour = now.getHours();
-    if (hour < 12) setGreeting('صباح الخير 👋');
-    else setGreeting('مساء الخير 👋');
+    if (hour < 12) setGreeting('صباح الخير');
+    else setGreeting('مساء الخير');
   }, []);
 
   // جلب آخر 20 إشعاراً عاماً من الإدارة

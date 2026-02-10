@@ -134,17 +134,17 @@ export function BalanceCard() {
                 </Button>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-1">
-                <h2 className="text-5xl font-black tracking-tight text-white">
+            <div className="flex items-baseline justify-center gap-2">
+                <h2 className="text-4xl font-black tracking-tight text-white">
                 {isLoading ? (
-                    <Skeleton className="h-12 w-32 bg-white/20" />
+                    <Skeleton className="h-10 w-28 bg-white/20" />
                 ) : isBalanceVisible ? (
                     balance.toLocaleString('en-US')
                 ) : (
                     "******"
                 )}
                 </h2>
-                <span className="text-xs font-black text-white/70 uppercase tracking-widest">ريال يمني</span>
+                <span className="text-sm font-bold text-white/80">ريال يمني</span>
             </div>
           </div>
 

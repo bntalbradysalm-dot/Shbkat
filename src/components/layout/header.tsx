@@ -1,4 +1,3 @@
-
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -72,19 +71,16 @@ const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
-      {/* عنصر فارغ لضمان بقاء النص في المنتصف تماماً */}
-      <div className="w-11 h-11" />
-
-      <div className="flex flex-col items-center justify-center flex-1 text-center px-2">
+      <div className="flex flex-col items-start justify-center flex-1 px-2">
         {isUserLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-24 mx-auto" />
-            <Skeleton className="h-4 w-32 mx-auto" />
+          <div className="space-y-2 text-right">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-6 w-32" />
           </div>
         ) : (
           <>
-            <p className="text-primary font-bold text-xl">{greeting}</p>
-            <h1 className="font-black text-foreground text-lg mt-1 tracking-tight">{displayName}</h1>
+            <p className="text-primary font-normal text-sm opacity-80">{greeting}</p>
+            <h1 className="font-black text-foreground text-lg mt-0.5 tracking-tight">{displayName}</h1>
           </>
         )}
       </div>

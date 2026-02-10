@@ -135,10 +135,18 @@ export default function LandlineRedesignPage() {
         setIsSearching(true);
         setQueryResult(null);
         try {
+            // تحديد نوع الاستعلام بناءً على التبويب النشط لحل مشكلة Type parameter required
+            const searchType = activeTab === 'internet' ? 'adsl' : 'line';
+            
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post' })
+                body: JSON.stringify({ 
+                    mobile: phone, 
+                    action: 'query', 
+                    service: 'post',
+                    type: searchType 
+                })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');

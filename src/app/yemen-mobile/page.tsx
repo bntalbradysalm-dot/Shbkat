@@ -130,7 +130,7 @@ const BalanceDisplay = () => {
         <Card className="shadow-md border-none rounded-3xl bg-mesh-gradient text-white">
             <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                    <p className="font-medium opacity-80 text-xs uppercase tracking-widest">رصيدك الحالي</p>
+                    <p className="font-medium opacity-80 text-xs uppercase tracking-widest text-right">رصيدك الحالي</p>
                     {isLoading ? (
                         <Skeleton className="h-8 w-32 mt-2 bg-white/20" />
                     ) : (
@@ -151,37 +151,36 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-[#FDE6D2] rounded-[20px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
       onClick={onClick}
     >
-      {/* Floating Logo */}
       <div className="absolute top-2 left-2 w-6 h-6 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
         <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={18} height={18} className="rounded-sm object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-base font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
+        <h4 className="text-sm font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
         <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
         <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
       <div className="flex justify-center my-1">
-        <span className="text-3xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
       <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
         <div className="space-y-1">
-          <Globe className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Mail className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Phone className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Clock className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -458,7 +457,6 @@ export default function YemenMobilePage() {
                         </TabsList>
 
                         <TabsContent value="packages" className="pt-6 space-y-6">
-                            {/* Billing Summary Info */}
                             <Card className="bg-[#fffbeb] border-2 border-amber-100 rounded-3xl shadow-sm">
                                 <CardContent className="grid grid-cols-3 gap-2 p-3 text-center">
                                     <div className='p-2 bg-white/50 rounded-2xl border border-amber-50'>
@@ -476,7 +474,6 @@ export default function YemenMobilePage() {
                                 </CardContent>
                             </Card>
 
-                            {/* Active Subscriptions Section */}
                             <Card className="border shadow-sm rounded-2xl overflow-hidden bg-white">
                                 <div className="bg-primary px-4 py-2 text-center">
                                     <h4 className="text-white text-sm font-black tracking-widest">الاشتراكات الحالية</h4>
@@ -511,7 +508,6 @@ export default function YemenMobilePage() {
                                 </CardContent>
                             </Card>
                             
-                            {/* Categories Accordion */}
                             <div className="space-y-3">
                                 <Accordion type="single" collapsible className="w-full space-y-4">
                                   {CATEGORIES.map((category) => (
@@ -521,7 +517,7 @@ export default function YemenMobilePage() {
                                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
                                                 <span className="text-primary font-black text-base">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-2xl tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-lg tracking-wide">{category.title}</span>
                                         </div>
                                         <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>

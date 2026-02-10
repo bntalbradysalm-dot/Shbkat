@@ -460,28 +460,28 @@ export default function YemenMobilePage() {
                             
                             {/* Categories Accordion */}
                             <div className="space-y-2">
-                                <Accordion type="single" collapsible className="w-full space-y-2">
+                                <Accordion type="single" collapsible className="w-full space-y-3">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-4 py-2 text-xs hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
-                                                <span className="text-primary font-black text-[9px]">{category.badge}</span>
+                                      <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                                <span className="text-primary font-black text-[10px]">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-bold text-right flex-1">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-sm tracking-wide">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-3.5 h-3.5 text-white/70 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-4 h-4 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
-                                      <AccordionContent className="p-2 space-y-1.5 bg-white border-x border-b rounded-b-2xl shadow-inner">
+                                      <AccordionContent className="p-2.5 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
                                           <Button 
                                             key={offer.offerId} 
                                             variant="ghost" 
-                                            className="w-full justify-between h-auto py-2.5 px-4 text-right border border-muted hover:bg-primary/5 rounded-xl transition-colors"
+                                            className="w-full justify-between h-auto py-3 px-4 text-right border border-muted hover:bg-primary/5 rounded-xl transition-colors"
                                             onClick={() => handleOfferClick(offer)}
                                           >
                                             <span className="text-xs font-bold text-slate-700">{offer.offerName}</span>
-                                            <Zap className="w-3.5 h-3.5 text-primary" />
+                                            <Zap className="w-4 h-4 text-primary" />
                                           </Button>
                                         ))}
                                       </AccordionContent>

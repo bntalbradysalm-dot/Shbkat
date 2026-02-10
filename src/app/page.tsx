@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser, useFirestore } from '@/firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { PromotionalImage } from '@/components/dashboard/promotional-image';
@@ -34,7 +33,6 @@ export default function LoginPage() {
   
   const router = useRouter();
   const auth = useAuth();
-  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
@@ -46,7 +44,16 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    
+    if (!auth) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'خطأ في الاتصال', 
+        description: 'لم يتم تهيئة خدمات Firebase. يرجى التأكد من إضافة مفاتيح البيئة (Environment Variables) في إعدادات الاستضافة.' 
+      });
+      return;
+    }
+
     if (!phoneNumber || !password) {
       toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال رقم الهاتف وكلمة المرور.' });
       return;
@@ -57,7 +64,8 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password.trim());
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'خطأ', description: 'رقم الهاتف أو كلمة المرور غير صحيحة.' });
+      console.error("Login error:", error);
+      toast({ variant: 'destructive', title: 'فشل الدخول', description: 'رقم الهاتف أو كلمة المرور غير صحيحة.' });
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +84,13 @@ export default function LoginPage() {
                 <p className="text-muted-foreground">سجل دخولك للبدء</p>
               </div>
           </div>
+
+          {!auth && (
+            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl mb-6 text-destructive text-sm flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <p>تحذير: لم يتم اكتشاف إعدادات Firebase. تأكد من ضبط الـ Env Variables في Vercel.</p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-6 text-right">
             <div className="space-y-2">

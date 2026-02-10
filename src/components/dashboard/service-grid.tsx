@@ -12,6 +12,7 @@ import {
   CreditCard,
   ArrowLeftRight,
   FileText,
+  Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,7 +28,7 @@ const services: Service[] = [
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'مشتريات', icon: ShoppingBag, href: '/store' },
-  { name: 'كشف الحساب', icon: FileText, href: '/transactions' },
+  { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },

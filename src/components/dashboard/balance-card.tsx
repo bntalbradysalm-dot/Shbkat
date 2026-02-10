@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, History, Wallet, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, FileText } from "lucide-react";
+import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, History, Wallet, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, FileText, Heart } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,7 +28,7 @@ const availableServices = [
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'store', name: 'مشتريات', icon: ShoppingBag, href: '/store' },
-  { id: 'statement-filter', name: 'كشف الحساب', icon: FileText, href: '/transactions' },
+  { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
@@ -39,7 +39,7 @@ export function BalanceCard() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: كشف الحساب
+  const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
   const [rightAction, setRightAction] = useState(availableServices[6]); // Default: الشبكات
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);

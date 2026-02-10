@@ -612,8 +612,8 @@ export default function YemenMobilePage() {
                         <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
                         <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
                     </div>
-                </AccordionDescription>
-            </AccordionHeader>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
             <AlertDialogFooter className="flex-row gap-3 mt-6">
                 <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                 <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>

@@ -157,31 +157,31 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-sm font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
+        <h4 className="text-base font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
         <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
         <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
       <div className="flex justify-center my-1">
-        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+        <span className="text-3xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
       <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
         <div className="space-y-1">
-          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+          <Globe className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-xs font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+          <Mail className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-xs font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+          <Phone className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-xs font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+          <Clock className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-xs font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -496,11 +496,11 @@ export default function YemenMobilePage() {
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
                                                 <div className="space-y-0.5">
-                                                    <div className="flex justify-start items-center gap-2 text-[10px] flex-row-reverse">
+                                                    <div className="flex justify-start items-center gap-2 text-[10px]">
                                                         <span className="text-green-600 font-bold">الاشتراك:</span>
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
                                                     </div>
-                                                    <div className="flex justify-start items-center gap-2 text-[10px] flex-row-reverse">
+                                                    <div className="flex justify-start items-center gap-2 text-[10px]">
                                                         <span className="text-destructive font-bold">الانتهاء:</span>
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
                                                     </div>
@@ -519,9 +519,9 @@ export default function YemenMobilePage() {
                                       <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none h-14">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                <span className="text-primary font-black text-sm">{category.badge}</span>
+                                                <span className="text-primary font-black text-base">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-xl tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-2xl tracking-wide">{category.title}</span>
                                         </div>
                                         <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
@@ -619,7 +619,7 @@ export default function YemenMobilePage() {
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
-    </Accordion>
+    </AlertDialog>
     </>
   );
 }

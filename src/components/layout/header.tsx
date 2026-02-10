@@ -61,6 +61,15 @@ const Header = () => {
     router.push('/notifications');
   };
 
+  const getFirstAndLastName = (name?: string) => {
+    if (!name) return 'محمد باشادي';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length <= 2) return name;
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  };
+
+  const displayName = getFirstAndLastName(user?.displayName || userProfile?.displayName);
+
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-20">
       <button onClick={handleNotificationClick} className="relative p-2.5 bg-muted/20 rounded-full border border-border/50">
@@ -79,7 +88,7 @@ const Header = () => {
         ) : (
           <>
             <p className="text-primary font-bold text-lg">{greeting}</p>
-            <h1 className="font-bold text-foreground opacity-70 text-sm mt-0.5">{user?.displayName || 'محمد باشادي'}</h1>
+            <h1 className="font-bold text-foreground opacity-70 text-sm mt-0.5">{displayName}</h1>
           </>
         )}
       </div>

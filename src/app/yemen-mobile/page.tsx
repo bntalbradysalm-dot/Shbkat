@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -464,14 +463,14 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-2">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-4 py-2.5 hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-4 py-2 text-xs hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
-                                                <span className="text-primary font-black text-[10px]">{category.badge}</span>
+                                            <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
+                                                <span className="text-primary font-black text-[9px]">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-bold text-sm text-right flex-1">{category.title}</span>
+                                            <span className="text-white font-bold text-right flex-1">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-4 h-4 text-white/70 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-3.5 h-3.5 text-white/70 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
                                       <AccordionContent className="p-2 space-y-1.5 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
@@ -534,7 +533,7 @@ export default function YemenMobilePage() {
                                     {isProcessing ? <Loader2 className="animate-spin h-5 w-5"/> : 'تأكيد'}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
-                                </AccordionContent>
+                                </AlertDialogContent>
                             </AlertDialog>
                         </TabsContent>
                     </Tabs>

@@ -43,6 +43,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   useEffect(() => {
     if (!auth) {
+        // إذا لم يكن هناك Auth (أثناء البناء)، ننهي حالة التحميل بسلام
         setUserAuthState({ user: null, isUserLoading: false, userError: null });
         return;
     }

@@ -129,7 +129,7 @@ export default function AccountPage() {
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -182,11 +182,13 @@ export default function AccountPage() {
   };
 
   const handleLogout = () => {
-    auth.signOut();
-    router.push('/');
+    if (auth) {
+        auth.signOut();
+        router.push('/');
+    }
   };
 
-  if (isUserLoading || !user || !userProfile) {
+  if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
   
@@ -286,121 +288,7 @@ export default function AccountPage() {
                 </CardContent>
               </Card>
             </div>
-          
-            <div>
-              <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-                  إعدادات الواجهة والتطبيق
-                </h3>
-              </div>
-               <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
-                 <CardContent className="p-0">
-                    {userAppSettingsLinks.map((link, index) => {
-                      const Icon = link.icon;
-                      const isShareButton = link.id === 'share-app';
-                      const isHelpButton = link.id === 'help-center';
-                      const finalHref = isHelpButton ? helpCenterUrl : link.href;
-
-                      const element = (
-                        <div
-                        key={link.id}
-                        onClick={isShareButton ? handleShare : undefined}
-                        className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
-                            index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
-                        }`}
-                        >
-                        <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-primary" />
-                            <span className="text-sm font-bold text-foreground">{link.title}</span>
-                        </div>
-                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                        </div>
-                      );
-
-                      if (isShareButton) {
-                        return (
-                          <button key={link.id} onClick={handleShare} className="w-full text-right">
-                           {element}
-                          </button>
-                        )
-                      }
-                      
-                      if (finalHref) {
-                        return (
-                          <a
-                          href={finalHref}
-                          key={link.id}
-                          target={finalHref.startsWith('http') ? '_blank' : '_self'}
-                          rel={finalHref.startsWith('http') ? 'noopener noreferrer' : ''}
-                          >
-                           {element}
-                          </a>
-                        )
-                      }
-                      return element;
-                    })}
-                 </CardContent>
-               </Card>
-            </div>
           </>
-        )}
-
-        {!isUserAdmin && (
-            <div>
-                <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-                    الإعدادات
-                    </h3>
-                </div>
-                <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
-                    <CardContent className="p-0">
-                    {userAppSettingsLinks.map((link, index) => {
-                       const Icon = link.icon;
-                       const isShareButton = link.id === 'share-app';
-                       const isHelpButton = link.id === 'help-center';
-                       const finalHref = isHelpButton ? helpCenterUrl : link.href;
-
-                       const element = (
-                         <div
-                         key={link.id}
-                         onClick={isShareButton ? handleShare : undefined}
-                         className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
-                             index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
-                         }`}
-                         >
-                         <div className="flex items-center gap-3">
-                             <Icon className="h-5 w-5 text-primary" />
-                             <span className="text-sm font-bold text-foreground">{link.title}</span>
-                         </div>
-                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
-                         </div>
-                       );
- 
-                       if (isShareButton) {
-                        return (
-                          <button key={link.id} onClick={handleShare} className="w-full text-right">
-                           {element}
-                          </button>
-                        )
-                      }
-
-                       if (finalHref) {
-                         return (
-                           <a
-                           href={finalHref}
-                           key={link.id}
-                           target={finalHref.startsWith('http') ? '_blank' : '_self'}
-                           rel={finalHref.startsWith('http') ? 'noopener noreferrer' : ''}
-                           >
-                            {element}
-                           </a>
-                         )
-                       }
-                       return element;
-                    })}
-                    </CardContent>
-                </Card>
-            </div>
         )}
 
         <div className="pt-4 pb-8">
@@ -408,12 +296,12 @@ export default function AccountPage() {
             <AlertDialogTrigger asChild>
               <Card className="bg-card cursor-pointer rounded-2xl border-none shadow-sm hover:bg-destructive/5 transition-colors">
                   <CardContent className="p-0">
-                      <button className="group flex items-center justify-center p-4 w-full">
+                      <div className="group flex items-center justify-center p-4 w-full">
                         <div className="flex items-center gap-3 text-destructive">
                             <LogOut className="h-5 w-5" />
                             <span className="text-sm font-black uppercase tracking-widest">تسجيل الخروج</span>
                         </div>
-                      </button>
+                      </div>
                   </CardContent>
               </Card>
             </AlertDialogTrigger>
@@ -421,7 +309,7 @@ export default function AccountPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-center font-black">هل أنت متأكد؟</AlertDialogTitle>
                 <AlertDialogDescription className="text-center">
-                  سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق. ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.
+                  سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-row gap-3 pt-4">

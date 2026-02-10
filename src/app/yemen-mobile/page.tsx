@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown, RefreshCcw, Globe, Mail, Clock } from 'lucide-react';
+import { Wallet, Phone, CheckCircle, Zap, Loader2, ChevronDown, RefreshCcw, Globe, Mail, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
@@ -151,12 +151,8 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-[#FDE6D2] rounded-[20px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
       onClick={onClick}
     >
-      <div className="absolute top-2 left-2 w-6 h-6 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={18} height={18} className="rounded-sm object-contain" />
-      </div>
-
       <div className="text-right pr-1">
-        <h4 className="text-base font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
+        <h4 className="text-lg font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
         <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
         <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
@@ -167,20 +163,20 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
 
       <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
         <div className="space-y-1">
-          <Globe className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[11px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+          <Globe className="w-6 h-6 mx-auto text-[#8B1D3D]" />
+          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Mail className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[11px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+          <Mail className="w-6 h-6 mx-auto text-[#8B1D3D]" />
+          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Phone className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[11px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+          <Phone className="w-6 h-6 mx-auto text-[#8B1D3D]" />
+          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Clock className="w-5 h-5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[11px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+          <Clock className="w-6 h-6 mx-auto text-[#8B1D3D]" />
+          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -222,59 +218,59 @@ export default function YemenMobilePage() {
     }
   }, [showSuccess]);
 
-  useEffect(() => {
-    const handleSearch = async () => {
-      if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
-        setShowTabs(true);
-        setActiveTab("balance");
-        setIsCheckingBilling(true);
-        setBillingInfo(null);
-        
-        try {
-          const [balanceRes, solfaRes] = await Promise.all([
-            fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'query' }),
-            }),
-            fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'solfa' }),
-            })
-          ]);
+  const handleSearch = async () => {
+    if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
+      setShowTabs(true);
+      setActiveTab("balance");
+      setIsCheckingBilling(true);
+      setBillingInfo(null);
+      
+      try {
+        const [balanceRes, solfaRes] = await Promise.all([
+          fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phone, action: 'query' }),
+          }),
+          fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phone, action: 'solfa' }),
+          })
+        ]);
 
-          const balanceResult = await balanceRes.json();
-          const solfaResult = await solfaRes.json();
+        const balanceResult = await balanceRes.json();
+        const solfaResult = await solfaRes.json();
 
-          if (!balanceRes.ok) throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
+        if (!balanceRes.ok) throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
 
-          let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
-          if (solfaRes.ok && solfaResult.status) {
-            finalSolfaStatus = solfaResult.status === '1' ? 'متسلف' : 'غير متسلف';
-          }
-  
-          setBillingInfo({
-            balance: parseFloat(balanceResult.balance || balanceResult.availableCredit || "0"),
-            customer_type: balanceResult.mobileTy || balanceResult.mobileType || 'غير معروف',
-            solfa_status: finalSolfaStatus
-          });
-
-        } catch (error: any) {
-          toast({ variant: "destructive", title: "تنبيه", description: error.message });
-        } finally {
-          setIsCheckingBilling(false);
+        let finalSolfaStatus: BillingInfo['solfa_status'] = 'غير معروف';
+        if (solfaRes.ok && solfaResult.status) {
+          finalSolfaStatus = solfaResult.status === '1' ? 'متسلف' : 'غير متسلف';
         }
-      } else {
-        setShowTabs(false);
-        setBillingInfo(null);
+
+        setBillingInfo({
+          balance: parseFloat(balanceResult.balance || balanceResult.availableCredit || "0"),
+          customer_type: balanceResult.mobileTy || balanceResult.mobileType || 'غير معروف',
+          solfa_status: finalSolfaStatus
+        });
+
+      } catch (error: any) {
+        toast({ variant: "destructive", title: "تنبيه", description: error.message });
+      } finally {
+        setIsCheckingBilling(false);
       }
-    };
-    
+    } else {
+      setShowTabs(false);
+      setBillingInfo(null);
+    }
+  };
+
+  useEffect(() => {
     if (phone.length === 9) {
         handleSearch();
     }
-  }, [phone, toast]);
+  }, [phone]);
 
   useEffect(() => {
     const numericAmount = parseFloat(amount);
@@ -427,7 +423,6 @@ export default function YemenMobilePage() {
         <Card className="shadow-lg border-none rounded-[32px] overflow-hidden bg-white">
           <CardHeader className="bg-primary/5 pb-4">
              <CardTitle className="text-center text-lg font-black text-primary flex items-center justify-center gap-2">
-                <Phone className="w-5 h-5" />
                 سداد رصيد وباقات
              </CardTitle>
           </CardHeader>
@@ -444,7 +439,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-3xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -484,8 +479,8 @@ export default function YemenMobilePage() {
                                             <div 
                                                 className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
                                                 onClick={() => {
-                                                    const accordionTrigger = document.querySelector('[data-state="closed"]');
-                                                    if (accordionTrigger instanceof HTMLElement) accordionTrigger.click();
+                                                    const renewalTab = document.querySelector('[value="packages"]');
+                                                    if (renewalTab instanceof HTMLElement) renewalTab.click();
                                                 }}
                                             >
                                                 <div className="p-2 bg-primary/10 rounded-xl">
@@ -495,14 +490,14 @@ export default function YemenMobilePage() {
                                             </div>
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
-                                                <div className="space-y-0.5">
-                                                    <div className="flex justify-end items-center gap-2 text-[10px]">
+                                                <div className="flex flex-col gap-0.5 items-end">
+                                                    <div className="flex items-center gap-2 text-[10px]">
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
-                                                        <span className="text-green-600 font-bold">الاشتراك:</span>
+                                                        <span className="text-green-600 font-bold">:الاشتراك</span>
                                                     </div>
-                                                    <div className="flex justify-end items-center gap-2 text-[10px]">
+                                                    <div className="flex items-center gap-2 text-[10px]">
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
-                                                        <span className="text-destructive font-bold">الانتهاء:</span>
+                                                        <span className="text-destructive font-bold">:الانتهاء</span>
                                                     </div>
                                                 </div>
                                             </div>

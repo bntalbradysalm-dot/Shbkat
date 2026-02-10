@@ -9,6 +9,16 @@ import {
   FileText, 
   ChevronLeft, 
   CreditCard,
+  Wallet,
+  Wifi,
+  SatelliteDish,
+  ShoppingBag,
+  ArrowLeftRight,
+  Smartphone,
+  Undo2,
+  TrendingUp,
+  Send,
+  Banknote
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -19,6 +29,20 @@ type Transaction = {
   transactionDate: string;
   amount: number;
   transactionType: string;
+};
+
+const getTransactionIcon = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('استرجاع')) return Undo2;
+    if (t.includes('تغذية') || t.includes('إيداع') || t.includes('استلام')) return Wallet;
+    if (t.includes('تحويل')) return Send;
+    if (t.includes('سحب')) return Banknote;
+    if (t.includes('شراء كرت')) return Wifi;
+    if (t.includes('سداد') || t.includes('رصيد')) return Smartphone;
+    if (t.includes('تجديد') || t.includes('باقة')) return SatelliteDish;
+    if (t.includes('متجر') || t.includes('منتج')) return ShoppingBag;
+    if (t.includes('أرباح')) return TrendingUp;
+    return CreditCard;
 };
 
 export function RecentTransactions() {
@@ -60,12 +84,14 @@ export function RecentTransactions() {
                                    tx.transactionType.includes('استرجاع') || 
                                    tx.transactionType.includes('إيداع');
                     
+                    const Icon = getTransactionIcon(tx.transactionType);
+                    
                     return (
                         <Card key={tx.id} className="rounded-3xl border-border/50 shadow-sm overflow-hidden bg-card">
                             <CardContent className="p-4 flex items-center justify-between">
                                 {/* الأيقونة في اليمين */}
                                 <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50 shrink-0">
-                                    <CreditCard className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
+                                    <Icon className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
                                 </div>
 
                                 {/* النص في المنتصف */}

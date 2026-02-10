@@ -93,34 +93,28 @@ function NavItems() {
             key={item.name}
             href={item.href}
             className={cn(
-                "relative flex flex-col items-center justify-center transition-all duration-500 ease-in-out px-4 py-2 flex-1 group",
+                "relative flex flex-col items-center justify-center transition-all duration-300 py-2 flex-1 group",
                 isActive ? "text-primary" : "text-muted-foreground/60 hover:text-primary/70"
             )}
           >
-            {/* Active Highlight Bubble */}
-            {isActive && (
-                <div className="absolute inset-x-2 inset-y-1 bg-primary/10 rounded-[24px] animate-in fade-in zoom-in duration-300" />
-            )}
-
-            <div className="relative z-10">
-              <item.icon className={cn("h-6 w-6 transition-all duration-500", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
+            <div className="relative">
+              <item.icon className={cn("h-6 w-6 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
               {showIndicator && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 min-w-[20px] min-h-[20px] items-center justify-center rounded-full bg-destructive text-white text-[10px] font-black border-2 border-background shadow-lg">
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 min-w-[20px] min-h-[20px] items-center justify-center rounded-full bg-destructive text-white text-[10px] font-black border-2 border-background shadow-sm">
                   {totalPending > 9 ? '+9' : totalPending}
                 </span>
               )}
             </div>
             
             <span className={cn(
-                "text-[10px] font-black mt-1.5 transition-all duration-500 z-10",
-                isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0"
+                "text-[10px] font-bold mt-1 transition-all duration-300",
+                isActive ? "opacity-100" : "opacity-70"
             )}>
                 {item.name}
             </span>
 
-            {/* Active Dot */}
             {isActive && (
-                <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full animate-in slide-in-from-bottom-1" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full animate-in slide-in-from-top-1" />
             )}
           </Link>
         );
@@ -131,8 +125,8 @@ function NavItems() {
 
 export function BottomNav() {
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-[380px] px-4 pointer-events-none">
-        <nav className="pointer-events-auto flex h-20 items-center justify-around px-2 bg-card/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/20 dark:border-white/5 rounded-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-md">
+        <nav className="flex h-18 pb-safe items-center justify-around px-2 bg-card/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-border shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
             <NavItems />
         </nav>
     </div>

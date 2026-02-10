@@ -34,7 +34,7 @@ export default function RootLayout({
           <ThemeProvider>
             <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
               <div className="flex-1 flex flex-col relative">
-                <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-28' : ''}`}>
+                <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-20' : ''}`}>
                   {children}
                 </main>
                 {isNavVisible && <BottomNav />}

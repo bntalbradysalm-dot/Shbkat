@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
+import Image from 'next/image';
 
 type Notification = {
   id: string;
@@ -16,48 +15,35 @@ type Notification = {
 type UserProfile = {
   lastNotificationRead?: string;
   displayName?: string;
+  photoURL?: string;
 };
-
-const getShortName = (fullName: string | null | undefined): string => {
-  if (!fullName) return 'مستخدم جديد';
-  const nameParts = fullName.trim().split(/\s+/);
-  if (nameParts.length > 1) {
-    return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
-  }
-  return fullName;
-};
-
 
 const Header = () => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const [hasUnread, setHasUnread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [greeting, setGreeting] = useState('أهلاً');
-
 
   useEffect(() => {
     const now = new Date();
-    const day = now.getDay(); // Sunday = 0, Friday = 5
     const hour = now.getHours();
-
-    if (day === 5) {
-      setGreeting('جمعة مباركة');
-    } else if (hour < 12) {
-      setGreeting('صباحك جميل');
-    } else {
-      setGreeting('مساءك جميل');
-    }
+    if (hour < 12) setGreeting('صباح الخير');
+    else setGreeting('مساء الخير');
   }, []);
 
-  // Get the last notification only if user is logged in
-  const lastNotificationQuery = useMemoFirebase(
-    () => (firestore && user) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(1)) : null,
+  const globalNotificationsQuery = useMemoFirebase(
+    () => (firestore) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
+    [firestore]
+  );
+  const { data: globalNotifications } = useCollection<Notification>(globalNotificationsQuery);
+
+  const personalNotificationsQuery = useMemoFirebase(
+    () => (firestore && user) ? query(collection(firestore, 'users', user.uid, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
     [firestore, user]
   );
-  const { data: lastNotification } = useCollection<Notification>(lastNotificationQuery);
+  const { data: personalNotifications } = useCollection<Notification>(personalNotificationsQuery);
 
-  // Get user profile
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
@@ -65,66 +51,88 @@ const Header = () => {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (lastNotification && lastNotification.length > 0 && userProfile) {
-      const latestTimestamp = lastNotification[0].timestamp;
-      const lastReadTimestamp = userProfile.lastNotificationRead;
-      if (!lastReadTimestamp || new Date(latestTimestamp) > new Date(lastReadTimestamp)) {
-        setHasUnread(true);
-      } else {
-        setHasUnread(false);
-      }
-    } else {
-      setHasUnread(false);
+    if (userProfile) {
+      const lastReadTime = userProfile.lastNotificationRead 
+        ? new Date(userProfile.lastNotificationRead).getTime() 
+        : 0;
+      
+      const allNotifs = [
+        ...(globalNotifications || []),
+        ...(personalNotifications || [])
+      ];
+
+      const count = allNotifs.filter(n => new Date(n.timestamp).getTime() > lastReadTime).length;
+      setUnreadCount(count);
     }
-  }, [lastNotification, userProfile]);
+  }, [globalNotifications, personalNotifications, userProfile]);
 
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (userDocRef && lastNotification && lastNotification.length > 0) {
-      // Optimistically update UI
-      setHasUnread(false);
-      // Update last read timestamp in Firestore
-      updateDoc(userDocRef, {
-        lastNotificationRead: lastNotification[0].timestamp,
-      }).catch(err => {
-        // if update fails, revert UI change
-        console.error("Failed to update last read timestamp", err);
-        setHasUnread(true);
-      });
+    if (userDocRef) {
+      const allNotifs = [
+        ...(globalNotifications || []),
+        ...(personalNotifications || [])
+      ];
+      
+      if (allNotifs.length > 0) {
+        const latestTs = allNotifs.reduce((latest, current) => {
+          return new Date(current.timestamp).getTime() > new Date(latest).getTime() 
+            ? current.timestamp 
+            : latest;
+        }, allNotifs[0].timestamp);
+        
+        updateDoc(userDocRef, { lastNotificationRead: latestTs });
+      } else {
+        updateDoc(userDocRef, { lastNotificationRead: new Date().toISOString() });
+      }
     }
     router.push('/notifications');
   };
 
+  const getFirstAndLastName = (name?: string) => {
+    if (!name) return 'مستخدم شبكات';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length <= 2) return name;
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  };
+
+  const displayName = getFirstAndLastName(user?.displayName || userProfile?.displayName);
 
   return (
-    <header className="flex items-center justify-between p-4 bg-transparent text-foreground">
-      <div className="flex items-center gap-3">
-        <UserIcon className="h-10 w-10 text-primary dark:text-primary-foreground" />
-        <div>
-           {isUserLoading ? (
-             <Skeleton className="h-6 w-32 mt-1" />
-           ) : user ? (
+    <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
+      <div className="flex items-center gap-3 flex-1 px-2">
+        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-border/50 shadow-sm shrink-0">
+          <Image 
+            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+            alt="Logo" 
+            fill 
+            className="object-cover"
+          />
+        </div>
+        <div className="flex flex-col items-start justify-center">
+          {isUserLoading ? (
+            <div className="space-y-2 text-right">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-28" />
+            </div>
+          ) : (
             <>
-              <p className="text-sm text-foreground/80">{greeting}</p>
-              <h1 className="font-bold text-lg">{getShortName(user.displayName)}</h1>
+              <p className="text-primary font-normal text-[10px] opacity-70 leading-tight">{greeting}</p>
+              <h1 className="font-black text-foreground text-base tracking-tight leading-tight">{displayName}</h1>
             </>
-           ) : (
-            <>
-              <p className="text-sm text-foreground/80">أهلاً بك</p>
-              <Link href="/login">
-                <h1 className="font-bold text-lg text-primary hover:underline">تسجيل الدخول</h1>
-              </Link>
-            </>
-           )}
+          )}
         </div>
       </div>
-      <button onClick={handleNotificationClick} className="relative p-2">
-        <Bell className="h-6 w-6" />
-        {hasUnread && (
-            <span className="absolute top-1 right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-            </span>
+
+      <button 
+        onClick={handleNotificationClick} 
+        className="relative p-2.5 bg-muted/20 rounded-full border border-border/50"
+      >
+        <Bell className="h-6 w-6 text-primary" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] font-bold animate-in zoom-in">
+            {unreadCount > 9 ? '+9' : unreadCount}
+          </span>
         )}
       </button>
     </header>

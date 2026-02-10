@@ -4,67 +4,126 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Wallet,
   SatelliteDish,
-  Send,
   History,
   Wifi,
-  CreditCard,
   Smartphone,
-  Gamepad2,
-  Bolt,
+  ShoppingBag,
+  ArrowLeftRight,
+  Heart,
+  Ticket,
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
 
 type Service = {
   name: string;
-  icon: LucideIcon | string;
+  icon: LucideIcon;
   href: string;
+  isComingSoon?: boolean;
 };
 
 const services: Service[] = [
-  { name: 'كبينة السداد', icon: Smartphone, href: '/telecom-services' },
+  { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-  { name: 'تحويل لمشترك', icon: Send, href: '/transfer' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
-  { name: 'المدفوعات', icon: Bolt, href: '/payments' },
+  { name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { name: 'المفضلة', icon: Heart, href: '/favorites' },
+  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
+  { name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
 ];
 
 const ServiceItem = ({
   name,
   icon: Icon,
-  href,
   index,
-}: Service & { index: number }) => (
-  <Link
-    href={href}
-    className="group flex flex-col items-center justify-start space-y-2 rounded-xl bg-card p-3 text-center shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 animate-in fade-in-0 zoom-in-95"
-    style={{
-      animationDelay: `${100 + index * 75}ms`,
-      animationFillMode: 'backwards',
-    }}
-  >
-    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted transition-colors group-hover:bg-primary/10">
-      {typeof Icon === 'string' ? (
-        <Image src={Icon} alt={name} width={32} height={32} className="transition-transform group-hover:scale-110 object-contain" />
-      ) : (
-        <Icon className="h-7 w-7 text-primary dark:text-primary-foreground transition-transform group-hover:scale-110" />
-      )}
+  href,
+  onClick,
+}: Service & { index: number; onClick?: () => void }) => {
+  const content = (
+    <div className="group flex flex-col items-center justify-start space-y-2 focus:outline-none animate-in fade-in-0 zoom-in-95 cursor-pointer"
+      style={{
+        animationDelay: `${100 + index * 50}ms`,
+        animationFillMode: 'backwards',
+      }}
+      onClick={onClick}
+    >
+      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-card border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+        <Icon 
+          className="h-10 w-10 transition-transform group-hover:scale-110" 
+          style={{ stroke: 'url(#icon-gradient)' }}
+        />
+      </div>
+      <span className="text-xs font-bold text-primary text-center px-1">{name}</span>
     </div>
-    <span className="h-8 text-xs font-semibold text-foreground/90">{name}</span>
-  </Link>
-);
+  );
+
+  if (href === '#') {
+    return content;
+  }
+
+  return (
+    <Link href={href}>
+      {content}
+    </Link>
+  );
+};
 
 export function ServiceGrid() {
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
+
   return (
-    <div className="relative bg-card rounded-t-3xl pt-2 pb-4">
-      <div className="grid grid-cols-4 gap-3 px-4">
+    <div className="relative bg-background rounded-t-[40px] mt-6 pt-8 pb-4">
+      {/* SVG Gradient Definition */}
+      <svg width="0" height="0" className="absolute">
+        <defs>
+          <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--icon-grad-start)" />
+            <stop offset="100%" stopColor="var(--icon-grad-end)" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      <div className="grid grid-cols-3 gap-y-6 gap-x-4 px-6">
         {services.map((service, index) => (
-          <ServiceItem key={service.name} {...service} index={index} />
+          <ServiceItem 
+            key={service.name} 
+            {...service} 
+            index={index} 
+            onClick={service.isComingSoon ? () => setIsComingSoonOpen(true) : undefined}
+          />
         ))}
       </div>
+
+      <Dialog open={isComingSoonOpen} onOpenChange={setIsComingSoonOpen}>
+        <DialogContent className="rounded-[32px] max-w-sm">
+          <DialogHeader>
+            <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                <Ticket className="text-primary h-8 w-8" />
+            </div>
+            <DialogTitle className="text-center text-xl font-black">قريباً</DialogTitle>
+            <DialogDescription className="text-center text-base font-bold">
+              هذه الخدمة ستكون متاحة قريباً في تحديثات التطبيق القادمة.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-4">
+            <DialogClose asChild>
+              <Button className="w-full rounded-2xl h-12 font-black">حسناً</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

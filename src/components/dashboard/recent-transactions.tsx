@@ -5,7 +5,21 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowDownToLine, ArrowUpFromLine, FileText, SatelliteDish, ChevronLeft, Undo2, CreditCard } from 'lucide-react';
+import { 
+  FileText, 
+  ChevronLeft, 
+  CreditCard,
+  Wallet,
+  Wifi,
+  SatelliteDish,
+  ShoppingBag,
+  ArrowLeftRight,
+  Smartphone,
+  Undo2,
+  TrendingUp,
+  Send,
+  Banknote
+} from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Link from 'next/link';
@@ -18,22 +32,17 @@ type Transaction = {
 };
 
 const getTransactionIcon = (type: string) => {
-    if (type.startsWith('استرجاع')) {
-        return <Undo2 className="h-5 w-5 text-orange-500" />;
-    }
-    if (type.startsWith('تغذية') || type.startsWith('استلام') || type.startsWith('أرباح')) {
-        return <ArrowDownToLine className="h-5 w-5 text-green-500" />;
-    }
-    if (type.startsWith('تحويل') || type.startsWith('سحب')) {
-        return <ArrowUpFromLine className="h-5 w-5 text-destructive" />;
-    }
-    if (type.startsWith('شراء كرت')) {
-        return <CreditCard className="h-5 w-5 text-primary" />;
-    }
-    if (type.startsWith('تجديد')) {
-        return <SatelliteDish className="h-5 w-5 text-primary" />;
-    }
-    return <SatelliteDish className="h-5 w-5 text-primary" />;
+    const t = type.toLowerCase();
+    if (t.includes('استرجاع')) return Undo2;
+    if (t.includes('تغذية') || t.includes('إيداع') || t.includes('استلام')) return Wallet;
+    if (t.includes('تحويل')) return Send;
+    if (t.includes('سحب')) return Banknote;
+    if (t.includes('شراء كرت')) return Wifi;
+    if (t.includes('سداد') || t.includes('رصيد')) return Smartphone;
+    if (t.includes('تجديد') || t.includes('باقة')) return SatelliteDish;
+    if (t.includes('متجر') || t.includes('منتج')) return ShoppingBag;
+    if (t.includes('أرباح')) return TrendingUp;
+    return CreditCard;
 };
 
 export function RecentTransactions() {
@@ -46,7 +55,7 @@ export function RecentTransactions() {
         ? query(
             collection(firestore, 'users', user.uid, 'transactions'),
             orderBy('transactionDate', 'desc'),
-            limit(4)
+            limit(2)
           )
         : null,
     [user, firestore]
@@ -54,78 +63,63 @@ export function RecentTransactions() {
 
   const { data: transactions, isLoading } = useCollection<Transaction>(transactionsQuery);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          {[...Array(2)].map((_, i) => (
-             <div key={i} className="flex items-center justify-between p-3 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </div>
-                <Skeleton className="h-4 w-20" />
-              </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (!transactions || transactions.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center py-10">
-          <FileText className="h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-md font-semibold">لا توجد عمليات بعد</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            ستظهر عملياتك الأخيرة هنا.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-2">
-        {transactions.map((tx) => (
-          <div key={tx.id} className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-full">
-                {getTransactionIcon(tx.transactionType)}
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{tx.transactionType}</p>
-                <p className="text-xs text-muted-foreground">
-                  {format(parseISO(tx.transactionDate), 'd MMM', { locale: ar })}
-                </p>
-              </div>
-            </div>
-            <div className="text-left">
-              <p className={`font-bold text-sm ${tx.transactionType.startsWith('تغذية') || tx.transactionType.startsWith('استلام') || tx.transactionType.startsWith('أرباح') || tx.transactionType.startsWith('استرجاع') ? 'text-green-600' : 'text-destructive'}`}>
-                {tx.amount.toLocaleString('en-US')} ريال
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="px-4 pt-6 animate-in fade-in-0 duration-500">
-        <div className="flex justify-between items-center mb-3 px-2">
-            <h3 className="text-md font-bold">آخر العمليات</h3>
-            <Link href="/transactions" className="flex items-center text-sm text-primary dark:text-primary-foreground font-semibold">
+    <div className="px-4 pt-8 pb-10 animate-in fade-in-0 duration-500">
+        <div className="flex justify-between items-center mb-4 px-2">
+            <h3 className="text-lg font-bold text-primary">آخر العمليات</h3>
+            <Link href="/transactions" className="flex items-center text-sm text-primary font-bold">
                 <span>الكل</span>
                 <ChevronLeft className="h-4 w-4"/>
             </Link>
         </div>
-        <Card>
-            <CardContent className="p-2">
-                 {renderContent()}
-            </CardContent>
-        </Card>
+        
+        <div className="space-y-3">
+            {isLoading ? (
+                [1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-3xl" />)
+            ) : transactions && transactions.length > 0 ? (
+                transactions.map((tx) => {
+                    const isCredit = tx.transactionType.includes('تغذية') || 
+                                   tx.transactionType.includes('استلام') || 
+                                   tx.transactionType.includes('أرباح') || 
+                                   tx.transactionType.includes('استرجاع') || 
+                                   tx.transactionType.includes('إيداع');
+                    
+                    const Icon = getTransactionIcon(tx.transactionType);
+                    
+                    return (
+                        <Card key={tx.id} className="rounded-3xl border-border/50 shadow-sm overflow-hidden bg-card">
+                            <CardContent className="p-4 flex items-center justify-between">
+                                {/* الأيقونة في اليمين */}
+                                <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50 shrink-0">
+                                    <Icon className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
+                                </div>
+
+                                {/* النص في المنتصف */}
+                                <div className="flex-1 text-right mx-4 overflow-hidden">
+                                    <p className="font-bold text-primary text-sm truncate">{tx.transactionType}</p>
+                                    <p className="text-[10px] text-primary/70 font-semibold mt-0.5">
+                                        {tx.transactionDate ? format(parseISO(tx.transactionDate), 'd MMMM', { locale: ar }) : 'منذ فترة'}
+                                    </p>
+                                </div>
+
+                                {/* المبلغ في اليسار */}
+                                <div className="text-left shrink-0">
+                                    <p className={`font-bold text-base ${isCredit ? 'text-green-600' : 'text-destructive'}`}>
+                                        {tx.amount.toLocaleString('en-US')} ر.ي
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">ناجحة</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })
+            ) : (
+                <div className="text-center py-10 bg-muted/10 rounded-3xl">
+                    <FileText className="mx-auto h-10 w-10 text-muted-foreground opacity-30" />
+                    <p className="mt-2 text-xs text-muted-foreground">لا توجد عمليات بعد</p>
+                </div>
+            )}
+        </div>
     </div>
   );
 }

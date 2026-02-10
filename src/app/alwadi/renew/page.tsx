@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 type UserProfile = {
   balance?: number;
@@ -48,12 +49,19 @@ function RenewPageComponent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    if (showSuccessOverlay && audioRef.current) {
+      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    }
+  }, [showSuccessOverlay]);
 
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -142,44 +150,51 @@ function RenewPageComponent() {
         setShowDialog(false);
     });
   };
+
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري إرسال طلبك..." />;
+  }
   
   if (showSuccessOverlay) {
     return (
-      <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-        <Card className="w-full max-w-sm text-center shadow-2xl">
-            <CardContent className="p-6">
-                <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="bg-green-100 p-4 rounded-full">
-                        <CheckCircle className="h-16 w-16 text-green-600" />
-                    </div>
-                    <h2 className="text-xl font-bold">تم تجديد كرتك بنجاح</h2>
-                    
-                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
-                       <div className="flex justify-between">
-                            <span className="text-muted-foreground">الفئة:</span>
-                            <span className="font-semibold">{title}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-semibold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
-                        </div>
+      <>
+        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-[110] flex items-center justify-center animate-in fade-in-0 p-4">
+          <Card className="w-full max-w-sm text-center shadow-2xl">
+              <CardContent className="p-6">
+                  <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="bg-green-100 p-4 rounded-full">
+                          <CheckCircle className="h-16 w-16 text-green-600" />
+                      </div>
+                      <h2 className="text-xl font-bold">تم تجديد كرتك بنجاح</h2>
+                      
+                      <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2">
                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                            <span className="font-semibold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
-                        </div>
-                    </div>
+                              <span className="text-muted-foreground">الفئة:</span>
+                              <span className="font-semibold">{title}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">المبلغ:</span>
+                              <span className="font-semibold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
+                          </div>
+                           <div className="flex justify-between">
+                              <span className="text-muted-foreground">الرصيد المتبقي:</span>
+                              <span className="font-semibold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
+                          </div>
+                      </div>
 
-                    <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                        <Button variant="outline" onClick={() => router.push('/')}>إغلاق</Button>
-                        <Button onClick={() => router.push('/transactions')}>
-                           <History className="ml-2 h-4 w-4" />
-                           العمليات
-                        </Button>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-      </div>
+                      <div className="w-full grid grid-cols-2 gap-3 pt-4">
+                          <Button variant="outline" onClick={() => router.push('/')}>إغلاق</Button>
+                          <Button onClick={() => router.push('/transactions')}>
+                             <History className="ml-2 h-4 w-4" />
+                             العمليات
+                          </Button>
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
@@ -192,7 +207,7 @@ function RenewPageComponent() {
           <CardHeader>
             <CardTitle className="text-center">{title}</CardTitle>
             {price && (
-              <p className="text-center text-2xl font-bold text-primary dark:text-primary-foreground">
+              <p className="text-center text-2xl font-bold text-primary">
                 {Number(price).toLocaleString('en-US')} ريال
               </p>
             )}
@@ -236,7 +251,7 @@ function RenewPageComponent() {
                       {isProcessing ? 'جاري الإرسال...' : 'إرسال طلب التجديد'}
                     </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-lg">
+                <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-center">تأكيد معلومات الطلب</AlertDialogTitle>
                     <AlertDialogDescription asChild>
@@ -252,7 +267,7 @@ function RenewPageComponent() {
                         </div>
                          <div className="flex justify-between items-center">
                            <span>المبلغ:</span>
-                           <span className="font-bold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
+                           <span className="font-bold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
                         </div>
                       </div>
                     </AlertDialogDescription>

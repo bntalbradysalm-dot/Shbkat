@@ -14,7 +14,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
-    className={cn("border-b-0", className)} // Changed border-b to border-b-0 to remove default line
+    className={cn("border-b", className)}
     {...props}
   />
 ))

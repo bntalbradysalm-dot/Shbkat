@@ -186,7 +186,15 @@ export default function BillPaymentRequestsPage() {
     }
     setIsCheckingStatus(true);
     try {
-        const response = await fetch(`/api/echehanly?service=info&action=status&mobile=${selectedRequest.targetPhoneNumber}&transid=${selectedRequest.transid}`);
+        const response = await fetch(`/api/telecom`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'status',
+                mobile: selectedRequest.targetPhoneNumber,
+                transid: selectedRequest.transid,
+            })
+        });
         const data: OperationStatus = await response.json();
 
         if (!response.ok) {

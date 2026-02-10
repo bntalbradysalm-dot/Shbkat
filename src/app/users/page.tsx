@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import {
   User as UserIcon,
+  Users,
   Search,
   Trash2,
   Edit,
@@ -43,6 +44,8 @@ import {
   PlusCircle,
   Crown,
   Wallet,
+  Banknote,
+  FileText,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -52,7 +55,9 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -62,57 +67,6 @@ type User = {
   balance?: number;
   accountType?: 'user' | 'network-owner';
 };
-
-const AgentBalanceCard = () => {
-    const [balance, setBalance] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        const fetchAgentBalance = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch('/api/echehanly?service=info&action=balance');
-                const data = await response.json();
-                if (response.ok) {
-                    setBalance(data.balance);
-                } else {
-                    throw new Error(data.message || 'Failed to fetch agent balance.');
-                }
-            } catch (error: any) {
-                toast({
-                    variant: 'destructive',
-                    title: 'خطأ في جلب رصيد الوكيل',
-                    description: error.message,
-                });
-                setBalance(null);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAgentBalance();
-    }, [toast]);
-
-    return (
-        <Card className="shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">رصيد الوكيل (اشحن لي)</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <Skeleton className="h-6 w-32" />
-                ) : (
-                    <div className="text-2xl font-bold text-blue-600">
-                        {balance !== null ? `${Number(balance).toLocaleString('en-US')} ريال` : 'تعذر الجلب'}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
-
 
 export default function UsersPage() {
   const firestore = useFirestore();
@@ -124,6 +78,8 @@ export default function UsersPage() {
   const [isTopUpDialogOpen, setIsTopUpDialogOpen] = useState(false);
   const [isManualDepositOpen, setIsManualDepositOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   const { toast } = useToast();
@@ -134,6 +90,11 @@ export default function UsersPage() {
   );
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
+
+  const totalBalance = useMemo(() => {
+    if (!users) return 0;
+    return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
+  }, [users]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -314,6 +275,64 @@ export default function UsersPage() {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (!selectedUser || !withdrawAmount || !firestore) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صالح." });
+      return;
+    }
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال مبلغ صالح." });
+      return;
+    }
+    if ((selectedUser.balance ?? 0) < amount) {
+        toast({
+            variant: "destructive",
+            title: "رصيد غير كافٍ",
+            description: `رصيد العميل (${(selectedUser.balance ?? 0).toLocaleString('en-US')}) غير كافٍ لسحب مبلغ ${amount.toLocaleString('en-US')}.`,
+        });
+        return;
+    }
+  
+    const userDocRef = doc(firestore, 'users', selectedUser.id);
+    const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
+  
+    try {
+      const batch = writeBatch(firestore);
+      
+      batch.update(userDocRef, { balance: increment(-amount) });
+      
+      const transactionDoc = doc(userTransactionsRef);
+      batch.set(transactionDoc, {
+        userId: selectedUser.id,
+        transactionDate: new Date().toISOString(),
+        amount: amount,
+        transactionType: 'سحب نقدي',
+        notes: 'سحب نقدي من قبل الإدارة',
+      });
+        
+      await batch.commit();
+
+      toast({
+        title: "نجاح",
+        description: `تم سحب ${amount.toLocaleString('en-US')} ريال من حساب ${selectedUser.displayName}.`,
+      });
+
+      setIsWithdrawDialogOpen(false);
+      setWithdrawAmount('');
+      setSelectedUser(null);
+
+    } catch (e) {
+      console.error('Error during withdrawal:', e);
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "فشلت عملية السحب.",
+      });
+    }
+  };
+
+
   const openWhatsAppWithMessage = (phoneNumber: string) => {
     const message = encodeURIComponent('السلام عليكم');
     const whatsappUrl = `https://api.whatsapp.com/send?phone=967${phoneNumber}&text=${message}`;
@@ -337,10 +356,13 @@ export default function UsersPage() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <p className="text-center">جاري تحميل المستخدمين...</p>;
+      return <div className="space-y-3">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>;
     }
     if (error) {
-      // The FirebaseErrorListener will catch and display the error overlay
       return <p className="text-center text-destructive">حدث خطأ أثناء جلب المستخدمين.</p>;
     }
     if (!filteredUsers || filteredUsers.length === 0) {
@@ -380,71 +402,109 @@ export default function UsersPage() {
                       {(user.balance ?? 0).toLocaleString('en-US')} ريال
                   </div>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <div className="flex gap-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-8 w-8">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            هل تريد بالتأكيد حذف المستخدم "{user.displayName}"؟ لا يمكن التراجع عن هذا الإجراء.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
-                            حذف
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
-                      <Edit className="h-4 w-4" />
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <Link href={`/users/${user.id}/report`} title="عرض التقرير">
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                        <FileText className="h-4 w-4" />
                     </Button>
+                </Link>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon" className="h-8 w-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        هل تريد بالتأكيد حذف المستخدم "{user.displayName}"؟ لا يمكن التراجع عن هذا الإجراء.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-                    <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
-                      if (!isOpen) {
-                          setIsManualDepositOpen(false);
-                          setSelectedUser(null);
-                          setTopUpAmount('');
-                      }
-                    }}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => {
-                            setSelectedUser(user);
-                            setIsManualDepositOpen(true);
-                        }}>
-                            <Wallet className="ml-1 h-4 w-4" />
-                            إيداع مع إبلاغ
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                              <DialogTitle>إيداع مع إبلاغ</DialogTitle>
-                              <DialogDescription>
-                                  أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
-                              </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="deposit-amount" className="text-right col-span-1">المبلغ</Label>
-                                  <Input id="deposit-amount" type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
-                              </div>
+                <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                
+                <Dialog open={isWithdrawDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                      setIsWithdrawDialogOpen(false);
+                      setSelectedUser(null);
+                      setWithdrawAmount('');
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                      <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => {
+                          setSelectedUser(user);
+                          setIsWithdrawDialogOpen(true);
+                      }}>
+                          <Banknote className="h-4 w-4" />
+                      </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                          <DialogTitle>سحب نقدي</DialogTitle>
+                          <DialogDescription>
+                              أدخل المبلغ المراد سحبه من حساب {selectedUser?.displayName}. رصيده الحالي: {(selectedUser?.balance ?? 0).toLocaleString('en-US')} ريال.
+                          </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="withdraw-amount" className="text-right col-span-1">المبلغ</Label>
+                              <Input id="withdraw-amount" type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
                           </div>
-                          <DialogFooter>
-                              <Button type="submit" onClick={handleManualDeposit}>تأكيد الإيداع</Button>
-                              <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
-                          </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                      </div>
+                      <DialogFooter>
+                          <Button type="submit" onClick={handleWithdraw}>تأكيد السحب</Button>
+                          <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                      </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
-                </div>
+
+                <Dialog open={isManualDepositOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                      setIsManualDepositOpen(false);
+                      setSelectedUser(null);
+                      setTopUpAmount('');
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                        setSelectedUser(user);
+                        setIsManualDepositOpen(true);
+                    }}>
+                        <Wallet className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                          <DialogTitle>إيداع مع إبلاغ</DialogTitle>
+                          <DialogDescription>
+                              أدخل المبلغ لإضافته إلى رصيد {selectedUser?.displayName} وإبلاغه عبر واتساب.
+                          </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="deposit-amount" className="text-right col-span-1">المبلغ</Label>
+                              <Input id="deposit-amount" type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="col-span-3" placeholder="ادخل المبلغ بالريال اليمني" />
+                          </div>
+                      </div>
+                      <DialogFooter>
+                          <Button type="submit" onClick={handleManualDeposit}>تأكيد الإيداع</Button>
+                          <DialogClose asChild><Button type="button" variant="secondary">إلغاء</Button></DialogClose>
+                      </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
                  <Dialog open={isTopUpDialogOpen && selectedUser?.id === user.id} onOpenChange={(isOpen) => {
                     if (!isOpen) {
                         setIsTopUpDialogOpen(false);
@@ -453,12 +513,11 @@ export default function UsersPage() {
                     }
                  }}>
                     <DialogTrigger asChild>
-                        <Button variant="default" size="sm" onClick={() => {
+                        <Button variant="default" size="icon" className="h-8 w-8" onClick={() => {
                             setSelectedUser(user);
                             setIsTopUpDialogOpen(true);
                         }}>
-                            <PlusCircle className="ml-1 h-4 w-4" />
-                            تغذية
+                            <PlusCircle className="h-4 w-4" />
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
@@ -506,7 +565,46 @@ export default function UsersPage() {
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AgentBalanceCard />
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-32" />
+                ) : (
+                  <div className="text-2xl font-bold text-primary">
+                    {totalBalance.toLocaleString('en-US')}
+                    <span className="text-base ml-1"> ريال</span>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  مجموع أرصدة المستخدمين.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <div className="text-2xl font-bold">
+                    {(users?.length ?? 0).toLocaleString('en-US')}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  إجمالي الحسابات المسجلة.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input

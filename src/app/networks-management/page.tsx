@@ -154,7 +154,7 @@ export default function NetworksManagementPage() {
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
                               <div className='p-2 bg-primary/10 rounded-full'>
-                               <Wifi className="h-6 w-6 text-primary dark:text-primary-foreground" />
+                               <Wifi className="h-6 w-6 text-primary" />
                               </div>
                               <div>
                                 <p className="font-semibold">{network.name}</p>

@@ -1,13 +1,13 @@
 'use client';
 
-import { Home, Users, ListChecks, User, Wifi, Repeat, DollarSign } from 'lucide-react';
+import { Home, Users, User, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import { cn } from '@/lib/utils';
 
 const allNavItems = [
   { name: 'الرئيسية', icon: Home, href: '/login', roles: ['admin', 'user'] },
@@ -31,10 +31,9 @@ function NavItems() {
   
   const getActiveState = (href: string) => {
     if (href === '/login') return pathname === '/login';
-    if (href === '/renewal-requests') return pathname.startsWith('/renewal-requests') || pathname.startsWith('/withdrawal-requests');
+    if (href === '/renewal-requests') return pathname.startsWith('/renewal-requests') || pathname.startsWith('/withdrawal-requests') || pathname.startsWith('/bill-payment-requests') || pathname.startsWith('/store-orders');
     return pathname.startsWith(href);
   };
-
 
   const renewalRequestsQuery = useMemoFirebase(
     () =>
@@ -73,9 +72,9 @@ function NavItems() {
     return (
        <>
         {itemsToShow.map(item => (
-            <div key={item.name} className="flex flex-col items-center justify-center space-y-1 p-2 rounded-md w-1/5">
+            <div key={item.name} className="flex flex-col items-center justify-center space-y-1 p-2 w-1/4">
                 <Skeleton className="h-6 w-6 rounded-md" />
-                <Skeleton className="h-4 w-12 rounded-md" />
+                <Skeleton className="h-2 w-10 rounded-md" />
             </div>
         ))}
        </>
@@ -86,33 +85,37 @@ function NavItems() {
      <>
       {navItems.map(item => {
         const isActive = getActiveState(item.href);
-        const showIndicator = (item.href === '/renewal-requests' || item.href === '/withdrawal-requests') && totalPending > 0;
+        const isRequests = item.href === '/renewal-requests';
+        const showIndicator = isRequests && totalPending > 0;
 
         return (
           <Link
             key={item.name}
             href={item.href}
-            className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
-              isActive
-                ? 'text-primary dark:text-primary-foreground'
-                : 'text-muted-foreground hover:text-primary dark:hover:text-primary-foreground'
-            }`}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            {isActive && (
-              <div className="absolute top-0 h-1 w-8 rounded-full bg-primary" />
+            className={cn(
+                "relative flex flex-col items-center justify-center transition-all duration-300 flex-1 group py-1",
+                isActive ? "text-primary" : "text-muted-foreground/60 hover:text-primary/70"
             )}
-
-            <div className="relative">
-              <item.icon className="h-6 w-6" />
+          >
+            <div className="relative py-1">
+              <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
               {showIndicator && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-white text-[10px]">
-                  {totalPending}
+                <span className="absolute -top-1 -right-2 flex h-4 w-4 min-w-[18px] min-h-[18px] items-center justify-center rounded-full bg-destructive text-white text-[9px] font-black border-2 border-background shadow-sm">
+                  {totalPending > 9 ? '+9' : totalPending}
                 </span>
               )}
             </div>
             
-            <span className="text-xs font-medium">{item.name}</span>
+            <span className={cn(
+                "text-[9px] font-bold transition-all duration-300",
+                isActive ? "opacity-100 scale-105" : "opacity-70"
+            )}>
+                {item.name}
+            </span>
+
+            {isActive && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full animate-in zoom-in" />
+            )}
           </Link>
         );
       })}
@@ -122,10 +125,10 @@ function NavItems() {
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-md border-t bg-card/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 items-center justify-around px-2">
-        <NavItems />
-      </div>
-    </nav>
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-[340px]">
+        <nav className="flex h-14 items-center justify-around bg-card/90 dark:bg-slate-950/90 backdrop-blur-xl border border-border/50 shadow-2xl rounded-full px-4">
+            <NavItems />
+        </nav>
+    </div>
   );
 }

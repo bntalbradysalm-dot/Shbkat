@@ -1,94 +1,29 @@
 
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
 import Image from "next/image";
-import Link from "next/link";
 import React from 'react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
-type Advertisement = {
-    id: string;
-    imageUrl: string;
-    linkUrl?: string;
-};
+interface PromotionalImageProps {
+    disableLink?: boolean;
+}
 
-export function PromotionalImage() {
-    const firestore = useFirestore();
-    const { user } = useUser();
-    
-    const adsCollection = useMemoFirebase(
-      () => (firestore && user ? collection(firestore, 'advertisements') : null),
-      [firestore, user]
-    );
-
-    const { data: ads, isLoading } = useCollection<Advertisement>(adsCollection);
-
-    const promoImage = (ad: Advertisement) => (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-lg">
-            <div className="relative aspect-[16/9] w-full">
-                <Image
-                    src={ad.imageUrl}
-                    alt="Promotional Banner"
+/**
+ * مكون يعرض شعار التطبيق الرئيسي بدلاً من الإعلانات المتغيرة.
+ * يستخدم في صفحة تسجيل الدخول والواجهات الرئيسية لتعزيز الهوية البصرية.
+ */
+export function PromotionalImage({ disableLink = false }: PromotionalImageProps) {
+    return (
+        <div className="flex justify-center items-center py-6 animate-in fade-in-0 zoom-in-95 duration-700">
+            <div className="relative w-[150px] h-[150px] overflow-hidden rounded-[40px] shadow-2xl border-4 border-white/20 dark:border-primary/20 bg-card">
+                <Image 
+                    src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                    alt="Shabakat Wallet Logo" 
                     fill
-                    className="object-cover"
+                    className="object-cover p-1"
+                    priority
                 />
             </div>
-        </Card>
-    );
-    
-    if (isLoading) {
-        return (
-             <div className="px-4 pt-4">
-                <Skeleton className="w-full aspect-[16/9] rounded-2xl" />
-            </div>
-        )
-    }
-    
-    if (!ads || ads.length === 0) {
-        return null;
-    }
-
-    return (
-        <div className="pt-4 animate-in fade-in-0 zoom-in-95 duration-500">
-          <div className="px-4">
-            <Carousel
-                className="w-full"
-                plugins={[
-                    Autoplay({
-                        delay: 3000,
-                        stopOnInteraction: false,
-                    }),
-                ]}
-                opts={{
-                    loop: true,
-                }}
-            >
-                <CarouselContent>
-                    {ads.map((ad) => (
-                        <CarouselItem key={ad.id}>
-                           <div className="p-1">
-                                {ad.linkUrl ? (
-                                    <Link href={ad.linkUrl} className="block">
-                                        {promoImage(ad)}
-                                    </Link>
-                                ) : (
-                                    promoImage(ad)
-                                )}
-                           </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-            </Carousel>
-          </div>
         </div>
     );
 }

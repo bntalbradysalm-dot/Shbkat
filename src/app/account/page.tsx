@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -11,7 +11,6 @@ import {
   Users,
   Wifi,
   CreditCard,
-  ImageIcon,
   BarChart3,
   Wallet,
   Megaphone,
@@ -24,13 +23,10 @@ import {
   Sun,
   Moon,
   SatelliteDish,
-  Users2,
-  Loader2,
+  ShoppingBag,
+  PackageCheck,
   ListChecks,
-  Repeat,
-  ClipboardList,
   Banknote,
-  Upload,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -48,16 +44,17 @@ import {
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+export const dynamic = 'force-dynamic';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
+  { title: 'إدارة المتجر', icon: ShoppingBag, href: '/store-management' },
+  { title: 'طلبات المتجر', icon: PackageCheck, href: '/store-orders' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
@@ -67,12 +64,6 @@ const managementLinks = [
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
   { title: 'إرسال إشعارات', icon: Send, href: '/send-notifications' },
   { title: 'إعدادات التطبيق', icon: Settings, href: '/app-settings' },
-];
-
-const appSettingsLinks = [
-    { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
-    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=' },
 ];
 
 const userAppSettingsLinks = [
@@ -95,18 +86,37 @@ type AppSettings = {
     supportPhoneNumber: string;
 };
 
-const LoadingSpinner = () => (
-  <div className="flex flex-col justify-center items-center h-screen bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <Image
-        src="https://i.postimg.cc/CMjm7nHT/20251116-001234.png"
-        alt="logo"
-        width={160}
-        height={160}
-        className="object-contain"
-      />
-      <Loader2 className="h-6 w-6 animate-spin text-black dark:text-white" />
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path
+          d="M15 25 A10 10 0 0 0 35 25"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40 15 A15 15 0 0 1 40 35"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className="opacity-30"
+        />
+      </svg>
     </div>
+  </div>
+);
+
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
+    <CustomLoader />
   </div>
 );
 
@@ -189,56 +199,56 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden rounded-2xl shadow-lg bg-primary text-primary-foreground">
-          <CardContent className="p-4 flex items-center gap-4">
-             <Avatar className="h-14 w-14 border-2 border-primary-foreground/50">
-                <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName || 'User'} />
-                <AvatarFallback>
-                    <User className="h-8 w-8" />
-                </AvatarFallback>
-            </Avatar>
-            <div className="flex-grow">
-              <h2 className="text-sm font-bold">{userProfile?.displayName || 'مستخدم جديد'}</h2>
-              <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
-                <div className="flex items-center">
-                  <Phone className="ml-2 h-3 w-3" />
-                  <span>{userProfile?.phoneNumber || '...'}</span>
+        <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="flex-grow text-right">
+              <h2 className="text-lg font-black text-white">{userProfile?.displayName || 'مستخدم جديد'}</h2>
+              <div className="text-xs text-white/80 mt-1.5 space-y-1.5">
+                <div className="flex items-center justify-start gap-2">
+                  <Phone className="h-3.5 w-3.5 opacity-70" />
+                  <span className="font-bold text-white/90">{userProfile?.phoneNumber || '...'}</span>
                 </div>
-                <div className="flex items-center">
-                  <MapPin className="ml-2 h-3 w-3" />
-                  <span>{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
+                <div className="flex items-center justify-start gap-2">
+                  <MapPin className="h-3.5 w-3.5 opacity-70" />
+                  <span className="font-bold text-white/90">{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
                 </div>
               </div>
             </div>
+            <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl">
+                <AvatarImage src={userProfile?.photoURL} />
+                <AvatarFallback>
+                    <User className="h-8 w-8 text-white" />
+                </AvatarFallback>
+            </Avatar>
           </CardContent>
         </Card>
         
         <div>
-            <h3 className="text-xs font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
+            <h3 className="text-xs font-black text-muted-foreground text-center mb-3 uppercase tracking-widest">الوضع المفضل</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleThemeChange('light')}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl cursor-pointer transition-all w-full border-2 bg-card',
                   activeTheme === 'light'
-                    ? 'border-primary text-primary dark:text-primary-foreground'
+                    ? 'border-primary text-primary shadow-md scale-[1.02]'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
                 <Sun className="h-5 w-5" />
-                <span className="text-xs font-semibold">فاتح</span>
+                <span className="text-xs font-bold">فاتح</span>
               </button>
               <button
                 onClick={() => handleThemeChange('dark')}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl cursor-pointer transition-all w-full border-2 bg-card',
                   activeTheme === 'dark'
-                    ? 'border-primary text-primary dark:text-primary-foreground'
+                    ? 'border-primary text-primary shadow-md scale-[1.02]'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
                 <Moon className="h-5 w-5" />
-                <span className="text-xs font-semibold">داكن</span>
+                <span className="text-xs font-bold">داكن</span>
               </button>
             </div>
         </div>
@@ -247,13 +257,13 @@ export default function AccountPage() {
           <>
             <div>
               <div className="flex items-center justify-center gap-2 mb-3">
-                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <LayoutGrid className="h-4 w-4 text-primary" />
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">
                   لوحة التحكم
                 </h3>
               </div>
 
-              <Card className="bg-card">
+              <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   {managementLinks.map((link, index) => {
                     const Icon = link.icon;
@@ -261,13 +271,13 @@ export default function AccountPage() {
                         <a
                         href={link.href}
                         key={link.title}
-                        className={`group flex items-center justify-between p-3 cursor-pointer ${
-                            index < managementLinks.length - 1 ? 'border-b' : ''
+                        className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                            index < managementLinks.length - 1 ? 'border-b border-muted' : ''
                         }`}
                         >
                         <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-semibold">{link.title}</span>
+                            <Icon className="h-5 w-5 text-primary" />
+                            <span className="text-sm font-bold text-foreground">{link.title}</span>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                         </a>
@@ -279,13 +289,13 @@ export default function AccountPage() {
           
             <div>
               <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                   إعدادات الواجهة والتطبيق
                 </h3>
               </div>
-               <Card className="bg-card">
+               <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                  <CardContent className="p-0">
-                    {appSettingsLinks.map((link, index) => {
+                    {userAppSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
                       const isShareButton = link.id === 'share-app';
                       const isHelpButton = link.id === 'help-center';
@@ -295,13 +305,13 @@ export default function AccountPage() {
                         <div
                         key={link.id}
                         onClick={isShareButton ? handleShare : undefined}
-                        className={`group flex items-center justify-between p-3 cursor-pointer ${
-                            index < appSettingsLinks.length - 1 ? 'border-b' : ''
+                        className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                            index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
                         }`}
                         >
                         <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-semibold">{link.title}</span>
+                            <Icon className="h-5 w-5 text-primary" />
+                            <span className="text-sm font-bold text-foreground">{link.title}</span>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                         </div>
@@ -338,11 +348,11 @@ export default function AccountPage() {
         {!isUserAdmin && (
             <div>
                 <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                    <h3 className="text-xs font-semibold text-muted-foreground">
+                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                     الإعدادات
                     </h3>
                 </div>
-                <Card className="bg-card">
+                <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                     <CardContent className="p-0">
                     {userAppSettingsLinks.map((link, index) => {
                        const Icon = link.icon;
@@ -354,13 +364,13 @@ export default function AccountPage() {
                          <div
                          key={link.id}
                          onClick={isShareButton ? handleShare : undefined}
-                         className={`group flex items-center justify-between p-3 cursor-pointer ${
-                             index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
+                         className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                             index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
                          }`}
                          >
                          <div className="flex items-center gap-3">
-                             <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                             <span className="text-xs font-semibold">{link.title}</span>
+                             <Icon className="h-5 w-5 text-primary" />
+                             <span className="text-sm font-bold text-foreground">{link.title}</span>
                          </div>
                          <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                          </div>
@@ -393,31 +403,31 @@ export default function AccountPage() {
             </div>
         )}
 
-        <div className="pt-4">
+        <div className="pt-4 pb-8">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Card className="bg-card cursor-pointer">
+              <Card className="bg-card cursor-pointer rounded-2xl border-none shadow-sm hover:bg-destructive/5 transition-colors">
                   <CardContent className="p-0">
-                      <button className="group flex items-center justify-center p-3 w-full">
-                        <div className="flex items-center gap-3 text-destructive dark:text-white">
+                      <button className="group flex items-center justify-center p-4 w-full">
+                        <div className="flex items-center gap-3 text-destructive">
                             <LogOut className="h-5 w-5" />
-                            <span className="text-xs font-semibold">تسجيل الخروج</span>
+                            <span className="text-sm font-black uppercase tracking-widest">تسجيل الخروج</span>
                         </div>
                       </button>
                   </CardContent>
               </Card>
             </AlertDialogTrigger>
-            <AlertDialogContent className="rounded-lg">
+            <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد من تسجيل الخروج؟</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="text-center font-black">هل أنت متأكد؟</AlertDialogTitle>
+                <AlertDialogDescription className="text-center">
                   سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق. ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout}>
-                  تأكيد
+              <AlertDialogFooter className="flex-row gap-3 pt-4">
+                <AlertDialogCancel className="flex-1 rounded-2xl">إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="flex-1 rounded-2xl bg-destructive hover:bg-destructive/90">
+                  تأكيد الخروج
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

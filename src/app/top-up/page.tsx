@@ -1,19 +1,21 @@
-
 'use client';
 
-import React, { useState, useMemo, ChangeEvent, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Send } from 'lucide-react';
+import { Copy, MessageCircle, Wallet, Banknote, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+export const dynamic = 'force-dynamic';
 
 type PaymentMethod = {
   id: string;
@@ -23,13 +25,13 @@ type PaymentMethod = {
   logoUrl?: string;
 };
 
+type AppSettings = {
+    supportPhoneNumber: string;
+};
+
 type UserProfile = {
     displayName?: string;
     phoneNumber?: string;
-};
-
-type AppSettings = {
-    supportPhoneNumber?: string;
 };
 
 const getLogoSrc = (url?: string) => {
@@ -41,30 +43,30 @@ const getLogoSrc = (url?: string) => {
 
 export default function TopUpPage() {
     const firestore = useFirestore();
-    const router = useRouter();
     const { toast } = useToast();
     const { user } = useUser();
     
+    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+    const [amount, setAmount] = useState('');
+
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
       [firestore, user]
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+    const settingsDocRef = useMemoFirebase(
+        () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
+        [firestore]
+    );
+    const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
     
     const methodsCollection = useMemoFirebase(
         () => (firestore ? collection(firestore, 'paymentMethods') : null),
         [firestore]
     );
     const { data: paymentMethods, isLoading: isLoadingMethods } = useCollection<PaymentMethod>(methodsCollection);
-    
-    const settingsDocRef = useMemoFirebase(
-        () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
-        [firestore]
-    );
-    const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
-    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-    
     useEffect(() => {
         if (!selectedMethod && paymentMethods && paymentMethods.length > 0) {
             setSelectedMethod(paymentMethods[0]);
@@ -79,34 +81,31 @@ export default function TopUpPage() {
         });
     };
 
-    const handleSendReceipt = () => {
-        if (!selectedMethod || !userProfile || !appSettings?.supportPhoneNumber) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'معلومات الدعم أو المستخدم غير متوفرة. لا يمكن إرسال الرسالة.',
-            });
+    const handleSendRequest = () => {
+        if (!selectedMethod || !amount || !userProfile) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إكمال البيانات.' });
             return;
         }
 
-        const userName = userProfile.displayName || 'غير معروف';
-        const userPhone = userProfile.phoneNumber || 'غير معروف';
-        const bankName = selectedMethod.name;
+        const phone = appSettings?.supportPhoneNumber;
+        if (!phone) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'رقم الدعم غير متوفر حالياً.' });
+            return;
+        }
 
-        const message = `مرحباً، أود تأكيد عملية إيداع.
-- اسمي: ${userName}
-- رقمي: ${userPhone}
-- البنك: ${bankName}
-- الإيصال مرفق.`;
+        const message = `*طلب إيداع رصيد جديد* 💰\n\n` +
+            `👤 *اسم العميل:* ${userProfile.displayName || 'غير معروف'}\n` +
+            `📱 *رقم الهاتف:* ${userProfile.phoneNumber || 'غير معروف'}\n` +
+            `💵 *المبلغ:* ${Number(amount).toLocaleString('en-US')} ريال\n` +
+            `🏦 *طريقة التحويل:* ${selectedMethod.name}\n\n` +
+            `_الرجاء إرسال صورة الإيصال بعد هذه الرسالة لتأكيد العملية_`;
 
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}&text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
     };
 
-    const isLoading = isLoadingMethods;
-
     const renderPaymentMethods = () => {
-        if (isLoading) {
+        if (isLoadingMethods) {
             return (
                 <div className="grid grid-cols-2 gap-4 px-4">
                     {[...Array(2)].map((_, i) => (
@@ -123,9 +122,6 @@ export default function TopUpPage() {
             return (
                 <div className="flex flex-col items-center justify-center text-center h-40 px-4">
                     <p className="mt-4 text-lg font-semibold">لا توجد طرق دفع متاحة</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        الرجاء إضافة طرق دفع من لوحة التحكم.
-                    </p>
                 </div>
             );
         }
@@ -158,65 +154,80 @@ export default function TopUpPage() {
     };
 
     return (
-        <>
-            <div className="flex flex-col h-full bg-background">
-                <SimpleHeader title="غذي حسابك" />
-                <div className="flex-1 overflow-y-auto space-y-6">
-                    <div className="pt-4">
-                        <div className="px-4">
-                            <h2 className="text-lg font-bold">1. اختر طريقة الدفع</h2>
-                            <p className="text-sm text-muted-foreground">اختر الحساب الذي تود التحويل إليه.</p>
-                        </div>
-                        <div className="mt-4">
-                            {renderPaymentMethods()}
-                        </div>
+        <div className="flex flex-col h-full bg-background">
+            <SimpleHeader title="إيداع رصيد" />
+            <div className="flex-1 overflow-y-auto space-y-6">
+                <div className="pt-4">
+                    <div className="px-4">
+                        <h2 className="text-lg font-bold">1. اختر طريقة التحويل</h2>
+                        <p className="text-sm text-muted-foreground">حول المبلغ إلى أحد حساباتنا الظاهرة أدناه.</p>
                     </div>
+                    <div className="mt-4">
+                        {renderPaymentMethods()}
+                    </div>
+                </div>
 
-                    {selectedMethod && (
-                        <div className="animate-in fade-in-0 duration-300 px-4">
-                            <h2 className="text-lg font-bold">2. حوّل المبلغ إلى الحساب التالي</h2>
-                            <Card className="mt-4">
-                                <CardContent className="p-4 text-center space-y-3">
-                                     <Image 
-                                        src={getLogoSrc(selectedMethod.logoUrl)} 
-                                        alt={selectedMethod.name} 
-                                        width={56} 
-                                        height={56} 
-                                        className="rounded-xl object-contain mx-auto" 
-                                    />
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">حول إلى حساب</p>
-                                        <p className="text-lg font-bold">{selectedMethod.accountHolderName}</p>
-                                    </div>
-                                    <div className="flex items-center justify-center bg-muted p-2 rounded-lg gap-1">
-                                        <Button variant="ghost" size="sm" onClick={() => handleCopy(selectedMethod.accountNumber)}>
-                                            <Copy className="ml-1 h-3 w-3" />
-                                            نسخ
-                                        </Button>
-                                        <p className="text-lg font-mono tracking-wider text-primary dark:text-primary-foreground">{selectedMethod.accountNumber}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
-                    
-                    {selectedMethod && (
-                       <div className="animate-in fade-in-0 duration-300 delay-150 px-4 pb-4">
-                           <h2 className="text-lg font-bold">3. إرسال الإيصال</h2>
-                           <p className="text-sm text-muted-foreground mt-1">بعد التحويل، أرسل الإيصال عبر واتساب لتأكيد الإيداع.</p>
-                           <Card className="mt-4">
-                               <CardContent className="p-4 space-y-4">
-                                    <Button className="w-full h-12 text-base" onClick={handleSendReceipt} disabled={!appSettings?.supportPhoneNumber}>
-                                        <Send className="ml-2 h-4 w-4" />
-                                        إرسال الإيصال عبر واتساب
+                {selectedMethod && (
+                    <div className="animate-in fade-in-0 duration-300 px-4">
+                        <h2 className="text-lg font-bold">2. بيانات الحساب المختارة</h2>
+                        <Card className="mt-4 border-primary/20">
+                            <CardContent className="p-4 text-center space-y-3">
+                                 <Image 
+                                    src={getLogoSrc(selectedMethod.logoUrl)} 
+                                    alt={selectedMethod.name} 
+                                    width={56} 
+                                    height={56} 
+                                    className="rounded-xl object-contain mx-auto" 
+                                />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">اسم صاحب الحساب</p>
+                                    <p className="text-lg font-bold">{selectedMethod.accountHolderName}</p>
+                                </div>
+                                <div className="flex items-center justify-center bg-muted p-2 rounded-lg gap-1 border border-primary/10">
+                                    <Button variant="ghost" size="sm" onClick={() => handleCopy(selectedMethod.accountNumber)} className="text-primary font-bold">
+                                        <Copy className="ml-1 h-3 w-3" />
+                                        نسخ
                                     </Button>
-                               </CardContent>
-                           </Card>
-                       </div>
-                    )}
+                                    <p className="text-lg font-mono tracking-wider text-primary dark:text-primary-foreground">{selectedMethod.accountNumber}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+                
+                <div className="px-4 pb-10 space-y-4">
+                    <h2 className="text-lg font-bold">3. تأكيد عملية الإيداع</h2>
+                    <Card className="shadow-md">
+                        <CardContent className="p-4 space-y-4">
+                            <div className='space-y-2'>
+                                <Label htmlFor="amount" className="flex items-center gap-2 text-muted-foreground">
+                                    <Wallet className="h-4 w-4 text-primary" />
+                                    المبلغ الذي قمت بتحويله (بالريال)
+                                </Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    inputMode='numeric'
+                                    placeholder="0.00"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="text-right h-12 text-xl font-bold border-2 focus-visible:ring-primary"
+                                />
+                            </div>
+                            <Button className="w-full h-14 text-lg font-bold shadow-lg" onClick={handleSendRequest} disabled={!amount || !selectedMethod}>
+                                <MessageCircle className="ml-2 h-6 w-6" />
+                                إرسال الإيصال عبر واتساب
+                            </Button>
+                            <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                                <p className="text-xs text-center text-muted-foreground leading-relaxed">
+                                    بعد الضغط على الزر، سيتم فتح محادثة الواتساب مع الإدارة. يرجى إرسال الرسالة التلقائية ثم إرفاق صورة الإيصال ليتم إضافة الرصيد لحسابك.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
             <Toaster />
-        </>
+        </div>
     );
 }

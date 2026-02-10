@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useEffect, useState, Suspense, useMemo } from 'react';
-import { useSearchParams, useParams } from 'next/navigation';
+import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
+import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, CheckCircle, Copy, AlertCircle, Database } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database, MessageSquare, Smartphone } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +19,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Separator } from '@/components/ui/separator';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type CardCategory = {
     id: number;
@@ -29,6 +42,7 @@ type CardCategory = {
     price: number;
     dataLimit?: string;
     expirationDate?: string;
+    count?: number;
 };
 
 type NetworkCard = {
@@ -60,6 +74,7 @@ function NetworkPurchasePageComponent() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [categories, setCategories] = useState<CardCategory[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
@@ -69,6 +84,9 @@ function NetworkPurchasePageComponent() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
+  const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
+  const [smsRecipient, setSmsRecipient] = useState('');
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -99,6 +117,12 @@ function NetworkPurchasePageComponent() {
     [user, firestore]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  
+  useEffect(() => {
+    if (purchasedCard) {
+        audioRef.current?.play().catch(e => console.error("Audio playback failed:", e));
+    }
+  }, [purchasedCard]);
 
   const handlePurchase = async () => {
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef) return;
@@ -131,33 +155,33 @@ function NetworkPurchasePageComponent() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
+            throw new Error(errorData?.error?.message?.ar || errorData?.message || 'فشل إنشاء الطلب.');
         }
 
         const result: OrderResponse = await response.json();
         const cardData = result.data.order.card;
         
-        // Firestore batch write
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
 
-        // 1. Deduct balance from user
         batch.update(userDocRef!, { balance: increment(-categoryPrice) });
 
-        // 2. Create a transaction record for buyer
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
-        batch.set(buyerTransactionRef, {
+        const transactionPayload: any = {
             userId: user.uid,
             transactionDate: now,
             amount: categoryPrice,
             transactionType: `شراء كرت ${selectedCategory.name}`,
             notes: `شبكة: ${networkName}`,
             cardNumber: cardData.cardID,
-            cardPassword: cardData.cardPass,
-        });
-        
-        await batch.commit();
+        };
 
+        if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+            transactionPayload.cardPassword = cardData.cardPass;
+        }
+        
+        batch.set(buyerTransactionRef, transactionPayload);
+        await batch.commit();
         setPurchasedCard(cardData);
 
     } catch (error: any) {
@@ -175,46 +199,29 @@ function NetworkPurchasePageComponent() {
 
   const handleCopyCardDetails = () => {
     if (purchasedCard) {
-        const cardDetails = `رقم الكرت: ${purchasedCard.cardID}\nكلمة المرور: ${purchasedCard.cardPass}`;
-        navigator.clipboard.writeText(cardDetails);
+        navigator.clipboard.writeText(purchasedCard.cardID);
         toast({
             title: "تم النسخ",
-            description: "تم نسخ تفاصيل الكرت بنجاح.",
+            description: "تم نسخ رقم الكرت بنجاح.",
         });
     }
   };
+  
+  const handleSendSms = () => {
+    if (!purchasedCard || !selectedCategory || !smsRecipient || !networkName) {
+        toast({
+            variant: "destructive",
+            title: "خطأ",
+            description: "الرجاء إدخال رقم زبون صحيح."
+        });
+        return;
+    }
 
-  if (purchasedCard) {
-    return (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-            <Card className="w-full max-w-sm text-center shadow-2xl">
-                <CardContent className="p-6">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
-                            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
-                        </div>
-                        <h2 className="text-xl font-bold">تم الشراء بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">هذه هي تفاصيل الكرت الخاص بك. يمكنك نسخها الآن.</p>
-                        
-                        <div className="w-full text-right space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono">
-                           <p>ID: {purchasedCard.cardID}</p>
-                           <p>Pass: {purchasedCard.cardPass}</p>
-                        </div>
-                        
-                         <Button className="w-full" onClick={handleCopyCardDetails}>
-                             <Copy className="ml-2 h-4 w-4" />
-                             نسخ التفاصيل
-                         </Button>
-
-                        <div className="w-full pt-4">
-                            <Button variant="outline" className="w-full" onClick={() => setPurchasedCard(null)}>إغلاق</Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
-  }
+    const messageBody = `شبكة: ${networkName}\nفئة: ${selectedCategory.name}\nرقم الكرت: ${purchasedCard.cardID}`;
+    const smsUri = `sms:${smsRecipient}?body=${encodeURIComponent(messageBody)}`;
+    window.location.href = smsUri;
+    setIsSmsDialogOpen(false);
+  };
 
   const renderContent = () => {
     if (isLoadingCategories) {
@@ -241,7 +248,7 @@ function NetworkPurchasePageComponent() {
                 <AlertCircle className="h-16 w-16 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">لا توجد فئات كروت</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    لم يقم المسؤول بإضافة أي فئات كروت لهذه الشبكة بعد.
+                    لم يتم العثور على فئات لهذه الشبكة.
                 </p>
             </div>
         );
@@ -249,44 +256,123 @@ function NetworkPurchasePageComponent() {
 
     return (
         <div className="space-y-4">
-            {categories.map((category, index) => (
-                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
-                    <CardContent className="p-0 flex">
-                        <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
-                           <Database className="w-8 h-8 text-primary/80" />
-                           {category.dataLimit && (
-                                <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.dataLimit}</span>
-                           )}
-                        </div>
-                        <div className="flex-grow p-3">
-                             <div className='flex items-start justify-between gap-2'>
-                                <div className='space-y-1 text-right'>
-                                     <h3 className="font-bold text-base">{category.name}</h3>
-                                     <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال يمني</p>
+            {categories.map((category, index) => {
+                return (
+                    <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
+                        <CardContent className="p-0 flex">
+                            <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">
+                            <Database className="w-8 h-8 text-primary/80" />
+                            {category.dataLimit && (
+                                    <span className="font-bold text-sm text-center text-primary/80 mt-2">{category.dataLimit}</span>
+                            )}
+                            </div>
+                            <div className="flex-grow p-3">
+                                <div className='flex items-start justify-between gap-2'>
+                                    <div className='space-y-1 text-right'>
+                                        <h3 className="font-bold text-base">{category.name}</h3>
+                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال</p>
+                                    </div>
+                                    <Button 
+                                        size="default" 
+                                        className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
+                                        onClick={() => {
+                                            setSelectedCategory(category);
+                                            setIsConfirming(true);
+                                        }}
+                                    >
+                                        شراء
+                                    </Button>
                                 </div>
-                                <Button 
-                                    size="default" 
-                                    className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
-                                    onClick={() => {
-                                        setSelectedCategory(category);
-                                        setIsConfirming(true);
-                                    }}
-                                >
-                                    شراء
-                                </Button>
-                             </div>
-                             <Separator className="my-2" />
-                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
-                                 {category.expirationDate && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.expirationDate}</span>}
-                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
+                                <Separator className="my-2" />
+                                <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
+                                    {category.expirationDate && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.expirationDate}</span>}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })}
         </div>
     );
   };
   
+  if (isProcessing) {
+    return <ProcessingOverlay message="جاري تجهيز طلبك..." />;
+  }
+
+  if (purchasedCard) {
+    return (
+      <>
+        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <Card className="w-full max-w-sm text-center shadow-2xl">
+                <CardContent className="p-6">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full">
+                            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h2 className="text-xl font-bold">تم الشراء بنجاح</h2>
+                        <p className="text-sm text-muted-foreground">هذا هو رقم الكرت الخاص بك.</p>
+                        
+                        <div className="w-full text-center space-y-2 bg-muted p-3 rounded-lg mt-2 font-mono text-xl">
+                           <p>{purchasedCard.cardID}</p>
+                        </div>
+                        
+                         <div className="w-full grid grid-cols-2 gap-3 pt-2">
+                             <Button className="w-full" onClick={handleCopyCardDetails}>
+                                 <Copy className="ml-2 h-4 w-4" />
+                                 نسخ الكرت
+                             </Button>
+                             <Button variant="outline" className="w-full" onClick={() => setIsSmsDialogOpen(true)}>
+                                <MessageSquare className="ml-2 h-4 w-4" />
+                                إرسال SMS
+                            </Button>
+                         </div>
+
+                        <div className="w-full pt-4">
+                            <Button variant="outline" className="w-full" onClick={() => {
+                                setPurchasedCard(null);
+                                router.push('/login');
+                            }}>العودة للرئيسية</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+        <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
+            <DialogContent className="rounded-[32px] max-w-sm p-6">
+                <DialogHeader>
+                    <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Smartphone className="text-primary h-6 w-6" />
+                    </div>
+                    <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                    <DialogDescription className="text-center">
+                        أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
+                        <Input 
+                            id="sms-phone"
+                            placeholder="7xxxxxxxx" 
+                            type="tel" 
+                            value={smsRecipient} 
+                            onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
+                            className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest" 
+                        />
+                    </div>
+                </div>
+                <DialogFooter className="flex gap-3">
+                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+                    <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   return (
     <>
         <div className="flex flex-col h-full bg-background">

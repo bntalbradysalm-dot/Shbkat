@@ -1,9 +1,44 @@
-export const firebaseConfig = {
-  "projectId": "studio-239662212-1b7b6",
-  "appId": "1:643429607022:web:43614046eb7b665f5aa87f",
-  "storageBucket": "studio-239662212-1b7b6.appspot.com",
-  "apiKey": "AIzaSyA7TYAHxiX0qhhJpdg-_WiCbTl1nTsbznQ",
-  "authDomain": "studio-239662212-1b7b6.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "643429607022"
+'use client';
+
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, initializeFirestore, Firestore } from 'firebase/firestore';
+
+const projectId = "studio-239662212-1b7b6";
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: `${projectId}.firebaseapp.com`,
+  projectId: projectId,
+  storageBucket: `${projectId}.firebasestorage.app`,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
+
+// Check if config is valid to avoid crashing during build phase if environment variables are missing
+const isConfigValid = typeof window !== "undefined" && !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "";
+
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let firestore: Firestore | undefined;
+
+if (isConfigValid) {
+    try {
+        if (getApps().length) {
+            app = getApp();
+        } else {
+            app = initializeApp(firebaseConfig);
+        }
+
+        if (app) {
+            auth = getAuth(app);
+            firestore = initializeFirestore(app, {
+                experimentalForceLongPolling: true,
+            });
+        }
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+    }
+}
+
+export { app, auth, firestore, firebaseConfig };

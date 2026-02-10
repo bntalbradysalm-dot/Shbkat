@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Banknote, User as UserIcon, Wallet, Send, Building, CheckCircle } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, increment, writeBatch } from 'firebase/firestore';
+import { doc, collection, writeBatch, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -28,9 +29,9 @@ import {
 import { useRouter } from 'next/navigation';
 
 type UserProfile = {
-  balance?: number;
   displayName?: string;
   phoneNumber?: string;
+  balance?: number; // Include balance here
 };
 
 type PaymentMethod = {
@@ -81,11 +82,11 @@ export default function WithdrawPage() {
         }
     }, [withdrawalMethods, selectedMethod]);
     
-    const balance = userProfile?.balance ?? 0;
     const isLoading = isUserLoading || isProfileLoading || isLoadingMethods;
     const numericAmount = parseFloat(amount);
+    const userBalance = userProfile?.balance ?? 0;
     const isAmountInvalid = isNaN(numericAmount) || numericAmount <= 0;
-    const isBalanceInsufficient = numericAmount > balance;
+    const isBalanceInsufficient = numericAmount > userBalance;
     const isButtonDisabled = isAmountInvalid || isBalanceInsufficient || !recipientName || !accountNumber;
 
     const handleConfirmRequest = () => {
@@ -94,7 +95,7 @@ export default function WithdrawPage() {
             return;
         }
         if (isBalanceInsufficient) {
-            toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لطلب هذا المبلغ." });
+            toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك لا يكفي لطلب هذا المبلغ." });
             return;
         }
         setIsConfirming(true);
@@ -119,19 +120,8 @@ export default function WithdrawPage() {
         };
 
         try {
-            const batch = writeBatch(firestore);
-
-            // 1. Create the withdrawal request
             const requestsCollection = collection(firestore, 'withdrawalRequests');
-            const requestDocRef = doc(requestsCollection);
-            batch.set(requestDocRef, requestData);
-
-            // 2. Deduct the amount from the owner's balance immediately
-            batch.update(userDocRef, {
-                balance: increment(-numericAmount)
-            });
-
-            await batch.commit();
+            await addDocumentNonBlocking(requestsCollection, requestData);
 
             setShowSuccess(true);
         } catch (error) {
@@ -172,11 +162,11 @@ export default function WithdrawPage() {
                 <Card>
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="font-medium text-muted-foreground">رصيدك من الأرباح</p>
+                            <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
                             {isLoading ? (
                                 <Skeleton className="h-8 w-32 mt-2" />
                             ) : (
-                                <p className="text-3xl font-bold text-primary mt-1">{balance.toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                                <p className="text-3xl font-bold text-primary mt-1">{userBalance.toLocaleString('en-US')} <span className="text-base">ريال</span></p>
                             )}
                         </div>
                         <Wallet className="h-8 w-8 text-primary" />
@@ -259,7 +249,7 @@ export default function WithdrawPage() {
                             <AlertDialogHeader>
                                 <AlertDialogTitle>تأكيد طلب السحب</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    هل أنت متأكد من إرسال طلب سحب بالمبلغ والتفاصيل التالية؟ سيتم خصم المبلغ من رصيدك فوراً.
+                                    هل أنت متأكد من إرسال طلب سحب بالمبلغ والتفاصيل التالية؟
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <div className="space-y-2 py-2 text-sm">

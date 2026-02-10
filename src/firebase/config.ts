@@ -1,8 +1,8 @@
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, initializeFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * إعدادات Firebase الخاصة بمشروع: studio-239662212-1b7b6
@@ -18,17 +18,25 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
 
-// تهيئة تطبيق Firebase
-const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// التحقق من وجود مفتاح API لتجنب أخطاء البناء في البيئات التي تفتقر للمتغيرات
+const isConfigValid = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "";
 
-// تهيئة الخدمات
-const auth = getAuth(app);
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let firestore: Firestore | undefined;
 
-// استخدام initializeFirestore مع إعدادات إضافية لحل مشاكل الاتصال في بيئات العمل السحابية
-const firestore = getApps().length 
-  ? getFirestore(getApp()) 
-  : initializeFirestore(app, {
-      experimentalForceLongPolling: true, // تفعيل الاتصال عبر Long Polling لتجاوز قيود الشبكة
-    });
+if (typeof window !== "undefined" || isConfigValid) {
+    try {
+        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        firestore = getApps().length 
+          ? getFirestore(getApp()) 
+          : initializeFirestore(app, {
+              experimentalForceLongPolling: true,
+            });
+    } catch (error) {
+        console.error("Firebase initialization failed during build or runtime:", error);
+    }
+}
 
 export { app, auth, firestore, firebaseConfig };

@@ -496,14 +496,14 @@ export default function YemenMobilePage() {
                                             </div>
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
-                                                <div className="flex flex-col gap-0.5 items-end justify-end w-full">
-                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
+                                                <div className="flex flex-col gap-0.5 items-start justify-start w-full">
+                                                    <div className="flex items-center gap-2 text-[10px] justify-start w-full">
+                                                        <span className="text-green-600 font-bold">الاشتراك:</span>
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
-                                                        <span className="text-green-600 font-bold">:الاشتراك</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
+                                                    <div className="flex items-center gap-2 text-[10px] justify-start w-full">
+                                                        <span className="text-destructive font-bold">الانتهاء:</span>
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
-                                                        <span className="text-destructive font-bold">:الانتهاء</span>
                                                     </div>
                                                 </div>
                                             </div>

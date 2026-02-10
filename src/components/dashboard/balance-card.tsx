@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Ticket } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Ticket } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -121,12 +120,8 @@ export function BalanceCard() {
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
       <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-white shadow-xl border-none">
         <CardContent className="p-6 flex flex-col items-center justify-center min-h-[170px] relative">
-          <div className="absolute top-3 left-4 right-4 flex justify-between items-center px-2">
-             <p className="text-[10px] font-medium opacity-60">اضغط مطولاً لتغيير الأزرار</p>
-             <Settings2 size={12} className="opacity-40" />
-          </div>
-
-          <div className="w-full relative flex items-center justify-center mt-6">
+          
+          <div className="w-full relative flex items-center justify-center mt-10">
             <div className="absolute left-0">
                 <Button
                     variant="ghost"

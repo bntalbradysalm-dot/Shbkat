@@ -32,14 +32,12 @@ const Header = () => {
     else setGreeting('مساء الخير');
   }, []);
 
-  // جلب آخر 20 إشعاراً عاماً من الإدارة
   const globalNotificationsQuery = useMemoFirebase(
     () => (firestore) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
     [firestore]
   );
   const { data: globalNotifications } = useCollection<Notification>(globalNotificationsQuery);
 
-  // جلب آخر 20 إشعاراً شخصياً للمستخدم (مثل الإيداعات)
   const personalNotificationsQuery = useMemoFirebase(
     () => (firestore && user) ? query(collection(firestore, 'users', user.uid, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
     [firestore, user]
@@ -63,7 +61,6 @@ const Header = () => {
         ...(personalNotifications || [])
       ];
 
-      // حساب عدد الإشعارات التي تاريخها أحدث من آخر تاريخ قراءة
       const count = allNotifs.filter(n => new Date(n.timestamp).getTime() > lastReadTime).length;
       setUnreadCount(count);
     }
@@ -78,7 +75,6 @@ const Header = () => {
       ];
       
       if (allNotifs.length > 0) {
-        // البحث عن أحدث تاريخ إشعار لتحديث علامة القراءة
         const latestTs = allNotifs.reduce((latest, current) => {
           return new Date(current.timestamp).getTime() > new Date(latest).getTime() 
             ? current.timestamp 
@@ -87,7 +83,6 @@ const Header = () => {
         
         updateDoc(userDocRef, { lastNotificationRead: latestTs });
       } else {
-        // إذا لم توجد إشعارات، نحدث التاريخ للوقت الحالي
         updateDoc(userDocRef, { lastNotificationRead: new Date().toISOString() });
       }
     }

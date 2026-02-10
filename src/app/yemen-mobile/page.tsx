@@ -151,7 +151,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-[#FDE6D2] rounded-[20px] p-4 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
       onClick={onClick}
     >
-      {/* Company Logo Restored */}
       <div className="absolute top-3 left-3 w-8 h-8 rounded-full overflow-hidden border border-white/50 shadow-sm opacity-80">
         <Image 
           src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" 
@@ -231,7 +230,7 @@ export default function YemenMobilePage() {
   const handleSearch = async () => {
     if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
       setShowTabs(true);
-      setActiveTab("balance"); // Open balance tab first automatically
+      setActiveTab("balance");
       setIsCheckingBilling(true);
       setBillingInfo(null);
       
@@ -488,10 +487,7 @@ export default function YemenMobilePage() {
                                         <div key={idx} className={cn("p-4 flex items-center justify-between gap-4", sub.highlight ? "bg-orange-50" : "")}>
                                             <div 
                                                 className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
-                                                onClick={() => {
-                                                    const renewalTab = document.querySelector('[value="packages"]');
-                                                    if (renewalTab instanceof HTMLElement) renewalTab.click();
-                                                }}
+                                                onClick={() => setActiveTab("packages")}
                                             >
                                                 <div className="p-2 bg-primary/10 rounded-xl">
                                                     <RefreshCcw className="w-5 h-5 text-primary" />
@@ -500,7 +496,7 @@ export default function YemenMobilePage() {
                                             </div>
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
-                                                <div className="flex flex-col gap-0.5 items-end">
+                                                <div className="flex flex-col gap-0.5 items-end justify-end w-full">
                                                     <div className="flex items-center gap-2 text-[10px] justify-end w-full">
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
                                                         <span className="text-green-600 font-bold">:الاشتراك</span>
@@ -520,7 +516,7 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-4">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none h-14">
+                                      <AccordionTrigger className="px-5 py-4 text-xs hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none h-14">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
                                                 <span className="text-primary font-black text-base">{category.badge}</span>

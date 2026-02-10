@@ -59,7 +59,7 @@ type BillingInfo = {
     balance: number;
     customer_type: string;
     resultDesc?: string;
-    isLoan?: boolean;
+    isLoan: boolean;
 };
 
 type ActiveOffer = {
@@ -189,7 +189,7 @@ export default function YemenMobilePage() {
       });
       const result = await response.json();
       if (response.ok) {
-          // Mapping mobileTy to a readable label (Prepaid vs Postpaid)
+          // جلب نوع الرقم (دفع مسبق أو فوترة)
           let typeLabel = result.mobileTy || '';
           if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
               typeLabel = 'نظام الفوترة';
@@ -199,11 +199,15 @@ export default function YemenMobilePage() {
               typeLabel = result.mobileTy || 'دفع مسبق';
           }
 
+          // التحقق من حالة السلفة
+          // في بعض واجهات الـ API تكون السلفة في حقل solfa أو solfaStatus أو loan
+          const isLoan = result.isLoan === true || result.solfa === 'Y' || (parseFloat(result.loanAmount || "0") > 0);
+
           setBillingInfo({ 
               balance: parseFloat(result.balance || "0"), 
               customer_type: typeLabel,
               resultDesc: result.resultDesc,
-              isLoan: result.isLoan || false
+              isLoan: isLoan
           });
           
           const offerResponse = await fetch('/api/telecom', {
@@ -215,6 +219,7 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               setActiveOffers(offerResult.offers);
           } else {
+              // باقات افتراضية للتجربة في حال عدم توفر رد من الـ API
               setActiveOffers([
                   { offerName: 'تفعيل خدمة الانترنت - شريحة (3G)', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: '2022-12-23' },
                   { offerName: 'باقة 450 ميجابايت شريحة', remainAmount: '450 MB', expireDate: '2026-02-13', startDate: '2026-01-15' },
@@ -224,7 +229,7 @@ export default function YemenMobilePage() {
           toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: result.message || 'تعذر جلب بيانات الرقم' });
       }
     } catch (e) {
-        console.error(e);
+        console.error("Search Error:", e);
     } finally {
         setIsSearching(false);
     }
@@ -349,7 +354,9 @@ export default function YemenMobilePage() {
                             <div className="p-3">
                                 <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
                                 <div className="flex items-center justify-center gap-1">
-                                    {billingInfo?.isLoan ? (
+                                    {isSearching ? (
+                                        <Skeleton className="h-5 w-16" />
+                                    ) : billingInfo?.isLoan ? (
                                         <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1"><Frown className="h-3 w-3" /> متسلف</Badge>
                                     ) : (
                                         <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1"><Smile className="h-3 w-3" /> غير متسلف</Badge>

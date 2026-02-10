@@ -213,23 +213,23 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden rounded-2xl shadow-lg bg-primary text-primary-foreground">
-          <CardContent className="p-4 flex items-center gap-4">
-             <Avatar className="h-14 w-14 border-2 border-primary-foreground/50">
+        <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-primary-foreground border-none">
+          <CardContent className="p-6 flex items-center gap-4">
+             <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10">
                 <AvatarFallback>
-                    <User className="h-8 w-8 text-muted-foreground" />
+                    <User className="h-8 w-8 text-white" />
                 </AvatarFallback>
             </Avatar>
-            <div className="flex-grow">
-              <h2 className="text-sm font-bold">{userProfile?.displayName || 'مستخدم جديد'}</h2>
-              <div className="text-xs text-primary-foreground/80 mt-2 space-y-1">
-                <div className="flex items-center">
-                  <Phone className="ml-2 h-3 w-3" />
+            <div className="flex-grow text-right">
+              <h2 className="text-base font-black">{userProfile?.displayName || 'مستخدم جديد'}</h2>
+              <div className="text-xs text-white/80 mt-2 space-y-1">
+                <div className="flex items-center justify-end gap-2">
                   <span>{userProfile?.phoneNumber || '...'}</span>
+                  <Phone className="h-3 w-3" />
                 </div>
-                <div className="flex items-center">
-                  <MapPin className="ml-2 h-3 w-3" />
+                <div className="flex items-center justify-end gap-2">
                   <span>{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
+                  <MapPin className="h-3 w-3" />
                 </div>
               </div>
             </div>
@@ -237,31 +237,31 @@ export default function AccountPage() {
         </Card>
         
         <div>
-            <h3 className="text-xs font-semibold text-muted-foreground text-center mb-2">الوضع المفضل</h3>
+            <h3 className="text-xs font-black text-muted-foreground text-center mb-3">الوضع المفضل</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleThemeChange('light')}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl cursor-pointer transition-all w-full border-2 bg-card',
                   activeTheme === 'light'
-                    ? 'border-primary text-primary'
+                    ? 'border-primary text-primary shadow-md scale-[1.02]'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
                 <Sun className="h-5 w-5" />
-                <span className="text-xs font-semibold">فاتح</span>
+                <span className="text-xs font-bold">فاتح</span>
               </button>
               <button
                 onClick={() => handleThemeChange('dark')}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl cursor-pointer transition-all w-full border-2 bg-card',
                   activeTheme === 'dark'
-                    ? 'border-primary text-primary'
+                    ? 'border-primary text-primary shadow-md scale-[1.02]'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
                 <Moon className="h-5 w-5" />
-                <span className="text-xs font-semibold">داكن</span>
+                <span className="text-xs font-bold">داكن</span>
               </button>
             </div>
         </div>
@@ -270,13 +270,13 @@ export default function AccountPage() {
           <>
             <div>
               <div className="flex items-center justify-center gap-2 mb-3">
-                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <LayoutGrid className="h-4 w-4 text-primary" />
+                <h3 className="text-xs font-black text-primary">
                   لوحة التحكم
                 </h3>
               </div>
 
-              <Card className="bg-card">
+              <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   {managementLinks.map((link, index) => {
                     const Icon = link.icon;
@@ -284,13 +284,13 @@ export default function AccountPage() {
                         <a
                         href={link.href}
                         key={link.title}
-                        className={`group flex items-center justify-between p-3 cursor-pointer ${
-                            index < managementLinks.length - 1 ? 'border-b' : ''
+                        className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                            index < managementLinks.length - 1 ? 'border-b border-muted' : ''
                         }`}
                         >
                         <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-semibold">{link.title}</span>
+                            <Icon className="h-5 w-5 text-primary" />
+                            <span className="text-sm font-bold text-foreground">{link.title}</span>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                         </a>
@@ -302,11 +302,11 @@ export default function AccountPage() {
           
             <div>
               <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-black text-muted-foreground">
                   إعدادات الواجهة والتطبيق
                 </h3>
               </div>
-               <Card className="bg-card">
+               <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                  <CardContent className="p-0">
                     {appSettingsLinks.map((link, index) => {
                       const Icon = link.icon;
@@ -318,13 +318,13 @@ export default function AccountPage() {
                         <div
                         key={link.id}
                         onClick={isShareButton ? handleShare : undefined}
-                        className={`group flex items-center justify-between p-3 cursor-pointer ${
-                            index < appSettingsLinks.length - 1 ? 'border-b' : ''
+                        className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                            index < appSettingsLinks.length - 1 ? 'border-b border-muted' : ''
                         }`}
                         >
                         <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-semibold">{link.title}</span>
+                            <Icon className="h-5 w-5 text-primary" />
+                            <span className="text-sm font-bold text-foreground">{link.title}</span>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                         </div>
@@ -361,11 +361,11 @@ export default function AccountPage() {
         {!isUserAdmin && (
             <div>
                 <div className="flex items-center justify-center gap-2 mt-6 mb-3">
-                    <h3 className="text-xs font-semibold text-muted-foreground">
+                    <h3 className="text-xs font-black text-muted-foreground">
                     الإعدادات
                     </h3>
                 </div>
-                <Card className="bg-card">
+                <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
                     <CardContent className="p-0">
                     {userAppSettingsLinks.map((link, index) => {
                        const Icon = link.icon;
@@ -377,13 +377,13 @@ export default function AccountPage() {
                          <div
                          key={link.id}
                          onClick={isShareButton ? handleShare : undefined}
-                         className={`group flex items-center justify-between p-3 cursor-pointer ${
-                             index < userAppSettingsLinks.length - 1 ? 'border-b' : ''
+                         className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                             index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
                          }`}
                          >
                          <div className="flex items-center gap-3">
-                             <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                             <span className="text-xs font-semibold">{link.title}</span>
+                             <Icon className="h-5 w-5 text-primary" />
+                             <span className="text-sm font-bold text-foreground">{link.title}</span>
                          </div>
                          <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
                          </div>
@@ -416,31 +416,31 @@ export default function AccountPage() {
             </div>
         )}
 
-        <div className="pt-4">
+        <div className="pt-4 pb-8">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Card className="bg-card cursor-pointer">
+              <Card className="bg-card cursor-pointer rounded-2xl border-none shadow-sm hover:bg-destructive/5 transition-colors">
                   <CardContent className="p-0">
-                      <button className="group flex items-center justify-center p-3 w-full">
-                        <div className="flex items-center gap-3 text-destructive dark:text-white">
+                      <button className="group flex items-center justify-center p-4 w-full">
+                        <div className="flex items-center gap-3 text-destructive">
                             <LogOut className="h-5 w-5" />
-                            <span className="text-xs font-semibold">تسجيل الخروج</span>
+                            <span className="text-sm font-black uppercase tracking-wider">تسجيل الخروج</span>
                         </div>
                       </button>
                   </CardContent>
               </Card>
             </AlertDialogTrigger>
-            <AlertDialogContent className="rounded-lg">
+            <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد من تسجيل الخروج؟</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="text-center font-black">هل أنت متأكد؟</AlertDialogTitle>
+                <AlertDialogDescription className="text-center">
                   سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق. ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout}>
-                  تأكيد
+              <AlertDialogFooter className="flex-row gap-3 pt-4">
+                <AlertDialogCancel className="flex-1 rounded-2xl">إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="flex-1 rounded-2xl bg-destructive hover:bg-destructive/90">
+                  تأكيد الخروج
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

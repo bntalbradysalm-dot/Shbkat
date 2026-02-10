@@ -148,10 +148,36 @@ export default function Yemen4GPage() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام.');
             
+            let rawBalance = result.balance || '';
+            let displayBalance = '0 MB';
+            let displayExpire = '...';
+
+            // تحسين استخلاص القيقا المتبقية وتاريخ الانتهاء من النص الطويل
+            if (rawBalance.includes('رصيد الباقة')) {
+                // استخلاص القيقا: رصيد الباقة: 3.79 GB
+                const balMatch = rawBalance.match(/رصيد الباقة:\s*([\d.]+)\s*GB/);
+                if (balMatch) displayBalance = `${balMatch[1]} GB`;
+
+                // استخلاص التاريخ: تأريخ الانتهاء: 2026-03-03
+                const dateMatch = rawBalance.match(/تأريخ الانتهاء:\s*(\d{4})-(\d{2})-(\d{2})/);
+                if (dateMatch) {
+                    // تحويل إلى صيغة D/M/YYYY
+                    displayExpire = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+                }
+            } else {
+                // في حال كان الرد رقمياً فقط أو بصيغة أخرى
+                displayBalance = formatData(rawBalance);
+                displayExpire = result.expireDate || '...';
+                if (displayExpire && displayExpire.includes('-')) {
+                    const parts = displayExpire.split(' ')[0].split('-');
+                    if (parts.length === 3) displayExpire = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+                }
+            }
+            
             setQueryResult({
-                balance: result.balance,
+                balance: displayBalance,
                 packName: result.packName,
-                expireDate: result.expireDate,
+                expireDate: displayExpire,
                 message: result.resultDesc
             });
         } catch (error: any) {
@@ -182,7 +208,7 @@ export default function Yemen4GPage() {
                     amount: val, 
                     action: 'bill',
                     service: 'yem4g',
-                    type: '2', // نوع 2 للسداد الرصيد (حسب المتطلبات)
+                    type: '2', 
                     transid: transid,
                 })
             });
@@ -220,7 +246,6 @@ export default function Yemen4GPage() {
         setIsActivatingOffer(true);
         try {
             const transid = Date.now().toString();
-            // نوع 1 لتفعيل الباقات
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -255,6 +280,7 @@ export default function Yemen4GPage() {
 
     const formatData = (balance: string | undefined) => {
         if (!balance) return '0 MB';
+        if (balance.includes('GB') || balance.includes('MB')) return balance;
         const numericBalance = parseFloat(balance);
         if (isNaN(numericBalance)) return balance;
         if (numericBalance >= 1024) return `${(numericBalance / 1024).toFixed(2)} GB`;
@@ -318,7 +344,7 @@ export default function Yemen4GPage() {
                                     <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
                                     <div className="flex items-center justify-center gap-1">
                                         <Database className="w-3.5 h-3.5 opacity-70" />
-                                        <p className="text-base font-black">{formatData(queryResult?.balance)}</p>
+                                        <p className="text-base font-black">{queryResult?.balance || '0 MB'}</p>
                                     </div>
                                 </div>
                                 <div className="p-4">

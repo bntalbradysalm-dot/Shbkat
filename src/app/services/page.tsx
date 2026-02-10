@@ -370,7 +370,10 @@ export default function ServicesPage() {
   };
 
   const handleSendSms = () => {
-    if (!purchasedCard || !selectedNetwork || !smsRecipient) return;
+    if (!purchasedCard || !selectedNetwork || !smsRecipient) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
+        return;
+    }
     const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
     window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
     setIsSmsDialogOpen(false);
@@ -520,7 +523,7 @@ export default function ServicesPage() {
                     </div>
                     
                     <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Your Card Code</p>
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كود الكرت</p>
                         <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
                             {purchasedCard.cardID || purchasedCard.cardNumber}
                         </p>
@@ -528,7 +531,7 @@ export default function ServicesPage() {
                     
                     <div className="grid grid-cols-2 gap-3">
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
-                            <Copy className="ml-2 h-4 w-4" /> نسخ الكود
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
                             <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
@@ -543,9 +546,9 @@ export default function ServicesPage() {
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-3xl max-w-xs">
-            <DialogHeader><DialogTitle className="text-center text-base">إرسال عبر SMS</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-center text-base">إرسال كرت لزبون</DialogTitle></DialogHeader>
             <div className="space-y-4 py-4">
-                <Label>رقم الجوال المستلم</Label>
+                <Label>رقم جوال الزبون</Label>
                 <Input placeholder="7xxxxxxxx" type="tel" value={smsRecipient} onChange={e => setSmsRecipient(e.target.value)} className="text-center text-lg font-bold h-12 rounded-xl" />
             </div>
             <DialogFooter><Button onClick={handleSendSms} className="w-full rounded-xl">إرسال الآن</Button></DialogFooter>

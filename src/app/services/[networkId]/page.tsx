@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
@@ -204,7 +205,7 @@ function NetworkPurchasePageComponent() {
         toast({
             variant: "destructive",
             title: "خطأ",
-            description: "الرجاء إدخال رقم هاتف صحيح."
+            description: "الرجاء إدخال رقم زبون صحيح."
         });
         return;
     }
@@ -313,7 +314,7 @@ function NetworkPurchasePageComponent() {
                          <div className="w-full grid grid-cols-2 gap-3 pt-2">
                              <Button className="w-full" onClick={handleCopyCardDetails}>
                                  <Copy className="ml-2 h-4 w-4" />
-                                 نسخ
+                                 نسخ الكرت
                              </Button>
                              <Button variant="outline" className="w-full" onClick={() => setIsSmsDialogOpen(true)}>
                                 <MessageSquare className="ml-2 h-4 w-4" />
@@ -334,14 +335,14 @@ function NetworkPurchasePageComponent() {
         <AlertDialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>إرسال الكرت عبر SMS</AlertDialogTitle>
+                    <AlertDialogTitle>إرسال كرت لزبون</AlertDialogTitle>
                     <AlertDialogDescription>
                         يرجى إدخال رقم الجوال الذي تريد إرسال المعلومات إليه.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-2">
                     <Label htmlFor="sms-recipient" className="sr-only">
-                        رقم الجوال
+                        رقم الزبون
                     </Label>
                     <Input
                         id="sms-recipient"

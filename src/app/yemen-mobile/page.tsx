@@ -95,6 +95,15 @@ const CATEGORIES = [
       { offerId: 'net_500', offerName: 'نت 500 ميجا', price: 600, data: '500 MB', validity: '30 يوم', offertype: 'Net500' },
       { offerId: 'net_1gb', offerName: 'نت 1 جيجا', price: 1100, data: '1 GB', validity: '30 يوم', offertype: 'Net1GB' },
     ]
+  },
+  {
+    id: 'gifts',
+    title: 'باقات هدايا',
+    badge: 'Gift',
+    icon: Gift,
+    offers: [
+      { offerId: 'gift_300', offerName: 'هدية 300 دقيقة', price: 400, minutes: '300', validity: '30 يوم', offertype: 'Gift300' },
+    ]
   }
 ];
 
@@ -106,28 +115,28 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       <div className="absolute top-3 left-3 w-8 h-8 rounded-full overflow-hidden opacity-20">
         <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="YM" fill className="object-cover" />
       </div>
-      <h4 className="text-base font-black text-primary mb-1">{offer.offerName}</h4>
+      <h4 className="text-sm font-bold text-primary mb-1">{offer.offerName}</h4>
       <div className="flex items-baseline gap-1 justify-end">
-        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString()}</span>
+        <span className="text-xl font-black text-primary">{offer.price.toLocaleString()}</span>
         <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
       </div>
       
-      <div className="grid grid-cols-4 gap-1 pt-3 mt-3 border-t border-primary/5 text-center">
+      <div className="grid grid-cols-4 gap-1 pt-2 mt-2 border-t border-primary/5 text-center">
         <div className="space-y-1">
-            <Globe className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.data || '-'}</p>
+            <Globe className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Mail className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.sms || '-'}</p>
+            <Mail className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Phone className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.minutes || '-'}</p>
+            <Phone className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Clock className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.validity || '-'}</p>
+            <Clock className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -343,7 +352,7 @@ export default function YemenMobilePage() {
                 placeholder="77xxxxxxx"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="text-center font-black text-4xl h-16 rounded-2xl border-2 border-primary/10 bg-muted/20 focus-visible:ring-primary focus-visible:border-primary transition-all"
+                className="text-center font-bold text-2xl h-14 rounded-2xl border-2 border-primary/10 bg-muted/20 focus-visible:ring-primary focus-visible:border-primary transition-all"
               />
             </div>
             
@@ -366,12 +375,12 @@ export default function YemenMobilePage() {
                                     placeholder="0.00" 
                                     value={amount} 
                                     onChange={(e) => setAmount(e.target.value)} 
-                                    className="text-center font-black text-4xl h-20 rounded-[24px] bg-primary/5 border-2 border-primary/20 text-primary placeholder:text-primary/20" 
+                                    className="text-center font-black text-3xl h-16 rounded-[24px] bg-primary/5 border-2 border-primary/20 text-primary placeholder:text-primary/20" 
                                 />
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 font-black">ر.ي</div>
                             </div>
                             <Button 
-                                className="w-full h-16 rounded-[24px] text-lg font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" 
+                                className="w-full h-14 rounded-[24px] text-lg font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" 
                                 onClick={() => setIsConfirming(true)} 
                                 disabled={!amount}
                             >
@@ -487,7 +496,7 @@ export default function YemenMobilePage() {
                   </div>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 text-center space-y-2">
-                      <p className="text-xl font-black text-primary">{selectedOffer?.offerName}</p>
+                      <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                       <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5">
                         <p className="text-xs font-bold">السعر: {selectedOffer?.price.toLocaleString()} ريال</p>

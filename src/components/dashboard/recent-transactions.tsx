@@ -58,16 +58,18 @@ export function RecentTransactions() {
                         <CardContent className="p-4 flex items-center justify-between">
                             <div className="text-right">
                                 <p className="text-destructive font-bold text-base">{tx.amount.toLocaleString('en-US')} ر.ي</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">منذ 14 يوم</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">ناجحة</p>
                             </div>
 
                             <div className="flex-1 text-center mr-4">
                                 <p className="font-bold text-primary text-sm">{tx.transactionType}</p>
-                                <p className="text-[10px] text-primary/70 font-semibold">ناجحة</p>
+                                <p className="text-[10px] text-primary/70 font-semibold">
+                                    {tx.transactionDate ? format(parseISO(tx.transactionDate), 'd MMMM', { locale: ar }) : 'منذ فترة'}
+                                </p>
                             </div>
 
                             <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50">
-                                <CreditCard className="h-6 w-6 text-primary" />
+                                <CreditCard className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
                             </div>
                         </CardContent>
                     </Card>

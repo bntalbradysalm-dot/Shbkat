@@ -27,13 +27,13 @@ const OwnerDashboard = () => (
       <div className="grid grid-cols-2 gap-4 px-6 py-2">
           <Link href="/my-network/manage" className="block">
               <Card className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center rounded-3xl border-border/50 shadow-sm">
-                  <Wifi className="w-10 h-10 text-primary" />
+                  <Wifi className="w-10 h-10" style={{ stroke: 'url(#icon-gradient)' }} />
                   <p className="font-bold text-primary text-sm">إدارة شبكتي</p>
               </Card>
           </Link>
           <Link href="/my-network/withdraw" className="block">
               <Card className="p-6 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 transition-colors text-center rounded-3xl border-border/50 shadow-sm">
-                  <Banknote className="w-10 h-10 text-primary" />
+                  <Banknote className="w-10 h-10" style={{ stroke: 'url(#icon-gradient)' }} />
                   <p className="font-bold text-primary text-sm">سحب الأرباح</p>
               </Card>
           </Link>

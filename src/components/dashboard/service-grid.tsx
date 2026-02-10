@@ -9,11 +9,8 @@ import {
   Wifi,
   Smartphone,
   ShoppingBag,
-  Heart,
-  Landmark,
   CreditCard,
   ArrowLeftRight,
-  ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,15 +28,15 @@ const services: Service[] = [
   { name: 'مشتريات', icon: ShoppingBag, href: '/store' },
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'كشف حساب', icon: ClipboardList, href: '/transactions' },
+  { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
 ];
 
 const ServiceItem = ({
   name,
   icon: Icon,
-  href,
   index,
+  href,
 }: Service & { index: number }) => (
   <Link
     href={href}

@@ -281,6 +281,14 @@ export default function YemenMobilePage() {
       }
   };
 
+  const formatCustomerType = (type: string | undefined) => {
+    if (!type) return '...';
+    const t = type.toString().toLowerCase();
+    if (t === 'prepaid' || t === '0') return 'دفع مسبق';
+    if (t === 'postpaid' || t === '1') return 'فوترة';
+    return type;
+  };
+
   if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
   
   if (showSuccess) {
@@ -347,7 +355,7 @@ export default function YemenMobilePage() {
                                     </div>
                                     <div className='p-2 bg-background rounded-md'>
                                         <p className="text-xs text-muted-foreground">نوع الرقم</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{billingInfo?.customer_type ?? '...'}</p>}
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{formatCustomerType(billingInfo?.customer_type)}</p>}
                                     </div>
                                      <div className='p-2 bg-background rounded-md'>
                                         <p className="text-xs text-muted-foreground">فحص السلفة</p>

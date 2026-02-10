@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -258,6 +259,7 @@ export default function ServicesPage() {
         name: network.name,
         location: network.location || 'غير محدد',
         favoriteType: 'Network',
+        isLocal: network.isLocal
       };
       if (network.isLocal && network.phoneNumber) favoriteData.phoneNumber = network.phoneNumber;
       addDocumentNonBlocking(favoritesCollectionRef, favoriteData);

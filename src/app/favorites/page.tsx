@@ -1,15 +1,28 @@
+
 'use client';
 
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { useCollection, useFirestore, useMemoFirebase, useUser, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, doc, getDocs, writeBatch, increment, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, MapPin, Phone, Star, Heart } from 'lucide-react';
+import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { Label } from '@/components/ui/label';
 
 type Favorite = {
   id: string;
@@ -19,13 +32,54 @@ type Favorite = {
   location: string;
   phoneNumber?: string;
   favoriteType: 'Network';
+  isLocal?: boolean;
+};
+
+type CardCategory = {
+    id: string | number;
+    name: string;
+    price: number;
+    dataLimit?: string;
+    validity?: string;
+    expirationDate?: string;
+};
+
+type CombinedNetwork = {
+    id: string;
+    name: string;
+    location: string;
+    phoneNumber?: string;
+    isLocal: boolean;
+    ownerId?: string;
+};
+
+type UserProfile = {
+  balance?: number;
+  displayName?: string;
+  phoneNumber?: string;
 };
 
 export default function FavoritesPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Popup States
+  const [selectedNetwork, setSelectedNetwork] = useState<CombinedNetwork | null>(null);
+  const [categories, setCategories] = useState<CardCategory[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  
+  // Purchase States
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [purchasedCard, setPurchasedCard] = useState<any>(null);
+  const [showConfirmPurchase, setShowConfirmConfirmPurchase] = useState<CardCategory | null>(null);
+  const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
+  const [smsRecipient, setSmsRecipient] = useState('');
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Favorites Query
   const favoritesQuery = useMemoFirebase(
     () =>
       user
@@ -36,8 +90,22 @@ export default function FavoritesPage() {
         : null,
     [firestore, user]
   );
-
   const { data: favorites, isLoading } = useCollection<Favorite>(favoritesQuery);
+
+  // User Profile
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  const filteredFavorites = useMemo(() => {
+    if (!favorites) return [];
+    return favorites.filter(fav => 
+      fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fav.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [favorites, searchTerm]);
 
   const handleRemoveFavorite = (e: React.MouseEvent, favoriteId: string, networkName: string) => {
     e.preventDefault();
@@ -52,23 +120,172 @@ export default function FavoritesPage() {
     });
   };
 
+  const handleNetworkClick = async (fav: Favorite) => {
+    // Inference for isLocal if not present (numeric ID = external)
+    const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
+    
+    // We might need to fetch the local network to get the ownerId
+    let ownerId = undefined;
+    if (isLocal) {
+        const netRef = doc(firestore, 'networks', fav.targetId);
+        const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
+        if (!netSnap.empty) {
+            ownerId = netSnap.docs[0].data().ownerId;
+        }
+    }
+
+    const network: CombinedNetwork = {
+        id: fav.targetId,
+        name: fav.name,
+        location: fav.location,
+        phoneNumber: fav.phoneNumber,
+        isLocal: isLocal,
+        ownerId: ownerId
+    };
+
+    setSelectedNetwork(network);
+    setCategories([]);
+    setIsLoadingCategories(true);
+    setCategoryError(null);
+    setPurchasedCard(null);
+
+    try {
+      if (isLocal) {
+        const catsRef = collection(firestore, `networks/${fav.targetId}/cardCategories`);
+        const snapshot = await getDocs(catsRef);
+        const catsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory));
+        setCategories(catsData);
+      } else {
+        const response = await fetch(`/services/networks-api/${fav.targetId}/classes`);
+        if (!response.ok) throw new Error('فشل تحميل الفئات الخارجية');
+        const data = await response.json();
+        setCategories(data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            price: c.price,
+            dataLimit: c.dataLimit,
+            expirationDate: c.expirationDate
+        })));
+      }
+    } catch (err: any) {
+      setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  const handlePurchase = async () => {
+    const selectedCategory = showConfirmPurchase;
+    if (!selectedCategory || !selectedNetwork || !user || !userProfile || !firestore || !userDocRef) return;
+
+    setIsProcessing(true);
+    const categoryPrice = selectedCategory.price;
+    const userBalance = userProfile?.balance ?? 0;
+
+    if (userBalance < categoryPrice) {
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
+        setIsProcessing(false);
+        setShowConfirmConfirmPurchase(null);
+        return;
+    }
+
+    try {
+        const now = new Date().toISOString();
+        const batch = writeBatch(firestore);
+
+        if (selectedNetwork.isLocal) {
+            const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
+            const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
+            const availableCardsSnapshot = await getDocs(q);
+
+            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
+
+            const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
+            const cardData = cardToPurchaseDoc.data();
+            const ownerId = selectedNetwork.ownerId!;
+            const commission = categoryPrice * 0.10;
+            const payoutAmount = categoryPrice - commission;
+
+            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+                cardNumber: cardData.cardNumber,
+            });
+            batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
+                userId: ownerId, transactionDate: now, amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+            });
+            batch.set(doc(collection(firestore, 'soldCards')), {
+                networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id, categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
+                price: categoryPrice, commissionAmount: commission, payoutAmount,
+                buyerId: user.uid, buyerName: userProfile.displayName,
+                buyerPhoneNumber: userProfile.phoneNumber, soldTimestamp: now, payoutStatus: 'completed'
+            });
+
+            await batch.commit();
+            setPurchasedCard({ cardID: cardData.cardNumber });
+        } else {
+            const response = await fetch(`/services/networks-api/order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ classId: selectedCategory.id })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData?.error?.message?.ar || errorData?.message || 'فشل إنشاء الطلب.');
+            }
+
+            const result = await response.json();
+            const cardData = result.data.order.card;
+
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+                cardNumber: cardData.cardID,
+            });
+
+            await batch.commit();
+            setPurchasedCard(cardData);
+        }
+        
+        audioRef.current?.play().catch(() => {});
+    } catch (error: any) {
+        console.error("Purchase failed:", error);
+        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+    } finally {
+        setIsProcessing(false);
+        setShowConfirmConfirmPurchase(null);
+    }
+  };
+
+  const handleCopy = () => {
+    if (purchasedCard) {
+        navigator.clipboard.writeText(purchasedCard.cardID || purchasedCard.cardNumber);
+        toast({ title: "تم النسخ", description: "تم نسخ رقم الكرت بنجاح." });
+    }
+  };
+
+  const handleSendSms = () => {
+    if (!purchasedCard || !selectedNetwork || !smsRecipient) return;
+    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
+    window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
+    setIsSmsDialogOpen(false);
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4 bg-card rounded-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg bg-muted" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32 bg-muted" />
-                    <Skeleton className="h-4 w-40 bg-muted" />
-                  </div>
-                </div>
-                <Skeleton className="h-6 w-6 rounded-full bg-muted" />
-              </div>
-            </Card>
+            <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
           ))}
         </div>
       );
@@ -77,10 +294,10 @@ export default function FavoritesPage() {
     if (!favorites || favorites.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center text-center h-64">
-          <Star className="h-16 w-16 text-muted-foreground" />
+          <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
           <h3 className="mt-4 text-lg font-semibold">لا توجد شبكات مفضلة</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            اضف شبكتك المفضلة هنا للوصول إليها بسرعة
+            أضف شبكتك المفضلة هنا للوصول إليها بسرعة
           </p>
         </div>
       );
@@ -88,43 +305,27 @@ export default function FavoritesPage() {
 
     return (
       <div className="space-y-4">
-        {favorites.map((fav, index) => (
-           <Link href={`/services/${fav.targetId}?name=${encodeURIComponent(fav.name)}`} key={fav.id} className="block">
-              <Card 
-                className="cursor-pointer bg-card text-card-foreground hover:bg-muted/50 transition-colors animate-in fade-in-0 rounded-2xl"
-                style={{ animationDelay: `${index * 50}ms` }}
+        {filteredFavorites.map((fav, index) => (
+          <Card 
+            key={fav.id} 
+            className="bg-mesh-gradient cursor-pointer text-primary-foreground hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+            style={{ animationDelay: `${index * 30}ms` }}
+            onClick={() => handleNetworkClick(fav)}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6" /></div>
+              <div className="flex-1 text-right mx-4 space-y-1">
+                <h4 className="font-bold text-base">{fav.name}</h4>
+                <p className="text-[10px] opacity-80">{fav.location}</p>
+              </div>
+              <button 
+                onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
+                className="p-2 hover:scale-110 transition-transform"
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-primary/10 rounded-lg">
-                        <Wifi className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="font-bold">{fav.name}</h4>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <MapPin className="h-3 w-3" />
-                          {fav.location}
-                        </p>
-                        {fav.phoneNumber && (
-                           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                            <Phone className="h-3 w-3" />
-                            {fav.phoneNumber}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                      className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
-                      aria-label={`إزالة ${fav.name} من المفضلة`}
-                    >
-                      <Heart className={cn("h-5 w-5 fill-red-400 text-red-500")} />
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-          </Link>
+                <Heart className={cn("h-6 w-6 fill-white text-white")} />
+              </button>
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
@@ -134,8 +335,152 @@ export default function FavoritesPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="المفضلة" />
-        <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
+        <div className="p-4">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="البحث في المفضلة..."
+              className="w-full pr-10 rounded-xl h-12"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {renderContent()}
+        </div>
       </div>
+
+      {/* Details Popup (Same as ServicesPage) */}
+      <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+          {selectedNetwork && (
+            <div className="flex flex-col max-h-[85vh]">
+              <div className="bg-mesh-gradient p-6 text-primary-foreground relative">
+                <button 
+                  onClick={() => setSelectedNetwork(null)}
+                  className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="flex flex-col items-center text-center gap-2 mt-2">
+                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10" /></div>
+                  <h2 className="text-xl font-black">{selectedNetwork.name}</h2>
+                  <p className="text-xs opacity-80">{selectedNetwork.location}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 bg-background">
+                {isLoadingCategories ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+                  </div>
+                ) : categoryError ? (
+                  <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div>
+                ) : categories.length === 0 ? (
+                  <p className="text-center py-10 text-muted-foreground">لا توجد فئات متاحة حالياً.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {categories.map((cat) => (
+                      <Card 
+                        key={cat.id} 
+                        className="rounded-2xl border-none shadow-sm bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => setShowConfirmConfirmPurchase(cat)}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex-1 text-right space-y-1">
+                            <h4 className="font-bold text-sm">{cat.name}</h4>
+                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                {cat.dataLimit && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.dataLimit}</span>}
+                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
+                            </div>
+                          </div>
+                          <div className="text-left">
+                            <p className="font-black text-primary text-base">{cat.price.toLocaleString()} ريال</p>
+                            <Button size="sm" className="h-7 rounded-lg text-[10px] px-4 mt-1">شراء</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmConfirmPurchase(null)}>
+        <DialogContent className="rounded-[28px] max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle>تأكيد الشراء</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من شراء كرت "{showConfirmPurchase?.name}"؟
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 bg-muted/50 rounded-2xl space-y-2">
+            <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmConfirmPurchase(null)}>إلغاء</Button>
+            <Button className="flex-1 rounded-xl" onClick={handlePurchase}>تأكيد</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Popup */}
+      {purchasedCard && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-in fade-in-0">
+            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                        <CheckCircle className="h-16 w-16 text-white" />
+                    </div>
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
+                    </div>
+                    
+                    <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Your Card Code</p>
+                        <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
+                            {purchasedCard.cardID || purchasedCard.cardNumber}
+                        </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكود
+                        </Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
+                        </Button>
+                    </div>
+                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
+                </CardContent>
+            </Card>
+        </div>
+      )}
+
+      {/* SMS Dialog */}
+      <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
+        <DialogContent className="rounded-3xl max-w-xs">
+            <DialogHeader><DialogTitle className="text-center text-base">إرسال عبر SMS</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4">
+                <Label>رقم الجوال المستلم</Label>
+                <Input placeholder="7xxxxxxxx" type="tel" value={smsRecipient} onChange={e => setSmsRecipient(e.target.value)} className="text-center text-lg font-bold h-12 rounded-xl" />
+            </div>
+            <DialogFooter><Button onClick={handleSendSms} className="w-full rounded-xl">إرسال الآن</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
       <Toaster />
     </>
   );

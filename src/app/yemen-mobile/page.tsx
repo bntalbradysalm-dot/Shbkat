@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown, RefreshCcw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
@@ -32,6 +33,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { cn } from '@/lib/utils';
 
 type UserProfile = {
   balance?: number;
@@ -51,7 +53,8 @@ type Offer = {
 const CATEGORIES = [
   {
     id: 'mazaya',
-    title: '1. باقات مزايا',
+    title: 'باقات مزايا',
+    badge: '3G',
     offers: [
       { offerId: 'm1200', offerName: 'مزايا الشهرية 1200' },
       { offerId: 'm2500', offerName: 'مزايا الشهرية 2500' },
@@ -61,7 +64,8 @@ const CATEGORIES = [
   },
   {
     id: '4g',
-    title: '2. باقات فورجي',
+    title: 'باقات فورجي',
+    badge: '4G',
     offers: [
       { offerId: '4g_5gb', offerName: 'فورجي 5 جيجابايت' },
       { offerId: '4g_10gb', offerName: 'فورجي 10 جيجابايت' },
@@ -71,7 +75,8 @@ const CATEGORIES = [
   },
   {
     id: 'volte',
-    title: '3. باقات فولتي',
+    title: 'باقات فولتي VoLTE',
+    badge: '4G',
     offers: [
       { offerId: 'volte_100', offerName: 'فولتي 100 دقيقة' },
       { offerId: 'volte_300', offerName: 'فولتي 300 دقيقة' },
@@ -80,7 +85,8 @@ const CATEGORIES = [
   },
   {
     id: 'monthly_net',
-    title: '4. باقات الانترنت الشهرية',
+    title: 'باقات الإنترنت الشهرية',
+    badge: '⇅',
     offers: [
       { offerId: 'net_1gb', offerName: 'إنترنت 1 جيجابايت شهري' },
       { offerId: 'net_3gb', offerName: 'إنترنت 3 جيجابايت شهري' },
@@ -90,13 +96,20 @@ const CATEGORIES = [
   },
   {
     id: '10days_net',
-    title: '5. باقات الانترنت 10 ايام',
+    title: 'باقات الإنترنت 10 أيام',
+    badge: '⇅',
     offers: [
       { offerId: 'net_10d_500', offerName: 'إنترنت 500 ميجابايت (10 أيام)' },
       { offerId: 'net_10d_1500', offerName: 'إنترنت 1.5 جيجابايت (10 أيام)' },
       { offerId: 'net_10d_3000', offerName: 'إنترنت 3 جيجابايت (10 أيام)' },
     ]
   },
+];
+
+const MOCK_ACTIVE_SUBS = [
+    { name: 'تفعيل خدمة الانترنت - شريحة (3G)', start: '2022-12-23 17:17:50', end: '2037-01-01 00:00:00' },
+    { name: 'باقة 450 ميجابايت شريحة', start: '2026-01-15 16:29:31', end: '2026-02-13 23:59:59', highlight: true },
+    { name: 'مزايا الشهرية - 350 دقيقة 150 رسالة 250 ميجا', start: '2026-02-02 17:22:52', end: '2026-03-03 23:59:59' },
 ];
 
 const BalanceDisplay = () => {
@@ -111,17 +124,19 @@ const BalanceDisplay = () => {
     const isLoading = isUserLoading || isProfileLoading;
 
     return (
-        <Card className="shadow-md">
-            <CardContent className="p-4 flex items-center justify-between">
+        <Card className="shadow-md border-none rounded-3xl bg-mesh-gradient text-white">
+            <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
+                    <p className="font-medium opacity-80 text-xs uppercase tracking-widest">رصيدك الحالي</p>
                     {isLoading ? (
-                        <Skeleton className="h-8 w-32 mt-2" />
+                        <Skeleton className="h-8 w-32 mt-2 bg-white/20" />
                     ) : (
-                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
+                        <p className="text-3xl font-black mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-sm font-normal">ريال</span></p>
                     )}
                 </div>
-                <Wallet className="h-8 w-8 text-primary" />
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                    <Wallet className="h-8 w-8" />
+                </div>
             </CardContent>
         </Card>
     );
@@ -337,13 +352,15 @@ export default function YemenMobilePage() {
         <>
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                <Card className="w-full max-w-sm text-center shadow-2xl">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col items-center justify-center gap-4">
-                            <div className="bg-green-100 p-4 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
-                            <h2 className="text-2xl font-bold">تم السداد بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح.</p>
-                            <Button className="w-full mt-4" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
+                    <CardContent className="p-8">
+                        <div className="flex flex-col items-center justify-center gap-6">
+                            <div className="bg-green-100 p-5 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
+                            <div className='space-y-2'>
+                                <h2 className="text-2xl font-black">تم السداد بنجاح</h2>
+                                <p className="text-sm text-muted-foreground">تم سداد مبلغ {Number(amount).toLocaleString('en-US')} ريال بنجاح.</p>
+                            </div>
+                            <Button className="w-full h-12 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -354,75 +371,118 @@ export default function YemenMobilePage() {
 
   return (
     <>
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-[#f8fafc]">
       <SimpleHeader title="خدمات يمن موبايل" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <BalanceDisplay />
-        <Card className="shadow-lg">
-          <CardHeader>
-             <CardTitle className="text-center">سداد رصيد وباقات</CardTitle>
+        
+        <Card className="shadow-lg border-none rounded-[32px] overflow-hidden bg-white">
+          <CardHeader className="bg-primary/5 pb-4">
+             <CardTitle className="text-center text-lg font-black text-primary flex items-center justify-center gap-2">
+                <Phone className="w-5 h-5" />
+                سداد رصيد وباقات
+             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="phone" className="flex items-center gap-2 mb-1">
-                <Phone className="h-4 w-4" />
+          <CardContent className="p-6 space-y-6">
+            <div className='space-y-2'>
+              <Label htmlFor="phone" className="text-xs font-bold text-muted-foreground px-1">
                 ادخل رقم الهاتف
               </Label>
               <Input
                 id="phone"
                 type="tel"
                 inputMode='numeric'
-                placeholder="7xxxxxxxx"
+                placeholder="77xxxxxxx"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-right font-semibold"
+                className="text-center font-black text-2xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
             {showTabs && (
-                <div className="pt-2 animate-in fade-in-0 duration-300">
-                    <Tabs defaultValue="balance" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                             <TabsTrigger value="packages">الباقات</TabsTrigger>
-                             <TabsTrigger value="balance">الرصيد</TabsTrigger>
+                <div className="pt-2 animate-in fade-in-0 duration-500">
+                    <Tabs defaultValue="packages" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-2xl h-12 p-1">
+                             <TabsTrigger value="packages" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">الباقات</TabsTrigger>
+                             <TabsTrigger value="balance" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">الرصيد</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="packages" className="pt-4 space-y-4">
-                            <Card className="bg-muted/50">
-                                <CardContent className="grid grid-cols-3 gap-2 p-2 text-center">
-                                    <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-[10px] text-muted-foreground">رصيد الرقم</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{(billingInfo?.balance ?? 0).toLocaleString()} ريال</p>}
+
+                        <TabsContent value="packages" className="pt-6 space-y-6">
+                            {/* Billing Summary Info */}
+                            <Card className="bg-[#fffbeb] border-2 border-amber-100 rounded-3xl shadow-sm">
+                                <CardContent className="grid grid-cols-3 gap-2 p-3 text-center">
+                                    <div className='p-2 bg-white/50 rounded-2xl border border-amber-50'>
+                                        <p className="text-[10px] text-amber-700 font-bold mb-1">رصيد الرقم</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-black text-xs text-amber-900">{(billingInfo?.balance ?? 0).toLocaleString()} ريال</p>}
                                     </div>
-                                    <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-[10px] text-muted-foreground">نوع الرقم</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{formatCustomerType(billingInfo?.customer_type)}</p>}
+                                    <div className='p-2 bg-white/50 rounded-2xl border border-amber-50'>
+                                        <p className="text-[10px] text-amber-700 font-bold mb-1">نوع الرقم</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-black text-xs text-amber-900">{formatCustomerType(billingInfo?.customer_type)}</p>}
                                     </div>
-                                     <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-[10px] text-muted-foreground">فحص السلفة</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{billingInfo?.solfa_status ?? '...'}</p>}
+                                     <div className='p-2 bg-white/50 rounded-2xl border border-amber-50'>
+                                        <p className="text-[10px] text-amber-700 font-bold mb-1">فحص السلفة</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className={cn("font-black text-xs", billingInfo?.solfa_status === 'متسلف' ? 'text-destructive' : 'text-green-600')}>{billingInfo?.solfa_status ?? '...'}</p>}
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {/* Active Subscriptions Section (Image-inspired) */}
+                            <Card className="border shadow-sm rounded-2xl overflow-hidden bg-white">
+                                <div className="bg-primary px-4 py-2 text-center">
+                                    <h4 className="text-white text-sm font-black tracking-widest">الاشتراكات الحالية</h4>
+                                </div>
+                                <CardContent className="p-0 divide-y divide-muted">
+                                    {MOCK_ACTIVE_SUBS.map((sub, idx) => (
+                                        <div key={idx} className={cn("p-4 flex items-center justify-between gap-4", sub.highlight ? "bg-orange-50" : "")}>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="p-2 bg-primary/10 rounded-xl">
+                                                    <RefreshCcw className="w-5 h-5 text-primary" />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-primary">تجديد</span>
+                                            </div>
+                                            <div className="flex-1 text-right">
+                                                <h5 className="text-xs font-black text-slate-800 leading-tight mb-2">{sub.name}</h5>
+                                                <div className="space-y-0.5">
+                                                    <div className="flex justify-start gap-2 text-[10px]">
+                                                        <span className="text-green-600 font-bold">الاشتراك:</span>
+                                                        <span className="font-mono text-slate-500">{sub.start}</span>
+                                                    </div>
+                                                    <div className="flex justify-start gap-2 text-[10px]">
+                                                        <span className="text-destructive font-bold">الانتهاء:</span>
+                                                        <span className="font-mono text-slate-500">{sub.end}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
                             
-                            <div className="space-y-2">
-                                <h4 className="font-bold mb-2 text-center text-sm text-primary">الباقات المتاحة</h4>
-                                <Accordion type="single" collapsible className="w-full space-y-2">
+                            {/* Categories Accordion */}
+                            <div className="space-y-3">
+                                <Accordion type="single" collapsible className="w-full space-y-3">
                                   {CATEGORIES.map((category) => (
-                                    <AccordionItem key={category.id} value={category.id} className="border rounded-xl bg-card overflow-hidden">
-                                      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 transition-colors">
-                                        <span className="text-sm font-bold text-right flex-1">{category.title}</span>
+                                    <AccordionItem key={category.id} value={category.id} className="border-none">
+                                      <AccordionTrigger className="px-4 py-4 hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0">
+                                                <span className="text-primary font-black text-xs">{category.badge}</span>
+                                            </div>
+                                            <span className="text-white font-black text-right flex-1">{category.title}</span>
+                                        </div>
+                                        <ChevronDown className="w-5 h-5 text-white/70 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
-                                      <AccordionContent className="p-2 space-y-1 bg-muted/20">
+                                      <AccordionContent className="p-3 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
                                           <Button 
                                             key={offer.offerId} 
                                             variant="ghost" 
-                                            className="w-full justify-between h-auto py-2 text-right border-b border-muted last:border-0 rounded-none"
+                                            className="w-full justify-between h-auto py-3 px-4 text-right border border-muted hover:bg-primary/5 rounded-xl transition-colors"
                                             onClick={() => handleOfferClick(offer)}
                                           >
-                                            <span className="text-xs">{offer.offerName}</span>
-                                            <Zap className="w-3 h-3 text-primary" />
+                                            <span className="text-xs font-bold text-slate-700">{offer.offerName}</span>
+                                            <Zap className="w-4 h-4 text-primary" />
                                           </Button>
                                         ))}
                                       </AccordionContent>
@@ -431,35 +491,47 @@ export default function YemenMobilePage() {
                                 </Accordion>
                             </div>
                         </TabsContent>
-                        <TabsContent value="balance" className="pt-4 space-y-4">
-                           <div className='text-right'>
-                                <Label htmlFor="amount" className="flex items-center justify-end gap-2 mb-1">المبلغ</Label>
-                                <Input id="amount" type="number" inputMode='numeric' placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-right" />
+
+                        <TabsContent value="balance" className="pt-6 space-y-6">
+                           <div className='space-y-4'>
+                                <div className='space-y-2'>
+                                    <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground px-1">المبلغ المراد تسديده</Label>
+                                    <Input 
+                                        id="amount" 
+                                        type="number" 
+                                        inputMode='numeric' 
+                                        placeholder="0.00" 
+                                        value={amount} 
+                                        onChange={(e) => setAmount(e.target.value)} 
+                                        className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-2" 
+                                    />
+                                </div>
+                                <div className='p-4 bg-primary/5 border border-primary/10 rounded-2xl flex justify-between items-center'>
+                                    <span className="text-sm font-bold text-slate-600 tracking-tight">صافي الرصيد المستلم:</span>
+                                    <span className="text-lg font-black text-primary">{netAmount.toFixed(2)} <span className="text-xs">ر.ي</span></span>
+                                </div>
                            </div>
-                           <div className='text-right'>
-                                <Label htmlFor="netAmount" className="flex items-center justify-end gap-2 mb-1">صافي الرصيد</Label>
-                                <Input id="netAmount" type="text" value={netAmount.toFixed(2)} readOnly className="bg-muted focus:ring-0 text-right" />
-                           </div>
+
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>
-                                <Button className="w-full" disabled={isProcessing || !amount || !phone}>
-                                    <Send className="ml-2 h-4 w-4" />
-                                    تسديد
+                                <Button className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20" disabled={isProcessing || !amount || !phone}>
+                                    <Send className="ml-2 h-5 w-5" />
+                                    تأكيد عملية التسديد
                                 </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="rounded-[32px]">
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-center">تأكيد السداد</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-center pt-2">
-                                    هل أنت متأكد من تسديد مبلغ{' '}
-                                    <span className="font-bold text-primary">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>{' '}
-                                    إلى الرقم <span className="font-bold text-primary">{phone}</span>؟
+                                    <AlertDialogTitle className="text-center text-xl font-black">تأكيد السداد</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-center pt-4 text-slate-700 space-y-2">
+                                        <p>أنت على وشك تسديد مبلغ</p>
+                                        <p className="font-black text-2xl text-primary tracking-tight">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</p>
+                                        <p>إلى الرقم <span className="font-black text-slate-900">{phone}</span></p>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handlePayment} disabled={isProcessing}>
-                                    {isProcessing ? 'جاري السداد...' : 'تأكيد'}
+                                <AlertDialogFooter className="flex-row gap-3 mt-6">
+                                    <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handlePayment} className="flex-1 rounded-2xl h-12 font-bold" disabled={isProcessing}>
+                                    {isProcessing ? <Loader2 className="animate-spin h-5 w-5"/> : 'تأكيد'}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -475,20 +547,22 @@ export default function YemenMobilePage() {
     <Toaster />
 
     <AlertDialog open={isConfirmingOffer} onOpenChange={setIsConfirmingOffer}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
-                <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
-                <Accordion type="single" collapsible>
-                  {/* Dummy component to make content look correct */}
-                </Accordion>
-                <AlertDialogDescription className='text-center pt-2'>
-                    هل أنت متأكد من تفعيل باقة "{selectedOffer?.offerName}" للرقم {phone}؟ سيتم خصم القيمة من رصيدك.
+                <AlertDialogTitle className="text-center text-xl font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
+                <AlertDialogDescription className='text-center pt-6 text-slate-700 space-y-3'>
+                    <div className="p-4 bg-muted/50 rounded-2xl">
+                        <p className="text-xs text-muted-foreground mb-1">الباقة المختارة:</p>
+                        <p className="font-black text-lg text-primary">{selectedOffer?.offerName}</p>
+                    </div>
+                    <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
+                    <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel disabled={isActivatingOffer}>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleActivateOffer} disabled={isActivatingOffer}>
-                    {isActivatingOffer ? <Loader2 className="ml-2 h-4 w-4 animate-spin"/> : 'تأكيد التفعيل'}
+            <AlertDialogFooter className="flex-row gap-3 mt-6">
+                <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
+                <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
+                    {isActivatingOffer ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : 'تفعيل الآن'}
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>

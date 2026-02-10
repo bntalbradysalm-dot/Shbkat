@@ -118,7 +118,6 @@ export default function YemenMobilePage() {
         setOffers(null);
         
         try {
-          // 1. استعلام الرصيد والسلفة والعروض بشكل متزامن
           const [balanceRes, solfaRes, offersRes] = await Promise.all([
             fetch('/api/telecom', {
                 method: 'POST',
@@ -366,8 +365,8 @@ export default function YemenMobilePage() {
                                     <h4 className="font-bold mb-2 text-center text-sm">الباقات المتاحة</h4>
                                     {offers.map((offer: Offer) => (
                                         <Button key={offer.offerId} variant="outline" className="w-full justify-between h-auto py-3 text-right" onClick={() => handleOfferClick(offer)}>
-                                            <span className="whitespace-normal">{offer.offerName}</span>
-                                            <Zap className="w-4 h-4 text-primary shrink-0" />
+                                            <span className="whitespace-normal text-right flex-1">{offer.offerName}</span>
+                                            <Zap className="w-4 h-4 text-primary shrink-0 mr-2" />
                                         </Button>
                                     ))}
                                 </div>

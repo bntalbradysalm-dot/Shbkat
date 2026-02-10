@@ -31,8 +31,9 @@ export async function POST(request: Request) {
     const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
     const token = generateToken(transid, payload.mobile);
 
-    let apiBaseUrl = 'https://echehanlyw.yrbso.net'; 
-    let endpoint = '/yem';
+    // الرابط الذي طلبه المستخدم كقاعدة أساسية
+    let apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
+    let endpoint = '';
     
     // إعداد المعايير المرسلة للـ API
     let apiRequestParams: any = {
@@ -44,11 +45,9 @@ export async function POST(request: Request) {
     };
     
     // تحديد النطاق والمسار بناءً على نوع الخدمة والوثائق المزودة
-    if (service === 'yem4g') {
-        apiBaseUrl = 'https://echehanly.yrbso.net';
-        endpoint = '/api/yr/'; 
-    } else if (service === 'post') {
-        endpoint = '/post';
+    if (service === 'post') {
+        // للهاتف الثابت و ADSL
+        endpoint = 'post';
     } else { 
         switch(action) {
             case 'query':
@@ -56,11 +55,11 @@ export async function POST(request: Request) {
             case 'solfa':
             case 'queryoffer':
             case 'billoffer':
-                endpoint = '/yem';
+                endpoint = 'yem';
                 break;
             case 'billover': 
                 // تفعيل باقة (One-step activation)
-                endpoint = '/offeryem';
+                endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 if (apiRequestParams.offertype) {
                     apiRequestParams.offerkey = apiRequestParams.offertype;
@@ -71,10 +70,10 @@ export async function POST(request: Request) {
                 break;
             case 'status':
             case 'balance':
-                endpoint = '/info';
+                endpoint = 'info';
                 break;
             default:
-                endpoint = '/yem';
+                endpoint = 'yem';
         }
     }
 

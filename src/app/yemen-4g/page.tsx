@@ -102,17 +102,13 @@ export default function Yemen4GPage() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام.');
             
-            if (result.resultCode === '0' || result.resultCode === '-2' || result.resultDesc) {
-                 setQueryResult({
-                    balance: result.balance,
-                    packName: result.packName,
-                    expireDate: result.expireDate,
-                    message: result.resultDesc
-                });
-                toast({ title: 'تم الاستعلام بنجاح', description: result.resultDesc || 'تم عرض بيانات الرقم.' });
-            } else {
-                throw new Error('استجابة غير معروفة من الخادم.');
-            }
+            setQueryResult({
+                balance: result.balance,
+                packName: result.packName,
+                expireDate: result.expireDate,
+                message: result.resultDesc
+            });
+            toast({ title: 'تم الاستعلام بنجاح', description: result.resultDesc || 'تم عرض بيانات الرقم.' });
 
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'فشل الاستعلام', description: error.message });
@@ -245,23 +241,23 @@ export default function Yemen4GPage() {
 
                             {queryResult && !isQuerying && (
                                 <Card className="mt-4 bg-muted/50 animate-in fade-in-0">
-                                    <CardHeader>
+                                    <CardHeader className="pb-2">
                                         <CardTitle className="text-sm text-center">نتيجة الاستعلام</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-3">
                                         {queryResult.balance || queryResult.packName || queryResult.expireDate ? (
                                             <div className="grid grid-cols-3 gap-2 text-center">
                                                  <div className='p-2 bg-background rounded-md space-y-1'>
-                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Database className="w-3 h-3"/>اسم الباقة</p>
-                                                    <p className="font-bold text-sm whitespace-normal" title={queryResult.packName}>{queryResult.packName || 'غير متوفر'}</p>
+                                                    <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Database className="w-3 h-3"/>الباقة</p>
+                                                    <p className="font-bold text-xs whitespace-normal" title={queryResult.packName}>{queryResult.packName || '...'}</p>
                                                 </div>
                                                 <div className='p-2 bg-background rounded-md space-y-1'>
-                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Wallet className="w-3 h-3"/>البيانات المتبقية</p>
-                                                    <p className="font-bold text-sm">{formatData(queryResult.balance)}</p>
+                                                    <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Wallet className="w-3 h-3"/>المتبقي</p>
+                                                    <p className="font-bold text-xs">{formatData(queryResult.balance)}</p>
                                                 </div>
                                                 <div className='p-2 bg-background rounded-md space-y-1'>
-                                                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Calendar className="w-3 h-3"/>تاريخ الانتهاء</p>
-                                                    <p className="font-bold text-sm">{queryResult.expireDate || 'غير متوفر'}</p>
+                                                    <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Calendar className="w-3 h-3"/>الانتهاء</p>
+                                                    <p className="font-bold text-xs">{queryResult.expireDate || '...'}</p>
                                                 </div>
                                             </div>
                                         ) : (

@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, History, Wallet, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, FileText, Heart } from "lucide-react";
+import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, History, Wallet, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, FileText, Heart, Ticket } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "@/Dialog";
 import Link from "next/link";
 
 type UserProfile = {
@@ -24,7 +24,7 @@ type UserProfile = {
 
 const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { id: 'transfer', name: 'حوالات', icon: Send, href: '/transfer' },
+  { id: 'transfer', name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'store', name: 'مشتريات', icon: ShoppingBag, href: '/store' },
@@ -42,6 +42,7 @@ export function BalanceCard() {
   const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
   const [rightAction, setRightAction] = useState(availableServices[6]); // Default: الشبكات
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 
   useEffect(() => {
@@ -91,8 +92,15 @@ export function BalanceCard() {
     };
     const clearTimer = () => clearTimeout(timer);
 
+    const handleClick = (e: React.MouseEvent) => {
+        if (service.isComingSoon) {
+            e.preventDefault();
+            setIsComingSoonOpen(true);
+        }
+    };
+
     return (
-      <Link href={service.href} className="flex-1">
+      <Link href={service.href} className="flex-1" onClick={handleClick}>
         <button
           onMouseDown={startTimer}
           onMouseUp={clearTimer}
@@ -183,6 +191,25 @@ export function BalanceCard() {
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="ghost" className="w-full rounded-2xl">إلغاء</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isComingSoonOpen} onOpenChange={setIsComingSoonOpen}>
+        <DialogContent className="rounded-[32px] max-w-sm">
+          <DialogHeader>
+            <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                <Ticket className="text-primary h-8 w-8" />
+            </div>
+            <DialogTitle className="text-center text-xl font-black">قريباً</DialogTitle>
+            <DialogDescription className="text-center text-base font-bold">
+              هذه الخدمة ستكون متاحة قريباً في تحديثات التطبيق القادمة.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-4">
+            <DialogClose asChild>
+              <Button className="w-full rounded-2xl h-12 font-black">حسناً</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

@@ -56,6 +56,8 @@ import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
 
+export const dynamic = 'force-dynamic';
+
 // Types
 type Network = {
   id: number;

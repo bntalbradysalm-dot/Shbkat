@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/dialog';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
+export const dynamic = 'force-dynamic';
+
 type Product = {
   id: string;
   name: string;

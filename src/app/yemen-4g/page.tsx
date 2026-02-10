@@ -16,6 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
+export const dynamic = 'force-dynamic';
+
 type UserProfile = {
   balance?: number;
 };
@@ -49,7 +51,9 @@ const BalanceDisplay = () => {
                         <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
                     )}
                 </div>
-                <Wallet className="h-8 w-8 text-primary" />
+                <div className="p-3 bg-primary/10 rounded-2xl">
+                    <Wallet className="h-8 w-8 text-primary" />
+                </div>
             </CardContent>
         </Card>
     );

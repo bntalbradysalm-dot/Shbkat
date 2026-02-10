@@ -16,17 +16,17 @@ const firebaseConfig = {
 };
 
 // Check if config is valid to avoid crashing during build phase if environment variables are missing
-const isConfigValid = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "";
+const isConfigValid = typeof window !== "undefined" && !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "";
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let firestore: Firestore | undefined;
 
-if (typeof window !== "undefined" || isConfigValid) {
+if (isConfigValid) {
     try {
         if (getApps().length) {
             app = getApp();
-        } else if (isConfigValid) {
+        } else {
             app = initializeApp(firebaseConfig);
         }
 
@@ -37,7 +37,7 @@ if (typeof window !== "undefined" || isConfigValid) {
             });
         }
     } catch (error) {
-        console.error("Firebase initialization failed during build or runtime:", error);
+        console.error("Firebase initialization failed:", error);
     }
 }
 

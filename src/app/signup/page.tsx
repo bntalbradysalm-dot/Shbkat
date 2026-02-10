@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -21,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
+
+export const dynamic = 'force-dynamic';
 
 const locations = [
   'سيئون',

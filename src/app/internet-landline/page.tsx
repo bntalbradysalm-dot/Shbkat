@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 
+export const dynamic = 'force-dynamic';
+
 export default function InternetLandlinePage() {
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("adsl");

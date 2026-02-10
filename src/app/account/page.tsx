@@ -200,15 +200,15 @@ export default function AccountPage() {
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none">
           <CardContent className="p-6 flex items-center gap-4">
             <div className="flex-grow text-right">
-              <h2 className="text-lg font-black">{userProfile?.displayName || 'مستخدم جديد'}</h2>
+              <h2 className="text-lg font-black text-white">{userProfile?.displayName || 'مستخدم جديد'}</h2>
               <div className="text-xs text-white/80 mt-1.5 space-y-1.5">
                 <div className="flex items-center justify-start gap-2">
                   <Phone className="h-3.5 w-3.5 opacity-70" />
-                  <span className="font-bold">{userProfile?.phoneNumber || '...'}</span>
+                  <span className="font-bold text-white/90">{userProfile?.phoneNumber || '...'}</span>
                 </div>
                 <div className="flex items-center justify-start gap-2">
                   <MapPin className="h-3.5 w-3.5 opacity-70" />
-                  <span className="font-bold">{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
+                  <span className="font-bold text-white/90">{userProfile?.location ? `حضرموت - ${userProfile.location}` : '...'}</span>
                 </div>
               </div>
             </div>

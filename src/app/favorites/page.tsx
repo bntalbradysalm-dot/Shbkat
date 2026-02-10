@@ -318,8 +318,8 @@ export default function FavoritesPage() {
             <CardContent className="p-4 flex items-center justify-between">
               <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6" /></div>
               <div className="flex-1 text-right mx-4 space-y-1">
-                <h4 className="font-bold text-base">{fav.name}</h4>
-                <p className="text-[10px] opacity-80">{fav.location}</p>
+                <h4 className="font-bold text-base text-white">{fav.name}</h4>
+                <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
               </div>
               <button 
                 onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
@@ -369,8 +369,8 @@ export default function FavoritesPage() {
                 </button>
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10" /></div>
-                  <h2 className="text-xl font-black">{selectedNetwork.name}</h2>
-                  <p className="text-xs opacity-80">{selectedNetwork.location}</p>
+                  <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                  <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
                 </div>
               </div>
 

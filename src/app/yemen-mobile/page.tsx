@@ -148,40 +148,40 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[24px] p-4 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
+      className="bg-[#FDE6D2] rounded-[24px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
       onClick={onClick}
     >
       {/* Floating Logo */}
-      <div className="absolute top-3 left-3 w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center p-1 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={24} height={24} className="rounded-sm object-contain" />
+      <div className="absolute top-2 left-2 w-7 h-7 bg-white rounded-lg shadow-sm flex items-center justify-center p-1 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={20} height={20} className="rounded-sm object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-xl font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
-        <p className="text-[11px] font-bold text-slate-800 mt-0.5">دفع مسبق</p>
-        <p className="text-[10px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-lg font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
+        <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
+        <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-2">
-        <span className="text-4xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-1.5">
+        <span className="text-3xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-3 border-t border-[#EBCDB5] text-center">
-        <div className="space-y-1">
-          <Globe className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-0.5">
+          <Globe className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Mail className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+        <div className="space-y-0.5 border-r border-[#EBCDB5]">
+          <Mail className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Phone className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+        <div className="space-y-0.5 border-r border-[#EBCDB5]">
+          <Phone className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Clock className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-xs font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+        <div className="space-y-0.5 border-r border-[#EBCDB5]">
+          <Clock className="w-5 h-5 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -272,7 +272,6 @@ export default function YemenMobilePage() {
       }
     };
     
-    // Process search immediately without debounce when the number is complete
     if (phone.length === 9) {
         handleSearch();
     }
@@ -446,7 +445,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-3xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -514,16 +513,16 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-4">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-4 py-4 text-base hover:no-underline bg-primary rounded-xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-5 py-5 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                <span className="text-primary font-black text-[10px]">{category.badge}</span>
+                                            <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                                <span className="text-primary font-black text-xs">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-sm tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-base tracking-wide">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-5 h-5 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
-                                      <AccordionContent className="p-4 space-y-2 bg-white border-x border-b rounded-b-xl shadow-inner">
+                                      <AccordionContent className="p-4 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
                                           <PackageCard 
                                             key={offer.offerId} 
@@ -541,7 +540,7 @@ export default function YemenMobilePage() {
                         <TabsContent value="balance" className="pt-6 space-y-6">
                            <div className='space-y-4'>
                                 <div className='space-y-2'>
-                                    <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground px-1">المبلغ المراد تسديده</Label>
+                                    <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground px-1 text-right block">المبلغ المراد تسديده</Label>
                                     <Input 
                                         id="amount" 
                                         type="number" 
@@ -549,12 +548,15 @@ export default function YemenMobilePage() {
                                         placeholder="0.00" 
                                         value={amount} 
                                         onChange={(e) => setAmount(e.target.value)} 
-                                        className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-2" 
+                                        className="text-right font-black text-3xl h-16 rounded-2xl bg-muted/20 border-2 px-4" 
                                     />
                                 </div>
-                                <div className='p-4 bg-primary/5 border border-primary/10 rounded-2xl flex justify-between items-center'>
-                                    <span className="text-sm font-bold text-slate-600 tracking-tight">صافي الرصيد المستلم:</span>
-                                    <span className="text-lg font-black text-primary">{netAmount.toFixed(2)} <span className="text-xs">ر.ي</span></span>
+                                <div className='p-4 bg-primary/5 border border-primary/10 rounded-2xl space-y-2'>
+                                    <p className="text-xs font-bold text-muted-foreground text-right">صافي الرصيد المستلم</p>
+                                    <div className='flex justify-center items-baseline gap-1.5'>
+                                        <span className="text-3xl font-black text-primary">{netAmount.toFixed(2)}</span>
+                                        <span className="text-sm font-bold text-primary">ر.ي</span>
+                                    </div>
                                 </div>
                            </div>
 

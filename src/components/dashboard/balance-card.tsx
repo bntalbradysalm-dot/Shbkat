@@ -60,7 +60,7 @@ export function BalanceCard() {
   }, []);
 
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, "users", user.uid) : null),
+    () => (user && firestore ? doc(firestore, "users", user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -107,7 +107,7 @@ export function BalanceCard() {
           onMouseLeave={clearTimer}
           onTouchStart={startTimer}
           onTouchEnd={clearTimer}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/10 hover:bg-white/20 transition-colors rounded-xl text-white text-[10px] font-bold border border-white/5 backdrop-blur-sm"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/5 hover:bg-primary/10 transition-colors rounded-xl text-primary text-[10px] font-bold border border-primary/10 backdrop-blur-sm"
         >
           <Icon size={12} />
           <span>{service.name}</span>
@@ -118,41 +118,39 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <Card className="w-full overflow-hidden rounded-[28px] bg-mesh-gradient text-white shadow-lg border-none">
-        <CardContent className="p-4 flex flex-col items-center justify-center min-h-[140px] relative">
-          
-          <div className="w-full relative flex flex-col items-center justify-center mt-8 mb-2">
-            <div className="absolute left-0 top-0">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-                    className="h-7 w-7 rounded-full hover:bg-white/20 text-white"
-                >
-                    {isBalanceVisible ? <Eye size={16} /> : <EyeOff size={16} />}
-                </Button>
-            </div>
-
-            <div className="flex items-baseline gap-1.5 pt-2">
-                <h2 className="text-3xl font-black tracking-tight text-white">
-                {isLoading ? (
-                    <Skeleton className="h-8 w-24 bg-white/20" />
-                ) : isBalanceVisible ? (
-                    balance.toLocaleString('en-US')
-                ) : (
-                    "******"
-                )}
-                </h2>
-                <span className="text-[10px] font-bold opacity-80 text-white">ريال يمني</span>
-            </div>
+      <div className="w-full flex flex-col items-center justify-center pt-2 pb-4 relative">
+        
+        <div className="w-full relative flex flex-col items-center justify-center mb-4">
+          <div className="absolute left-0 top-0">
+              <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                  className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground"
+              >
+                  {isBalanceVisible ? <Eye size={18} /> : <EyeOff size={18} />}
+              </Button>
           </div>
 
-          <div className="mt-6 flex gap-2 w-full">
-            <ActionButton service={leftAction} side="left" />
-            <ActionButton service={rightAction} side="right" />
+          <div className="flex flex-col items-center justify-center gap-1">
+              <h2 className="text-5xl font-black tracking-tight text-primary">
+              {isLoading ? (
+                  <Skeleton className="h-12 w-32" />
+              ) : isBalanceVisible ? (
+                  balance.toLocaleString('en-US')
+              ) : (
+                  "******"
+              )}
+              </h2>
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">ريال يمني</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="flex gap-2 w-full max-w-[280px]">
+          <ActionButton service={leftAction} side="left" />
+          <ActionButton service={rightAction} side="right" />
+        </div>
+      </div>
 
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="rounded-[32px] max-w-sm">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -155,7 +156,7 @@ export default function LoginPage() {
       <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
         <div className="flex-1 flex flex-col justify-center">
           <div className="mb-8">
-             <PromotionalImage />
+             <PromotionalImage disableLink />
               <div className="text-center mt-6">
                 <h1 className="text-2xl font-bold">أهلاً بك</h1>
                 <p className="text-muted-foreground">سجل دخولك للبدء</p>

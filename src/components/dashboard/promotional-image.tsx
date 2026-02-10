@@ -21,7 +21,11 @@ type Advertisement = {
     linkUrl?: string;
 };
 
-export function PromotionalImage() {
+interface PromotionalImageProps {
+    disableLink?: boolean;
+}
+
+export function PromotionalImage({ disableLink = false }: PromotionalImageProps) {
     const firestore = useFirestore();
     
     const adsCollection = useMemoFirebase(
@@ -87,7 +91,7 @@ export function PromotionalImage() {
                     {ads.map((ad) => (
                         <CarouselItem key={ad.id}>
                            <div className="p-1">
-                                {ad.linkUrl ? (
+                                {!disableLink && ad.linkUrl ? (
                                     <Link href={ad.linkUrl} className="block">
                                         {promoImage(ad)}
                                     </Link>

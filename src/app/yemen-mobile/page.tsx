@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown, RefreshCcw } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown, RefreshCcw, Globe, Mail, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
@@ -33,6 +33,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type UserProfile = {
   balance?: number;
@@ -47,6 +48,11 @@ type BillingInfo = {
 type Offer = {
     offerName: string;
     offerId: string;
+    price: number;
+    data?: string;
+    sms?: string;
+    minutes?: string;
+    validity?: string;
 };
 
 const CATEGORIES = [
@@ -55,10 +61,10 @@ const CATEGORIES = [
     title: 'باقات مزايا',
     badge: '3G',
     offers: [
-      { offerId: 'm1200', offerName: 'مزايا الشهرية 1200' },
-      { offerId: 'm2500', offerName: 'مزايا الشهرية 2500' },
-      { offerId: 'm5000', offerName: 'مزايا الشهرية 5000' },
-      { offerId: 'm_weekly', offerName: 'مزايا الإسبوعية' },
+      { offerId: 'm1200', offerName: 'مزايا الشهرية 1200', price: 1200, data: '250 ميجا', sms: '150 رسالة', minutes: '300 دقيقة', validity: '30 يوم' },
+      { offerId: 'm2500', offerName: 'مزايا الشهرية 2500', price: 2500, data: '1 جيجا', sms: '300 رسالة', minutes: '600 دقيقة', validity: '30 يوم' },
+      { offerId: 'm5000', offerName: 'مزايا الشهرية 5000', price: 5000, data: '2.5 جيجا', sms: '600 رسالة', minutes: '1200 دقيقة', validity: '30 يوم' },
+      { offerId: 'm_weekly', offerName: 'مزايا الإسبوعية', price: 485, data: '90 ميجا', sms: '30 رسالة', minutes: '100 دقيقة', validity: '7 أيام' },
     ]
   },
   {
@@ -66,10 +72,10 @@ const CATEGORIES = [
     title: 'باقات فورجي',
     badge: '4G',
     offers: [
-      { offerId: '4g_5gb', offerName: 'فورجي 5 جيجابايت' },
-      { offerId: '4g_10gb', offerName: 'فورجي 10 جيجابايت' },
-      { offerId: '4g_20gb', offerName: 'فورجي 20 جيجابايت' },
-      { offerId: '4g_unlimited', offerName: 'فورجي بلا حدود (شهري)' },
+      { offerId: '4g_5gb', offerName: 'فورجي 5 جيجابايت', price: 2400, data: '5 جيجا', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم' },
+      { offerId: '4g_10gb', offerName: 'فورجي 10 جيجابايت', price: 4400, data: '10 جيجا', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم' },
+      { offerId: '4g_20gb', offerName: 'فورجي 20 جيجابايت', price: 8000, data: '20 جيجا', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم' },
+      { offerId: '4g_unlimited', offerName: 'فورجي بلا حدود', price: 15000, data: 'بلا حدود', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم' },
     ]
   },
   {
@@ -77,9 +83,9 @@ const CATEGORIES = [
     title: 'باقات فولتي VoLTE',
     badge: '4G',
     offers: [
-      { offerId: 'volte_100', offerName: 'فولتي 100 دقيقة' },
-      { offerId: 'volte_300', offerName: 'فولتي 300 دقيقة' },
-      { offerId: 'volte_500', offerName: 'فولتي 500 دقيقة' },
+      { offerId: 'volte_100', offerName: 'فولتي 100 دقيقة', price: 500, data: '0 ميجا', sms: '0 رسالة', minutes: '100 دقيقة', validity: '30 يوم' },
+      { offerId: 'volte_300', offerName: 'فولتي 300 دقيقة', price: 1200, data: '0 ميجا', sms: '0 رسالة', minutes: '300 دقيقة', validity: '30 يوم' },
+      { offerId: 'volte_500', offerName: 'فولتي 500 دقيقة', price: 2000, data: '0 ميجا', sms: '0 رسالة', minutes: '500 دقيقة', validity: '30 يوم' },
     ]
   },
   {
@@ -87,10 +93,9 @@ const CATEGORIES = [
     title: 'باقات الإنترنت الشهرية',
     badge: '⇅',
     offers: [
-      { offerId: 'net_1gb', offerName: 'إنترنت 1 جيجابايت شهري' },
-      { offerId: 'net_3gb', offerName: 'إنترنت 3 جيجابايت شهري' },
-      { offerId: 'net_6gb', offerName: 'إنترنت 6 جيجابايت شهري' },
-      { offerId: 'net_12gb', offerName: 'إنترنت 12 جيجابايت شهري' },
+      { offerId: 'net_1gb', offerName: 'إنترنت 1 جيجابايت', price: 1000, data: '1 جيجا', sms: '0 رسالة', minutes: '0 دقيقة', validity: '30 يوم' },
+      { offerId: 'net_3gb', offerName: 'إنترنت 3 جيجابايت', price: 2500, data: '3 جيجا', sms: '0 رسالة', minutes: '0 دقيقة', validity: '30 يوم' },
+      { offerId: 'net_6gb', offerName: 'إنترنت 6 جيجابايت', price: 4500, data: '6 جيجا', sms: '0 رسالة', minutes: '0 دقيقة', validity: '30 يوم' },
     ]
   },
   {
@@ -98,9 +103,8 @@ const CATEGORIES = [
     title: 'باقات الإنترنت 10 أيام',
     badge: '⇅',
     offers: [
-      { offerId: 'net_10d_500', offerName: 'إنترنت 500 ميجابايت (10 أيام)' },
-      { offerId: 'net_10d_1500', offerName: 'إنترنت 1.5 جيجابايت (10 أيام)' },
-      { offerId: 'net_10d_3000', offerName: 'إنترنت 3 جيجابايت (10 أيام)' },
+      { offerId: 'net_10d_500', offerName: 'إنترنت 500 ميجا', price: 400, data: '500 ميجا', sms: '0 رسالة', minutes: '0 دقيقة', validity: '10 أيام' },
+      { offerId: 'net_10d_1500', offerName: 'إنترنت 1.5 جيجا', price: 1000, data: '1.5 جيجا', sms: '0 رسالة', minutes: '0 دقيقة', validity: '10 أيام' },
     ]
   },
 ];
@@ -140,6 +144,49 @@ const BalanceDisplay = () => {
         </Card>
     );
 }
+
+const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
+  return (
+    <div 
+      className="bg-[#FDE6D2] rounded-[32px] p-5 shadow-md relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-4"
+      onClick={onClick}
+    >
+      {/* Floating Logo */}
+      <div className="absolute top-4 left-4 w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center p-1 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={32} height={32} className="rounded-md object-contain" />
+      </div>
+
+      <div className="text-right pr-2">
+        <h4 className="text-lg font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
+        <p className="text-sm font-bold text-slate-800 mt-1">دفع مسبق</p>
+        <p className="text-[10px] font-bold text-slate-500">شريحة + برمجة</p>
+      </div>
+
+      <div className="flex justify-center my-4">
+        <span className="text-5xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      </div>
+
+      <div className="grid grid-cols-4 gap-0 pt-4 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-1">
+          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[9px] font-black text-slate-800">{offer.data || '-'}</p>
+        </div>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[9px] font-black text-slate-800">{offer.sms || '-'}</p>
+        </div>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[9px] font-black text-slate-800">{offer.minutes || '-'}</p>
+        </div>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[9px] font-black text-slate-800">{offer.validity || '-'}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function YemenMobilePage() {
   const router = useRouter();
@@ -426,7 +473,7 @@ export default function YemenMobilePage() {
                                 </CardContent>
                             </Card>
 
-                            {/* Active Subscriptions Section (Image-inspired) */}
+                            {/* Active Subscriptions Section */}
                             <Card className="border shadow-sm rounded-2xl overflow-hidden bg-white">
                                 <div className="bg-primary px-4 py-2 text-center">
                                     <h4 className="text-white text-sm font-black tracking-widest">الاشتراكات الحالية</h4>
@@ -463,26 +510,22 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-3">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-5 py-5 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
                                         <div className="flex items-center gap-4 flex-1">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                <span className="text-primary font-black text-[10px]">{category.badge}</span>
+                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                                <span className="text-primary font-black text-xs">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-sm tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-base tracking-wide">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-4 h-4 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-5 h-5 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
-                                      <AccordionContent className="p-2.5 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
+                                      <AccordionContent className="p-4 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
-                                          <Button 
+                                          <PackageCard 
                                             key={offer.offerId} 
-                                            variant="ghost" 
-                                            className="w-full justify-between h-auto py-3 px-4 text-right border border-muted hover:bg-primary/5 rounded-xl transition-colors"
-                                            onClick={() => handleOfferClick(offer)}
-                                          >
-                                            <span className="text-xs font-bold text-slate-700">{offer.offerName}</span>
-                                            <Zap className="w-4 h-4 text-primary" />
-                                          </Button>
+                                            offer={offer} 
+                                            onClick={() => handleOfferClick(offer)} 
+                                          />
                                         ))}
                                       </AccordionContent>
                                     </AccordionItem>

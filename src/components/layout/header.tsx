@@ -118,7 +118,7 @@ const Header = () => {
             </div>
           ) : (
             <>
-              <p className="text-primary font-bold text-sm opacity-90 leading-tight">{greeting}</p>
+              <p className="text-primary font-black text-lg opacity-90 leading-tight">{greeting}</p>
               <h1 className="font-black text-foreground text-base tracking-tight leading-tight">{displayName}</h1>
             </>
           )}

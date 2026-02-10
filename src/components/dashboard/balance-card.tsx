@@ -108,7 +108,7 @@ export function BalanceCard() {
           onMouseLeave={clearTimer}
           onTouchStart={startTimer}
           onTouchEnd={clearTimer}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/5 hover:bg-primary/10 transition-colors rounded-xl text-primary text-[10px] font-bold border border-primary/10 backdrop-blur-sm"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/20 hover:bg-white/30 transition-colors rounded-xl text-white text-[10px] font-bold border border-white/10 backdrop-blur-sm"
         >
           <Icon size={12} />
           <span>{service.name}</span>
@@ -119,7 +119,7 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <Card className="overflow-hidden border-none shadow-lg bg-card rounded-[32px]">
+      <Card className="overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-[32px]">
         <CardContent className="p-6 flex flex-col items-center justify-center relative">
           
           <div className="w-full relative flex flex-col items-center justify-center mb-4">
@@ -128,23 +128,23 @@ export function BalanceCard() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-                    className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground"
+                    className="h-8 w-8 rounded-full hover:bg-white/10 text-white/70"
                 >
                     {isBalanceVisible ? <Eye size={18} /> : <EyeOff size={18} />}
                 </Button>
             </div>
 
             <div className="flex flex-col items-center justify-center gap-1">
-                <h2 className="text-5xl font-black tracking-tight text-primary">
+                <h2 className="text-5xl font-black tracking-tight text-white">
                 {isLoading ? (
-                    <Skeleton className="h-12 w-32" />
+                    <Skeleton className="h-12 w-32 bg-white/20" />
                 ) : isBalanceVisible ? (
                     balance.toLocaleString('en-US')
                 ) : (
                     "******"
                 )}
                 </h2>
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">ريال يمني</span>
+                <span className="text-xs font-black text-white/70 uppercase tracking-widest">ريال يمني</span>
             </div>
           </div>
 

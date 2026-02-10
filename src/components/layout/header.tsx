@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -5,7 +6,6 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, query, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 type Notification = {
   id: string;
@@ -72,15 +72,8 @@ const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
-      <button onClick={handleNotificationClick} className="relative p-2.5 bg-muted/20 rounded-full border border-border/50">
-        <Bell className="h-6 w-6 text-primary" />
-        {hasUnread && (
-          <span className="absolute top-1 right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-          </span>
-        )}
-      </button>
+      {/* عنصر فارغ لضمان بقاء النص في المنتصف تماماً */}
+      <div className="w-11 h-11" />
 
       <div className="flex flex-col items-center justify-center flex-1 text-center px-2">
         {isUserLoading ? (
@@ -96,11 +89,18 @@ const Header = () => {
         )}
       </div>
 
-      <Avatar className="h-14 w-14 border-2 border-border/50 bg-muted shadow-sm">
-        <AvatarFallback>
-          <UserIcon className="h-8 w-8 text-muted-foreground" />
-        </AvatarFallback>
-      </Avatar>
+      <button 
+        onClick={handleNotificationClick} 
+        className="relative p-2.5 bg-muted/20 rounded-full border border-border/50"
+      >
+        <Bell className="h-6 w-6 text-primary" />
+        {hasUnread && (
+          <span className="absolute top-1 right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+          </span>
+        )}
+      </button>
     </header>
   );
 };

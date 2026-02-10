@@ -148,35 +148,45 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[20px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
+      className="bg-[#FDE6D2] rounded-[20px] p-4 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
       onClick={onClick}
     >
+      {/* Company Logo Restored */}
+      <div className="absolute top-3 left-3 w-8 h-8 rounded-full overflow-hidden border border-white/50 shadow-sm opacity-80">
+        <Image 
+          src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" 
+          alt="YM Logo" 
+          fill 
+          className="object-cover"
+        />
+      </div>
+
       <div className="text-right pr-1">
-        <h4 className="text-lg font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
-        <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
-        <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-xl font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
+        <p className="text-[11px] font-bold text-slate-800">دفع مسبق</p>
+        <p className="text-[10px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-1">
-        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-2">
+        <span className="text-3xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
-        <div className="space-y-1">
-          <Globe className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-0 pt-3 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-1.5">
+          <Globe className="w-7 h-7 mx-auto text-[#8B1D3D]" />
+          <p className="text-[13px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Mail className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+        <div className="space-y-1.5 border-r border-[#EBCDB5]">
+          <Mail className="w-7 h-7 mx-auto text-[#8B1D3D]" />
+          <p className="text-[13px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Phone className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+        <div className="space-y-1.5 border-r border-[#EBCDB5]">
+          <Phone className="w-7 h-7 mx-auto text-[#8B1D3D]" />
+          <p className="text-[13px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-1 border-r border-[#EBCDB5]">
-          <Clock className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+        <div className="space-y-1.5 border-r border-[#EBCDB5]">
+          <Clock className="w-7 h-7 mx-auto text-[#8B1D3D]" />
+          <p className="text-[13px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -221,7 +231,7 @@ export default function YemenMobilePage() {
   const handleSearch = async () => {
     if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
       setShowTabs(true);
-      setActiveTab("balance");
+      setActiveTab("balance"); // Open balance tab first automatically
       setIsCheckingBilling(true);
       setBillingInfo(null);
       
@@ -439,7 +449,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -491,11 +501,11 @@ export default function YemenMobilePage() {
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
                                                 <div className="flex flex-col gap-0.5 items-end">
-                                                    <div className="flex items-center gap-2 text-[10px]">
+                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
                                                         <span className="text-green-600 font-bold">:الاشتراك</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-[10px]">
+                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
                                                         <span className="text-destructive font-bold">:الانتهاء</span>
                                                     </div>

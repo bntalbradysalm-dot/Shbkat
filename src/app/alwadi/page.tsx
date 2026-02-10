@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Zap } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -316,7 +316,6 @@ export default function AlwadiPage() {
                   onClick={handleConfirmClick}
                   disabled={!selectedOption || !subscriberName || !cardNumber}
                 >
-                  <Zap className="ml-2 h-5 w-5" />
                   تجديد الآن
                 </Button>
               </AlertDialogTrigger>

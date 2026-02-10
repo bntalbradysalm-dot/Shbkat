@@ -13,7 +13,7 @@ const SimpleHeader = ({ title }: SimpleHeaderProps) => {
   return (
     <header className="flex items-center p-4 bg-transparent text-foreground relative h-16">
       <button 
-        onClick={() => router.back()} 
+        onClick={() => router.push('/login')} 
         className="p-2 absolute right-4 z-10 hover:bg-muted rounded-full transition-colors"
         aria-label="رجوع"
       >

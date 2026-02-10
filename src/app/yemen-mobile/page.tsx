@@ -47,6 +47,7 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,7 @@ type BillingInfo = {
     balance: number;
     customer_type: string;
     resultDesc?: string;
-    isLoan?: boolean; // محاكاة لخاصية السلفة
+    isLoan?: boolean;
 };
 
 type ActiveOffer = {
@@ -188,9 +189,19 @@ export default function YemenMobilePage() {
       });
       const result = await response.json();
       if (response.ok) {
+          // Mapping mobileTy to a readable label (Prepaid vs Postpaid)
+          let typeLabel = result.mobileTy || '';
+          if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
+              typeLabel = 'نظام الفوترة';
+          } else if (typeLabel.includes('مسبق') || typeLabel.toLowerCase().includes('prepaid')) {
+              typeLabel = 'دفع مسبق';
+          } else {
+              typeLabel = result.mobileTy || 'دفع مسبق';
+          }
+
           setBillingInfo({ 
               balance: parseFloat(result.balance || "0"), 
-              customer_type: result.mobileTy || 'دفع مسبق | 3G',
+              customer_type: typeLabel,
               resultDesc: result.resultDesc,
               isLoan: result.isLoan || false
           });
@@ -204,7 +215,6 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               setActiveOffers(offerResult.offers);
           } else {
-              // Mock data for UI presentation if no offers
               setActiveOffers([
                   { offerName: 'تفعيل خدمة الانترنت - شريحة (3G)', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: '2022-12-23' },
                   { offerName: 'باقة 450 ميجابايت شريحة', remainAmount: '450 MB', expireDate: '2026-02-13', startDate: '2026-01-15' },
@@ -224,6 +234,11 @@ export default function YemenMobilePage() {
     if (!phone || !amount || !user || !userDocRef || !firestore) return;
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
+
+    if ((userProfile?.balance ?? 0) < val) {
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يغطي تكلفة السداد.' });
+        return;
+    }
 
     setIsProcessing(true);
     try {
@@ -258,6 +273,12 @@ export default function YemenMobilePage() {
 
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
+    
+    if ((userProfile?.balance ?? 0) < selectedOffer.price) {
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة.' });
+        return;
+    }
+
     setIsActivatingOffer(true);
     try {
         const transid = Date.now().toString();
@@ -293,7 +314,6 @@ export default function YemenMobilePage() {
       <SimpleHeader title="يمن موبايل" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
-        {/* Input Field */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
             <div className="flex justify-between items-center mb-2 px-1">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
@@ -304,7 +324,7 @@ export default function YemenMobilePage() {
                 placeholder="77xxxxxxx"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="text-center font-bold text-xl h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
             />
         </div>
 
@@ -316,7 +336,6 @@ export default function YemenMobilePage() {
                 </TabsList>
 
                 <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                    {/* Inquiry Result Table */}
                     <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
                         <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                             <div className="p-3 border-l">
@@ -331,16 +350,15 @@ export default function YemenMobilePage() {
                                 <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
                                 <div className="flex items-center justify-center gap-1">
                                     {billingInfo?.isLoan ? (
-                                        <div className="flex items-center gap-1 text-destructive font-bold text-[10px]"><Frown className="w-3 h-3"/> متسلف</div>
+                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1"><Frown className="h-3 w-3" /> متسلف</Badge>
                                     ) : (
-                                        <div className="flex items-center gap-1 text-green-600 font-bold text-[10px]"><Smile className="w-3 h-3"/> غير متسلف</div>
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1"><Smile className="h-3 w-3" /> غير متسلف</Badge>
                                     )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Current Subscriptions Section */}
                     <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
                         <div className="bg-primary p-3 text-center">
                             <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
@@ -378,7 +396,6 @@ export default function YemenMobilePage() {
                         </div>
                     </div>
 
-                    {/* Categories Accordion */}
                     <Accordion type="single" collapsible className="w-full space-y-3">
                         {CATEGORIES.map((cat) => (
                             <AccordionItem key={cat.id} value={cat.id} className="border-none">

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -27,11 +28,11 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'رقم الهاتف مطلوب.' }), { status: 400 });
     }
 
-    // توليد رقم عملية فريد
+    // توليد رقم عملية فريد إذا لم يتوفر
     const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
     const token = generateToken(transid, payload.mobile);
 
-    // الرابط الذي طلبه المستخدم كقاعدة أساسية
+    // الرابط الأساسي للمزود
     let apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
     let endpoint = '';
     
@@ -44,10 +45,13 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد النطاق والمسار بناءً على نوع الخدمة والوثائق المزودة
+    // تحديد النطاق والمسار بناءً على نوع الخدمة
     if (service === 'post') {
         // للهاتف الثابت و ADSL
         endpoint = 'post';
+    } else if (service === 'yem4g') {
+        // ليمن فورجي (استعلام وسداد)
+        endpoint = 'yem4g';
     } else { 
         switch(action) {
             case 'query':
@@ -58,7 +62,6 @@ export async function POST(request: Request) {
                 endpoint = 'yem';
                 break;
             case 'billover': 
-                // تفعيل باقة (One-step activation)
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 if (apiRequestParams.offertype) {
@@ -77,7 +80,7 @@ export async function POST(request: Request) {
         }
     }
 
-    // إزالة المعايير الداخلية
+    // إزالة المعايير الداخلية التي لا يحتاجها المزود
     delete apiRequestParams.service;
 
     const params = new URLSearchParams(apiRequestParams);
@@ -113,8 +116,8 @@ export async function POST(request: Request) {
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
             
-            // تحويل رسالة الخطأ الخاصة بمنطقة التحصيل إلى رسالة مفهومة ومختصرة
-            if (errorMessage.includes('1009') || errorMessage.includes('منطقة التحصيل') || errorMessage.includes('من ارقام منطقة')) {
+            // تحويل رسائل الخطأ الشائعة
+            if (errorMessage.includes('1009') || errorMessage.includes('منطقة التحصيل')) {
                 errorMessage = 'الرقم ليس من مناطق التحصيل المسموح بها';
             }
 

@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -117,7 +118,7 @@ const Header = () => {
             </div>
           ) : (
             <>
-              <p className="text-primary font-normal text-[10px] opacity-70 leading-tight">{greeting}</p>
+              <p className="text-primary font-black text-sm opacity-90 leading-tight">{greeting}</p>
               <h1 className="font-black text-foreground text-base tracking-tight leading-tight">{displayName}</h1>
             </>
           )}

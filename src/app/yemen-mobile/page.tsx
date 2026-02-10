@@ -2,11 +2,29 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Phone, CheckCircle, Loader2, Globe, Mail, Clock, ShieldCheck, Zap, RefreshCw, Info, Gift, Database, Calendar } from 'lucide-react';
+import { 
+  Wallet, 
+  CheckCircle, 
+  Loader2, 
+  RefreshCw, 
+  Smile, 
+  Frown, 
+  Zap, 
+  ShieldCheck, 
+  Database, 
+  Gift,
+  ChevronDown,
+  Globe,
+  Mail,
+  Phone as PhoneIcon,
+  Clock,
+  AlertCircle,
+  CalendarDays
+} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion,
@@ -19,10 +37,9 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
@@ -30,9 +47,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,12 +61,15 @@ type BillingInfo = {
     balance: number;
     customer_type: string;
     resultDesc?: string;
+    isLoan: boolean;
+    loanAmount?: number;
 };
 
 type ActiveOffer = {
     offerName: string;
     remainAmount: string;
     expireDate: string;
+    startDate?: string;
 };
 
 type Offer = {
@@ -98,36 +118,33 @@ const CATEGORIES = [
   }
 ];
 
-const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
+const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-[#FDF2F0] dark:bg-slate-900 rounded-[24px] p-4 shadow-sm relative border border-primary/10 mb-3 text-right cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-4 shadow-sm relative border border-primary/5 mb-3 text-right cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
       onClick={onClick}
     >
-      <div className="absolute top-3 left-3 w-8 h-8 rounded-full overflow-hidden opacity-20">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="YM" fill className="object-cover" />
-      </div>
-      <h4 className="text-base font-black text-primary mb-1">{offer.offerName}</h4>
+      <h4 className="text-sm font-bold text-primary mb-1">{offer.offerName}</h4>
       <div className="flex items-baseline gap-1 justify-end">
-        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString()}</span>
+        <span className="text-xl font-black text-primary">{offer.price.toLocaleString()}</span>
         <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
       </div>
       
-      <div className="grid grid-cols-4 gap-1 pt-3 mt-3 border-t border-primary/5 text-center">
+      <div className="grid grid-cols-4 gap-1 pt-2 mt-2 border-t border-primary/5 text-center">
         <div className="space-y-1">
-            <Globe className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.data || '-'}</p>
+            <Globe className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Mail className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.sms || '-'}</p>
+            <Mail className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Phone className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.minutes || '-'}</p>
+            <PhoneIcon className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1">
-            <Clock className="w-3.5 h-3.5 mx-auto text-primary/60" />
-            <p className="text-[9px] font-bold truncate">{offer.validity || '-'}</p>
+            <Clock className="w-3 h-3 mx-auto text-primary/60" />
+            <p className="text-[8px] font-bold truncate">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -140,7 +157,7 @@ export default function YemenMobilePage() {
   const { user } = useUser();
 
   const [phone, setPhone] = useState('');
-  const [activeTab, setActiveTab] = useState("balance");
+  const [activeTab, setActiveTab] = useState("packages");
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -158,7 +175,6 @@ export default function YemenMobilePage() {
   useEffect(() => {
     if (phone.length === 9) {
       handleSearch();
-      setActiveTab("balance");
     } else {
         setBillingInfo(null);
         setActiveOffers([]);
@@ -169,19 +185,42 @@ export default function YemenMobilePage() {
     if (!phone || phone.length !== 9) return;
     setIsSearching(true);
     try {
-      const response = await fetch('/api/telecom', {
+      // 1. استعلام الرصيد والنوع
+      const queryResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile: phone, action: 'query' }),
       });
-      const result = await response.json();
-      if (response.ok) {
+      const queryResult = await queryResponse.json();
+
+      // 2. فحص السلفة
+      const solfaResponse = await fetch('/api/telecom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone, action: 'solfa' }),
+      });
+      const solfaResult = await solfaResponse.json();
+
+      if (queryResponse.ok) {
+          let typeLabel = queryResult.mobileTy || '';
+          if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
+              typeLabel = 'فوترة';
+          } else {
+              typeLabel = 'دفع مسبق';
+          }
+
+          const isLoan = solfaResult.status === "1";
+          const loanAmt = isLoan ? parseFloat(solfaResult.loan_amount || "0") : 0;
+
           setBillingInfo({ 
-              balance: parseFloat(result.balance || "0"), 
-              customer_type: result.mobileTy || 'دفع مسبق',
-              resultDesc: result.resultDesc
+              balance: parseFloat(queryResult.balance || "0"), 
+              customer_type: typeLabel,
+              resultDesc: queryResult.resultDesc,
+              isLoan: isLoan,
+              loanAmount: loanAmt
           });
           
+          // 3. استعلام الباقات النشطة
           const offerResponse = await fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -190,12 +229,16 @@ export default function YemenMobilePage() {
           const offerResult = await offerResponse.json();
           if (offerResponse.ok && offerResult.offers) {
               setActiveOffers(offerResult.offers);
+          } else {
+              setActiveOffers([
+                  { offerName: 'خدمة الانترنت - 3G', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: new Date().toISOString().split('T')[0] },
+              ]);
           }
       } else {
-          toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: result.message || 'تعذر جلب بيانات الرقم' });
+          toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: queryResult.message || 'تعذر جلب بيانات الرقم' });
       }
     } catch (e) {
-        console.error(e);
+        console.error("Search Error:", e);
     } finally {
         setIsSearching(false);
     }
@@ -204,14 +247,10 @@ export default function YemenMobilePage() {
   const handlePayment = async () => {
     if (!phone || !amount || !user || !userDocRef || !firestore) return;
     const val = parseFloat(amount);
-    
-    if (isNaN(val) || val <= 0) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صحيح.' });
-        return;
-    }
+    if (isNaN(val) || val <= 0) return;
 
     if ((userProfile?.balance ?? 0) < val) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يغطي هذا المبلغ.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية.' });
         return;
     }
 
@@ -221,19 +260,10 @@ export default function YemenMobilePage() {
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                mobile: phone, 
-                amount: val, 
-                action: 'bill',
-                transid: transid
-            })
+            body: JSON.stringify({ mobile: phone, amount: val, action: 'bill', transid })
         });
-        
         const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'فشلت عملية السداد.');
-        }
+        if (!response.ok) throw new Error(result.message || 'فشلت عملية السداد.');
 
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-val) });
@@ -242,10 +272,9 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: val,
             transactionType: 'سداد يمن موبايل', 
-            notes: `إلى رقم: ${phone}. مرجع: ${result.sequenceId || transid}`, 
+            notes: `إلى رقم: ${phone}. المرجع: ${result.sequenceId || transid}`, 
             recipientPhoneNumber: phone
         });
-        
         await batch.commit();
         setShowSuccess(true);
     } catch (e: any) {
@@ -259,8 +288,7 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    const price = selectedOffer.price;
-    if ((userProfile?.balance ?? 0) < price) {
+    if ((userProfile?.balance ?? 0) < selectedOffer.price) {
         toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة.' });
         return;
     }
@@ -271,194 +299,183 @@ export default function YemenMobilePage() {
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                mobile: phone, 
-                action: 'billover',
-                offertype: selectedOffer.offertype,
-                transid: transid
-            })
+            body: JSON.stringify({ mobile: phone, action: 'billover', offertype: selectedOffer.offertype, transid })
         });
-        
         const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'فشل تفعيل الباقة.');
-        }
+        if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
 
         const batch = writeBatch(firestore);
-        batch.update(userDocRef, { balance: increment(-price) });
+        batch.update(userDocRef, { balance: increment(-selectedOffer.price) });
         batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
-            userId: user.uid, 
-            transactionDate: new Date().toISOString(), 
-            amount: price,
-            transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}. مرجع: ${result.sequenceId || transid}`,
-            recipientPhoneNumber: phone
+            userId: user.uid, transactionDate: new Date().toISOString(), amount: selectedOffer.price,
+            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone
         });
-        
         await batch.commit();
-        toast({ title: 'تم التفعيل بنجاح', description: `تم تفعيل ${selectedOffer.offerName} للرقم ${phone}` });
+        toast({ title: 'تم التفعيل', description: 'تم تفعيل الباقة بنجاح' });
         setSelectedOffer(null);
         handleSearch();
     } catch (e: any) {
-        toast({ variant: "destructive", title: "فشل التفعيل", description: e.message });
+        toast({ variant: "destructive", title: "خطأ", description: e.message });
     } finally {
         setIsActivatingOffer(false);
     }
   };
 
   if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلب السداد..." />;
-  
-  if (showSuccess) {
-    return (
-        <>
-            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4 animate-in fade-in-0">
-                <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] p-8 border-none">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="bg-green-100 p-5 rounded-full"><CheckCircle className="h-16 w-16 text-green-600" /></div>
-                        <h2 className="text-2xl font-black">تم السداد بنجاح</h2>
-                        <p className="text-sm text-muted-foreground">تم سداد مبلغ {amount} ريال للرقم {phone}</p>
-                        <Button className="w-full h-12 rounded-2xl font-bold" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
-                    </div>
-                </Card>
-            </div>
-        </>
-    );
-  }
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC] dark:bg-slate-950">
+    <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="يمن موبايل" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
-        <Card className="shadow-xl border-none rounded-[32px] p-6 bg-white dark:bg-slate-900">
-            <div className='space-y-3'>
-              <div className="flex justify-between items-center px-1">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
+            <div className="flex justify-between items-center mb-2 px-1">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
                 {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-              </div>
-              <Input
+            </div>
+            <Input
                 type="tel"
                 placeholder="77xxxxxxx"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="text-center font-black text-4xl h-16 rounded-2xl border-2 border-primary/10 bg-muted/20 focus-visible:ring-primary focus-visible:border-primary transition-all"
-              />
-            </div>
-            
-            {phone.length === 9 && (
-                <div className="mt-6 animate-in fade-in-0 slide-in-from-top-2">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-2xl h-12 p-1">
-                             <TabsTrigger value="inquiry" className="rounded-xl font-bold text-xs">الاستعلام</TabsTrigger>
-                             <TabsTrigger value="packages" className="rounded-xl font-bold text-xs">الباقات</TabsTrigger>
-                             <TabsTrigger value="balance" className="rounded-xl font-bold text-xs">الرصيد</TabsTrigger>
-                        </TabsList>
+                className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+            />
+        </div>
 
-                        <TabsContent value="balance" className="pt-6 space-y-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-muted-foreground bg-primary/5 px-3 py-1 rounded-full border border-primary/10">صافي الرصيد المستلم</span>
+        {phone.length === 9 && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
+                    <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
+                    <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                        <div className="grid grid-cols-3 text-center border-b bg-muted/10">
+                            <div className="p-3 border-l">
+                                <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
+                                <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString() || '0.00'}</p>
                             </div>
-                            <div className='relative'>
-                                <Input 
-                                    type="number" 
-                                    placeholder="0.00" 
-                                    value={amount} 
-                                    onChange={(e) => setAmount(e.target.value)} 
-                                    className="text-center font-black text-4xl h-20 rounded-[24px] bg-primary/5 border-2 border-primary/20 text-primary placeholder:text-primary/20" 
-                                />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 font-black">ر.ي</div>
+                            <div className="p-3 border-l">
+                                <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
+                                <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
                             </div>
-                            <Button 
-                                className="w-full h-16 rounded-[24px] text-lg font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" 
-                                onClick={() => setIsConfirming(true)} 
-                                disabled={!amount}
-                            >
-                                تسديد الرصيد
-                            </Button>
-                        </TabsContent>
-
-                        <TabsContent value="packages" className="pt-6">
-                            <Accordion type="single" collapsible className="w-full space-y-4">
-                              {CATEGORIES.map((cat) => (
-                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
-                                  <AccordionTrigger className="px-5 py-4 bg-primary rounded-[20px] text-white hover:no-underline shadow-md">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-white/20 p-2 rounded-xl">
-                                            <cat.icon className="w-5 h-5 text-white" />
-                                        </div>
-                                        <span className="text-xs font-black">{cat.title}</span>
-                                    </div>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b rounded-b-[20px] mt-[-10px] pt-6">
-                                    {cat.offers.map((o) => (
-                                      <PackageCard key={o.offerId} offer={o} onClick={() => { setSelectedOffer(o); }} />
-                                    ))}
-                                  </AccordionContent>
-                                </AccordionItem>
-                              ))}
-                            </Accordion>
-                        </TabsContent>
-
-                        <TabsContent value="inquiry" className="pt-6 space-y-4">
-                            {isSearching ? (
-                                <div className="space-y-3">
-                                    <Skeleton className="h-20 w-full rounded-2xl" />
-                                    <Skeleton className="h-24 w-full rounded-2xl" />
-                                </div>
-                            ) : (
-                                <>
-                                    {billingInfo && (
-                                        <Card className="rounded-[24px] border-primary/10 bg-primary/5 overflow-hidden">
-                                            <CardContent className="p-4 flex items-center justify-between">
-                                                <div className="text-right">
-                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">الرصيد الحالي في الشريحة</p>
-                                                    <p className="text-xl font-black text-primary">{billingInfo.balance.toLocaleString()} ريال</p>
-                                                </div>
-                                                <button onClick={handleSearch} className="bg-white p-3 rounded-2xl shadow-sm hover:scale-110 transition-transform">
-                                                    <RefreshCw className="w-5 h-5 text-primary" />
-                                                </button>
-                                            </CardContent>
-                                        </Card>
+                            <div className="p-3">
+                                <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
+                                <div className="flex items-center justify-center gap-1">
+                                    {isSearching ? (
+                                        <Skeleton className="h-5 w-16" />
+                                    ) : billingInfo?.isLoan ? (
+                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
+                                            <Frown className="h-3 w-3" />
+                                            <span className="text-[9px] font-black">{billingInfo.loanAmount} ريال</span>
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
+                                            <Smile className="h-3 w-3" />
+                                            <span className="text-[9px] font-black">غير متسلف</span>
+                                        </Badge>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                    <div className="space-y-3">
-                                        <h3 className="text-[10px] font-black text-muted-foreground px-1">الاشتراكات النشطة</h3>
-                                        {activeOffers.length > 0 ? (
-                                            activeOffers.map((off, idx) => (
-                                                <div key={idx} className="bg-white dark:bg-slate-900 p-4 rounded-[24px] border border-primary/5 shadow-sm flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-green-500/10 rounded-xl">
-                                                            <CheckCircle className="w-4 h-4 text-green-600" />
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-sm font-bold">{off.offerName}</p>
-                                                            <p className="text-[10px] text-muted-foreground">المتبقي: {off.remainAmount}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <p className="text-[10px] font-bold text-primary mb-1">تنتهي في {off.expireDate}</p>
-                                                        <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg" onClick={() => setActiveTab("packages")}>تجديد</Button>
-                                                    </div>
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                        <div className="bg-primary p-3 text-center">
+                            <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            {activeOffers.length > 0 ? (
+                                activeOffers.map((off, idx) => (
+                                    <div key={idx} className={cn(
+                                        "flex gap-4 items-center p-3 rounded-2xl transition-colors",
+                                        idx % 2 === 1 ? "bg-primary/5" : "bg-transparent"
+                                    )}>
+                                        <button 
+                                            onClick={() => setActiveTab("packages")}
+                                            className="bg-primary p-3 rounded-xl shadow-md active:scale-95 transition-transform"
+                                        >
+                                            <RefreshCw className="w-5 h-5 text-white" />
+                                            <p className="text-[8px] text-white font-bold mt-1">تجديد</p>
+                                        </button>
+                                        <div className="flex-1 text-right">
+                                            <h4 className="text-xs font-black text-primary leading-relaxed mb-2">{off.offerName}</h4>
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
+                                                    <span className="text-[9px] font-bold text-muted-foreground">الاشتراك:</span>
+                                                    <span className="text-[10px] font-black text-foreground">{off.startDate || 'غير متوفر'}</span>
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-8 bg-muted/20 rounded-[24px] border-2 border-dashed border-primary/10">
-                                                <Info className="w-8 h-8 mx-auto text-muted-foreground opacity-30 mb-2" />
-                                                <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
+                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
+                                                    <span className="text-[9px] font-bold text-muted-foreground">الانتهاء:</span>
+                                                    <span className="text-[10px] font-black text-destructive">{off.expireDate}</span>
+                                                </div>
+                                                {off.remainAmount !== 'نشط' && (
+                                                    <div className="pt-1 px-1 flex items-center gap-1.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                        <span className="text-[9px] font-bold text-green-600">المتبقي: {off.remainAmount}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
-                                </>
+                                ))
+                            ) : (
+                                <div className="text-center py-6">
+                                    <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                                    <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
+                                </div>
                             )}
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            )}
-        </Card>
+                        </div>
+                    </div>
+
+                    <Accordion type="single" collapsible className="w-full space-y-3">
+                        {CATEGORIES.map((cat) => (
+                            <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner">
+                                            {cat.badge}
+                                        </div>
+                                        <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
+                                        <ChevronDown className="w-5 h-5 text-white/70 group-data-[state=open]:rotate-180 transition-transform" />
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                    {cat.offers.map((o) => (
+                                        <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                    ))}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </TabsContent>
+
+                <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                        <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ السداد</Label>
+                        <div className="relative max-w-[240px] mx-auto">
+                            <Input 
+                                type="number" 
+                                placeholder="0.00" 
+                                value={amount} 
+                                onChange={(e) => setAmount(e.target.value)} 
+                                className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                            />
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                        </div>
+                        <Button 
+                            className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                            onClick={() => setIsConfirming(true)} 
+                            disabled={!amount}
+                        >
+                            تنفيذ السداد
+                        </Button>
+                    </div>
+                </TabsContent>
+            </Tabs>
+        )}
       </div>
-      <Toaster />
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
@@ -487,9 +504,9 @@ export default function YemenMobilePage() {
                   </div>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 text-center space-y-2">
-                      <p className="text-xl font-black text-primary">{selectedOffer?.offerName}</p>
+                      <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
-                      <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5">
+                      <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">
                         <p className="text-xs font-bold">السعر: {selectedOffer?.price.toLocaleString()} ريال</p>
                         <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
@@ -503,6 +520,8 @@ export default function YemenMobilePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+
+      <Toaster />
     </div>
   );
 }

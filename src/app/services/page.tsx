@@ -383,7 +383,7 @@ export default function ServicesPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-full bg-background text-foreground">
         <SimpleHeader title="الشبكات" />
         <div className="p-4">
           <div className="relative">
@@ -409,7 +409,7 @@ export default function ServicesPage() {
             filteredNetworks.map((network, index) => (
               <Card 
                 key={network.id} 
-                className="bg-mesh-gradient cursor-pointer text-primary-foreground hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+                className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
                 style={{ animationDelay: `${index * 30}ms` }}
                 onClick={() => handleNetworkClick(network)}
               >
@@ -434,7 +434,7 @@ export default function ServicesPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-6 text-primary-foreground relative">
+              <div className="bg-mesh-gradient p-6 text-white relative">
                 <button 
                   onClick={() => setSelectedNetwork(null)}
                   className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
@@ -463,11 +463,11 @@ export default function ServicesPage() {
                       <Card 
                         key={cat.id} 
                         className="rounded-2xl border-none shadow-sm bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => setShowConfirmConfirmPurchase(cat)}
+                        onClick={() => setShowConfirmPurchase(cat)}
                       >
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex-1 text-right space-y-1">
-                            <h4 className="font-bold text-sm">{cat.name}</h4>
+                            <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                                 {cat.dataLimit && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.dataLimit}</span>}
                                 {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
@@ -566,7 +566,7 @@ export default function ServicesPage() {
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
-                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest" 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
                     />
                 </div>
             </div>

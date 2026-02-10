@@ -197,7 +197,7 @@ export default function AccountPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-primary-foreground border-none">
+        <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none">
           <CardContent className="p-6 flex items-center gap-4">
             <div className="flex-grow text-right">
               <h2 className="text-lg font-black">{userProfile?.displayName || 'مستخدم جديد'}</h2>

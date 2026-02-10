@@ -53,7 +53,7 @@ export function BalanceCard() {
         if (service) setLeftAction(service);
     }
     if (savedRightId) {
-        const service = availableServices.find(s => s.id === savedRightId);
+        const service = availableServices.find(s => s.id === rightAction.id);
         if (service) setRightAction(service);
     }
   }, []);
@@ -110,7 +110,7 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-primary-foreground shadow-xl border-none">
+      <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-white shadow-xl border-none">
         <CardContent className="p-6 flex flex-col items-center justify-center min-h-[170px] relative">
           <div className="absolute top-3 left-4 right-4 flex justify-between items-center px-2">
              <p className="text-[10px] font-medium opacity-60">اضغط مطولاً لتغيير الأزرار</p>
@@ -130,7 +130,7 @@ export function BalanceCard() {
             </div>
 
             <div className="flex items-baseline gap-2">
-                <h2 className="text-4xl font-bold tracking-tight">
+                <h2 className="text-4xl font-bold tracking-tight text-white">
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />
                 ) : isBalanceVisible ? (
@@ -139,7 +139,7 @@ export function BalanceCard() {
                     "******"
                 )}
                 </h2>
-                <span className="text-xs font-medium opacity-90">ريال يمني</span>
+                <span className="text-xs font-medium opacity-90 text-white">ريال يمني</span>
             </div>
           </div>
 

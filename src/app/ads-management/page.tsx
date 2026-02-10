@@ -14,6 +14,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 
+export const dynamic = 'force-dynamic';
+
 type Advertisement = {
   id: string;
   imageUrl: string;
@@ -129,7 +131,7 @@ export default function AdsManagementPage() {
                         <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
                             <X className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" onClick={() => handleSave(ad.id)}>
+                        <Button size="icon" onClick={() => handleSave(id)}>
                             <Save className="h-4 w-4" />
                         </Button>
                         </div>

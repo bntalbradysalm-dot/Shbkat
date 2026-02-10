@@ -57,6 +57,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
 
 // Define the User type based on your backend.json schema
 type User = {
@@ -362,7 +363,6 @@ export default function UsersPage() {
       </div>;
     }
     if (error) {
-      // The FirebaseErrorListener will catch and display the error overlay
       return <p className="text-center text-destructive">حدث خطأ أثناء جلب المستخدمين.</p>;
     }
     if (!filteredUsers || filteredUsers.length === 0) {

@@ -425,7 +425,6 @@ export default function YemenMobilePage() {
   }
 
   return (
-    <>
     <div className="flex flex-col h-full bg-[#f8fafc]">
       <SimpleHeader title="خدمات يمن موبايل" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -596,32 +595,31 @@ export default function YemenMobilePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-    <Toaster />
+      <Toaster />
 
-    <AlertDialog open={isConfirmingOffer} onOpenChange={setIsConfirmingOffer}>
-        <AlertDialogContent className="rounded-[32px]">
-            <AlertDialogHeader>
-                <AlertDialogTitle className="text-center text-xl font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                <AlertDialogDescription className='text-center pt-6 text-slate-700 space-y-3' asChild>
-                    <div className="space-y-3">
-                        <div className="p-4 bg-muted/50 rounded-2xl">
-                            <p className="text-xs text-muted-foreground mb-1">الباقة المختارة:</p>
-                            <p className="font-black text-lg text-primary">{selectedOffer?.offerName}</p>
-                        </div>
-                        <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
-                        <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
-                    </div>
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-row gap-3 mt-6">
-                <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
-                <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
-                    {isActivatingOffer ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : 'تفعيل الآن'}
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-    </AlertDialog>
-    </>
+      <AlertDialog open={isConfirmingOffer} onOpenChange={setIsConfirmingOffer}>
+          <AlertDialogContent className="rounded-[32px]">
+              <AlertDialogHeader>
+                  <AlertDialogTitle className="text-center text-xl font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
+                  <AlertDialogDescription className='text-center pt-6 text-slate-700 space-y-3' asChild>
+                      <div className="space-y-3">
+                          <div className="p-4 bg-muted/50 rounded-2xl">
+                              <p className="text-xs text-muted-foreground mb-1">الباقة المختارة:</p>
+                              <p className="font-black text-lg text-primary">{selectedOffer?.offerName}</p>
+                          </div>
+                          <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
+                          <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
+                      </div>
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-row gap-3 mt-6">
+                  <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
+                      {isActivatingOffer ? <Loader2 className="ml-2 h-5 w-5 animate-spin"/> : 'تفعيل الآن'}
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

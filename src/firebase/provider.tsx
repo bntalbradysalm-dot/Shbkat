@@ -90,7 +90,7 @@ export const useFirebase = (): FirebaseContextState => {
 export const useAuth = (): Auth => {
   const { auth } = useFirebase();
   if (!auth) {
-    if (typeof window === 'undefined') return {} as Auth;
+    if (typeof window === 'undefined') return undefined as any;
     throw new Error("Firebase Auth is not initialized. Check your environment variables.");
   }
   return auth;
@@ -99,7 +99,7 @@ export const useAuth = (): Auth => {
 export const useFirestore = (): Firestore => {
   const { firestore } = useFirebase();
   if (!firestore) {
-    if (typeof window === 'undefined') return {} as Firestore;
+    if (typeof window === 'undefined') return undefined as any;
     throw new Error("Firebase Firestore is not initialized. Check your environment variables.");
   }
   return firestore;
@@ -108,7 +108,7 @@ export const useFirestore = (): Firestore => {
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
   if (!firebaseApp) {
-    if (typeof window === 'undefined') return {} as FirebaseApp;
+    if (typeof window === 'undefined') return undefined as any;
     throw new Error("Firebase App is not initialized. Check your environment variables.");
   }
   return firebaseApp;

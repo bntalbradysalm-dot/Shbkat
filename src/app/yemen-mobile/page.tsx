@@ -148,40 +148,40 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[24px] p-2.5 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
+      className="bg-[#FDE6D2] rounded-[20px] p-2 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-1.5"
       onClick={onClick}
     >
       {/* Floating Logo */}
-      <div className="absolute top-2 left-2 w-6 h-6 bg-white rounded-lg shadow-sm flex items-center justify-center p-1 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={18} height={18} className="rounded-sm object-contain" />
+      <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={14} height={14} className="rounded-sm object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-sm font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
-        <p className="text-[9px] font-bold text-slate-800">دفع مسبق</p>
-        <p className="text-[8px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-xs font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
+        <p className="text-[8px] font-bold text-slate-800">دفع مسبق</p>
+        <p className="text-[7px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-1">
-        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-0.5">
+        <span className="text-xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-1.5 border-t border-[#EBCDB5] text-center">
+      <div className="grid grid-cols-4 gap-0 pt-1 border-t border-[#EBCDB5] text-center">
         <div className="space-y-0.5">
-          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[9px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+          <Globe className="w-3 h-3 mx-auto text-[#8B1D3D]" />
+          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
         <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[9px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+          <Mail className="w-3 h-3 mx-auto text-[#8B1D3D]" />
+          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[9px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+          <Phone className="w-3 h-3 mx-auto text-[#8B1D3D]" />
+          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
-          <p className="text-[9px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+          <Clock className="w-3 h-3 mx-auto text-[#8B1D3D]" />
+          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -445,7 +445,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-4xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -554,7 +554,7 @@ export default function YemenMobilePage() {
                                 <div className="space-y-2">
                                     <p className="text-xs font-bold text-muted-foreground text-right px-1">صافي الرصيد المستلم</p>
                                     <div className='p-4 bg-primary/5 border border-primary/10 rounded-2xl flex justify-center items-center'>
-                                        <span className="text-3xl font-black text-primary">{netAmount.toFixed(2)}</span>
+                                        <span className="text-xl font-black text-primary">{netAmount.toFixed(2)}</span>
                                     </div>
                                 </div>
                            </div>
@@ -562,17 +562,18 @@ export default function YemenMobilePage() {
                            <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                                 <AlertDialogTrigger asChild>
                                 <Button className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20" disabled={isProcessing || !amount || !phone}>
-                                    <Send className="ml-2 h-5 w-5" />
                                     تأكيد عملية التسديد
                                 </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent className="rounded-[32px]">
                                 <AlertDialogHeader>
                                     <AlertDialogTitle className="text-center text-xl font-black">تأكيد السداد</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-center pt-4 text-slate-700 space-y-2">
-                                        <p>أنت على وشك تسديد مبلغ</p>
-                                        <p className="font-black text-2xl text-primary tracking-tight">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</p>
-                                        <p>إلى الرقم <span className="font-black text-slate-900">{phone}</span></p>
+                                    <AlertDialogDescription className="text-center pt-4 text-slate-700 space-y-2" asChild>
+                                        <div className="space-y-2">
+                                            <p>أنت على وشك تسديد مبلغ</p>
+                                            <p className="font-black text-2xl text-primary tracking-tight">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</p>
+                                            <p>إلى الرقم <span className="font-black text-slate-900">{phone}</span></p>
+                                        </div>
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="flex-row gap-3 mt-6">

@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, ClipboardList, Landmark, Smartphone, ArrowLeftRight } from "lucide-react";
+import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, ClipboardList, Landmark, Smartphone, ArrowLeftRight, SatelliteDish } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -32,7 +31,7 @@ const availableServices = [
   { id: 'telecom', name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'البطائق الرقمية', icon: CreditCard, href: '/services' },
   { id: 'statement', name: 'كشف حساب', icon: ClipboardList, href: '/transactions' },
-  { id: 'banking', name: 'الخدمات البنكية', icon: Landmark, href: '/top-up' },
+  { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
 ];
 
 export function BalanceCard() {

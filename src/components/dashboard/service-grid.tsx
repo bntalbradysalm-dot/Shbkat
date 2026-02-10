@@ -32,7 +32,7 @@ const services: Service[] = [
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { name: 'البطائق الرقمية', icon: CreditCard, href: '/services' },
   { name: 'كشف حساب', icon: ClipboardList, href: '/transactions' },
-  { name: 'الخدمات البنكية', icon: Landmark, href: '/top-up' },
+  { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
 ];
 
 const ServiceItem = ({

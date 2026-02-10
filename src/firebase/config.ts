@@ -2,13 +2,12 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 /**
  * إعدادات Firebase الخاصة بمشروع: shbket
- * يتم جلب القيم من متغيرات البيئة لضمان الأمان والعمل الصحيح في بيئة الاستوديو.
  */
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "shbket";
+const projectId = "shbket";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
@@ -22,8 +21,14 @@ const firebaseConfig = {
 // تهيئة تطبيق Firebase
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// تهيئة الخدمات وتصديرها كنسخ مفردة (Singletons)
+// تهيئة الخدمات
 const auth = getAuth(app);
-const firestore = getFirestore(app);
+
+// استخدام initializeFirestore مع إعدادات إضافية لحل مشاكل الاتصال في بيئات العمل السحابية
+const firestore = getApps().length 
+  ? getFirestore(getApp()) 
+  : initializeFirestore(app, {
+      experimentalForceLongPolling: true, // تفعيل الاتصال عبر Long Polling لتجاوز قيود الشبكة
+    });
 
 export { app, auth, firestore, firebaseConfig };

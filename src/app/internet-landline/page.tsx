@@ -14,12 +14,9 @@ import {
   Search,
   Wifi,
   Phone,
-  ArrowRightLeft,
   Globe,
   Zap,
   Activity,
-  CreditCard,
-  History
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -164,6 +161,8 @@ export default function LandlineRedesignPage() {
         setIsProcessing(true);
         try {
             const transid = Date.now().toString();
+            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
+            
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -172,12 +171,19 @@ export default function LandlineRedesignPage() {
                     amount: payAmount, 
                     action: 'bill',
                     service: 'post',
-                    type: activeTab === 'internet' ? 'adsl' : 'line',
+                    type: serviceType,
                     transid: transid,
                 })
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'فشلت عملية السداد.');
+            
+            // resultCode "0" is success, "-2" is pending
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (!response.ok || (!isSuccess && !isPending)) {
+                throw new Error(result.message || 'فشلت عملية السداد.');
+            }
             
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-payAmount) });
@@ -186,7 +192,7 @@ export default function LandlineRedesignPage() {
                 transactionDate: new Date().toISOString(),
                 amount: payAmount,
                 transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. المرجع: ${result.sequenceId || transid}`,
+                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone
             });
             await batch.commit();

@@ -26,7 +26,7 @@ const availableServices = [
   { id: 'pay-bills', name: 'مدفوعات', icon: CreditCard, href: '/telecom-services' },
   { id: 'transfer', name: 'حوالات', icon: Send, href: '/transfer' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { id: 'exchange', name: 'مصارفة', icon: ArrowLeftRight, href: '/transfer' },
+  { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'store', name: 'مشتريات', icon: ShoppingBag, href: '/store' },
   { id: 'telecom', name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },

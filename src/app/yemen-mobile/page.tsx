@@ -148,40 +148,40 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[24px] p-4 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
+      className="bg-[#FDE6D2] rounded-[24px] p-5 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-4"
       onClick={onClick}
     >
       {/* Floating Logo */}
-      <div className="absolute top-3 left-3 w-8 h-8 bg-white rounded-xl shadow-sm flex items-center justify-center p-1.5 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={24} height={24} className="rounded-sm object-contain" />
+      <div className="absolute top-4 left-4 w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center p-1.5 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={32} height={32} className="rounded-sm object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-xl font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
-        <p className="text-[11px] font-bold text-slate-800 mt-1">دفع مسبق</p>
-        <p className="text-[10px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-2xl font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
+        <p className="text-[13px] font-bold text-slate-800 mt-1">دفع مسبق</p>
+        <p className="text-[11px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-3">
-        <span className="text-4xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-4">
+        <span className="text-5xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-3 border-t border-[#EBCDB5] text-center">
-        <div className="space-y-1.5">
-          <Globe className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-0 pt-4 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-2">
+          <Globe className="w-8 h-8 mx-auto text-[#8B1D3D]" />
+          <p className="text-sm font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-1.5 border-r border-[#EBCDB5]">
-          <Mail className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+        <div className="space-y-2 border-r border-[#EBCDB5]">
+          <Mail className="w-8 h-8 mx-auto text-[#8B1D3D]" />
+          <p className="text-sm font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-1.5 border-r border-[#EBCDB5]">
-          <Phone className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+        <div className="space-y-2 border-r border-[#EBCDB5]">
+          <Phone className="w-8 h-8 mx-auto text-[#8B1D3D]" />
+          <p className="text-sm font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-1.5 border-r border-[#EBCDB5]">
-          <Clock className="w-6 h-6 mx-auto text-[#8B1D3D]" />
-          <p className="text-[12px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+        <div className="space-y-2 border-r border-[#EBCDB5]">
+          <Clock className="w-8 h-8 mx-auto text-[#8B1D3D]" />
+          <p className="text-sm font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -442,7 +442,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-2xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-20 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -510,14 +510,14 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-4">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-5 py-4 text-base hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-5 py-5 text-base hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
                                         <div className="flex items-center gap-4 flex-1">
-                                            <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                <span className="text-primary font-black text-[11px]">{category.badge}</span>
+                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                                <span className="text-primary font-black text-xs">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-sm tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-base tracking-wide">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-5 h-5 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
                                       <AccordionContent className="p-4 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (

@@ -325,6 +325,7 @@ export default function ServicesPage() {
 
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
+            setSelectedNetwork(null); // إغلاق منبثق الفئات فور النجاح
         } else {
             // External Purchase Logic
             const response = await fetch(`/services/networks-api/order`, {
@@ -350,6 +351,7 @@ export default function ServicesPage() {
 
             await batch.commit();
             setPurchasedCard(cardData);
+            setSelectedNetwork(null); // إغلاق منبثق الفئات فور النجاح
         }
         
         audioRef.current?.play().catch(() => {});
@@ -545,7 +547,7 @@ export default function ServicesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[200]">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />

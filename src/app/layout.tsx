@@ -16,8 +16,19 @@ export default function RootLayout({
   const [isNavVisible, setIsNavVisible] = useState(false);
 
   useEffect(() => {
-    const pagesWithoutNav = ['/', '/signup', '/forgot-password'];
-    setIsNavVisible(!pagesWithoutNav.includes(pathname));
+    // قائمة الصفحات الرئيسية التي يجب أن يظهر فيها شريط التنقل
+    const topLevelPages = [
+      '/login', 
+      '/renewal-requests', 
+      '/users', 
+      '/account', 
+      '/store-orders', 
+      '/bill-payment-requests', 
+      '/withdrawal-requests'
+    ];
+    
+    // يظهر الشريط فقط إذا كان المسار الحالي ضمن القائمة أعلاه
+    setIsNavVisible(topLevelPages.includes(pathname));
   }, [pathname]);
 
   return (

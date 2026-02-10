@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ const Header = () => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
-  const [hasUnread, setHasUnread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [greeting, setGreeting] = useState('أهلاً');
 
   useEffect(() => {
@@ -31,11 +32,19 @@ const Header = () => {
     else setGreeting('مساء الخير 👋');
   }, []);
 
-  const lastNotificationQuery = useMemoFirebase(
-    () => (firestore && user) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(1)) : null,
+  // جلب آخر 20 إشعاراً عاماً من الإدارة
+  const globalNotificationsQuery = useMemoFirebase(
+    () => (firestore) ? query(collection(firestore, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
+    [firestore]
+  );
+  const { data: globalNotifications } = useCollection<Notification>(globalNotificationsQuery);
+
+  // جلب آخر 20 إشعاراً شخصياً للمستخدم (مثل الإيداعات)
+  const personalNotificationsQuery = useMemoFirebase(
+    () => (firestore && user) ? query(collection(firestore, 'users', user.uid, 'notifications'), orderBy('timestamp', 'desc'), limit(20)) : null,
     [firestore, user]
   );
-  const { data: lastNotification } = useCollection<Notification>(lastNotificationQuery);
+  const { data: personalNotifications } = useCollection<Notification>(personalNotificationsQuery);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -44,18 +53,43 @@ const Header = () => {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (lastNotification && lastNotification.length > 0 && userProfile) {
-      const latestTimestamp = lastNotification[0].timestamp;
-      const lastReadTimestamp = userProfile.lastNotificationRead;
-      setHasUnread(!lastReadTimestamp || new Date(latestTimestamp) > new Date(lastReadTimestamp));
+    if (userProfile) {
+      const lastReadTime = userProfile.lastNotificationRead 
+        ? new Date(userProfile.lastNotificationRead).getTime() 
+        : 0;
+      
+      const allNotifs = [
+        ...(globalNotifications || []),
+        ...(personalNotifications || [])
+      ];
+
+      // حساب عدد الإشعارات التي تاريخها أحدث من آخر تاريخ قراءة
+      const count = allNotifs.filter(n => new Date(n.timestamp).getTime() > lastReadTime).length;
+      setUnreadCount(count);
     }
-  }, [lastNotification, userProfile]);
+  }, [globalNotifications, personalNotifications, userProfile]);
 
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (userDocRef && lastNotification && lastNotification.length > 0) {
-      setHasUnread(false);
-      updateDoc(userDocRef, { lastNotificationRead: lastNotification[0].timestamp });
+    if (userDocRef) {
+      const allNotifs = [
+        ...(globalNotifications || []),
+        ...(personalNotifications || [])
+      ];
+      
+      if (allNotifs.length > 0) {
+        // البحث عن أحدث تاريخ إشعار لتحديث علامة القراءة
+        const latestTs = allNotifs.reduce((latest, current) => {
+          return new Date(current.timestamp).getTime() > new Date(latest).getTime() 
+            ? current.timestamp 
+            : latest;
+        }, allNotifs[0].timestamp);
+        
+        updateDoc(userDocRef, { lastNotificationRead: latestTs });
+      } else {
+        // إذا لم توجد إشعارات، نحدث التاريخ للوقت الحالي
+        updateDoc(userDocRef, { lastNotificationRead: new Date().toISOString() });
+      }
     }
     router.push('/notifications');
   };
@@ -90,10 +124,9 @@ const Header = () => {
         className="relative p-2.5 bg-muted/20 rounded-full border border-border/50"
       >
         <Bell className="h-6 w-6 text-primary" />
-        {hasUnread && (
-          <span className="absolute top-1 right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-[10px] font-bold animate-in zoom-in">
+            {unreadCount > 9 ? '+9' : unreadCount}
           </span>
         )}
       </button>

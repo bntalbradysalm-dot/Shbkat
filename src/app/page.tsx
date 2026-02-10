@@ -49,7 +49,7 @@ export default function LoginPage() {
       toast({ 
         variant: 'destructive', 
         title: 'خطأ في الاتصال', 
-        description: 'لم يتم تهيئة خدمات Firebase. يرجى التأكد من إضافة مفاتيح البيئة (Environment Variables) في إعدادات الاستضافة.' 
+        description: 'تحذير: لم يتم اكتشاف إعدادات Firebase. تأكد من ضبط الـ Env Variables في Vercel.' 
       });
       return;
     }

@@ -4,7 +4,7 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { app, auth, firestore } from './config';
 
 interface FirebaseProviderProps {
@@ -81,7 +81,15 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 export const useFirebase = (): FirebaseContextState => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+    // Return a safe default instead of crashing during build
+    return {
+        firebaseApp: undefined,
+        firestore: undefined,
+        auth: undefined,
+        user: null,
+        isUserLoading: false,
+        userError: null
+    };
   }
   return context;
 };

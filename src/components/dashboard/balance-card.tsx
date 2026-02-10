@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, History, Wallet, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, FileText, Heart, Ticket } from "lucide-react";
+import { Eye, EyeOff, Settings2, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Ticket } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -18,21 +18,21 @@ import {
 } from "@/components/ui/dialog";
 import Link from "next/link";
 
+const availableServices = [
+  { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
+  { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
+  { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
+  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
+  { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
+  { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
+  { id: 'transfer', name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
+];
+
 type UserProfile = {
   balance?: number;
 };
-
-const availableServices = [
-  { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { id: 'transfer', name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
-  { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
-  { id: 'store', name: 'مشتريات', icon: ShoppingBag, href: '/store' },
-  { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
-  { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-];
 
 export function BalanceCard() {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -40,7 +40,7 @@ export function BalanceCard() {
   const firestore = useFirestore();
 
   const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
-  const [rightAction, setRightAction] = useState(availableServices[6]); // Default: الشبكات
+  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);

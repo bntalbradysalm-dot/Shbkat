@@ -4,14 +4,11 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Wallet,
   SatelliteDish,
-  Send,
   History,
   Wifi,
   Smartphone,
   ShoppingBag,
-  CreditCard,
   ArrowLeftRight,
-  FileText,
   Heart,
   Ticket,
 } from 'lucide-react';
@@ -37,14 +34,14 @@ type Service = {
 
 const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
-  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
-  { name: 'مشتريات', icon: ShoppingBag, href: '/store' },
-  { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
-  { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
+  { name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { name: 'المفضلة', icon: Heart, href: '/favorites' },
+  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
+  { name: 'سجل العمليات', icon: History, href: '/transactions' },
+  { name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
 ];
 
 const ServiceItem = ({

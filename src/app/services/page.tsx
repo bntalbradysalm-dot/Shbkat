@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -523,7 +522,7 @@ export default function ServicesPage() {
                     </div>
                     
                     <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كود الكرت</p>
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p>
                         <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
                             {purchasedCard.cardID || purchasedCard.cardNumber}
                         </p>

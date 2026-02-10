@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, ClipboardList, Landmark, Smartphone, ArrowLeftRight, SatelliteDish, Wifi } from "lucide-react";
+import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, ClipboardList, Landmark, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, Wallet } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -25,7 +25,7 @@ type UserProfile = {
 const availableServices = [
   { id: 'pay-bills', name: 'مدفوعات', icon: CreditCard, href: '/telecom-services' },
   { id: 'transfer', name: 'حوالات', icon: Send, href: '/transfer' },
-  { id: 'withdraw', name: 'سحب نقدي', icon: Smartphone, href: '/top-up' },
+  { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'exchange', name: 'مصارفة', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'store', name: 'مشتريات', icon: ShoppingBag, href: '/store' },
   { id: 'telecom', name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },

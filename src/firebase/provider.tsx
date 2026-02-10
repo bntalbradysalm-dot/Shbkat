@@ -43,7 +43,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   useEffect(() => {
     if (!auth) {
-        // إذا لم يكن هناك Auth (أثناء البناء)، ننهي حالة التحميل بسلام
         setUserAuthState({ user: null, isUserLoading: false, userError: null });
         return;
     }
@@ -87,19 +86,19 @@ export const useFirebase = (): FirebaseContextState => {
   return context;
 };
 
-export const useAuth = (): Auth => {
+export const useAuth = (): Auth | undefined => {
   const { auth } = useFirebase();
-  return auth as Auth;
+  return auth;
 };
 
-export const useFirestore = (): Firestore => {
+export const useFirestore = (): Firestore | undefined => {
   const { firestore } = useFirebase();
-  return firestore as Firestore;
+  return firestore;
 };
 
-export const useFirebaseApp = (): FirebaseApp => {
+export const useFirebaseApp = (): FirebaseApp | undefined => {
   const { firebaseApp } = useFirebase();
-  return firebaseApp as FirebaseApp;
+  return firebaseApp;
 };
 
 export const useUser = (): UserHookResult => {

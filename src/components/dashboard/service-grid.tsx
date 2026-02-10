@@ -30,7 +30,7 @@ const services: Service[] = [
   { name: 'مصارفة', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'مشتريات', icon: ShoppingBag, href: '/store' },
   { name: 'رصيد وباقات', icon: Smartphone, href: '/telecom-services' },
-  { name: 'البطائق الرقمية', icon: CreditCard, href: '/services' },
+  { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'كشف حساب', icon: ClipboardList, href: '/transactions' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
 ];

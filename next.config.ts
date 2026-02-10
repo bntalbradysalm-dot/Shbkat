@@ -1,8 +1,7 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* خيارات الإعداد هنا */
   serverExternalPackages: ['@genkit-ai/google-genai'],
   devIndicators: false,
   typescript: {

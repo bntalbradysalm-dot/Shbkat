@@ -93,28 +93,28 @@ function NavItems() {
             key={item.name}
             href={item.href}
             className={cn(
-                "relative flex flex-col items-center justify-center transition-all duration-300 py-2 flex-1 group",
+                "relative flex flex-col items-center justify-center transition-all duration-300 flex-1 group",
                 isActive ? "text-primary" : "text-muted-foreground/60 hover:text-primary/70"
             )}
           >
-            <div className="relative">
+            <div className="relative py-2">
               <item.icon className={cn("h-6 w-6 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
               {showIndicator && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 min-w-[20px] min-h-[20px] items-center justify-center rounded-full bg-destructive text-white text-[10px] font-black border-2 border-background shadow-sm">
+                <span className="absolute top-1 -right-2 flex h-5 w-5 min-w-[20px] min-h-[20px] items-center justify-center rounded-full bg-destructive text-white text-[10px] font-black border-2 border-background shadow-sm">
                   {totalPending > 9 ? '+9' : totalPending}
                 </span>
               )}
             </div>
             
             <span className={cn(
-                "text-[10px] font-bold mt-1 transition-all duration-300",
+                "text-[10px] font-bold mb-1 transition-all duration-300",
                 isActive ? "opacity-100" : "opacity-70"
             )}>
                 {item.name}
             </span>
 
             {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full animate-in slide-in-from-top-1" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary rounded-b-full shadow-[0_2px_10px_rgba(var(--primary),0.3)] animate-in slide-in-from-top-1" />
             )}
           </Link>
         );
@@ -126,7 +126,7 @@ function NavItems() {
 export function BottomNav() {
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-md">
-        <nav className="flex h-18 pb-safe items-center justify-around px-2 bg-card/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-border shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+        <nav className="flex h-16 items-center justify-around bg-card/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-border/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             <NavItems />
         </nav>
     </div>

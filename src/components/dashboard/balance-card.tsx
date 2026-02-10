@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,9 +100,9 @@ export function BalanceCard() {
           onMouseLeave={clearTimer}
           onTouchStart={startTimer}
           onTouchEnd={clearTimer}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 transition-colors rounded-2xl text-white text-xs font-bold border border-white/5 backdrop-blur-sm"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white/10 hover:bg-white/20 transition-colors rounded-2xl text-white text-xs font-bold border border-white/5 backdrop-blur-sm"
         >
-          <Icon size={16} />
+          <Icon size={14} />
           <span>{service.name}</span>
         </button>
       </Link>
@@ -110,19 +111,19 @@ export function BalanceCard() {
 
   return (
     <div className="animate-in fade-in-0 zoom-in-95 duration-500 px-4">
-      <Card className="w-full overflow-hidden rounded-[40px] bg-mesh-gradient text-primary-foreground shadow-2xl border-none">
-        <CardContent className="p-8 flex flex-col items-center justify-center min-h-[200px] relative">
-          <div className="absolute top-4 left-4 right-4 flex justify-between items-center px-4">
-             <p className="text-xs font-medium opacity-60">اضغط مطولاً لتغيير الأزرار</p>
-             <Settings2 size={14} className="opacity-40" />
+      <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-primary-foreground shadow-xl border-none">
+        <CardContent className="p-6 flex flex-col items-center justify-center min-h-[170px] relative">
+          <div className="absolute top-3 left-4 right-4 flex justify-between items-center px-2">
+             <p className="text-[10px] font-medium opacity-60">اضغط مطولاً لتغيير الأزرار</p>
+             <Settings2 size={12} className="opacity-40" />
           </div>
 
-          <p className="text-sm font-medium opacity-90 mb-1 mt-2">ريال يمني</p>
+          <p className="text-xs font-medium opacity-90 mb-0.5 mt-1">ريال يمني</p>
           
-          <div className="flex items-center gap-4">
-            <h2 className="text-5xl font-bold tracking-tight">
+          <div className="flex items-center gap-3">
+            <h2 className="text-4xl font-bold tracking-tight">
               {isLoading ? (
-                <Skeleton className="h-12 w-32 bg-white/20" />
+                <Skeleton className="h-10 w-28 bg-white/20" />
               ) : isBalanceVisible ? (
                 balance.toLocaleString('en-US')
               ) : (
@@ -133,21 +134,21 @@ export function BalanceCard() {
               variant="ghost"
               size="icon"
               onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-              className="h-10 w-10 rounded-full hover:bg-white/20 text-white"
+              className="h-8 w-8 rounded-full hover:bg-white/20 text-white"
             >
-              {isBalanceVisible ? <Eye size={24} /> : <EyeOff size={24} />}
+              {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
             </Button>
           </div>
 
-          <div className="mt-8 flex gap-3 w-full">
+          <div className="mt-6 flex gap-3 w-full">
             <ActionButton service={leftAction} side="left" />
             <ActionButton service={rightAction} side="right" />
           </div>
 
-          <div className="mt-6 flex gap-1.5">
-            <div className="h-1.5 w-6 rounded-full bg-white/30" />
-            <div className="h-1.5 w-6 rounded-full bg-white/30" />
-            <div className="h-1.5 w-12 rounded-full bg-white shadow-sm" />
+          <div className="mt-4 flex gap-1.5">
+            <div className="h-1 w-4 rounded-full bg-white/30" />
+            <div className="h-1 w-4 rounded-full bg-white/30" />
+            <div className="h-1 w-8 rounded-full bg-white shadow-sm" />
           </div>
         </CardContent>
       </Card>

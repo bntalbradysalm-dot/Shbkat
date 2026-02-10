@@ -60,7 +60,7 @@ type Offer = {
     sms?: string;
     minutes?: string;
     validity?: string;
-    offertype: string; // Used for API
+    offertype: string; 
 };
 
 const CATEGORIES = [
@@ -166,6 +166,7 @@ export default function YemenMobilePage() {
   }, [phone]);
 
   const handleSearch = async () => {
+    if (!phone || phone.length !== 9) return;
     setIsSearching(true);
     try {
       const response = await fetch('/api/telecom', {
@@ -181,7 +182,6 @@ export default function YemenMobilePage() {
               resultDesc: result.resultDesc
           });
           
-          // Also fetch active offers
           const offerResponse = await fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -299,7 +299,7 @@ export default function YemenMobilePage() {
         await batch.commit();
         toast({ title: 'تم التفعيل بنجاح', description: `تم تفعيل ${selectedOffer.offerName} للرقم ${phone}` });
         setSelectedOffer(null);
-        handleSearch(); // Refresh info
+        handleSearch();
     } catch (e: any) {
         toast({ variant: "destructive", title: "فشل التفعيل", description: e.message });
     } finally {
@@ -332,7 +332,6 @@ export default function YemenMobilePage() {
       <SimpleHeader title="يمن موبايل" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         
-        {/* Phone Input Card */}
         <Card className="shadow-xl border-none rounded-[32px] p-6 bg-white dark:bg-slate-900">
             <div className='space-y-3'>
               <div className="flex justify-between items-center px-1">
@@ -357,7 +356,6 @@ export default function YemenMobilePage() {
                              <TabsTrigger value="balance" className="rounded-xl font-bold text-xs">الرصيد</TabsTrigger>
                         </TabsList>
 
-                        {/* Balance Tab */}
                         <TabsContent value="balance" className="pt-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs font-bold text-muted-foreground bg-primary/5 px-3 py-1 rounded-full border border-primary/10">صافي الرصيد المستلم</span>
@@ -381,7 +379,6 @@ export default function YemenMobilePage() {
                             </Button>
                         </TabsContent>
 
-                        {/* Packages Tab */}
                         <TabsContent value="packages" className="pt-6">
                             <Accordion type="single" collapsible className="w-full space-y-4">
                               {CATEGORIES.map((cat) => (
@@ -404,7 +401,6 @@ export default function YemenMobilePage() {
                             </Accordion>
                         </TabsContent>
 
-                        {/* Inquiry Tab */}
                         <TabsContent value="inquiry" className="pt-6 space-y-4">
                             {isSearching ? (
                                 <div className="space-y-3">
@@ -420,9 +416,9 @@ export default function YemenMobilePage() {
                                                     <p className="text-[10px] font-bold text-muted-foreground uppercase">الرصيد الحالي في الشريحة</p>
                                                     <p className="text-xl font-black text-primary">{billingInfo.balance.toLocaleString()} ريال</p>
                                                 </div>
-                                                <div className="bg-white p-3 rounded-2xl shadow-sm">
-                                                    <RefreshCw className="w-5 h-5 text-primary" onClick={handleSearch} />
-                                                </div>
+                                                <button onClick={handleSearch} className="bg-white p-3 rounded-2xl shadow-sm hover:scale-110 transition-transform">
+                                                    <RefreshCw className="w-5 h-5 text-primary" />
+                                                </button>
                                             </CardContent>
                                         </Card>
                                     )}
@@ -464,7 +460,6 @@ export default function YemenMobilePage() {
       </div>
       <Toaster />
 
-      {/* Recharge Confirmation */}
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
@@ -472,10 +467,10 @@ export default function YemenMobilePage() {
                     <Wallet className="w-8 h-8 text-primary" />
                 </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
-                <AlertDialogDescription className="text-center text-base pt-2">
+                <div className="text-center text-base pt-2 text-muted-foreground">
                     سيتم سداد مبلغ <span className="font-black text-primary text-xl">{amount} ريال</span> <br />
                     للرقم <span className="font-black text-foreground">{phone}</span>
-                </AlertDialogDescription>
+                </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-row gap-3 mt-6">
                 <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
@@ -484,7 +479,6 @@ export default function YemenMobilePage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Package Confirmation */}
       <AlertDialog open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
           <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>

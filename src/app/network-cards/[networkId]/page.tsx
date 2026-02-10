@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -310,7 +310,7 @@ function NetworkPurchasePageComponent() {
                             type="tel" 
                             value={smsRecipient} 
                             onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
-                            className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest" 
+                            className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
                         />
                     </div>
                 </div>
@@ -407,7 +407,7 @@ function NetworkPurchasePageComponent() {
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isProcessing}>إلغاء</AlertDialogCancel>
                         <AlertDialogAction onClick={handlePurchase} disabled={isProcessing}>
-                            {isProcessing ? 'جاري الشراء...' : 'تأكيد'}
+                            {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

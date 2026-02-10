@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, getDocs, writeBatch, increment, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet, Smartphone } from 'lucide-react';
+import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet, Smartphone, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -73,7 +73,7 @@ export default function FavoritesPage() {
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
-  const [showConfirmPurchase, setShowConfirmConfirmPurchase] = useState<CardCategory | null>(null);
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState<CardCategory | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -120,7 +120,7 @@ export default function FavoritesPage() {
   };
 
   const handleNetworkClick = async (fav: Favorite) => {
-    // Inference for isLocal if not present (numeric ID = external)
+    // Inference for isLocal if not present
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
     // We might need to fetch the local network to get the ownerId
@@ -183,7 +183,7 @@ export default function FavoritesPage() {
     if (userBalance < categoryPrice) {
         toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
         setIsProcessing(false);
-        setShowConfirmConfirmPurchase(null);
+        setShowConfirmPurchase(null);
         return;
     }
 
@@ -228,7 +228,7 @@ export default function FavoritesPage() {
 
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
-            setSelectedNetwork(null); // إغلاق منبثق الفئات فور النجاح
+            setShowConfirmPurchase(null);
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -253,7 +253,7 @@ export default function FavoritesPage() {
 
             await batch.commit();
             setPurchasedCard(cardData);
-            setSelectedNetwork(null); // إغلاق منبثق الفئات فور النجاح
+            setShowConfirmPurchase(null);
         }
         
         audioRef.current?.play().catch(() => {});
@@ -262,7 +262,6 @@ export default function FavoritesPage() {
         toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
     } finally {
         setIsProcessing(false);
-        setShowConfirmConfirmPurchase(null);
     }
   };
 
@@ -316,7 +315,7 @@ export default function FavoritesPage() {
             onClick={() => handleNetworkClick(fav)}
           >
             <CardContent className="p-4 flex items-center justify-between">
-              <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6" /></div>
+              <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
               <div className="flex-1 text-right mx-4 space-y-1">
                 <h4 className="font-bold text-base text-white">{fav.name}</h4>
                 <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
@@ -368,7 +367,7 @@ export default function FavoritesPage() {
                   <X className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10" /></div>
+                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10 text-white" /></div>
                   <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
                   <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
                 </div>
@@ -428,8 +427,10 @@ export default function FavoritesPage() {
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmConfirmPurchase(null)}>إلغاء</Button>
-            <Button className="flex-1 rounded-xl" onClick={handlePurchase}>تأكيد</Button>
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
+            <Button className="flex-1 rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

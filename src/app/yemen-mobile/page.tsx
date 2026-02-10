@@ -35,6 +35,8 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
+export const dynamic = 'force-dynamic';
+
 type UserProfile = {
   balance?: number;
 };
@@ -448,7 +450,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-4xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -496,14 +498,14 @@ export default function YemenMobilePage() {
                                             </div>
                                             <div className="flex-1 text-right">
                                                 <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
-                                                <div className="flex flex-col gap-0.5 items-start justify-start w-full">
-                                                    <div className="flex items-center gap-2 text-[10px] justify-start w-full">
-                                                        <span className="text-green-600 font-bold">الاشتراك:</span>
+                                                <div className="flex flex-col gap-0.5 items-start justify-end w-full">
+                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
+                                                        <span className="text-green-600 font-bold">:الاشتراك</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-[10px] justify-start w-full">
-                                                        <span className="text-destructive font-bold">الانتهاء:</span>
+                                                    <div className="flex items-center gap-2 text-[10px] justify-end w-full">
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
+                                                        <span className="text-destructive font-bold">:الانتهاء</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -521,7 +523,7 @@ export default function YemenMobilePage() {
                                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
                                                 <span className="text-primary font-black text-base">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-sm tracking-wide">{category.title}</span>
+                                            <span className="text-white font-bold text-right flex-1 text-sm tracking-wide">{category.title}</span>
                                         </div>
                                         <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
@@ -557,7 +559,7 @@ export default function YemenMobilePage() {
                                 <div className="space-y-2">
                                     <p className="text-xs font-bold text-muted-foreground text-right px-1">صافي الرصيد المستلم</p>
                                     <div className='p-4 bg-primary/5 border border-primary/10 rounded-2xl flex justify-center items-center'>
-                                        <span className="text-xl font-black text-primary">{netAmount.toFixed(2)}</span>
+                                        <span className="text-xl font-bold text-primary">{netAmount.toFixed(2)}</span>
                                     </div>
                                 </div>
                            </div>
@@ -610,8 +612,8 @@ export default function YemenMobilePage() {
                         <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
                         <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
                     </div>
-                </AlertDialogDescription>
-            </AlertDialogHeader>
+                </AccordionDescription>
+            </AccordionHeader>
             <AlertDialogFooter className="flex-row gap-3 mt-6">
                 <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                 <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>

@@ -13,6 +13,8 @@ import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 type UserProfile = {
   accountType?: 'user' | 'network-owner';
 };

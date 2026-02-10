@@ -61,6 +61,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+export const dynamic = 'force-dynamic';
 
 type Transaction = {
   id: string;

@@ -30,6 +30,8 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 type RenewalOption = {
   id: string;
   title: string;
@@ -322,27 +324,25 @@ export default function AlwadiPage() {
               <AlertDialogContent className="rounded-2xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-center">تأكيد معلومات التجديد</AlertDialogTitle>
-                  <AlertDialogDescription asChild>
-                    <div className="space-y-4 pt-4 text-base text-foreground text-right">
-                      <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك لإتمام العملية.</p>
-                      <div className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">اسم المشترك:</span>
-                        <span className="font-bold">{subscriberName}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">رقم الكرت:</span>
-                        <span className="font-bold">{cardNumber}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">الفئة:</span>
-                        <span className="font-bold">{selectedOption?.title}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-muted-foreground">المبلغ:</span>
-                        <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString()} ريال</span>
-                      </div>
+                  <div className="space-y-4 pt-4 text-base text-foreground text-right">
+                    <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك لإتمام العملية.</p>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">اسم المشترك:</span>
+                      <span className="font-bold">{subscriberName}</span>
                     </div>
-                  </AlertDialogDescription>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">رقم الكرت:</span>
+                      <span className="font-bold">{cardNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-muted-foreground">الفئة:</span>
+                      <span className="font-bold">{selectedOption?.title}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-muted-foreground">المبلغ:</span>
+                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString()} ريال</span>
+                    </div>
+                  </div>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
                   <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation}>

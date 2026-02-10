@@ -48,6 +48,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+export const dynamic = 'force-dynamic';
+
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },

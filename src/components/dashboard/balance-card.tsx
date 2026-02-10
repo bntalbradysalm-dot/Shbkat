@@ -121,7 +121,7 @@ export function BalanceCard() {
       <Card className="w-full overflow-hidden rounded-[32px] bg-mesh-gradient text-white shadow-xl border-none">
         <CardContent className="p-6 flex flex-col items-center justify-center min-h-[170px] relative">
           
-          <div className="w-full relative flex items-center justify-center mt-12 mb-4">
+          <div className="w-full relative flex flex-col items-center justify-center mt-16 mb-4">
             <div className="absolute left-0 top-0">
                 <Button
                     variant="ghost"
@@ -133,7 +133,7 @@ export function BalanceCard() {
                 </Button>
             </div>
 
-            <div className="flex items-baseline gap-2 pt-2">
+            <div className="flex items-baseline gap-2 pt-4">
                 <h2 className="text-4xl font-bold tracking-tight text-white">
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />
@@ -147,7 +147,7 @@ export function BalanceCard() {
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3 w-full">
+          <div className="mt-8 flex gap-3 w-full">
             <ActionButton service={leftAction} side="left" />
             <ActionButton service={rightAction} side="right" />
           </div>

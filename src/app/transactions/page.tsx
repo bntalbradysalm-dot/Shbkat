@@ -30,7 +30,7 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
   Dialog,
@@ -151,14 +151,20 @@ export default function TransactionsPage() {
     if (!transactions) return [];
     if (!appliedFrom && !appliedTo) return transactions;
 
-    return transactions.filter(tx => {
-      const txDate = parseISO(tx.transactionDate);
-      
-      const start = appliedFrom ? startOfDay(parseISO(appliedFrom)) : new Date(0);
-      const end = appliedTo ? endOfDay(parseISO(appliedTo)) : new Date();
+    try {
+        const start = appliedFrom ? startOfDay(parseISO(appliedFrom)) : new Date(0);
+        const end = appliedTo ? endOfDay(parseISO(appliedTo)) : new Date();
+        
+        if (!isValid(start) || !isValid(end)) return transactions;
 
-      return isWithinInterval(txDate, { start, end });
-    });
+        return transactions.filter(tx => {
+          const txDate = parseISO(tx.transactionDate);
+          if (!isValid(txDate)) return false;
+          return isWithinInterval(txDate, { start, end });
+        });
+    } catch (e) {
+        return transactions;
+    }
   }, [transactions, appliedFrom, appliedTo]);
 
   const handleFilter = () => {
@@ -413,7 +419,8 @@ export default function TransactionsPage() {
                                 type="date" 
                                 value={fromDate}
                                 onChange={(e) => setFromDate(e.target.value)}
-                                className="rounded-xl h-10 text-xs bg-background"
+                                onClick={(e) => e.currentTarget.showPicker?.()}
+                                className="rounded-xl h-10 text-xs bg-background cursor-pointer"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -423,7 +430,8 @@ export default function TransactionsPage() {
                                 type="date" 
                                 value={toDate}
                                 onChange={(e) => setToDate(e.target.value)}
-                                className="rounded-xl h-10 text-xs bg-background"
+                                onClick={(e) => e.currentTarget.showPicker?.()}
+                                className="rounded-xl h-10 text-xs bg-background cursor-pointer"
                             />
                         </div>
                     </div>

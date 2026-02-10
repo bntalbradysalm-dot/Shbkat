@@ -53,27 +53,40 @@ export function RecentTransactions() {
             {isLoading ? (
                 [1, 2].map(i => <Skeleton key={i} className="h-20 w-full rounded-3xl" />)
             ) : transactions && transactions.length > 0 ? (
-                transactions.map((tx) => (
-                    <Card key={tx.id} className="rounded-3xl border-border/50 shadow-sm overflow-hidden">
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div className="text-right">
-                                <p className="text-destructive font-bold text-base">{tx.amount.toLocaleString('en-US')} ر.ي</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">ناجحة</p>
-                            </div>
+                transactions.map((tx) => {
+                    const isCredit = tx.transactionType.includes('تغذية') || 
+                                   tx.transactionType.includes('استلام') || 
+                                   tx.transactionType.includes('أرباح') || 
+                                   tx.transactionType.includes('استرجاع') || 
+                                   tx.transactionType.includes('إيداع');
+                    
+                    return (
+                        <Card key={tx.id} className="rounded-3xl border-border/50 shadow-sm overflow-hidden bg-card">
+                            <CardContent className="p-4 flex items-center justify-between">
+                                {/* الأيقونة في اليمين */}
+                                <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50 shrink-0">
+                                    <CreditCard className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
+                                </div>
 
-                            <div className="flex-1 text-center mr-4">
-                                <p className="font-bold text-primary text-sm">{tx.transactionType}</p>
-                                <p className="text-[10px] text-primary/70 font-semibold">
-                                    {tx.transactionDate ? format(parseISO(tx.transactionDate), 'd MMMM', { locale: ar }) : 'منذ فترة'}
-                                </p>
-                            </div>
+                                {/* النص في المنتصف */}
+                                <div className="flex-1 text-right mx-4 overflow-hidden">
+                                    <p className="font-bold text-primary text-sm truncate">{tx.transactionType}</p>
+                                    <p className="text-[10px] text-primary/70 font-semibold mt-0.5">
+                                        {tx.transactionDate ? format(parseISO(tx.transactionDate), 'd MMMM', { locale: ar }) : 'منذ فترة'}
+                                    </p>
+                                </div>
 
-                            <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50">
-                                <CreditCard className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))
+                                {/* المبلغ في اليسار */}
+                                <div className="text-left shrink-0">
+                                    <p className={`font-bold text-base ${isCredit ? 'text-green-600' : 'text-destructive'}`}>
+                                        {tx.amount.toLocaleString('en-US')} ر.ي
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">ناجحة</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })
             ) : (
                 <div className="text-center py-10 bg-muted/10 rounded-3xl">
                     <FileText className="mx-auto h-10 w-10 text-muted-foreground opacity-30" />

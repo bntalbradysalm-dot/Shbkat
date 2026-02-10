@@ -339,7 +339,7 @@ export default function ServicesPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData?.error?.message?.ar || errorData?.message || 'فشل إنشاء الطلب.');
+                throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
             }
 
             const result = await response.json();
@@ -417,7 +417,7 @@ export default function ServicesPage() {
               >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
-                  <div className="flex-1 text-right mx-4 space-y-1">
+                  <div className="flex-1 text-right mx-4 space-y-1 text-white">
                     <h4 className="font-bold text-base text-white">{network.name}</h4>
                     <p className="text-[10px] opacity-80 text-white/80">{network.location}</p>
                   </div>
@@ -514,7 +514,7 @@ export default function ServicesPage() {
 
       {/* Success Popup */}
       {purchasedCard && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-in fade-in-0">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <div className="bg-green-500 p-8 flex justify-center">
@@ -551,7 +551,7 @@ export default function ServicesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[200]">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />

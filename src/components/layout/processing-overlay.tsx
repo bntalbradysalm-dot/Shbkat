@@ -32,7 +32,7 @@ const CustomLoader = () => (
 
 export const ProcessingOverlay = ({ message }: { message: string }) => {
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center animate-in fade-in-0 p-4">
       <div className="flex flex-col items-center justify-center gap-4 text-center">
         <CustomLoader />
         <p className="text-sm font-bold text-white drop-shadow-md animate-pulse">{message}</p>

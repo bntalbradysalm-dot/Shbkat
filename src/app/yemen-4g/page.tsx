@@ -86,12 +86,10 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       </div>
       
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl">
-            <Globe className="w-3.5 h-3.5 text-primary/60" />
+        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
             <p className="text-[10px] font-bold">{offer.data}</p>
         </div>
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl">
-            <Clock className="w-3.5 h-3.5 text-primary/60" />
+        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
             <p className="text-[10px] font-bold">{offer.validity}</p>
         </div>
       </div>
@@ -129,7 +127,6 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        // Clear results if phone number is changed or deleted
         if (phone.length !== 9 || !phone.startsWith('10')) {
             setQueryResult(null);
         }
@@ -319,9 +316,8 @@ export default function Yemen4GPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم خدمة فورجي</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                         <Input
                             type="tel"
                             placeholder="10xxxxxxx"
@@ -332,15 +328,18 @@ export default function Yemen4GPage() {
                                     setPhone(val.slice(0, 9));
                                 }
                             }}
-                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest flex-1"
+                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
                         />
-                        <Button 
-                            onClick={handleSearch} 
-                            disabled={phone.length !== 9 || isSearching}
-                            className="h-14 rounded-2xl px-6 font-bold"
-                        >
-                            {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : "استعلام"}
-                        </Button>
+                        {phone.length === 9 && (
+                            <Button 
+                                onClick={handleSearch} 
+                                disabled={isSearching}
+                                className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
+                            >
+                                {isSearching ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : <Search className="w-5 h-5 ml-2" />}
+                                استعلام
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -361,7 +360,7 @@ export default function Yemen4GPage() {
                             </div>
                         )}
 
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                                 <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات المتاحة</TabsTrigger>
                                 <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">سداد رصيد</TabsTrigger>

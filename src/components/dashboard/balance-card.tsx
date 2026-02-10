@@ -118,26 +118,30 @@ export function BalanceCard() {
              <Settings2 size={12} className="opacity-40" />
           </div>
 
-          <p className="text-xs font-medium opacity-90 mb-0.5 mt-1">ريال يمني</p>
-          
-          <div className="flex items-center gap-3">
-            <h2 className="text-4xl font-bold tracking-tight">
-              {isLoading ? (
-                <Skeleton className="h-10 w-28 bg-white/20" />
-              ) : isBalanceVisible ? (
-                balance.toLocaleString('en-US')
-              ) : (
-                "******"
-              )}
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-              className="h-8 w-8 rounded-full hover:bg-white/20 text-white"
-            >
-              {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
-            </Button>
+          <div className="w-full relative flex items-center justify-center mt-2">
+            <div className="absolute left-0">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                    className="h-8 w-8 rounded-full hover:bg-white/20 text-white"
+                >
+                    {isBalanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                </Button>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+                <h2 className="text-4xl font-bold tracking-tight">
+                {isLoading ? (
+                    <Skeleton className="h-10 w-28 bg-white/20" />
+                ) : isBalanceVisible ? (
+                    balance.toLocaleString('en-US')
+                ) : (
+                    "******"
+                )}
+                </h2>
+                <span className="text-xs font-medium opacity-90">ريال يمني</span>
+            </div>
           </div>
 
           <div className="mt-6 flex gap-3 w-full">

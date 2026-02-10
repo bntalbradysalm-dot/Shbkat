@@ -111,7 +111,13 @@ export async function POST(request: Request) {
         const isPending = data.resultCode === "-2" || data.resultCode === -2;
 
         if (!response.ok || (!isSuccess && !isPending)) {
-            const errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
+            let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
+            
+            // تحويل رسالة الخطأ الخاصة بمنطقة التحصيل إلى رسالة مفهومة ومختصرة
+            if (errorMessage.includes('1009') || errorMessage.includes('منطقة التحصيل') || errorMessage.includes('من ارقام منطقة')) {
+                errorMessage = 'الرقم ليس من مناطق التحصيل المسموح بها';
+            }
+
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },

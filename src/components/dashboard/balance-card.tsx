@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/Dialog";
+} from "@/components/ui/dialog";
 import Link from "next/link";
 
 type UserProfile = {

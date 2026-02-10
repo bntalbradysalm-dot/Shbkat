@@ -148,40 +148,40 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[20px] p-2 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-1.5"
+      className="bg-[#FDE6D2] rounded-[20px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-2"
       onClick={onClick}
     >
       {/* Floating Logo */}
-      <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={14} height={14} className="rounded-sm object-contain" />
+      <div className="absolute top-2 left-2 w-6 h-6 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={18} height={18} className="rounded-sm object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-xs font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
-        <p className="text-[8px] font-bold text-slate-800">دفع مسبق</p>
-        <p className="text-[7px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-sm font-black text-[#8B1D3D] leading-tight mb-0.5">{offer.offerName}</h4>
+        <p className="text-[10px] font-bold text-slate-800">دفع مسبق</p>
+        <p className="text-[9px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-0.5">
-        <span className="text-xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-1">
+        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-1 border-t border-[#EBCDB5] text-center">
-        <div className="space-y-0.5">
-          <Globe className="w-3 h-3 mx-auto text-[#8B1D3D]" />
-          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-1">
+          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Mail className="w-3 h-3 mx-auto text-[#8B1D3D]" />
-          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Phone className="w-3 h-3 mx-auto text-[#8B1D3D]" />
-          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Clock className="w-3 h-3 mx-auto text-[#8B1D3D]" />
-          <p className="text-[8px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800 leading-none">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -196,7 +196,7 @@ export default function YemenMobilePage() {
 
   const [phone, setPhone] = useState('');
   const [showTabs, setShowTabs] = useState(false);
-  const [activeTab, setActiveTab] = useState("packages");
+  const [activeTab, setActiveTab] = useState("balance");
   const [isCheckingBilling, setIsCheckingBilling] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   
@@ -227,7 +227,7 @@ export default function YemenMobilePage() {
     const handleSearch = async () => {
       if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
         setShowTabs(true);
-        setActiveTab("balance"); // Open balance tab first automatically
+        setActiveTab("balance");
         setIsCheckingBilling(true);
         setBillingInfo(null);
         
@@ -445,7 +445,7 @@ export default function YemenMobilePage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={9}
-                className="text-center font-black text-4xl h-16 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
+                className="text-center font-black text-4xl h-14 rounded-2xl border-2 focus-visible:ring-primary bg-muted/30"
               />
             </div>
             
@@ -484,20 +484,23 @@ export default function YemenMobilePage() {
                                 <CardContent className="p-0 divide-y divide-muted">
                                     {MOCK_ACTIVE_SUBS.map((sub, idx) => (
                                         <div key={idx} className={cn("p-4 flex items-center justify-between gap-4", sub.highlight ? "bg-orange-50" : "")}>
-                                            <div className="flex flex-col items-center gap-1">
+                                            <div 
+                                                className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                                onClick={() => setActiveTab("packages")}
+                                            >
                                                 <div className="p-2 bg-primary/10 rounded-xl">
                                                     <RefreshCcw className="w-5 h-5 text-primary" />
                                                 </div>
                                                 <span className="text-[10px] font-bold text-primary">تجديد</span>
                                             </div>
                                             <div className="flex-1 text-right">
-                                                <h5 className="text-xs font-black text-slate-800 leading-tight mb-2">{sub.name}</h5>
+                                                <h5 className="text-xs font-black text-slate-800 leading-tight mb-1">{sub.name}</h5>
                                                 <div className="space-y-0.5">
-                                                    <div className="flex justify-start gap-2 text-[10px]">
+                                                    <div className="flex justify-start items-center gap-2 text-[10px] flex-row-reverse">
                                                         <span className="text-green-600 font-bold">الاشتراك:</span>
                                                         <span className="font-mono text-slate-500">{sub.start}</span>
                                                     </div>
-                                                    <div className="flex justify-start gap-2 text-[10px]">
+                                                    <div className="flex justify-start items-center gap-2 text-[10px] flex-row-reverse">
                                                         <span className="text-destructive font-bold">الانتهاء:</span>
                                                         <span className="font-mono text-slate-500">{sub.end}</span>
                                                     </div>
@@ -513,14 +516,14 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-4">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-5 py-4 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none h-14">
                                         <div className="flex items-center gap-3 flex-1">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                                <span className="text-primary font-black text-[10px]">{category.badge}</span>
+                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                                <span className="text-primary font-black text-sm">{category.badge}</span>
                                             </div>
-                                            <span className="text-white font-black text-right flex-1 text-base tracking-wide">{category.title}</span>
+                                            <span className="text-white font-black text-right flex-1 text-xl tracking-wide">{category.title}</span>
                                         </div>
-                                        <ChevronDown className="w-5 h-5 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
+                                        <ChevronDown className="w-6 h-6 text-white/80 transition-transform group-data-[state=open]:rotate-180 ml-auto" />
                                       </AccordionTrigger>
                                       <AccordionContent className="p-4 space-y-2 bg-white border-x border-b rounded-b-2xl shadow-inner">
                                         {category.offers.map((offer) => (
@@ -616,7 +619,7 @@ export default function YemenMobilePage() {
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
-    </AlertDialog>
+    </Accordion>
     </>
   );
 }

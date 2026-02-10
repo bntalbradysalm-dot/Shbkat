@@ -212,7 +212,7 @@ function NetworkPurchasePageComponent() {
         console.error("Purchase failed:", error);
         toast({
             variant: "destructive",
-            title: "فشلت عملية الشراء",
+            title: "فشل عملية الشراء",
             description: error.message || "حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.",
         });
     } finally {
@@ -255,7 +255,7 @@ function NetworkPurchasePageComponent() {
     return (
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-[110] flex items-center justify-center animate-in fade-in-0 p-4">
             <Card className="w-full max-w-sm text-center shadow-2xl">
                 <CardContent className="p-6">
                     <div className="flex flex-col items-center justify-center gap-4">
@@ -361,7 +361,7 @@ function NetworkPurchasePageComponent() {
                                 <div className='flex items-start justify-between gap-2'>
                                     <div className='space-y-1 text-right'>
                                         <h3 className="font-bold text-base">{category.name}</h3>
-                                        <p className="font-semibold text-primary dark:text-primary-foreground">{category.price.toLocaleString('en-US')} ريال</p>
+                                        <p className="font-semibold text-primary">{category.price.toLocaleString('en-US')} ريال</p>
                                     </div>
                                     <Button 
                                         size="default" 
@@ -401,7 +401,7 @@ function NetworkPurchasePageComponent() {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-center">تأكيد عملية الشراء</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
-                            هل أنت متأكد من رغبتك في شراء كرت "{selectedCategory.name}"؟ سيتم خصم <span className="font-bold text-primary dark:text-primary-foreground">{selectedCategory.price.toLocaleString('en-US')} ريال</span> من رصيدك.
+                            هل أنت متأكد من رغبتك في شراء كرت "{selectedCategory.name}"؟ سيتم خصم <span className="font-bold text-primary">{selectedCategory.price.toLocaleString('en-US')} ريال</span> من رصيدك.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

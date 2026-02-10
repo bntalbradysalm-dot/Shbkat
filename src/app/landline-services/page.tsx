@@ -198,7 +198,7 @@ function LandlinePageComponent() {
     return (
         <>
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <div className="fixed inset-0 bg-background z-[110] flex items-center justify-center animate-in fade-in-0 p-4">
                 <Card className="w-full max-w-sm text-center shadow-2xl">
                     <CardContent className="p-6">
                         <div className="flex flex-col items-center justify-center gap-4">

@@ -159,7 +159,7 @@ function RenewPageComponent() {
     return (
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-sm z-[110] flex items-center justify-center animate-in fade-in-0 p-4">
           <Card className="w-full max-w-sm text-center shadow-2xl">
               <CardContent className="p-6">
                   <div className="flex flex-col items-center justify-center gap-4">
@@ -175,7 +175,7 @@ function RenewPageComponent() {
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">المبلغ:</span>
-                              <span className="font-semibold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
+                              <span className="font-semibold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
                           </div>
                            <div className="flex justify-between">
                               <span className="text-muted-foreground">الرصيد المتبقي:</span>
@@ -207,7 +207,7 @@ function RenewPageComponent() {
           <CardHeader>
             <CardTitle className="text-center">{title}</CardTitle>
             {price && (
-              <p className="text-center text-2xl font-bold text-primary dark:text-primary-foreground">
+              <p className="text-center text-2xl font-bold text-primary">
                 {Number(price).toLocaleString('en-US')} ريال
               </p>
             )}
@@ -251,7 +251,7 @@ function RenewPageComponent() {
                       {isProcessing ? 'جاري الإرسال...' : 'إرسال طلب التجديد'}
                     </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-lg">
+                <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-center">تأكيد معلومات الطلب</AlertDialogTitle>
                     <AlertDialogDescription asChild>
@@ -267,7 +267,7 @@ function RenewPageComponent() {
                         </div>
                          <div className="flex justify-between items-center">
                            <span>المبلغ:</span>
-                           <span className="font-bold text-primary dark:text-primary-foreground">{Number(price).toLocaleString('en-US')} ريال</span>
+                           <span className="font-bold text-primary">{Number(price).toLocaleString('en-US')} ريال</span>
                         </div>
                       </div>
                     </AlertDialogDescription>

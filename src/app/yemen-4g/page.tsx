@@ -17,7 +17,8 @@ import {
   Clock, 
   AlertCircle,
   Smartphone,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -128,15 +129,17 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 9 && phone.startsWith('10')) {
-            handleSearch();
-        } else {
+        // Clear results if phone number is changed or deleted
+        if (phone.length !== 9 || !phone.startsWith('10')) {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 9) return;
+        if (!phone || phone.length !== 9) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرقام' });
+            return;
+        }
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -152,20 +155,15 @@ export default function Yemen4GPage() {
             let displayBalance = '0 MB';
             let displayExpire = '...';
 
-            // تحسين استخلاص القيقا المتبقية وتاريخ الانتهاء من النص الطويل
             if (rawBalance.includes('رصيد الباقة')) {
-                // استخلاص القيقا: رصيد الباقة: 3.79 GB
                 const balMatch = rawBalance.match(/رصيد الباقة:\s*([\d.]+)\s*GB/);
                 if (balMatch) displayBalance = `${balMatch[1]} GB`;
 
-                // استخلاص التاريخ: تأريخ الانتهاء: 2026-03-03
                 const dateMatch = rawBalance.match(/تأريخ الانتهاء:\s*(\d{4})-(\d{2})-(\d{2})/);
                 if (dateMatch) {
-                    // تحويل إلى صيغة D/M/YYYY
                     displayExpire = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
                 }
             } else {
-                // في حال كان الرد رقمياً فقط أو بصيغة أخرى
                 displayBalance = formatData(rawBalance);
                 displayExpire = result.expireDate || '...';
                 if (displayExpire && displayExpire.includes('-')) {
@@ -182,6 +180,7 @@ export default function Yemen4GPage() {
             });
         } catch (error: any) {
             console.error("Search Error:", error);
+            toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
             setIsSearching(false);
         }
@@ -322,40 +321,45 @@ export default function Yemen4GPage() {
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم خدمة فورجي</Label>
                         {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
-                    <Input
-                        type="tel"
-                        placeholder="10xxxxxxx"
-                        value={phone}
-                        onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            if (val === '' || val.startsWith('10')) {
-                                setPhone(val.slice(0, 9));
-                            }
-                        }}
-                        className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
-                    />
+                    <div className="flex gap-2">
+                        <Input
+                            type="tel"
+                            placeholder="10xxxxxxx"
+                            value={phone}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '');
+                                if (val === '' || val.startsWith('10')) {
+                                    setPhone(val.slice(0, 9));
+                                }
+                            }}
+                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest flex-1"
+                        />
+                        <Button 
+                            onClick={handleSearch} 
+                            disabled={phone.length !== 9 || isSearching}
+                            className="h-14 rounded-2xl px-6 font-bold"
+                        >
+                            {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : "استعلام"}
+                        </Button>
+                    </div>
                 </div>
 
                 {phone.length === 9 && phone.startsWith('10') ? (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1">
-                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                <div className="p-4 border-l border-white/10">
-                                    <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Database className="w-3.5 h-3.5 opacity-70" />
-                                        <p className="text-base font-black">{queryResult?.balance || '0 MB'}</p>
+                        {queryResult && (
+                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
+                                    <div className="p-4 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                        <p className="text-base font-black">{queryResult.balance}</p>
                                     </div>
-                                </div>
-                                <div className="p-4">
-                                    <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Calendar className="w-3.5 h-3.5 opacity-70" />
-                                        <p className="text-sm font-black">{queryResult?.expireDate || '...'}</p>
+                                    <div className="p-4">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

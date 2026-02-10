@@ -402,7 +402,7 @@ export default function ServicesPage() {
             filteredNetworks.map((network, index) => (
               <Card 
                 key={network.id} 
-                className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2"
+                className="bg-mesh-gradient cursor-pointer text-primary-foreground hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
                 style={{ animationDelay: `${index * 30}ms` }}
                 onClick={() => handleNetworkClick(network)}
               >
@@ -427,7 +427,7 @@ export default function ServicesPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-primary p-6 text-primary-foreground relative">
+              <div className="bg-mesh-gradient p-6 text-primary-foreground relative">
                 <button 
                   onClick={() => setSelectedNetwork(null)}
                   className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"

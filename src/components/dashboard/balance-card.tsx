@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, MoreHorizontal, Settings2, PlusCircle, CreditCard, Send, ShoppingBag, Wifi, ClipboardList, Landmark, Smartphone, ArrowLeftRight } from "lucide-react";
+import { Eye, EyeOff, Settings2, CreditCard, Send, ShoppingBag, ClipboardList, Landmark, Smartphone, ArrowLeftRight } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import Link from "next/link";
@@ -46,10 +45,17 @@ export function BalanceCard() {
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 
   useEffect(() => {
-    const savedLeft = localStorage.getItem('balance_card_left');
-    const savedRight = localStorage.getItem('balance_card_right');
-    if (savedLeft) setLeftAction(JSON.parse(savedLeft));
-    if (savedRight) setRightAction(JSON.parse(savedRight));
+    const savedLeftId = localStorage.getItem('balance_card_left_id');
+    const savedRightId = localStorage.getItem('balance_card_right_id');
+    
+    if (savedLeftId) {
+        const service = availableServices.find(s => s.id === savedLeftId);
+        if (service) setLeftAction(service);
+    }
+    if (savedRightId) {
+        const service = availableServices.find(s => s.id === savedRightId);
+        if (service) setRightAction(service);
+    }
   }, []);
 
   const userDocRef = useMemoFirebase(
@@ -69,15 +75,16 @@ export function BalanceCard() {
   const selectService = (service: typeof availableServices[0]) => {
     if (editingSide === 'left') {
       setLeftAction(service);
-      localStorage.setItem('balance_card_left', JSON.stringify(service));
+      localStorage.setItem('balance_card_left_id', service.id);
     } else {
       setRightAction(service);
-      localStorage.setItem('balance_card_right', JSON.stringify(service));
+      localStorage.setItem('balance_card_right_id', service.id);
     }
     setIsConfigOpen(false);
   };
 
   const ActionButton = ({ service, side }: { service: typeof availableServices[0], side: 'left' | 'right' }) => {
+    const Icon = service.icon;
     let timer: any;
     const startTimer = () => {
       timer = setTimeout(() => handleLongPress(side), 600);
@@ -94,7 +101,7 @@ export function BalanceCard() {
           onTouchEnd={clearTimer}
           className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 transition-colors rounded-2xl text-white text-xs font-bold border border-white/5 backdrop-blur-sm"
         >
-          <service.icon size={16} />
+          <Icon size={16} />
           <span>{service.name}</span>
         </button>
       </Link>
@@ -154,17 +161,20 @@ export function BalanceCard() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-4">
-            {availableServices.map((service) => (
-              <Button
-                key={service.id}
-                variant="outline"
-                className="flex flex-col h-24 gap-2 rounded-2xl border-primary/10 hover:bg-primary/5 hover:border-primary/30"
-                onClick={() => selectService(service)}
-              >
-                <service.icon className="h-8 w-8 text-primary" />
-                <span className="text-xs font-bold">{service.name}</span>
-              </Button>
-            ))}
+            {availableServices.map((service) => {
+              const ServiceIcon = service.icon;
+              return (
+                <Button
+                  key={service.id}
+                  variant="outline"
+                  className="flex flex-col h-24 gap-2 rounded-2xl border-primary/10 hover:bg-primary/5 hover:border-primary/30"
+                  onClick={() => selectService(service)}
+                >
+                  <ServiceIcon className="h-8 w-8 text-primary" />
+                  <span className="text-xs font-bold">{service.name}</span>
+                </Button>
+              );
+            })}
           </div>
           <DialogFooter>
             <DialogClose asChild>

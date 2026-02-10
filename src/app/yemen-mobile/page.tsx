@@ -122,7 +122,7 @@ const BalanceDisplay = () => {
     const firestore = useFirestore();
 
     const userDocRef = useMemoFirebase(
-        () => (user ? doc(firestore, 'users', user.uid) : null),
+        () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
         [firestore, user]
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
@@ -218,7 +218,7 @@ export default function YemenMobilePage() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);

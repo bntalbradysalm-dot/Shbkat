@@ -5,7 +5,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
-import { app, auth, firestore } from './config'; // Import the initialized instances
+import { app, auth, firestore } from './config';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -42,7 +42,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
   });
 
   useEffect(() => {
-    // Check if auth instance exists (might be undefined during builds without environment variables)
     if (!auth) {
         setUserAuthState({ user: null, isUserLoading: false, userError: null });
         return;
@@ -89,29 +88,17 @@ export const useFirebase = (): FirebaseContextState => {
 
 export const useAuth = (): Auth => {
   const { auth } = useFirebase();
-  if (!auth) {
-    if (typeof window === 'undefined') return undefined as any;
-    throw new Error("Firebase Auth is not initialized. Check your environment variables.");
-  }
-  return auth;
+  return auth as Auth;
 };
 
 export const useFirestore = (): Firestore => {
   const { firestore } = useFirebase();
-  if (!firestore) {
-    if (typeof window === 'undefined') return undefined as any;
-    throw new Error("Firebase Firestore is not initialized. Check your environment variables.");
-  }
-  return firestore;
+  return firestore as Firestore;
 };
 
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
-  if (!firebaseApp) {
-    if (typeof window === 'undefined') return undefined as any;
-    throw new Error("Firebase App is not initialized. Check your environment variables.");
-  }
-  return firebaseApp;
+  return firebaseApp as FirebaseApp;
 };
 
 export const useUser = (): UserHookResult => {

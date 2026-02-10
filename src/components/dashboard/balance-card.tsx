@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -125,7 +126,7 @@ export function BalanceCard() {
              <Settings2 size={12} className="opacity-40" />
           </div>
 
-          <div className="w-full relative flex items-center justify-center mt-2">
+          <div className="w-full relative flex items-center justify-center mt-6">
             <div className="absolute left-0">
                 <Button
                     variant="ghost"
@@ -154,12 +155,6 @@ export function BalanceCard() {
           <div className="mt-6 flex gap-3 w-full">
             <ActionButton service={leftAction} side="left" />
             <ActionButton service={rightAction} side="right" />
-          </div>
-
-          <div className="mt-4 flex gap-1.5">
-            <div className="h-1 w-4 rounded-full bg-white/30" />
-            <div className="h-1 w-4 rounded-full bg-white/30" />
-            <div className="h-1 w-8 rounded-full bg-white shadow-sm" />
           </div>
         </CardContent>
       </Card>

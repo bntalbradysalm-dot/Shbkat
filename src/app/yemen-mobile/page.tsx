@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -148,40 +149,40 @@ const BalanceDisplay = () => {
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => {
   return (
     <div 
-      className="bg-[#FDE6D2] rounded-[20px] p-3 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
+      className="bg-[#FDE6D2] rounded-[24px] p-4 shadow-sm relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer border border-[#EBCDB5] mb-3"
       onClick={onClick}
     >
       {/* Floating Logo */}
-      <div className="absolute top-2 left-2 w-6 h-6 bg-white rounded-md shadow-sm flex items-center justify-center p-0.5 border border-white">
-        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={20} height={20} className="rounded-sm object-contain" />
+      <div className="absolute top-2 left-2 w-8 h-8 bg-white rounded-xl shadow-sm flex items-center justify-center p-1 border border-white">
+        <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Logo" width={24} height={24} className="rounded-md object-contain" />
       </div>
 
       <div className="text-right pr-1">
-        <h4 className="text-sm font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
-        <p className="text-[10px] font-bold text-slate-800 mt-0.5">دفع مسبق</p>
-        <p className="text-[8px] font-bold text-slate-500">شريحة + برمجة</p>
+        <h4 className="text-base font-black text-[#8B1D3D] leading-tight">{offer.offerName}</h4>
+        <p className="text-xs font-bold text-slate-800 mt-1">دفع مسبق</p>
+        <p className="text-[10px] font-bold text-slate-500">شريحة + برمجة</p>
       </div>
 
-      <div className="flex justify-center my-1.5">
-        <span className="text-2xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
+      <div className="flex justify-center my-2">
+        <span className="text-4xl font-black text-slate-400 opacity-20 drop-shadow-sm tracking-tighter">{offer.price}</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 pt-2 border-t border-[#EBCDB5] text-center">
-        <div className="space-y-0.5">
-          <Globe className="w-2.5 h-2.5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[7px] font-black text-slate-800">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-0 pt-3 border-t border-[#EBCDB5] text-center">
+        <div className="space-y-1">
+          <Globe className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Mail className="w-2.5 h-2.5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[7px] font-black text-slate-800">{offer.sms || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Mail className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Phone className="w-2.5 h-2.5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[7px] font-black text-slate-800">{offer.minutes || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Phone className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-0.5 border-r border-[#EBCDB5]">
-          <Clock className="w-2.5 h-2.5 mx-auto text-[#8B1D3D]" />
-          <p className="text-[7px] font-black text-slate-800">{offer.validity || '-'}</p>
+        <div className="space-y-1 border-r border-[#EBCDB5]">
+          <Clock className="w-4 h-4 mx-auto text-[#8B1D3D]" />
+          <p className="text-[10px] font-black text-slate-800">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -510,7 +511,7 @@ export default function YemenMobilePage() {
                                 <Accordion type="single" collapsible className="w-full space-y-3">
                                   {CATEGORIES.map((category) => (
                                     <AccordionItem key={category.id} value={category.id} className="border-none">
-                                      <AccordionTrigger className="px-4 py-3.5 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
+                                      <AccordionTrigger className="px-4 py-3 text-sm hover:no-underline bg-primary rounded-2xl shadow-md transition-all active:scale-[0.98] group flex-row-reverse [&[data-state=open]]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
                                                 <span className="text-primary font-black text-[10px]">{category.badge}</span>
@@ -592,15 +593,17 @@ export default function YemenMobilePage() {
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
                 <AlertDialogTitle className="text-center text-xl font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                <AlertDialogDescription className='text-center pt-6 text-slate-700 space-y-3'>
-                    <div className="p-4 bg-muted/50 rounded-2xl">
-                        <p className="text-xs text-muted-foreground mb-1">الباقة المختارة:</p>
-                        <p className="font-black text-lg text-primary">{selectedOffer?.offerName}</p>
+                <AlertDialogDescription className='text-center pt-6 text-slate-700 space-y-3' asChild>
+                    <div className="space-y-3">
+                        <div className="p-4 bg-muted/50 rounded-2xl">
+                            <p className="text-xs text-muted-foreground mb-1">الباقة المختارة:</p>
+                            <p className="font-black text-lg text-primary">{selectedOffer?.offerName}</p>
+                        </div>
+                        <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
+                        <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
                     </div>
-                    <p>سيتم تفعيل هذه الباقة للرقم <span className="font-black text-slate-900">{phone}</span></p>
-                    <p className="text-xs text-destructive font-bold">سيتم خصم قيمة الباقة من رصيدك الحالي.</p>
                 </AlertDialogDescription>
-            </AlertDialogHeader>
+            </AccordionHeader>
             <AlertDialogFooter className="flex-row gap-3 mt-6">
                 <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                 <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>

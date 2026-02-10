@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -135,7 +136,6 @@ export default function LandlineRedesignPage() {
         setIsSearching(true);
         setQueryResult(null);
         try {
-            // تحديد نوع الاستعلام بناءً على التبويب النشط لحل مشكلة Type parameter required
             const searchType = activeTab === 'internet' ? 'adsl' : 'line';
             
             const response = await fetch('/api/telecom', {
@@ -218,6 +218,31 @@ export default function LandlineRedesignPage() {
         }
     };
 
+    const formatDisplayValue = (val: string | undefined) => {
+        if (!val) return '0.00';
+        const cleanVal = val.toString().toLowerCase();
+        
+        // If it already has units, return as is
+        if (cleanVal.includes('gb') || cleanVal.includes('mb') || cleanVal.includes('ريال')) {
+            return val;
+        }
+
+        const num = parseFloat(val);
+        if (isNaN(num)) return val;
+
+        if (activeTab === 'internet') {
+            // For ADSL, if the number is large it might be bytes/MB
+            if (num > 100) {
+                if (num >= 1024) return `${(num / 1024).toFixed(2)} GB`;
+                return `${num.toFixed(2)} MB`;
+            }
+            // If it's a small decimal, maybe it's already GB
+            if (num > 0 && num < 100) return `${num.toFixed(2)} GB`;
+        }
+
+        return `${num.toLocaleString('en-US')} ريال`;
+    };
+
     if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
 
     if (showSuccess) {
@@ -281,8 +306,10 @@ export default function LandlineRedesignPage() {
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
                                 <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
                                     <div className="p-4 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">المديونية/الرصيد</p>
-                                        <p className="text-base font-black">{parseFloat(queryResult.balance || '0').toLocaleString()} ريال</p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">
+                                            {activeTab === 'internet' ? 'البيانات المتبقية' : 'المديونية/الرصيد'}
+                                        </p>
+                                        <p className="text-base font-black">{formatDisplayValue(queryResult.balance)}</p>
                                     </div>
                                     <div className="p-4">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">حالة الخط</p>

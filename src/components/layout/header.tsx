@@ -28,8 +28,8 @@ const Header = () => {
   useEffect(() => {
     const now = new Date();
     const hour = now.getHours();
-    if (hour < 12) setGreeting('صباحك جميل 👋');
-    else setGreeting('مساءك جميل 👋');
+    if (hour < 12) setGreeting('صباح الخير 👋');
+    else setGreeting('مساء الخير 👋');
   }, []);
 
   const lastNotificationQuery = useMemoFirebase(
@@ -62,7 +62,7 @@ const Header = () => {
   };
 
   const getFirstAndLastName = (name?: string) => {
-    if (!name) return 'محمد باشادي';
+    if (!name) return 'مستخدم شبكات';
     const parts = name.trim().split(/\s+/);
     if (parts.length <= 2) return name;
     return `${parts[0]} ${parts[parts.length - 1]}`;
@@ -71,7 +71,7 @@ const Header = () => {
   const displayName = getFirstAndLastName(user?.displayName || userProfile?.displayName);
 
   return (
-    <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-20">
+    <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
       <button onClick={handleNotificationClick} className="relative p-2.5 bg-muted/20 rounded-full border border-border/50">
         <Bell className="h-6 w-6 text-primary" />
         {hasUnread && (
@@ -82,18 +82,21 @@ const Header = () => {
         )}
       </button>
 
-      <div className="flex flex-col items-center justify-center flex-1 text-center">
+      <div className="flex flex-col items-center justify-center flex-1 text-center px-2">
         {isUserLoading ? (
-          <Skeleton className="h-6 w-32" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-24 mx-auto" />
+            <Skeleton className="h-4 w-32 mx-auto" />
+          </div>
         ) : (
           <>
-            <p className="text-primary font-bold text-lg">{greeting}</p>
-            <h1 className="font-bold text-foreground opacity-70 text-sm mt-0.5">{displayName}</h1>
+            <p className="text-primary font-bold text-xl">{greeting}</p>
+            <h1 className="font-black text-foreground text-lg mt-1 tracking-tight">{displayName}</h1>
           </>
         )}
       </div>
 
-      <Avatar className="h-14 w-14 border-2 border-border/50 bg-muted">
+      <Avatar className="h-14 w-14 border-2 border-border/50 bg-muted shadow-sm">
         <AvatarFallback>
           <UserIcon className="h-8 w-8 text-muted-foreground" />
         </AvatarFallback>

@@ -65,8 +65,8 @@ export function ServiceGrid() {
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsla(215, 100%, 45%, 1)" />
-            <stop offset="100%" stopColor="hsla(215, 100%, 34%, 1)" />
+            <stop offset="0%" stopColor="var(--icon-grad-start)" />
+            <stop offset="100%" stopColor="var(--icon-grad-end)" />
           </linearGradient>
         </defs>
       </svg>

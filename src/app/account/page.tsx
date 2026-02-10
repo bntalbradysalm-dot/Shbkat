@@ -244,7 +244,7 @@ export default function AccountPage() {
                 className={cn(
                   'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
                   activeTheme === 'light'
-                    ? 'border-primary text-primary dark:text-primary-foreground'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
@@ -256,7 +256,7 @@ export default function AccountPage() {
                 className={cn(
                   'flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors w-full border-2 bg-card',
                   activeTheme === 'dark'
-                    ? 'border-primary text-primary dark:text-primary-foreground'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >

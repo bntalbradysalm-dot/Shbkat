@@ -188,7 +188,7 @@ export default function NotificationsPage() {
                             key={notification.id} 
                             className="flex items-start gap-4"
                         >
-                            <BellRing className="h-5 w-5 text-primary dark:text-primary-foreground mt-1 shrink-0" />
+                            <BellRing className="h-5 w-5 text-primary mt-1 shrink-0" />
                             <div className="flex-1">
                                 <p className="font-bold text-sm">{notification.title}</p>
                                 <p className="text-sm text-foreground/80 mt-1">{notification.body}</p>

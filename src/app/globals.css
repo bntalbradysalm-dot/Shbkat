@@ -32,6 +32,9 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --radius: 0.75rem;
+    
+    --icon-grad-start: #2563eb;
+    --icon-grad-end: #1e3a8a;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -53,6 +56,9 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    
+    --icon-grad-start: #60a5fa;
+    --icon-grad-end: #93c5fd;
   }
 }
 

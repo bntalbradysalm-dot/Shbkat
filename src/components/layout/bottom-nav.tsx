@@ -94,8 +94,8 @@ function NavItems() {
             href={item.href}
             className={`relative flex flex-col items-center justify-center space-y-1 p-2 rounded-md transition-all duration-200 w-1/4 focus:outline-none active:scale-95 ${
               isActive
-                ? 'text-primary dark:text-primary-foreground'
-                : 'text-muted-foreground hover:text-primary dark:hover:text-primary-foreground'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-primary'
             }`}
             aria-current={isActive ? 'page' : undefined}
           >

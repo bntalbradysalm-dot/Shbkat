@@ -6,8 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2 } from 'lucide-react';
+import { Wallet, Send, Phone, CheckCircle, Wifi, Zap, Loader2, ChevronDown } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -40,9 +46,58 @@ type BillingInfo = {
 type Offer = {
     offerName: string;
     offerId: string;
-    offerStartDate: string;
-    offerEndDate: string;
 };
+
+const CATEGORIES = [
+  {
+    id: 'mazaya',
+    title: '1. باقات مزايا',
+    offers: [
+      { offerId: 'm1200', offerName: 'مزايا الشهرية 1200' },
+      { offerId: 'm2500', offerName: 'مزايا الشهرية 2500' },
+      { offerId: 'm5000', offerName: 'مزايا الشهرية 5000' },
+      { offerId: 'm_weekly', offerName: 'مزايا الإسبوعية' },
+    ]
+  },
+  {
+    id: '4g',
+    title: '2. باقات فورجي',
+    offers: [
+      { offerId: '4g_5gb', offerName: 'فورجي 5 جيجابايت' },
+      { offerId: '4g_10gb', offerName: 'فورجي 10 جيجابايت' },
+      { offerId: '4g_20gb', offerName: 'فورجي 20 جيجابايت' },
+      { offerId: '4g_unlimited', offerName: 'فورجي بلا حدود (شهري)' },
+    ]
+  },
+  {
+    id: 'volte',
+    title: '3. باقات فولتي',
+    offers: [
+      { offerId: 'volte_100', offerName: 'فولتي 100 دقيقة' },
+      { offerId: 'volte_300', offerName: 'فولتي 300 دقيقة' },
+      { offerId: 'volte_500', offerName: 'فولتي 500 دقيقة' },
+    ]
+  },
+  {
+    id: 'monthly_net',
+    title: '4. باقات الانترنت الشهرية',
+    offers: [
+      { offerId: 'net_1gb', offerName: 'إنترنت 1 جيجابايت شهري' },
+      { offerId: 'net_3gb', offerName: 'إنترنت 3 جيجابايت شهري' },
+      { offerId: 'net_6gb', offerName: 'إنترنت 6 جيجابايت شهري' },
+      { offerId: 'net_12gb', offerName: 'إنترنت 12 جيجابايت شهري' },
+    ]
+  },
+  {
+    id: '10days_net',
+    title: '5. باقات الانترنت 10 ايام',
+    offers: [
+      { offerId: 'net_10d_500', offerName: 'إنترنت 500 ميجابايت (10 أيام)' },
+      { offerId: 'net_10d_1500', offerName: 'إنترنت 1.5 جيجابايت (10 أيام)' },
+      { offerId: 'net_10d_3000', offerName: 'إنترنت 3 جيجابايت (10 أيام)' },
+    ]
+  },
+];
 
 const BalanceDisplay = () => {
     const { user, isUserLoading } = useUser();
@@ -83,8 +138,6 @@ export default function YemenMobilePage() {
   const [isCheckingBilling, setIsCheckingBilling] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   
-  const [offers, setOffers] = useState<Offer[] | null>(null);
-  const [isQueryingOffers, setIsQueryingOffers] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [isConfirmingOffer, setIsConfirmingOffer] = useState(false);
   const [isActivatingOffer, setIsActivatingOffer] = useState(false);
@@ -113,12 +166,10 @@ export default function YemenMobilePage() {
       if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
         setShowTabs(true);
         setIsCheckingBilling(true);
-        setIsQueryingOffers(true);
         setBillingInfo(null);
-        setOffers(null);
         
         try {
-          const [balanceRes, solfaRes, offersRes] = await Promise.all([
+          const [balanceRes, solfaRes] = await Promise.all([
             fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -128,17 +179,11 @@ export default function YemenMobilePage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ mobile: phone, action: 'solfa' }),
-            }),
-            fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
             })
           ]);
 
           const balanceResult = await balanceRes.json();
           const solfaResult = await solfaRes.json();
-          const offersResult = await offersRes.json();
 
           if (!balanceRes.ok) throw new Error(balanceResult.message || 'فشل الاستعلام عن الرصيد.');
 
@@ -153,18 +198,14 @@ export default function YemenMobilePage() {
             solfa_status: finalSolfaStatus
           });
 
-          setOffers(offersResult.offers || []);
-
         } catch (error: any) {
           toast({ variant: "destructive", title: "تنبيه", description: error.message });
         } finally {
           setIsCheckingBilling(false);
-          setIsQueryingOffers(false);
         }
       } else {
         setShowTabs(false);
         setBillingInfo(null);
-        setOffers(null);
       }
     };
     
@@ -350,37 +391,45 @@ export default function YemenMobilePage() {
                             <Card className="bg-muted/50">
                                 <CardContent className="grid grid-cols-3 gap-2 p-2 text-center">
                                     <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">رصيد الرقم</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{(billingInfo?.balance ?? 0).toLocaleString()} ريال</p>}
+                                        <p className="text-[10px] text-muted-foreground">رصيد الرقم</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{(billingInfo?.balance ?? 0).toLocaleString()} ريال</p>}
                                     </div>
                                     <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">نوع الرقم</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{formatCustomerType(billingInfo?.customer_type)}</p>}
+                                        <p className="text-[10px] text-muted-foreground">نوع الرقم</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{formatCustomerType(billingInfo?.customer_type)}</p>}
                                     </div>
                                      <div className='p-2 bg-background rounded-md'>
-                                        <p className="text-xs text-muted-foreground">فحص السلفة</p>
-                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-sm">{billingInfo?.solfa_status ?? '...'}</p>}
+                                        <p className="text-[10px] text-muted-foreground">فحص السلفة</p>
+                                        {isCheckingBilling ? <Skeleton className="h-5 w-12 mx-auto mt-1" /> : <p className="font-bold text-xs">{billingInfo?.solfa_status ?? '...'}</p>}
                                     </div>
                                 </CardContent>
                             </Card>
-                             {isQueryingOffers ? (
-                                <div className="space-y-2">
-                                    <Skeleton className="h-12 w-full" />
-                                    <Skeleton className="h-12 w-full" />
-                                </div>
-                            ) : offers && offers.length > 0 ? (
-                                <div className="space-y-2">
-                                    <h4 className="font-bold mb-2 text-center text-sm">الباقات المتاحة</h4>
-                                    {offers.map((offer: Offer) => (
-                                        <Button key={offer.offerId} variant="outline" className="w-full justify-between h-auto py-3 text-right" onClick={() => handleOfferClick(offer)}>
-                                            <span className="whitespace-normal text-right flex-1">{offer.offerName}</span>
-                                            <Zap className="w-4 h-4 text-primary shrink-0 mr-2" />
-                                        </Button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-center text-muted-foreground p-4">لا توجد باقات متاحة حالياً.</p>
-                            )}
+                            
+                            <div className="space-y-2">
+                                <h4 className="font-bold mb-2 text-center text-sm text-primary">الباقات المتاحة</h4>
+                                <Accordion type="single" collapsible className="w-full space-y-2">
+                                  {CATEGORIES.map((category) => (
+                                    <AccordionItem key={category.id} value={category.id} className="border rounded-xl bg-card overflow-hidden">
+                                      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 transition-colors">
+                                        <span className="text-sm font-bold text-right flex-1">{category.title}</span>
+                                      </AccordionTrigger>
+                                      <AccordionContent className="p-2 space-y-1 bg-muted/20">
+                                        {category.offers.map((offer) => (
+                                          <Button 
+                                            key={offer.offerId} 
+                                            variant="ghost" 
+                                            className="w-full justify-between h-auto py-2 text-right border-b border-muted last:border-0 rounded-none"
+                                            onClick={() => handleOfferClick(offer)}
+                                          >
+                                            <span className="text-xs">{offer.offerName}</span>
+                                            <Zap className="w-3 h-3 text-primary" />
+                                          </Button>
+                                        ))}
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  ))}
+                                </Accordion>
+                            </div>
                         </TabsContent>
                         <TabsContent value="balance" className="pt-4 space-y-4">
                            <div className='text-right'>
@@ -429,7 +478,10 @@ export default function YemenMobilePage() {
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>تأكيد تفعيل الباقة</AlertDialogTitle>
-                <AlertDialogDescription>
+                <Accordion type="single" collapsible>
+                  {/* Dummy component to make content look correct */}
+                </Accordion>
+                <AlertDialogDescription className='text-center pt-2'>
                     هل أنت متأكد من تفعيل باقة "{selectedOffer?.offerName}" للرقم {phone}؟ سيتم خصم القيمة من رصيدك.
                 </AlertDialogDescription>
             </AlertDialogHeader>

@@ -6,6 +6,11 @@ import { getFirestore, initializeFirestore, Firestore } from 'firebase/firestore
 
 const projectId = "studio-239662212-1b7b6";
 
+// ملاحظة للمطور: تأكد من إضافة هذه المتغيرات في إعدادات فيرسل (Environment Variables)
+// NEXT_PUBLIC_FIREBASE_API_KEY
+// NEXT_PUBLIC_FIREBASE_APP_ID
+// NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
   authDomain: `${projectId}.firebaseapp.com`,
@@ -15,14 +20,12 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
 
-// Check if config is valid to avoid crashing during build phase if environment variables are missing
-const isConfigValid = typeof window !== "undefined" && !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "";
-
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let firestore: Firestore | undefined;
 
-if (isConfigValid) {
+// تهيئة آمنة لا تكسر البناء (Build)
+if (typeof window !== "undefined") {
     try {
         if (getApps().length) {
             app = getApp();

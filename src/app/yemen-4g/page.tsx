@@ -182,7 +182,7 @@ export default function Yemen4GPage() {
                     amount: val, 
                     action: 'bill',
                     service: 'yem4g',
-                    type: '2', 
+                    type: '2', // نوع 2 للسداد الرصيد (حسب المتطلبات)
                     transid: transid,
                 })
             });
@@ -220,7 +220,7 @@ export default function Yemen4GPage() {
         setIsActivatingOffer(true);
         try {
             const transid = Date.now().toString();
-            // Note: Yemen 4G activation usually uses the same 'bill' endpoint with specific offer keys or amounts
+            // نوع 1 لتفعيل الباقات
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -229,6 +229,7 @@ export default function Yemen4GPage() {
                     action: 'bill', 
                     service: 'yem4g', 
                     amount: selectedOffer.price,
+                    type: '1',
                     transid 
                 })
             });

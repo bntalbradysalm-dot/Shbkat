@@ -22,7 +22,8 @@ import {
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CalendarDays
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -192,7 +193,7 @@ export default function YemenMobilePage() {
       });
       const queryResult = await queryResponse.json();
 
-      // 2. فحص السلفة بناءً على التوثيق المرفق (status: "1" = متسلف)
+      // 2. فحص السلفة
       const solfaResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -208,7 +209,6 @@ export default function YemenMobilePage() {
               typeLabel = 'دفع مسبق';
           }
 
-          // معالجة بيانات السلفة من الرد البرمجي الموضح في الصورة
           const isLoan = solfaResult.status === "1";
           const loanAmt = isLoan ? parseFloat(solfaResult.loan_amount || "0") : 0;
 
@@ -231,7 +231,7 @@ export default function YemenMobilePage() {
               setActiveOffers(offerResult.offers);
           } else {
               setActiveOffers([
-                  { offerName: 'خدمة الانترنت - 3G', remainAmount: 'نشط', expireDate: '2037-01-01' },
+                  { offerName: 'خدمة الانترنت - 3G', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: new Date().toISOString().split('T')[0] },
               ]);
           }
       } else {
@@ -400,20 +400,31 @@ export default function YemenMobilePage() {
                                             <p className="text-[8px] text-white font-bold mt-1">تجديد</p>
                                         </button>
                                         <div className="flex-1 text-right">
-                                            <h4 className="text-xs font-black text-primary leading-relaxed">{off.offerName}</h4>
-                                            <div className="mt-1 space-y-0.5">
-                                                <p className="text-[10px] font-bold">
-                                                    <span className="text-green-600">المتبقي:</span> {off.remainAmount}
-                                                </p>
-                                                <p className="text-[10px] font-bold">
-                                                    <span className="text-destructive">الإنتهاء:</span> {off.expireDate}
-                                                </p>
+                                            <h4 className="text-xs font-black text-primary leading-relaxed mb-2">{off.offerName}</h4>
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
+                                                    <span className="text-[9px] font-bold text-muted-foreground">الاشتراك:</span>
+                                                    <span className="text-[10px] font-black text-foreground">{off.startDate || 'غير متوفر'}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
+                                                    <span className="text-[9px] font-bold text-muted-foreground">الانتهاء:</span>
+                                                    <span className="text-[10px] font-black text-destructive">{off.expireDate}</span>
+                                                </div>
+                                                {off.remainAmount !== 'نشط' && (
+                                                    <div className="pt-1 px-1 flex items-center gap-1.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                        <span className="text-[9px] font-bold text-green-600">المتبقي: {off.remainAmount}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-center text-xs text-muted-foreground py-4">لا توجد اشتراكات نشطة</p>
+                                <div className="text-center py-6">
+                                    <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                                    <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
+                                </div>
                             )}
                         </div>
                     </div>

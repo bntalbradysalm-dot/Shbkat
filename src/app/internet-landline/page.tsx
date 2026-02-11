@@ -44,8 +44,9 @@ type UserProfile = {
 
 type QueryResult = {
     balance?: string;
-    resultDesc?: string;
-    status?: string;
+    packagePrice?: string;
+    expireDate?: string;
+    message?: string;
 };
 
 type InternetPackage = {
@@ -151,10 +152,29 @@ export default function LandlineRedesignPage() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
+            const raw = result.balance || '';
+            let balance = '0.00 GB';
+            let price = '0';
+            let expiry = '...';
+
+            // Extract values using regex
+            const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
+            if (balMatch) balance = `${balMatch[2]} GB`;
+            else if (!isNaN(parseFloat(raw))) balance = `${parseFloat(raw).toLocaleString()} ريال`;
+
+            const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
+            if (priceMatch) price = priceMatch[1];
+
+            const dateMatch = raw.match(/تأريخ الانتهاء:\s*(\d{4})[-]?(\d{2})[-]?(\d{2})/i);
+            if (dateMatch) {
+                expiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+            }
+            
             setQueryResult({
-                balance: result.balance || '0.00',
-                resultDesc: result.resultDesc || 'نشط',
-                status: 'متصل'
+                balance,
+                packagePrice: price,
+                expireDate: expiry,
+                message: result.resultDesc
             });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
@@ -222,28 +242,6 @@ export default function LandlineRedesignPage() {
         }
     };
 
-    const formatDisplayValue = (val: string | undefined) => {
-        if (!val) return '0.00';
-        const cleanVal = val.toString().toLowerCase();
-        
-        if (cleanVal.includes('gb') || cleanVal.includes('mb') || cleanVal.includes('ريال')) {
-            return val;
-        }
-
-        const num = parseFloat(val);
-        if (isNaN(num)) return val;
-
-        if (activeTab === 'internet') {
-            if (num > 100) {
-                if (num >= 1024) return `${(num / 1024).toFixed(2)} GB`;
-                return `${num.toFixed(2)} MB`;
-            }
-            if (num > 0 && num < 100) return `${num.toFixed(2)} GB`;
-        }
-
-        return `${num.toLocaleString('en-US')} ريال`;
-    };
-
     if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
 
     if (showSuccess) {
@@ -294,7 +292,7 @@ export default function LandlineRedesignPage() {
                     <div className="flex flex-col gap-2">
                         <Input
                             type="tel"
-                            placeholder="0xxxxxxx"
+                            placeholder="رقم الهاتف"
                             value={phone}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, '');
@@ -315,21 +313,22 @@ export default function LandlineRedesignPage() {
                     </div>
                 </div>
 
-                {phone.length === 8 && phone.startsWith('0') && (
+                {phone.length === 8 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-4 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
-                                        <p className="text-base font-black">{formatDisplayValue(queryResult.balance)}</p>
+                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                        <p className="text-sm font-black">{queryResult.balance}</p>
                                     </div>
-                                    <div className="p-4">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">حالة الخط</p>
-                                        <div className="flex items-center justify-center gap-1">
-                                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                                            <p className="text-sm font-black">{queryResult.resultDesc}</p>
-                                        </div>
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                        <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                    </div>
+                                    <div className="p-3">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
                                     </div>
                                 </div>
                             </div>

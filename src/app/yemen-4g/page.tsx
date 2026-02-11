@@ -42,7 +42,7 @@ type UserProfile = {
 
 type QueryResult = {
     balance?: string;
-    packName?: string;
+    packagePrice?: string;
     expireDate?: string;
     message?: string;
 };
@@ -122,7 +122,7 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length !== 9 || !phone.startsWith('10')) {
+        if (phone.length !== 9) {
             setQueryResult(null);
         }
     }, [phone]);
@@ -143,31 +143,29 @@ export default function Yemen4GPage() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام.');
             
-            let rawBalance = result.balance || '';
-            let displayBalance = '0 MB';
-            let displayExpire = '...';
+            const raw = result.balance || '';
+            let balance = '0 GB';
+            let price = '0';
+            let expiry = '...';
 
-            if (rawBalance.includes('رصيد الباقة')) {
-                const balMatch = rawBalance.match(/رصيد الباقة:\s*([\d.]+)\s*GB/);
-                if (balMatch) displayBalance = `${balMatch[1]} GB`;
+            // Extract values using regex from descriptive string
+            const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
+            if (balMatch) balance = `${balMatch[2]} GB`;
 
-                const dateMatch = rawBalance.match(/تأريخ الانتهاء:\s*(\d{4})-(\d{2})-(\d{2})/);
-                if (dateMatch) {
-                    displayExpire = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
-                }
-            } else {
-                displayBalance = formatData(rawBalance);
-                displayExpire = result.expireDate || '...';
-                if (displayExpire && displayExpire.includes('-')) {
-                    const parts = displayExpire.split(' ')[0].split('-');
-                    if (parts.length === 3) displayExpire = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
-                }
+            const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
+            if (priceMatch) price = priceMatch[1];
+
+            const dateMatch = raw.match(/تأريخ الانتهاء:\s*(\d{4})[-]?(\d{2})[-]?(\d{2})/i);
+            if (dateMatch) {
+                expiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+            } else if (result.expireDate) {
+                expiry = result.expireDate;
             }
             
             setQueryResult({
-                balance: displayBalance,
-                packName: result.packName,
-                expireDate: displayExpire,
+                balance,
+                packagePrice: price,
+                expireDate: expiry,
                 message: result.resultDesc
             });
         } catch (error: any) {
@@ -276,15 +274,6 @@ export default function Yemen4GPage() {
         }
     };
 
-    const formatData = (balance: string | undefined) => {
-        if (!balance) return '0 MB';
-        if (balance.includes('GB') || balance.includes('MB')) return balance;
-        const numericBalance = parseFloat(balance);
-        if (isNaN(numericBalance)) return balance;
-        if (numericBalance >= 1024) return `${(numericBalance / 1024).toFixed(2)} GB`;
-        return `${numericBalance.toFixed(0)} MB`;
-    };
-
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
 
     if (showSuccess) {
@@ -339,7 +328,7 @@ export default function Yemen4GPage() {
                     <div className="flex flex-col gap-2">
                         <Input
                             type="tel"
-                            placeholder="10xxxxxxx"
+                            placeholder="رقم الهاتف"
                             value={phone}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, '');
@@ -360,16 +349,20 @@ export default function Yemen4GPage() {
                     </div>
                 </div>
 
-                {phone.length === 9 && phone.startsWith('10') && (
+                {phone.length === 9 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-4 border-l border-white/10">
+                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
+                                    <div className="p-3 border-l border-white/10">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                        <p className="text-base font-black">{queryResult.balance}</p>
+                                        <p className="text-sm font-black">{queryResult.balance}</p>
                                     </div>
-                                    <div className="p-4">
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                        <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                    </div>
+                                    <div className="p-3">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
                                         <p className="text-sm font-black">{queryResult.expireDate}</p>
                                     </div>

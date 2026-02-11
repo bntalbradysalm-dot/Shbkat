@@ -218,7 +218,6 @@ const CATEGORIES = [
     badge: '4G',
     icon: Database,
     offers: [
-      { offerId: 'net_4gb_tawfeer', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4821' },
       { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A3435' },
       { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A3436' },
       { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A3825' },
@@ -228,6 +227,13 @@ const CATEGORIES = [
       { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: '40 يوم', offertype: 'A3347' },
       { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4830' },
     ]
+  },
+  {
+    id: 'internet_10days',
+    title: 'باقات الإنترنت 10 ايام',
+    badge: 'Net',
+    icon: Globe,
+    offers: []
   }
 ];
 
@@ -645,9 +651,13 @@ export default function YemenMobilePage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {cat.offers.map((o) => (
-                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                        ))}
+                                        {cat.offers.length > 0 ? (
+                                            cat.offers.map((o) => (
+                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                            ))
+                                        ) : (
+                                            <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
+                                        )}
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}

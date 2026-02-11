@@ -358,9 +358,6 @@ export default function YemenMobilePage() {
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="يمن موبايل" />
       
-      {/* Loading Overlay */}
-      {isSearching && <LoadingSpinner />}
-
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
         {/* Balance Card */}
@@ -401,105 +398,112 @@ export default function YemenMobilePage() {
                 </TabsList>
 
                 <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
-                        <div className="grid grid-cols-3 text-center border-b bg-muted/10">
-                            <div className="p-3 border-l">
-                                <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                                <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString() || '0.00'}</p>
-                            </div>
-                            <div className="p-3 border-l">
-                                <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
-                                <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
-                            </div>
-                            <div className="p-3">
-                                <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
-                                <div className="flex items-center justify-center gap-1">
-                                    {billingInfo?.isLoan ? (
-                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
-                                            <Frown className="h-3 w-3" />
-                                            <span className="text-[9px] font-black">{billingInfo.loanAmount} ريال</span>
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
-                                            <Smile className="h-3 w-3" />
-                                            <span className="text-[9px] font-black">غير متسلف</span>
-                                        </Badge>
-                                    )}
+                    {/* Show spinner when packages tab is selected and we are searching/refreshing */}
+                    {isSearching && <div className="flex justify-center py-4"><CustomLoader /></div>}
+                    
+                    {!isSearching && (
+                        <>
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                            <div className="grid grid-cols-3 text-center border-b bg-muted/10">
+                                <div className="p-3 border-l">
+                                    <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
+                                    <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString() || '0.00'}</p>
+                                </div>
+                                <div className="p-3 border-l">
+                                    <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
+                                    <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
+                                    <div className="flex items-center justify-center gap-1">
+                                        {billingInfo?.isLoan ? (
+                                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
+                                                <Frown className="h-3 w-3" />
+                                                <span className="text-[9px] font-black">{billingInfo.loanAmount} ريال</span>
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
+                                                <Smile className="h-3 w-3" />
+                                                <span className="text-[9px] font-black">غير متسلف</span>
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
-                        <div className="bg-primary p-3 text-center">
-                            <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
-                        </div>
-                        <div className="p-4 space-y-4">
-                            {activeOffers.length > 0 ? (
-                                activeOffers.map((off, idx) => (
-                                    <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <button 
-                                                onClick={() => handleTabChange("packages")}
-                                                className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
-                                            >
-                                                <RefreshCw className="w-6 h-6 text-white" />
-                                                <span className="text-[10px] text-white font-bold">تجديد</span>
-                                            </button>
-                                        </div>
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                            <div className="bg-primary p-3 text-center">
+                                <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
+                            </div>
+                            <div className="p-4 space-y-4">
+                                {activeOffers.length > 0 ? (
+                                    activeOffers.map((off, idx) => (
+                                        <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <button 
+                                                    onClick={() => handleTabChange("packages")}
+                                                    className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
+                                                >
+                                                    <RefreshCw className="w-6 h-6 text-white" />
+                                                    <span className="text-[10px] text-white font-bold">تجديد</span>
+                                                </button>
+                                            </div>
 
-                                        <div className="flex-1 space-y-3">
-                                            <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
-                                                {off.offerName}
-                                            </h4>
-                                            
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-end gap-2 text-[11px]">
-                                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.startDate}
-                                                    </span>
-                                                    <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
-                                                </div>
+                                            <div className="flex-1 space-y-3">
+                                                <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
+                                                    {off.offerName}
+                                                </h4>
                                                 
-                                                <div className="flex items-center justify-end gap-2 text-[11px]">
-                                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.expireDate}
-                                                    </span>
-                                                    <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center justify-end gap-2 text-[11px]">
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
+                                                            {off.startDate}
+                                                        </span>
+                                                        <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center justify-end gap-2 text-[11px]">
+                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
+                                                            {off.expireDate}
+                                                        </span>
+                                                        <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-6">
+                                        <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                                        <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-6">
-                                    <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                                    <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    <Accordion type="single" collapsible className="w-full space-y-3">
-                        {CATEGORIES.map((cat) => (
-                            <AccordionItem key={cat.id} value={cat.id} className="border-none">
-                                <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
-                                    <div className="flex items-center justify-between w-full">
-                                        <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner">
-                                            {cat.badge}
+                        <Accordion type="single" collapsible className="w-full space-y-3">
+                            {CATEGORIES.map((cat) => (
+                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                    <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner">
+                                                {cat.badge}
+                                            </div>
+                                            <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
+                                            <ChevronDown className="w-5 h-5 text-white/70 group-data-[state=open]:rotate-180 transition-transform" />
                                         </div>
-                                        <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
-                                        <ChevronDown className="w-5 h-5 text-white/70 group-data-[state=open]:rotate-180 transition-transform" />
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                    {cat.offers.map((o) => (
-                                        <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                    ))}
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                        {cat.offers.map((o) => (
+                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                        ))}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                        </>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
@@ -562,7 +566,7 @@ export default function YemenMobilePage() {
                         <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
                   </div>
-              </AccordionHeader>
+              </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>

@@ -123,24 +123,24 @@ export default function AdenNetPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 9) {
-            if (!phone.startsWith('79')) {
-                toast({
-                    variant: 'destructive',
-                    title: 'خطأ في الرقم',
-                    description: 'رقم عدن نت يجب أن يبدأ بـ 79'
-                });
-                setQueryResult(null);
-                return;
-            }
-            handleSearch();
-        } else {
+        if (phone.length !== 9) {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 9 || !phone.startsWith('79')) return;
+        if (!phone || phone.length !== 9) return;
+        
+        if (!phone.startsWith('79')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم عدن نت يجب أن يبدأ بـ 79'
+            });
+            setQueryResult(null);
+            return;
+        }
+
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -320,14 +320,16 @@ export default function AdenNetPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
-                    <Button 
-                        className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                        onClick={handleSearch}
-                        disabled={isSearching || phone.length < 9}
-                    >
-                        {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
-                        استعلام عن الرقم
-                    </Button>
+                    {phone.length === 9 && (
+                        <Button 
+                            className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                            onClick={handleSearch}
+                            disabled={isSearching}
+                        >
+                            {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                            استعلام
+                        </Button>
+                    )}
                 </div>
 
                 {phone.length === 9 && phone.startsWith('79') && (

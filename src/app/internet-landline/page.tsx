@@ -84,24 +84,24 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 8) {
-            if (!phone.startsWith('0')) {
-                toast({
-                    variant: 'destructive',
-                    title: 'خطأ في الرقم',
-                    description: 'رقم الثابت يجب أن يبدأ بـ 0'
-                });
-                setQueryResult(null);
-                return;
-            }
-            handleSearch();
-        } else {
+        if (phone.length !== 8) {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 8 || !phone.startsWith('0')) return;
+        if (!phone || phone.length !== 8) return;
+        
+        if (!phone.startsWith('0')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم الثابت يجب أن يبدأ بـ 0'
+            });
+            setQueryResult(null);
+            return;
+        }
+
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -316,14 +316,16 @@ export default function LandlineRedesignPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
-                    <Button 
-                        className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                        onClick={handleSearch}
-                        disabled={isSearching || phone.length < 8}
-                    >
-                        {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
-                        استعلام عن الرقم
-                    </Button>
+                    {phone.length === 8 && (
+                        <Button 
+                            className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                            onClick={handleSearch}
+                            disabled={isSearching}
+                        >
+                            {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                            استعلام
+                        </Button>
+                    )}
                 </div>
 
                 {phone.length === 8 && phone.startsWith('0') && (

@@ -108,11 +108,9 @@ export default function GamesPage() {
             const result = await response.json();
             
             if (!response.ok) {
-                // استخراج رسالة الخطأ من استجابة الـ API
                 throw new Error(result.message || result.resultDesc || 'فشل تنفيذ الطلب من المصدر.');
             }
 
-            // التحقق من كود النتيجة بشكل إضافي لضمان الدقة
             const isSuccess = result.resultCode === "0" || result.resultCode === 0;
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
@@ -136,7 +134,6 @@ export default function GamesPage() {
             setSelectedPackage(null);
             setPlayerId('');
         } catch (e: any) {
-            // إظهار الخطأ في واجهة التطبيق
             toast({ 
                 variant: "destructive", 
                 title: "فشل في عملية الشحن", 
@@ -176,7 +173,6 @@ export default function GamesPage() {
             <SimpleHeader title="شدات ببجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                {/* PUBG Banner */}
                 <div className="relative w-full aspect-[21/9] rounded-[28px] overflow-hidden shadow-lg border border-primary/10 mb-2 animate-in fade-in-0 zoom-in-95 duration-500">
                     <Image 
                         src="https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg" 
@@ -244,8 +240,8 @@ export default function GamesPage() {
             <Dialog open={!!selectedPackage} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
-                        <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <Zap className="text-primary h-6 w-6" />
+                        <div className="bg-orange-100 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <Star className="text-orange-500 fill-orange-500 h-6 w-6" />
                         </div>
                         <DialogTitle className="text-center font-black">تأكيد شحن {selectedPackage?.amount}</DialogTitle>
                         <DialogDescription className="text-center">أدخل رقم اللاعب (Player ID) لإتمام العملية</DialogDescription>

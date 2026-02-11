@@ -79,7 +79,7 @@ const PackageCard = ({ pkg, onClick }: { pkg: InternetPackage, onClick: () => vo
       </div>
       
       <div className="flex items-baseline gap-1 justify-end mb-3">
-        <span className="text-xl font-black text-primary">{pkg.price.toLocaleString()}</span>
+        <span className="text-xl font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
         <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
       </div>
       
@@ -157,10 +157,9 @@ export default function LandlineRedesignPage() {
             let price = '0';
             let expiry = '...';
 
-            // Extract values using regex
             const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
             if (balMatch) balance = `${balMatch[2]} GB`;
-            else if (!isNaN(parseFloat(raw))) balance = `${parseFloat(raw).toLocaleString()} ريال`;
+            else if (!isNaN(parseFloat(raw))) balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
 
             const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
             if (priceMatch) price = priceMatch[1];
@@ -234,7 +233,7 @@ export default function LandlineRedesignPage() {
             await batch.commit();
             setShowSuccess(true);
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'فشل السداد', description: error.message });
+            toast({ variant: "destructive", title: "فشل السداد", description: error.message });
         } finally {
             setIsProcessing(false);
             setIsConfirmingPayment(false);
@@ -275,8 +274,8 @@ export default function LandlineRedesignPage() {
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
-                                <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
+                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl">
@@ -396,15 +395,15 @@ export default function LandlineRedesignPage() {
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">مبلغ الفاتورة:</span>
-                                <span className="font-bold">{amount} ريال</span>
+                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -426,15 +425,15 @@ export default function LandlineRedesignPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedPackage?.name}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">سعر التفعيل:</span>
-                                <span className="font-bold">{selectedPackage?.price.toLocaleString()} ريال</span>
+                                <span className="font-bold">{selectedPackage?.price.toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                                 <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{(selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
+                                <span className="font-black text-primary text-lg">{((selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

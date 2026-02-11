@@ -288,7 +288,7 @@ export default function AlwadiPage() {
                         <CheckCircle className="absolute top-1 right-1 h-4 w-4 text-primary" />
                       )}
                       <span className="text-xs font-bold">{option.title}</span>
-                      <span className="text-sm font-black text-primary">{option.price.toLocaleString()} ريال</span>
+                      <span className="text-sm font-black text-primary">{option.price.toLocaleString('en-US')} ريال</span>
                     </div>
                   ))}
                 </div>
@@ -301,7 +301,7 @@ export default function AlwadiPage() {
                   <Wallet className="h-5 w-5 text-primary" />
                   <span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span>
                 </div>
-                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString()} ريال يمني</span>
+                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال يمني</span>
               </div>
             )}
 
@@ -334,7 +334,7 @@ export default function AlwadiPage() {
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-muted-foreground">المبلغ:</span>
-                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString()} ريال</span>
+                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
                     </div>
                   </div>
                 </AlertDialogHeader>

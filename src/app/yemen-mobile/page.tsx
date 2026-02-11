@@ -154,7 +154,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
       <div className="flex items-center justify-center mb-4">
-        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString()}</span>
+        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -368,7 +368,7 @@ export default function YemenMobilePage() {
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                     <div className="flex items-baseline gap-1">
-                        <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
+                        <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
                         <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
@@ -412,7 +412,7 @@ export default function YemenMobilePage() {
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                                    <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString() || '0.00'}</p>
+                                    <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString('en-US') || '0.00'}</p>
                                 </div>
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
@@ -424,7 +424,7 @@ export default function YemenMobilePage() {
                                         {billingInfo?.isLoan ? (
                                             <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
                                                 <Frown className="h-3 w-3" />
-                                                <span className="text-[9px] font-black">{billingInfo.loanAmount} ريال</span>
+                                                <span className="text-[9px] font-black">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                                             </Badge>
                                         ) : (
                                             <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
@@ -553,7 +553,7 @@ export default function YemenMobilePage() {
                 </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
                 <div className="text-center text-base pt-2 text-muted-foreground text-right">
-                    سيتم سداد مبلغ <span className="font-black text-primary text-xl">{amount} ريال</span> <br />
+                    سيتم سداد مبلغ <span className="font-black text-primary text-xl">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span> <br />
                     للرقم <span className="font-black text-foreground">{phone}</span>
                 </div>
             </AlertDialogHeader>
@@ -575,7 +575,7 @@ export default function YemenMobilePage() {
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                       <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">
-                        <p className="text-xs font-bold">السعر: {selectedOffer?.price.toLocaleString()} ريال</p>
+                        <p className="text-xs font-bold">السعر: {selectedOffer?.price.toLocaleString('en-US')} ريال</p>
                         <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
                   </div>

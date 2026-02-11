@@ -36,9 +36,10 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
@@ -148,31 +149,30 @@ const LoadingSpinner = () => (
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-4 shadow-sm relative border border-primary/5 mb-3 text-right cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
       onClick={onClick}
     >
-      <h4 className="text-sm font-bold text-primary mb-1">{offer.offerName}</h4>
-      <div className="flex items-baseline gap-1 justify-end">
-        <span className="text-xl font-black text-primary">{offer.price.toLocaleString()}</span>
-        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
+      <div className="flex items-center justify-center mb-4">
+        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString()}</span>
       </div>
       
-      <div className="grid grid-cols-4 gap-1 pt-2 mt-2 border-t border-primary/5 text-center">
-        <div className="space-y-1">
-            <Globe className="w-3 h-3 mx-auto text-primary/60" />
-            <p className="text-[8px] font-bold truncate">{offer.data || '-'}</p>
+      <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
+        <div className="space-y-1.5">
+            <Globe className="w-4 h-4 mx-auto text-primary" />
+            <p className="text-[10px] font-black text-foreground truncate">{offer.data || '-'}</p>
         </div>
-        <div className="space-y-1">
-            <Mail className="w-3 h-3 mx-auto text-primary/60" />
-            <p className="text-[8px] font-bold truncate">{offer.sms || '-'}</p>
+        <div className="space-y-1.5">
+            <Mail className="w-4 h-4 mx-auto text-primary" />
+            <p className="text-[10px] font-black text-foreground truncate">{offer.sms || '-'}</p>
         </div>
-        <div className="space-y-1">
-            <PhoneIcon className="w-3 h-3 mx-auto text-primary/60" />
-            <p className="text-[8px] font-bold truncate">{offer.minutes || '-'}</p>
+        <div className="space-y-1.5">
+            <PhoneIcon className="w-4 h-4 mx-auto text-primary" />
+            <p className="text-[10px] font-black text-foreground truncate">{offer.minutes || '-'}</p>
         </div>
-        <div className="space-y-1">
-            <Clock className="w-3 h-3 mx-auto text-primary/60" />
-            <p className="text-[8px] font-bold truncate">{offer.validity || '-'}</p>
+        <div className="space-y-1.5">
+            <Clock className="w-4 h-4 mx-auto text-primary" />
+            <p className="text-[10px] font-black text-foreground truncate">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>

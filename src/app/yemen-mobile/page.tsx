@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -85,9 +86,36 @@ const CATEGORIES = [
     badge: '3G',
     icon: ShieldCheck,
     offers: [
-      { offerId: 'm1200', offerName: 'مزايا الشهرية 1200', price: 1350, data: '250 MB', sms: '150', minutes: '300', validity: '30 يوم', offertype: 'Mazaya1200' },
-      { offerId: 'm2500', offerName: 'مزايا الشهرية 2500', price: 2800, data: '1 GB', sms: '300', minutes: '600', validity: '30 يوم', offertype: 'Mazaya2500' },
-      { offerId: 'm5000', offerName: 'مزايا الشهرية 5000', price: 5500, data: '2.5 GB', sms: '600', minutes: '1200', validity: '30 يوم', offertype: 'Mazaya5000' },
+      { 
+        offerId: 'm_monthly', 
+        offerName: 'مزايا الشهرية', 
+        price: 1300, 
+        data: '250 MB', 
+        sms: '350', 
+        minutes: '350', 
+        validity: 'شهر', 
+        offertype: 'A38394' 
+      },
+      { 
+        offerId: 'm_weekly', 
+        offerName: 'مزايا الأسبوعية', 
+        price: 485, 
+        data: '90 MB', 
+        sms: '30', 
+        minutes: '100', 
+        validity: 'أسبوع', 
+        offertype: 'A64329' 
+      },
+      { 
+        offerId: 'm_max', 
+        offerName: 'مزايا ماكس الشهرية', 
+        price: 2000, 
+        data: '600 MB', 
+        sms: '200', 
+        minutes: '500', 
+        validity: 'شهر', 
+        offertype: 'A75328' 
+      },
     ]
   },
   {
@@ -159,20 +187,20 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
         <div className="space-y-1.5">
-            <Globe className="w-4 h-4 mx-auto text-primary" />
-            <p className="text-[10px] font-black text-foreground truncate">{offer.data || '-'}</p>
+            <Globe className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <Mail className="w-4 h-4 mx-auto text-primary" />
-            <p className="text-[10px] font-black text-foreground truncate">{offer.sms || '-'}</p>
+            <Mail className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <PhoneIcon className="w-4 h-4 mx-auto text-primary" />
-            <p className="text-[10px] font-black text-foreground truncate">{offer.minutes || '-'}</p>
+            <PhoneIcon className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <Clock className="w-4 h-4 mx-auto text-primary" />
-            <p className="text-[10px] font-black text-foreground truncate">{offer.validity || '-'}</p>
+            <Clock className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -400,7 +428,6 @@ export default function YemenMobilePage() {
                 </TabsList>
 
                 <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                    {/* Show skeleton while searching for the first time or refreshing */}
                     {!billingInfo && isSearching ? (
                         <div className="space-y-4">
                             <Skeleton className="h-20 w-full rounded-3xl" />

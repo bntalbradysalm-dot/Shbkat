@@ -13,7 +13,11 @@ import {
   Globe,
   Clock,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Hash,
+  Calendar,
+  History,
+  Globe2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,6 +35,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,6 +107,7 @@ export default function AdenNetPage() {
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
     const [isActivatingOffer, setIsActivatingOffer] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [lastTxDetails, setLastTxDetails] = useState<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const userDocRef = useMemoFirebase(
@@ -129,7 +136,7 @@ export default function AdenNetPage() {
         setIsSearching(true);
         setQueryResult(null);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -171,7 +178,7 @@ export default function AdenNetPage() {
 
         setIsActivatingOffer(true);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -198,10 +205,17 @@ export default function AdenNetPage() {
                 amount: totalToDeduct,
                 transactionType: `تفعيل ${selectedOffer.offerName}`, 
                 notes: `للرقم: ${phone}. تشمل النسبة: ${commission} ر.ي`, 
-                recipientPhoneNumber: phone
+                recipientPhoneNumber: phone,
+                transid: transid
             });
             await batch.commit();
             
+            setLastTxDetails({
+                type: `تفعيل ${selectedOffer.offerName}`,
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
             setShowSuccess(true);
             setSelectedOffer(null);
         } catch (e: any) {
@@ -214,19 +228,52 @@ export default function AdenNetPage() {
     if (isSearching) return <ProcessingOverlay message="جاري الاستعلام عن الرقم..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
-    if (showSuccess) {
+    if (showSuccess && lastTxDetails) {
         return (
             <>
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
-                            <CheckCircle className="h-20 w-20 text-white" />
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تم تفعيل الباقة بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم تنفيذ طلبك للرقم {phone} بنجاح.</p>
-                            <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                            <div>
+                                <h2 className="text-2xl font-black text-green-600">تم تفعيل الباقة بنجاح</h2>
+                                <p className="text-sm text-muted-foreground mt-1">تمت العملية بنجاح لصالح المشترك</p>
+                            </div>
+
+                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Globe2 className="w-3.5 h-3.5" /> رقم عدن نت:</span>
+                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع الباقة:</span>
+                                    <span className="font-bold">{lastTxDetails.type}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                                    <History className="ml-2 h-4 w-4" /> العمليات
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

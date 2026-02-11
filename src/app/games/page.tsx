@@ -15,7 +15,10 @@ import {
   Zap,
   ShieldCheck,
   Star,
-  AlertCircle
+  AlertCircle,
+  Hash,
+  Calendar,
+  History
 } from 'lucide-react';
 import {
   Dialog,
@@ -32,6 +35,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import Image from 'next/image';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +65,8 @@ export default function GamesPage() {
     const [playerId, setPlayerId] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [lastTransid, setLastTransid] = useState('');
+    const [lastTotalAmount, setLastTotalAmount] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const userDocRef = useMemoFirebase(
@@ -91,7 +98,9 @@ export default function GamesPage() {
 
         setIsProcessing(true);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
+            setLastTransid(transid);
+            setLastTotalAmount(totalToDeduct);
             
             const response = await fetch('/api/telecom', {
                 method: 'POST',
@@ -126,13 +135,13 @@ export default function GamesPage() {
                 amount: totalToDeduct,
                 transactionType: `شحن شدات: ${selectedPackage.amount}`, 
                 notes: `رقم اللاعب: ${playerId}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`, 
-                recipientPhoneNumber: playerId
+                recipientPhoneNumber: playerId,
+                transid: transid
             });
             await batch.commit();
             
             setShowSuccess(true);
-            setSelectedPackage(null);
-            setPlayerId('');
+            // Selected package kept for success view
         } catch (e: any) {
             toast({ 
                 variant: "destructive", 
@@ -150,17 +159,48 @@ export default function GamesPage() {
         return (
             <>
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
-                            <CheckCircle className="h-20 w-20 text-white" />
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                تم قبول طلبك بنجاح. ستصل الشدات إلى حسابك (ID: {playerId}) قريباً.
-                            </p>
-                            <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                            <div>
+                                <h2 className="text-2xl font-black text-green-600">تم الشحن بنجاح</h2>
+                                <p className="text-sm text-muted-foreground mt-1">وصلت الشدات لحساب اللاعب</p>
+                            </div>
+
+                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                                    <span className="font-mono font-black text-primary">{lastTransid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Zap className="w-3.5 h-3.5" /> فئة الشحن:</span>
+                                    <span className="font-bold">{selectedPackage?.amount}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><User className="w-3.5 h-3.5" /> رقم اللاعب (ID):</span>
+                                    <span className="font-mono font-bold tracking-widest">{playerId}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="font-black text-primary">{lastTotalAmount.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                                    <History className="ml-2 h-4 w-4" /> العمليات
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -237,7 +277,7 @@ export default function GamesPage() {
                 </div>
             </div>
 
-            <Dialog open={!!selectedPackage} onOpenChange={() => setSelectedPackage(null)}>
+            <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
                         <div className="bg-orange-100 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">

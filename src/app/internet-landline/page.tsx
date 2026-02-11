@@ -16,6 +16,9 @@ import {
   Globe,
   Zap,
   Activity,
+  Hash,
+  Calendar,
+  History
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,6 +38,8 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +68,7 @@ export default function LandlineRedesignPage() {
     const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [lastTxDetails, setLastTxDetails] = useState<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const userDocRef = useMemoFirebase(
@@ -163,7 +169,7 @@ export default function LandlineRedesignPage() {
 
         setIsProcessing(true);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
             const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
             
             const response = await fetch('/api/telecom', {
@@ -195,9 +201,17 @@ export default function LandlineRedesignPage() {
                 amount: totalToDeduct,
                 transactionType: `سداد ${typeLabel}`,
                 notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
-                recipientPhoneNumber: phone
+                recipientPhoneNumber: phone,
+                transid: transid
             });
             await batch.commit();
+            
+            setLastTxDetails({
+                type: `سداد ${typeLabel}`,
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
             setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
@@ -210,19 +224,52 @@ export default function LandlineRedesignPage() {
     if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
     if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
-    if (showSuccess) {
+    if (showSuccess && lastTxDetails) {
         return (
             <>
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
-                            <CheckCircle className="h-20 w-20 text-white" />
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-20 w-20 text-white" />
+                            </div>
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم تنفيذ طلبك للرقم {phone} بنجاح.</p>
-                            <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                            <div>
+                                <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                                <p className="text-sm text-muted-foreground mt-1">تم قبول وتنفيذ طلب السداد</p>
+                            </div>
+
+                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع الخدمة:</span>
+                                    <span className="font-bold">{lastTxDetails.type}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
+                                    <History className="ml-2 h-4 w-4" /> العمليات
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

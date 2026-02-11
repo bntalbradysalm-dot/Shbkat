@@ -50,12 +50,6 @@ type Game = {
 const GAMES: Game[] = [
     { id: 'pubg', name: 'PUBG Mobile', type: 'pubg', logo: 'https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg', fields: ['playerid', 'uniqcode'] },
     { id: 'freefire', name: 'Free Fire', type: 'freefire', logo: 'https://i.postimg.cc/3x7WLbRz/free-fire-cha7n.jpg', fields: ['playerid', 'uniqcode'] },
-    { id: 'legends', name: 'Mobile Legends', type: 'legends', logo: 'https://placehold.co/100x100?text=ML', fields: ['playerid', 'zoneid', 'uniqcode'] },
-    { id: 'ps_usa', name: 'بلايستيشن امريكي', type: 'plastationusa', logo: 'https://placehold.co/100x100?text=PS', fields: ['uniqcode', 'mobile'] },
-    { id: 'google_usa', name: 'جوجل بلاي امريكي', type: 'googleplayusa', logo: 'https://placehold.co/100x100?text=GP', fields: ['uniqcode', 'mobile'] },
-    { id: 'razer', name: 'Razer Gold', type: 'razergold', logo: 'https://placehold.co/100x100?text=RZ', fields: ['uniqcode', 'mobile'] },
-    { id: 'likee', name: 'Likee', type: 'likee', logo: 'https://placehold.co/100x100?text=Likee', fields: ['playerid', 'uniqcode'] },
-    { id: 'bigo', name: 'BIGO LIVE', type: 'bigolive', logo: 'https://placehold.co/100x100?text=Bigo', fields: ['playerid', 'uniqcode'] },
 ];
 
 export default function GamesPage() {

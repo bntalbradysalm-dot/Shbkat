@@ -133,6 +133,16 @@ const CATEGORIES = [
         offertype: 'A88332' 
       },
       { 
+        offerId: 'super_4g_3gb', 
+        offerName: 'سوبر فورجي 2G | 4G - 1G | 3G', 
+        price: 2000, 
+        data: '3GB', 
+        sms: '250', 
+        minutes: '250', 
+        validity: 'شهر', 
+        offertype: 'A5533822' 
+      },
+      { 
         offerId: '4g_48h', 
         offerName: 'مزايا فورجي 48 ساعة', 
         price: 600, 

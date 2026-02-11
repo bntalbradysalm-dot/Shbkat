@@ -23,6 +23,12 @@ const telecomServices = [
     description: 'سداد فواتير وباقات شركة YOU',
   },
   {
+    name: 'عدن نت',
+    logo: 'https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg',
+    href: '/aden-net',
+    description: 'استعلام وسداد باقات عدن نت',
+  },
+  {
     name: 'يمن فورجي',
     logo: 'https://i.postimg.cc/FsmGqt98/1768999789252.jpg',
     href: '/yemen-4g',

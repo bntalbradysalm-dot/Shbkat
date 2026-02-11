@@ -1,4 +1,3 @@
-
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -52,6 +51,9 @@ export async function POST(request: Request) {
     } else if (service === 'yem4g') {
         // ليمن فورجي (استعلام وسداد)
         endpoint = 'yem4g';
+    } else if (service === 'adenet') {
+        // عدن نت (استعلام وسداد)
+        endpoint = 'adenet';
     } else { 
         switch(action) {
             case 'query':

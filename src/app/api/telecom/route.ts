@@ -53,9 +53,7 @@ export async function POST(request: Request) {
         endpoint = 'adenet';
         apiRequestParams.action = action;
     } else if (service === 'games') {
-        // رابط شحن الألعاب الموضح في الصورة
         endpoint = 'gameswcards';
-        // الألعاب عادة تستخدم GET وتمرر الحقول في URL
     } else { 
         switch(action) {
             case 'query':
@@ -114,8 +112,10 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود.' }), { status: 502 });
         }
         
-        const isSuccess = data.resultCode === "0" || data.resultCode === 0;
-        const isPending = data.resultCode === "-2" || data.resultCode === -2;
+        // تحويل النتيجة لنص ومسح الفراغات لضمان دقة التحقق
+        const code = data.resultCode?.toString().trim();
+        const isSuccess = code === "0";
+        const isPending = code === "-2";
 
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';

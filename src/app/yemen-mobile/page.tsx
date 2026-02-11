@@ -131,7 +131,7 @@ const CATEGORIES = [
         offertype: 'A4821' 
       },
       { 
-        offerId: 'super_4g_3gb', 
+        offerId: 'super_4g', 
         offerName: 'سوبر فورجي', 
         price: 2000, 
         data: '3GB', 
@@ -234,37 +234,33 @@ const CATEGORIES = [
   }
 ];
 
-const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
-    <div className="relative w-12 h-12">
-      <svg
-        viewBox="0 0 50 50"
-        className="absolute inset-0 w-full h-full animate-spin"
-        style={{ animationDuration: '1.2s' }}
-      >
-        <path
-          d="M15 25 A10 10 0 0 0 35 25"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M40 15 A15 15 0 0 1 40 35"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-          className="opacity-30"
-        />
-      </svg>
-    </div>
-  </div>
-);
-
 const LoadingSpinner = () => (
   <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
-    <CustomLoader />
+    <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+        <div className="relative w-12 h-12">
+        <svg
+            viewBox="0 0 50 50"
+            className="absolute inset-0 w-full h-full animate-spin"
+            style={{ animationDuration: '1.2s' }}
+        >
+            <path
+            d="M15 25 A10 10 0 0 0 35 25"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="5"
+            strokeLinecap="round"
+            />
+            <path
+            d="M40 15 A15 15 0 0 1 40 35"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="5"
+            strokeLinecap="round"
+            className="opacity-30"
+            />
+        </svg>
+        </div>
+    </div>
   </div>
 );
 
@@ -644,8 +640,8 @@ export default function YemenMobilePage() {
                             {CATEGORIES.map((cat) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
                                                 {cat.badge}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>

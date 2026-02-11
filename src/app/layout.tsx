@@ -36,10 +36,7 @@ export default function RootLayout({
       <head>
         <title>Shabakat Wallet</title>
         <meta name="description" content="Your Digital Wallet" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* نستخدم خط Alexandria كخط احتياطي ممتاز يدعم العربية بشكل احترافي */}
-        <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.cdnfonts.com/css/din-next-lt-arabic" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background">
         <FirebaseProvider>

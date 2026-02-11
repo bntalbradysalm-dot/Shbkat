@@ -68,7 +68,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Hanimation Arabic', 'Alexandria', sans-serif;
+    font-family: 'DIN Next LT Arabic', sans-serif;
+    font-weight: 500;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   }
   .dark body {

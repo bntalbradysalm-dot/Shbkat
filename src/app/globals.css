@@ -23,14 +23,6 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 215 100% 34%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
     --radius: 0.75rem;
     
     --icon-grad-start: #2563eb;
@@ -65,12 +57,12 @@
 @layer base {
   * {
     @apply border-border;
-    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
+    font-family: 'Almarai', sans-serif !important;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
-    font-weight: 500;
+    font-family: 'Almarai', sans-serif !important;
+    font-weight: 400;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -80,7 +72,7 @@
   }
   h1, h2, h3, h4, h5, h6, input, button, select, textarea {
     @apply text-foreground;
-    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
+    font-family: 'Almarai', sans-serif !important;
   }
 }
 

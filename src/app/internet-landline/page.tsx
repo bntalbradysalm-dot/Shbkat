@@ -306,9 +306,7 @@ export default function LandlineRedesignPage() {
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
                                 <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
                                     <div className="p-4 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">
-                                            {activeTab === 'internet' ? 'البيانات المتبقية' : 'المديونية/الرصيد'}
-                                        </p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
                                         <p className="text-base font-black">{formatDisplayValue(queryResult.balance)}</p>
                                     </div>
                                     <div className="p-4">
@@ -406,9 +404,9 @@ export default function LandlineRedesignPage() {
                             </div>
                         </div>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-row gap-3 mt-6">
-                        <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
-                        <AlertDialogAction className="flex-1 rounded-2xl h-12 font-bold" onClick={() => handlePayment(parseFloat(amount), 'هاتف ثابت')}>تأكيد</AlertDialogAction>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={() => handlePayment(parseFloat(amount), 'هاتف ثابت')}>تأكيد</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -436,9 +434,9 @@ export default function LandlineRedesignPage() {
                             </div>
                         </div>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-row gap-3 mt-6">
-                        <AlertDialogCancel className="flex-1 rounded-2xl h-12">تراجع</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => selectedPackage && handlePayment(selectedPackage.price, selectedPackage.name)} className="flex-1 rounded-2xl h-12 font-bold">تفعيل</AlertDialogAction>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => selectedPackage && handlePayment(selectedPackage.price, selectedPackage.name)} className="w-full rounded-2xl h-12 font-bold">تفعيل</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

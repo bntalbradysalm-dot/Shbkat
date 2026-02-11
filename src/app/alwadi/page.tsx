@@ -174,8 +174,8 @@ export default function AlwadiPage() {
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-          <Card className="w-full max-w-sm text-center shadow-2xl">
-              <CardContent className="p-6">
+          <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
+              <CardContent className="p-8">
                   <div className="flex flex-col items-center justify-center gap-4">
                       <div className="bg-green-100 p-4 rounded-full">
                           <CheckCircle className="h-16 w-16 text-green-600" />
@@ -198,8 +198,8 @@ export default function AlwadiPage() {
                       </div>
 
                       <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                          <Button variant="outline" className="flex-1" onClick={() => router.push('/login')}>الرئيسية</Button>
-                          <Button className="flex-1" onClick={() => router.push('/transactions')}>
+                          <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => router.push('/login')}>الرئيسية</Button>
+                          <Button className="flex-1 rounded-2xl h-12" onClick={() => router.push('/transactions')}>
                              <History className="ml-2 h-4 w-4" />
                              العمليات
                           </Button>
@@ -338,9 +338,9 @@ export default function AlwadiPage() {
                     </div>
                   </div>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="flex-row gap-3 pt-4">
-                  <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
-                  <AlertDialogAction className="flex-1 rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>
+                <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
+                  <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                  <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>
                     تأكيد وإرسال
                   </AlertDialogAction>
                 </AlertDialogFooter>

@@ -153,9 +153,9 @@ export default function TransferPage() {
 
     setIsProcessing(true);
     const numericAmount = parseFloat(amount);
-    const totalDeduction = numericAmount + commission;
+    const totalToDeduct = numericAmount + commission;
     
-    if ((senderProfile.balance ?? 0) < totalDeduction) {
+    if ((senderProfile.balance ?? 0) < totalToDeduct) {
         toast({ variant: "destructive", title: "رصيد غير كاف!", description: "رصيدك لم يعد كافياً لإتمام هذه العملية." });
         setIsProcessing(false);
         setIsConfirming(false);
@@ -165,7 +165,7 @@ export default function TransferPage() {
     try {
       const batch = writeBatch(firestore);
 
-      batch.update(senderDocRef, { balance: increment(-totalDeduction) });
+      batch.update(senderDocRef, { balance: increment(-totalToDeduct) });
 
       const recipientDocRef = doc(firestore, 'users', recipient.id);
       batch.update(recipientDocRef, { balance: increment(numericAmount) });
@@ -176,7 +176,7 @@ export default function TransferPage() {
       batch.set(senderTransactionRef, {
         userId: user.uid,
         transactionDate: now,
-        amount: totalDeduction,
+        amount: totalToDeduct,
         transactionType: `تحويل إلى ${recipient.displayName}`,
         notes: `شامل عمولة خدمات ${commission} ريال`
       });
@@ -344,9 +344,9 @@ export default function TransferPage() {
                     </div>
                 </div>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-row gap-3 pt-4">
-                <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
-                <AlertDialogAction className="flex-1 rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
+            <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
+                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
                     {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
                 </AlertDialogAction>
             </AlertDialogFooter>

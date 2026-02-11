@@ -446,9 +446,9 @@ export default function Yemen4GPage() {
                             </div>
                         </div>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-row gap-3 mt-6">
-                        <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
-                        <AlertDialogAction className="flex-1 rounded-2xl h-12 font-bold" onClick={handlePayment}>تأكيد السداد</AlertDialogAction>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePayment}>تأكيد السداد</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -476,9 +476,9 @@ export default function Yemen4GPage() {
                             </div>
                         </div>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-row gap-3 mt-6">
-                        <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleActivateOffer} className="flex-1 rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
                             {isActivatingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : 'تفعيل الآن'}
                         </AlertDialogAction>
                     </AlertDialogFooter>

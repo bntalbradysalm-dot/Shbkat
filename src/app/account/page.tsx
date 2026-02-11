@@ -27,6 +27,8 @@ import {
   PackageCheck,
   ListChecks,
   Banknote,
+  Code,
+  UserRound,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -41,12 +43,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,8 +79,9 @@ const managementLinks = [
 
 const userAppSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { id: 'share-app', title: 'شارك التطبيق', icon: Share2 },
-    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, href: 'https://api.whatsapp.com/send?phone=' },
+    { id: 'share-app', title: 'شارك التطبيق', icon: Share2, action: 'share' },
+    { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, action: 'help' },
+    { id: 'app-developer', title: 'مطور التطبيق', icon: Code, action: 'developer' },
 ];
 
 
@@ -122,6 +134,7 @@ const LoadingSpinner = () => (
 
 export default function AccountPage() {
   const [activeTheme, setActiveTheme] = useState('light');
+  const [isDevDialogOpen, setIsDevDialogOpen] = useState(false);
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -178,8 +191,42 @@ export default function AccountPage() {
       return;
     }
   
-    window.open(appSettings.appLink, '_blank', 'noopener,noreferrer');
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'تطبيق شبكات',
+                text: 'حمل تطبيق شبكات الآن واستمتع بخدماتنا المتميزة!',
+                url: appSettings.appLink,
+            });
+        } catch (error) {
+            window.open(appSettings.appLink, '_blank', 'noopener,noreferrer');
+        }
+    } else {
+        window.open(appSettings.appLink, '_blank', 'noopener,noreferrer');
+    }
   };
+
+  const handleAction = (item: any) => {
+    if (item.href) {
+        router.push(item.href);
+        return;
+    }
+
+    switch (item.action) {
+        case 'share':
+            handleShare();
+            break;
+        case 'help':
+            const helpCenterUrl = appSettings?.supportPhoneNumber 
+                ? `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}`
+                : '#';
+            window.open(helpCenterUrl, '_blank');
+            break;
+        case 'developer':
+            setIsDevDialogOpen(true);
+            break;
+    }
+  }
 
   const handleLogout = () => {
     if (auth) {
@@ -191,10 +238,6 @@ export default function AccountPage() {
   if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
-  
-  const helpCenterUrl = appSettings?.supportPhoneNumber 
-    ? `https://api.whatsapp.com/send?phone=${appSettings.supportPhoneNumber}`
-    : '#';
 
   return (
     <>
@@ -255,6 +298,35 @@ export default function AccountPage() {
             </div>
         </div>
 
+        <div>
+            <div className="flex items-center justify-center gap-2 mb-3">
+                <Settings className="h-4 w-4 text-primary" />
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">إعدادات الحساب</h3>
+            </div>
+            <Card className="bg-card rounded-3xl border-none shadow-sm overflow-hidden">
+                <CardContent className="p-0">
+                    {userAppSettingsLinks.map((link, index) => {
+                        const Icon = link.icon;
+                        return (
+                            <div
+                                key={link.id}
+                                onClick={() => handleAction(link)}
+                                className={`group flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-muted/30 ${
+                                    index < userAppSettingsLinks.length - 1 ? 'border-b border-muted' : ''
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Icon className="h-5 w-5 text-primary" />
+                                    <span className="text-sm font-bold text-foreground">{link.title}</span>
+                                </div>
+                                <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
+                            </div>
+                        )
+                    })}
+                </CardContent>
+            </Card>
+        </div>
+
         {isUserAdmin && (
           <>
             <div>
@@ -312,9 +384,9 @@ export default function AccountPage() {
                   سيؤدي هذا الإجراء إلى تسجيل خروجك من التطبيق.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter className="flex-row gap-3 pt-4">
-                <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout} className="flex-1 rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">
+              <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4">
+                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">
                   تأكيد الخروج
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -324,6 +396,37 @@ export default function AccountPage() {
 
       </div>
     </div>
+
+    {/* Developer Dialog */}
+    <Dialog open={isDevDialogOpen} onOpenChange={setIsDevDialogOpen}>
+        <DialogContent className="rounded-[40px] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
+            <div className="bg-mesh-gradient h-32 relative">
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
+                    <Image 
+                        src="https://picsum.photos/seed/dev/200/200" 
+                        alt="Developer" 
+                        width={100} 
+                        height={100} 
+                        className="object-cover"
+                        data-ai-hint="developer portrait"
+                    />
+                </div>
+            </div>
+            <div className="pt-16 pb-8 px-6 text-center space-y-4">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-black text-primary">محمد راضي باشادي</DialogTitle>
+                    <DialogDescription className="text-foreground/80 font-bold text-base leading-relaxed pt-2">
+                        مطور برمجيات شغوف ببناء حلول رقمية مبتكرة تسهل حياة المستخدمين. متخصص في تقنيات الويب وتطبيقات المحافظ الرقمية.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="bg-muted/50 p-4 rounded-2xl border border-primary/5">
+                    <p className="text-xs text-muted-foreground font-bold">تم تطوير هذا التطبيق لتقديم أفضل تجربة سداد وخدمات إلكترونية في اليمن.</p>
+                </div>
+                <Button className="w-full rounded-2xl h-12 font-black" onClick={() => setIsDevDialogOpen(false)}>إغلاق</Button>
+            </div>
+        </DialogContent>
+    </Dialog>
+
     <Toaster />
     </>
   );

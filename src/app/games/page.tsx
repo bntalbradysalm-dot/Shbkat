@@ -212,25 +212,7 @@ export default function GamesPage() {
             <SimpleHeader title="شدات ببجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                {/* Balance Card - Now at the Top */}
-                <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="text-right">
-                            <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black text-white">
-                                    {userProfile?.balance?.toLocaleString('en-US') || '0'}
-                                </h2>
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
-                            </div>
-                        </div>
-                        <div className="p-3 bg-white/20 rounded-2xl">
-                            <Wallet className="h-6 w-6 text-white" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Banner - Now below Balance */}
+                {/* Banner */}
                 <div className="relative w-full aspect-[21/9] rounded-[28px] overflow-hidden shadow-lg border border-primary/10 mb-2 animate-in fade-in-0 zoom-in-95 duration-500">
                     <Image 
                         src="https://i.postimg.cc/K8pPdgWg/112750758-whatsubject.jpg" 
@@ -261,7 +243,7 @@ export default function GamesPage() {
                                         </div>
                                         <div className="text-right">
                                             <h4 className="font-black text-sm text-foreground">{pkg.amount}</h4>
-                                            <p className="text-[10px] font-bold text-muted-foreground">كود الفئة: {pkg.code}</p>
+                                            <p className="text-[10px] font-bold text-muted-foreground">شحن مباشر</p>
                                         </div>
                                     </div>
                                     <div className="text-left">

@@ -7,18 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
-  Gamepad2, 
   CheckCircle, 
-  Search,
-  Wallet,
-  Loader2,
-  AlertCircle,
-  X,
-  CreditCard,
+  Wallet, 
+  Loader2, 
   User,
-  Hash,
-  Mail,
-  Smartphone
+  Gamepad2,
+  Zap,
+  ShieldCheck,
+  Star
 } from 'lucide-react';
 import {
   Dialog,
@@ -34,21 +30,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
-type Game = {
-    id: string;
-    name: string;
-    type: string;
-    logo: string;
-    fields: ('playerid' | 'playername' | 'zoneid' | 'email' | 'mobile' | 'uniqcode')[];
+type UCPrice = {
+    amount: string;
+    price: number;
+    code: string;
 };
 
-const GAMES: Game[] = [
-    { id: 'pubg', name: 'PUBG Mobile', type: 'pubg', logo: 'https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg', fields: ['playerid', 'uniqcode'] },
+const UC_PACKAGES: UCPrice[] = [
+    { amount: '60 شدة', price: 1800, code: '60' },
+    { amount: '325 شدة', price: 8000, code: '325' },
+    { amount: '385 شدة', price: 9000, code: '385' },
+    { amount: '660 شدة', price: 15000, code: '660' },
+    { amount: '720 شدة', price: 17500, code: '720' },
+    { amount: '1800 شدة', price: 39000, code: '1800' },
 ];
 
 export default function GamesPage() {
@@ -57,17 +55,8 @@ export default function GamesPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-    const [formData, setFormData] = useState<any>({
-        playerid: '',
-        playername: '',
-        zoneid: '',
-        email: '',
-        mobile: '',
-        uniqcode: '',
-        amount: ''
-    });
-    
+    const [selectedPackage, setSelectedPackage] = useState<UCPrice | null>(null);
+    const [playerId, setPlayerId] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -84,21 +73,15 @@ export default function GamesPage() {
         }
     }, [showSuccess]);
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev: any) => ({ ...prev, [field]: value }));
-    };
-
     const handlePurchase = async () => {
-        if (!selectedGame || !user || !userDocRef || !firestore) return;
-        
-        const price = parseFloat(formData.amount);
-        if (isNaN(price) || price <= 0) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال مبلغ صحيح.' });
+        if (!selectedPackage || !playerId || !user || !userDocRef || !firestore) {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم اللاعب.' });
             return;
         }
 
-        const commission = Math.ceil(price * 0.05);
-        const totalToDeduct = price + commission;
+        const basePrice = selectedPackage.price;
+        const commission = Math.ceil(basePrice * 0.05);
+        const totalToDeduct = basePrice + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام العملية شاملة العمولة.' });
@@ -109,20 +92,17 @@ export default function GamesPage() {
         try {
             const transid = Date.now().toString();
             
-            const payload: any = {
-                service: 'games',
-                type: selectedGame.type,
-                transid: transid
-            };
-            selectedGame.fields.forEach(f => {
-                if (formData[f]) payload[f] = formData[f];
-            });
-            payload.mobile = formData.mobile || userProfile?.phoneNumber || '000';
-
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ 
+                    service: 'games',
+                    type: 'pubg',
+                    uniqcode: selectedPackage.code,
+                    playerid: playerId,
+                    mobile: userProfile?.phoneNumber || '000',
+                    transid: transid 
+                })
             });
             const result = await response.json();
             
@@ -134,13 +114,14 @@ export default function GamesPage() {
                 userId: user.uid, 
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
-                transactionType: `شحن ${selectedGame.name}`, 
-                notes: `الكود: ${formData.uniqcode}. اللاعب: ${formData.playerid || formData.email}`, 
+                transactionType: `شحن ${selectedPackage.amount}`, 
+                notes: `اللاعب: ${playerId}. كود الفئة: ${selectedPackage.code}`, 
             });
             await batch.commit();
             
             setShowSuccess(true);
-            setSelectedGame(null);
+            setSelectedPackage(null);
+            setPlayerId('');
         } catch (e: any) {
             toast({ variant: "destructive", title: "خطأ", description: e.message });
         } finally {
@@ -158,7 +139,7 @@ export default function GamesPage() {
                             <CheckCircle className="h-20 w-20 text-white" />
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تم الشحن بنجاح</h2>
+                            <h2 className="text-2xl font-black text-green-600">تم طلب الشحن بنجاح</h2>
                             <p className="text-sm text-muted-foreground">تم تنفيذ طلبك بنجاح. سيتم إضافة الشدات لحسابك قريباً.</p>
                             <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </CardContent>
@@ -173,82 +154,115 @@ export default function GamesPage() {
             <SimpleHeader title="شدات ببجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
-                    <CardContent className="p-6 flex items-center justify-between">
+                {/* PUBG Banner */}
+                <div className="relative w-full aspect-[21/9] rounded-[28px] overflow-hidden shadow-lg border border-primary/10 mb-2 animate-in fade-in-0 zoom-in-95 duration-500">
+                    <Image 
+                        src="https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg" 
+                        alt="PUBG Mobile Banner" 
+                        fill 
+                        className="object-cover"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-4">
+                        <h3 className="text-white font-black text-lg">ببجي موبايل - PUBG Mobile</h3>
+                        <p className="text-white/70 text-[10px] font-bold">اشحن شداتك الآن بأفضل الأسعار وأسرع سداد</p>
+                    </div>
+                </div>
+
+                <Card className="overflow-hidden rounded-[28px] shadow-sm bg-white dark:bg-slate-900 border-none mb-4">
+                    <CardContent className="p-5 flex items-center justify-between">
                         <div className="text-right">
-                            <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال</span>
+                                <h2 className="text-2xl font-black text-primary">
+                                    {userProfile?.balance?.toLocaleString('en-US') || '0'}
+                                </h2>
+                                <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
                             </div>
                         </div>
-                        <div className="p-3 bg-white/20 rounded-2xl">
-                            <Wallet className="h-6 w-6 text-white" />
+                        <div className="p-3 bg-primary/10 rounded-2xl">
+                            <Wallet className="h-6 w-6 text-primary" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 gap-4 max-w-[240px] mx-auto">
-                    {GAMES.map((game) => (
-                        <Card 
-                            key={game.id} 
-                            className="cursor-pointer hover:bg-primary/5 transition-all active:scale-95 border-none shadow-sm rounded-3xl overflow-hidden"
-                            onClick={() => setSelectedGame(game)}
-                        >
-                            <div className="aspect-square relative">
-                                <Image src={game.logo} alt={game.name} fill className="object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
-                                    <p className="text-white text-xs font-black truncate">{game.name}</p>
-                                </div>
-                            </div>
-                        </Card>
-                    ))}
+                <div className="space-y-3 pb-10">
+                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">اختر فئة الشحن</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                        {UC_PACKAGES.map((pkg) => (
+                            <Card 
+                                key={pkg.code} 
+                                className="cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] border-none shadow-sm rounded-3xl overflow-hidden group"
+                                onClick={() => setSelectedPackage(pkg)}
+                            >
+                                <CardContent className="p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-orange-100 dark:bg-orange-950/30 rounded-2xl group-hover:bg-orange-200 transition-colors">
+                                            <Star className="w-6 h-6 text-orange-500 fill-orange-500" />
+                                        </div>
+                                        <div className="text-right">
+                                            <h4 className="font-black text-sm text-foreground">{pkg.amount}</h4>
+                                            <p className="text-[10px] font-bold text-muted-foreground">كود الفئة: {pkg.code}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="flex items-baseline gap-1 justify-end">
+                                            <span className="text-lg font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
+                                            <span className="text-[9px] font-bold text-muted-foreground">ريال</span>
+                                        </div>
+                                        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">شراء</Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <Dialog open={!!selectedGame} onOpenChange={() => setSelectedGame(null)}>
+            <Dialog open={!!selectedPackage} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="text-center font-black">شحن {selectedGame?.name}</DialogTitle>
-                        <DialogDescription className="text-center">أدخل بيانات الشحن المطلوبة للعملية</DialogDescription>
+                        <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <Zap className="text-primary h-6 w-6" />
+                        </div>
+                        <DialogTitle className="text-center font-black">تأكيد شحن {selectedPackage?.amount}</DialogTitle>
+                        <DialogDescription className="text-center">أدخل رقم اللاعب (Player ID) لإتمام العملية</DialogDescription>
                     </DialogHeader>
+                    
                     <div className="space-y-4 py-4">
-                        {selectedGame?.fields.includes('playerid') && (
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-bold mr-1">رقم اللاعب (Player ID)</Label>
-                                <Input 
-                                    placeholder="12345678" 
-                                    value={formData.playerid} 
-                                    onChange={e => handleInputChange('playerid', e.target.value)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        )}
-                        {selectedGame?.fields.includes('uniqcode') && (
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-bold mr-1">كود الفئة الموحد (Uniqcode)</Label>
-                                <Input 
-                                    placeholder="PUBG_60" 
-                                    value={formData.uniqcode} 
-                                    onChange={e => handleInputChange('uniqcode', e.target.value)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        )}
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold mr-1 text-primary">المبلغ بالريال اليمني</Label>
+                        <div className="space-y-2">
+                            <Label htmlFor="playerid" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم اللاعب (Player ID)</Label>
                             <Input 
-                                type="number"
-                                placeholder="0.00" 
-                                value={formData.amount} 
-                                onChange={e => handleInputChange('amount', e.target.value)}
-                                className="rounded-xl border-primary/30 font-bold"
+                                id="playerid"
+                                placeholder="12345678" 
+                                type="tel"
+                                value={playerId} 
+                                onChange={e => setPlayerId(e.target.value.replace(/\D/g, ''))}
+                                className="rounded-2xl h-14 text-center text-2xl font-black border-2 focus-visible:ring-primary tracking-widest"
                             />
                         </div>
+
+                        <div className="bg-muted/50 p-4 rounded-[24px] space-y-2 text-sm">
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-muted-foreground font-bold">سعر الشحن:</span>
+                                <span className="font-black">{selectedPackage?.price.toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-muted-foreground font-bold">العمولة (5%):</span>
+                                <span className="font-black text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="pt-2 border-t border-dashed flex justify-between items-center">
+                                <span className="font-black text-foreground">الإجمالي:</span>
+                                <span className="font-black text-primary text-lg">
+                                    {((selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)).toLocaleString('en-US')} ريال
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
                     <DialogFooter className="grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-2xl h-12" onClick={() => setSelectedGame(null)}>إلغاء</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={handlePurchase} disabled={isProcessing}>
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
+                        <Button className="rounded-2xl h-12 font-black shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing || !playerId}>
                             {isProcessing ? <Loader2 className="animate-spin" /> : 'شحن الآن'}
                         </Button>
                     </DialogFooter>

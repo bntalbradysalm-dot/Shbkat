@@ -116,7 +116,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: '4g',
+    id: '4g_mazaya',
     title: 'باقات مزايا فورجي',
     badge: '4G',
     icon: Zap,
@@ -148,7 +148,7 @@ const CATEGORIES = [
         data: '1GB', 
         sms: '100', 
         minutes: '50', 
-        validity: '48 ساعة', 
+        validity: 'ساعة 48', 
         offertype: 'A88337' 
       },
       { 
@@ -214,7 +214,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'data',
+    id: '4g_net',
     title: 'باقات نت فورجي',
     badge: '4G',
     icon: Database,
@@ -225,20 +225,20 @@ const CATEGORIES = [
       { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A3822' },
       { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4828' },
       { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A34346' },
-      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: '40 يوم', offertype: 'A3347' },
+      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: 'يوم 40', offertype: 'A3347' },
       { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4830' },
     ]
   },
   {
     id: 'internet_10days',
     title: 'باقات الإنترنت 10 ايام',
-    badge: '10D',
+    badge: '10',
     icon: CalendarDays,
     offers: [
-      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
-      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
-      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
-      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74351' },
+      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: 'ايام 10', offertype: 'A74332' },
+      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: 'ايام 10', offertype: 'A74339' },
+      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: 'ايام 10', offertype: 'A44345' },
+      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: 'ايام 10', offertype: 'A74351' },
     ]
   }
 ];

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -334,7 +333,7 @@ export default function Yemen4GPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم خدمة فورجي</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
                     <div className="flex flex-col gap-2">
                         <Input

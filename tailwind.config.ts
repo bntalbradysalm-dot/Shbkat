@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type {Config} from 'tailwind-merge';
 
 export default {
   darkMode: ['class'],
@@ -10,8 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Alexandria"', 'sans-serif'],
-        headline: ['"Alexandria"', 'sans-serif'],
+        body: ["'Almarai'", 'sans-serif'],
+        headline: ["'Almarai'", 'sans-serif'],
+        sans: ["'Almarai'", 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

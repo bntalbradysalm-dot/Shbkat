@@ -65,11 +65,11 @@
 @layer base {
   * {
     @apply border-border;
-    font-family: 'Bahij TheSansArabic', sans-serif !important;
+    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Bahij TheSansArabic', sans-serif !important;
+    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
     font-weight: 500;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     -webkit-font-smoothing: antialiased;
@@ -80,7 +80,7 @@
   }
   h1, h2, h3, h4, h5, h6, input, button, select, textarea {
     @apply text-foreground;
-    font-family: 'Bahij TheSansArabic', sans-serif !important;
+    font-family: 'IBM Plex Sans Arabic', sans-serif !important;
   }
 }
 

@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ["'Bahij TheSansArabic'", 'sans-serif'],
-        headline: ["'Bahij TheSansArabic'", 'sans-serif'],
-        sans: ["'Bahij TheSansArabic'", 'sans-serif'],
+        body: ["'IBM Plex Sans Arabic'", 'sans-serif'],
+        headline: ["'IBM Plex Sans Arabic'", 'sans-serif'],
+        sans: ["'IBM Plex Sans Arabic'", 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

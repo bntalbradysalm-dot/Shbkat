@@ -140,12 +140,6 @@ const CustomLoader = () => (
   </div>
 );
 
-const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
-    <CustomLoader />
-  </div>
-);
-
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
       className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-4 shadow-sm relative border border-primary/5 mb-3 text-right cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
@@ -519,6 +513,14 @@ export default function YemenMobilePage() {
                             />
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
                         </div>
+                        
+                        {amount && (
+                            <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
+                                <p className="text-xl font-black text-primary">{(parseFloat(amount) * 0.826).toFixed(2)} ر.ي</p>
+                            </div>
+                        )}
+
                         <Button 
                             className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
                             onClick={() => setIsConfirming(true)} 

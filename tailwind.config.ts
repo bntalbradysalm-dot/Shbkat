@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Tajawal"', 'sans-serif'],
-        headline: ['"Tajawal"', 'sans-serif'],
+        body: ['"Alexandria"', 'sans-serif'],
+        headline: ['"Alexandria"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

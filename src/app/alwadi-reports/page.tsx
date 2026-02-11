@@ -195,7 +195,7 @@ export default function AlwadiReportsPage() {
                             {monthRequests.map(request => (
                                 <AccordionItem value={request.id} key={request.id}>
                                     <AccordionTrigger className="p-3 bg-muted/30 rounded-t-lg text-sm [&[data-state=open]]:rounded-b-none [&[data-state=open]]:border-b">
-                                        <div className="flex justify-between items-center w-full">
+                                        <div className="flex justify-between items-center flex-1 me-4">
                                             <h4 className="font-bold">{request.userName}</h4>
                                             <StatusBadge status={request.status} />
                                         </div>

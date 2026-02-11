@@ -57,12 +57,12 @@ type Offer = {
 };
 
 const YEMEN_4G_OFFERS: Offer[] = [
-    { offerId: '4g_15gb', offerName: 'يمن فورجي 15 جيجا', price: 2400, data: '15 GB', validity: '30 يوم', offertype: '4G_15GB' },
-    { offerId: '4g_25gb', offerName: 'يمن فورجي 25 جيجا', price: 4000, data: '25 GB', validity: '30 يوم', offertype: '4G_25GB' },
-    { offerId: '4g_60gb', offerName: 'يمن فورجي 60 جيجا', price: 8000, data: '60 GB', validity: '30 يوم', offertype: '4G_60GB' },
-    { offerId: '4g_130gb', offerName: 'يمن فورجي 130 جيجا', price: 16000, data: '130 GB', validity: '30 يوم', offertype: '4G_130GB' },
-    { offerId: '4g_250gb', offerName: 'يمن فورجي 250 جيجا', price: 26000, data: '250 GB', validity: '30 يوم', offertype: '4G_250GB' },
-    { offerId: '4g_500gb', offerName: 'يمن فورجي 500 جيجا', price: 46000, data: '500 GB', validity: '30 يوم', offertype: '4G_500GB' },
+    { offerId: '4g_15gb', offerName: 'يمن فورجي 15 جيجا', price: 2400, data: '15 GB', validity: 'يوم 30', offertype: '4G_15GB' },
+    { offerId: '4g_25gb', offerName: 'يمن فورجي 25 جيجا', price: 4000, data: '25 GB', validity: 'يوم 30', offertype: '4G_25GB' },
+    { offerId: '4g_60gb', offerName: 'يمن فورجي 60 جيجا', price: 8000, data: '60 GB', validity: 'يوم 30', offertype: '4G_60GB' },
+    { offerId: '4g_130gb', offerName: 'يمن فورجي 130 جيجا', price: 16000, data: '130 GB', validity: 'يوم 30', offertype: '4G_130GB' },
+    { offerId: '4g_250gb', offerName: 'يمن فورجي 250 جيجا', price: 26000, data: '250 GB', validity: 'يوم 30', offertype: '4G_250GB' },
+    { offerId: '4g_500gb', offerName: 'يمن فورجي 500 جيجا', price: 46000, data: '500 GB', validity: 'يوم 30', offertype: '4G_500GB' },
 ];
 
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (

@@ -16,12 +16,13 @@ import {
   Zap, 
   ShieldCheck, 
   Database, 
-  ChevronDown,
   Globe,
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CalendarDays,
+  ArrowUpDown
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -48,7 +49,6 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,20 +117,30 @@ const CATEGORIES = [
     ]
   },
   {
-    id: '4g',
-    title: 'باقات فورجي',
+    id: '4g_mazaya',
+    title: 'باقات مزايا فورجي',
     badge: '4G',
     icon: Zap,
     offers: [
       { 
-        offerId: '4g_4gb_net', 
-        offerName: 'باقة نت فورجي 4 قيقا', 
+        offerId: 'super_4g', 
+        offerName: 'سوبر فورجي', 
         price: 2000, 
-        data: '4GB', 
-        sms: 'لا يوجد', 
-        minutes: 'لا يوجد', 
+        data: '3GB', 
+        sms: '250', 
+        minutes: '250', 
         validity: 'شهر', 
-        offertype: 'A88332' 
+        offertype: 'A5533822' 
+      },
+      { 
+        offerId: '4g_24h', 
+        offerName: 'مزايا فورجي 24 ساعة', 
+        price: 300, 
+        data: '512MB', 
+        sms: '30', 
+        minutes: '20', 
+        validity: 'يوم', 
+        offertype: 'A4826' 
       },
       { 
         offerId: '4g_48h', 
@@ -139,7 +149,7 @@ const CATEGORIES = [
         data: '1GB', 
         sms: '100', 
         minutes: '50', 
-        validity: '48 ساعة', 
+        validity: 'ساعة 48', 
         offertype: 'A88337' 
       },
       { 
@@ -153,6 +163,26 @@ const CATEGORIES = [
         offertype: 'A88336' 
       },
       { 
+        offerId: '4g_800sms', 
+        offerName: 'مزايا فورجي 800 رسالة', 
+        price: 1000, 
+        data: 'لا يوجد', 
+        sms: '800', 
+        minutes: 'لا يوجد', 
+        validity: 'شهر', 
+        offertype: 'A31338' 
+      },
+      { 
+        offerId: 'm_tawfeer', 
+        offerName: 'مزايا توفير الشهرية', 
+        price: 2400, 
+        data: '4GB', 
+        sms: '450', 
+        minutes: '450', 
+        validity: 'شهر', 
+        offertype: 'A3823' 
+      },
+      { 
         offerId: '4g_monthly', 
         offerName: 'مزايا فورجي الشهرية', 
         price: 2500, 
@@ -162,51 +192,98 @@ const CATEGORIES = [
         validity: 'شهر', 
         offertype: 'A88335' 
       },
+      { 
+        offerId: 'm_max_4g', 
+        offerName: 'مزايا ماكس فورجي', 
+        price: 4000, 
+        data: '4GB', 
+        sms: '600', 
+        minutes: '1100', 
+        validity: 'شهر', 
+        offertype: 'A88441' 
+      },
+      { 
+        offerId: 'm_business_4g', 
+        offerName: 'مزايا أعمال فورجي', 
+        price: 5000, 
+        data: '6GB', 
+        sms: '1000', 
+        minutes: '1500', 
+        validity: 'شهر', 
+        offertype: 'A39053' 
+      },
     ]
   },
   {
-    id: 'data',
-    title: 'باقات النت',
-    badge: 'Net',
+    id: '4g_net',
+    title: 'باقات نت فورجي',
+    badge: '4G',
     icon: Database,
     offers: [
-      { offerId: 'net_500', offerName: 'نت 500 ميجا', price: 600, data: '500 MB', validity: '30 يوم', offertype: 'Net500' },
-      { offerId: 'net_1gb', offerName: 'نت 1 جيجا', price: 1100, data: '1 GB', validity: '30 يوم', offertype: 'Net1GB' },
+      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4821' },
+      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A3435' },
+      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A3436' },
+      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A3825' },
+      { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A3822' },
+      { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4828' },
+      { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A34346' },
+      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: 'يوم 40', offertype: 'A3347' },
+      { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4830' },
+    ]
+  },
+  {
+    id: 'internet_monthly',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: ArrowUpDown,
+    offers: [
+      { offerId: 'net_3g_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_3g_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_3g_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_3g_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
+    ]
+  },
+  {
+    id: 'internet_10days',
+    title: 'باقات الإنترنت 10 ايام',
+    badge: '10',
+    icon: CalendarDays,
+    offers: [
+      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: 'ايام 10', offertype: 'A74332' },
+      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: 'ايام 10', offertype: 'A74339' },
+      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: 'ايام 10', offertype: 'A44345' },
+      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: 'ايام 10', offertype: 'A74351' },
     ]
   }
 ];
 
-const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
-    <div className="relative w-12 h-12">
-      <svg
-        viewBox="0 0 50 50"
-        className="absolute inset-0 w-full h-full animate-spin"
-        style={{ animationDuration: '1.2s' }}
-      >
-        <path
-          d="M15 25 A10 10 0 0 0 35 25"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M40 15 A15 15 0 0 1 40 35"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-          className="opacity-30"
-        />
-      </svg>
-    </div>
-  </div>
-);
-
 const LoadingSpinner = () => (
   <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
-    <CustomLoader />
+    <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+        <div className="relative w-12 h-12">
+        <svg
+            viewBox="0 0 50 50"
+            className="absolute inset-0 w-full h-full animate-spin"
+            style={{ animationDuration: '1.2s' }}
+        >
+            <path
+            d="M15 25 A10 10 0 0 0 35 25"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="5"
+            strokeLinecap="round"
+            />
+            <path
+            d="M40 15 A15 15 0 0 1 40 35"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="5"
+            strokeLinecap="round"
+            className="opacity-30"
+            />
+        </svg>
+        </div>
+    </div>
   </div>
 );
 
@@ -237,7 +314,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
         </div>
         <div className="space-y-1.5">
             <Clock className="w-5 h-5 mx-auto text-primary" />
-            <p className="text-[11px] font-black text-foreground truncate">{offer.validity || '-'}</p>
+            <p className="text-[11px] font-black text-foreground truncate">{offer.validity ? offer.validity.split(' ').reverse().join(' ') : '-'}</p>
         </div>
       </div>
     </div>
@@ -262,7 +339,10 @@ export default function YemenMobilePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
   useEffect(() => {
@@ -381,7 +461,7 @@ export default function YemenMobilePage() {
     const totalToDeduct = val + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية شاملة السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة السلفة.' });
         return;
     }
 
@@ -454,6 +534,9 @@ export default function YemenMobilePage() {
         setIsActivatingOffer(false);
     }
   };
+
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
@@ -548,25 +631,25 @@ export default function YemenMobilePage() {
                             <div className="bg-primary p-3 text-center">
                                 <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
                             </div>
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-2">
                                 {activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-3 items-center p-2.5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
                                                     onClick={() => handleRenewOffer(off.offerName)}
-                                                    className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
+                                                    className="bg-primary p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
                                                 >
-                                                    <RefreshCw className="w-6 h-6 text-white" />
-                                                    <span className="text-[10px] text-white font-bold">تجديد</span>
+                                                    <RefreshCw className="w-4 h-4 text-white" />
+                                                    <span className="text-[9px] text-white font-bold">تجديد</span>
                                                 </button>
                                             </div>
 
                                             <div className="flex-1">
-                                                <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
+                                                <h4 className="text-xs font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                     {off.offerName}
                                                 </h4>
-                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">باقة نشطة حالياً</p>
+                                                <p className="text-[9px] font-bold text-muted-foreground mt-0.5">باقة نشطة حالياً</p>
                                             </div>
                                         </div>
                                     ))
@@ -583,18 +666,21 @@ export default function YemenMobilePage() {
                             {CATEGORIES.map((cat) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
                                                 {cat.badge}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
-                                            <ChevronDown className="w-5 h-5 text-white/70 group-data-[state=open]:rotate-180 transition-transform" />
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {cat.offers.map((o) => (
-                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                        ))}
+                                        {cat.offers.length > 0 ? (
+                                            cat.offers.map((o) => (
+                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                            ))
+                                        ) : (
+                                            <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
+                                        )}
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -640,6 +726,25 @@ export default function YemenMobilePage() {
       </div>
 
       <Toaster />
+
+      {showSuccess && (
+        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <CheckCircle className="h-20 w-20 text-white" />
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
+                    <div className="bg-muted p-4 rounded-2xl">
+                        <p className="text-xs text-muted-foreground mb-1">إجمالي المبلغ المخصوم</p>
+                        <p className="text-2xl font-black text-primary">{(parseFloat(amount || '0') + loanAmountToAdd).toLocaleString('en-US')} ريال</p>
+                    </div>
+                    <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                </CardContent>
+            </Card>
+        </div>
+      )}
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
@@ -702,7 +807,7 @@ export default function YemenMobilePage() {
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
-                      {isActivatingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : 'تفعيل الآن'}
+                      تفعيل الآن
                   </AlertDialogAction>
               </AlertDialogFooter>
           </AlertDialogContent>

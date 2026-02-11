@@ -22,8 +22,7 @@ import {
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle,
-  CalendarDays
+  AlertCircle
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -63,9 +62,8 @@ type BillingInfo = {
 
 type ActiveOffer = {
     offerName: string;
-    remainAmount: string;
+    startDate: string;
     expireDate: string;
-    startDate?: string;
 };
 
 type Offer = {
@@ -221,12 +219,16 @@ export default function YemenMobilePage() {
           });
           const offerResult = await offerResponse.json();
           if (offerResponse.ok && offerResult.offers) {
-              setActiveOffers(offerResult.offers);
+              // Map the API fields start_date and expire_date to our component state
+              const mappedOffers = offerResult.offers.map((off: any) => ({
+                  offerName: off.offer_name || off.offerName,
+                  startDate: off.start_date || off.startDate || '...',
+                  expireDate: off.expire_date || off.expireDate || '...'
+              }));
+              setActiveOffers(mappedOffers);
           } else {
-              // Fallback data if needed
-              setActiveOffers([
-                  { offerName: 'مزايا الشهرية - دفع مسبق 350 دقيقه 150 رساله 250 ميجا', remainAmount: 'نشط', expireDate: '2026-03-03 23:59:59', startDate: '2026-02-02 17:22:52' },
-              ]);
+              // Fallback for UI visualization if API fails to return offers
+              setActiveOffers([]);
           }
       }
     } catch (e) {
@@ -381,7 +383,6 @@ export default function YemenMobilePage() {
                             {activeOffers.length > 0 ? (
                                 activeOffers.map((off, idx) => (
                                     <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
-                                        {/* الزر على اليسار */}
                                         <div className="flex flex-col items-center justify-center">
                                             <button 
                                                 onClick={() => setActiveTab("packages")}
@@ -392,7 +393,6 @@ export default function YemenMobilePage() {
                                             </button>
                                         </div>
 
-                                        {/* المحتوى على اليمين */}
                                         <div className="flex-1 space-y-3">
                                             <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                 {off.offerName}
@@ -401,14 +401,14 @@ export default function YemenMobilePage() {
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center justify-end gap-2 text-[11px]">
                                                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.startDate || '...'}
+                                                        {off.startDate}
                                                     </span>
                                                     <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
                                                 </div>
                                                 
                                                 <div className="flex items-center justify-end gap-2 text-[11px]">
                                                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.expireDate || '...'}
+                                                        {off.expireDate}
                                                     </span>
                                                     <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
                                                 </div>

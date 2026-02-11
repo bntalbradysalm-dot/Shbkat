@@ -185,7 +185,7 @@ export default function YemenMobilePage() {
   const { user } = useUser();
 
   const [phone, setPhone] = useState('');
-  const [activeTab, setActiveTab] = useState("balance"); // Default to balance
+  const [activeTab, setActiveTab] = useState("balance");
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -267,6 +267,13 @@ export default function YemenMobilePage() {
         console.error("Search Error:", e);
     } finally {
         setIsSearching(false);
+    }
+  };
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    if (val === 'packages' && phone.length === 9) {
+        handleSearch();
     }
   };
 
@@ -387,7 +394,7 @@ export default function YemenMobilePage() {
         </div>
 
         {phone.length === 9 && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                     <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                     <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
@@ -433,7 +440,7 @@ export default function YemenMobilePage() {
                                     <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                         <div className="flex flex-col items-center justify-center">
                                             <button 
-                                                onClick={() => setActiveTab("packages")}
+                                                onClick={() => handleTabChange("packages")}
                                                 className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
                                             >
                                                 <RefreshCw className="w-6 h-6 text-white" />
@@ -555,7 +562,7 @@ export default function YemenMobilePage() {
                         <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
                   </div>
-              </AlertDialogHeader>
+              </AccordionHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>

@@ -631,25 +631,25 @@ export default function YemenMobilePage() {
                             <div className="bg-primary p-3 text-center">
                                 <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
                             </div>
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-2">
                                 {activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-3 items-center p-2.5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
                                                     onClick={() => handleRenewOffer(off.offerName)}
-                                                    className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
+                                                    className="bg-primary p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
                                                 >
-                                                    <RefreshCw className="w-6 h-6 text-white" />
-                                                    <span className="text-[10px] text-white font-bold">تجديد</span>
+                                                    <RefreshCw className="w-4 h-4 text-white" />
+                                                    <span className="text-[9px] text-white font-bold">تجديد</span>
                                                 </button>
                                             </div>
 
                                             <div className="flex-1">
-                                                <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
+                                                <h4 className="text-xs font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                     {off.offerName}
                                                 </h4>
-                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">باقة نشطة حالياً</p>
+                                                <p className="text-[9px] font-bold text-muted-foreground mt-0.5">باقة نشطة حالياً</p>
                                             </div>
                                         </div>
                                     ))

@@ -275,7 +275,7 @@ export default function GamesPage() {
                             <Label htmlFor="playerid" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم اللاعب (Player ID)</Label>
                             <Input 
                                 id="playerid"
-                                placeholder="12345678" 
+                                placeholder="" 
                                 type="tel"
                                 value={playerId} 
                                 onChange={e => setPlayerId(e.target.value.replace(/\D/g, ''))}

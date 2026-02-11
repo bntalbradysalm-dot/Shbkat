@@ -225,7 +225,7 @@ const CATEGORIES = [
   {
     id: 'data',
     title: 'باقات نت فورجي',
-    badge: 'Net',
+    badge: '4G',
     icon: Database,
     offers: [
       { offerId: 'net_4gb_tawfeer', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4821' },

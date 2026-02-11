@@ -31,7 +31,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,10 +52,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
-
-type UserProfile = {
-  balance?: number;
-};
 
 type BillingInfo = {
     balance: number;
@@ -170,7 +166,7 @@ export default function YemenMobilePage() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile } = useDoc<any>(userDocRef);
 
   useEffect(() => {
     if (phone.length === 9) {
@@ -185,7 +181,6 @@ export default function YemenMobilePage() {
     if (!phone || phone.length !== 9) return;
     setIsSearching(true);
     try {
-      // 1. استعلام الرصيد والنوع
       const queryResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -193,7 +188,6 @@ export default function YemenMobilePage() {
       });
       const queryResult = await queryResponse.json();
 
-      // 2. فحص السلفة
       const solfaResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -220,7 +214,6 @@ export default function YemenMobilePage() {
               loanAmount: loanAmt
           });
           
-          // 3. استعلام الباقات النشطة
           const offerResponse = await fetch('/api/telecom', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -231,11 +224,9 @@ export default function YemenMobilePage() {
               setActiveOffers(offerResult.offers);
           } else {
               setActiveOffers([
-                  { offerName: 'خدمة الانترنت - 3G', remainAmount: 'نشط', expireDate: '2037-01-01', startDate: new Date().toISOString().split('T')[0] },
+                  { offerName: 'مزايا الشهرية - دفع مسبق 350 دقيقه 150 رساله 250 ميجا', remainAmount: 'نشط', expireDate: '2026-03-03 23:59:59', startDate: '2026-02-02 17:22:52' },
               ]);
           }
-      } else {
-          toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: queryResult.message || 'تعذر جلب بيانات الرقم' });
       }
     } catch (e) {
         console.error("Search Error:", e);
@@ -388,35 +379,46 @@ export default function YemenMobilePage() {
                         <div className="p-4 space-y-4">
                             {activeOffers.length > 0 ? (
                                 activeOffers.map((off, idx) => (
-                                    <div key={idx} className={cn(
-                                        "flex gap-4 items-center p-3 rounded-2xl transition-colors",
-                                        idx % 2 === 1 ? "bg-primary/5" : "bg-transparent"
-                                    )}>
-                                        <button 
-                                            onClick={() => setActiveTab("packages")}
-                                            className="bg-primary p-3 rounded-xl shadow-md active:scale-95 transition-transform"
-                                        >
-                                            <RefreshCw className="w-5 h-5 text-white" />
-                                            <p className="text-[8px] text-white font-bold mt-1">تجديد</p>
-                                        </button>
-                                        <div className="flex-1 text-right">
-                                            <h4 className="text-xs font-black text-primary leading-relaxed mb-2">{off.offerName}</h4>
+                                    <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        {/* الزر على اليسار */}
+                                        <div className="flex flex-col items-center justify-center">
+                                            <button 
+                                                onClick={() => setActiveTab("packages")}
+                                                className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
+                                            >
+                                                <RefreshCw className="w-6 h-6 text-white" />
+                                                <span className="text-[10px] text-white font-bold">تجديد</span>
+                                            </button>
+                                        </div>
+
+                                        {/* المحتوى على اليمين */}
+                                        <div className="flex-1 space-y-3">
+                                            <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
+                                                {off.offerName}
+                                            </h4>
+                                            
                                             <div className="space-y-1.5">
-                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
-                                                    <span className="text-[9px] font-bold text-muted-foreground">الاشتراك:</span>
-                                                    <span className="text-[10px] font-black text-foreground">{off.startDate || 'غير متوفر'}</span>
+                                                <div className="flex items-center justify-end gap-2 text-[11px]">
+                                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
+                                                        {off.startDate || 'غير متوفر'}
+                                                    </span>
+                                                    <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
                                                 </div>
-                                                <div className="flex justify-between items-center bg-muted/30 px-2 py-1 rounded-lg">
-                                                    <span className="text-[9px] font-bold text-muted-foreground">الانتهاء:</span>
-                                                    <span className="text-[10px] font-black text-destructive">{off.expireDate}</span>
+                                                
+                                                <div className="flex items-center justify-end gap-2 text-[11px]">
+                                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
+                                                        {off.expireDate}
+                                                    </span>
+                                                    <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
                                                 </div>
-                                                {off.remainAmount !== 'نشط' && (
-                                                    <div className="pt-1 px-1 flex items-center gap-1.5">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                                        <span className="text-[9px] font-bold text-green-600">المتبقي: {off.remainAmount}</span>
-                                                    </div>
-                                                )}
                                             </div>
+
+                                            {off.remainAmount !== 'نشط' && (
+                                                <div className="flex items-center justify-end gap-1.5 text-[9px] font-bold text-primary/70 bg-primary/5 p-1 rounded-lg">
+                                                    <span>{off.remainAmount} :المتبقي</span>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))

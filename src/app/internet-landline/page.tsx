@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -166,8 +165,12 @@ export default function LandlineRedesignPage() {
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        if ((userProfile?.balance ?? 0) < payAmount) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+        const baseAmount = payAmount;
+        const commission = Math.ceil(baseAmount * 0.05);
+        const totalToDeduct = baseAmount + commission;
+
+        if ((userProfile?.balance ?? 0) < totalToDeduct) {
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة النسبة.' });
             return;
         }
 
@@ -181,7 +184,7 @@ export default function LandlineRedesignPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    amount: payAmount, 
+                    amount: baseAmount, 
                     action: 'bill',
                     service: 'post',
                     type: serviceType,
@@ -198,13 +201,13 @@ export default function LandlineRedesignPage() {
             }
             
             const batch = writeBatch(firestore);
-            batch.update(userDocRef, { balance: increment(-payAmount) });
+            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
-                amount: payAmount,
+                amount: totalToDeduct,
                 transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone
             });
             await batch.commit();
@@ -222,7 +225,6 @@ export default function LandlineRedesignPage() {
         if (!val) return '0.00';
         const cleanVal = val.toString().toLowerCase();
         
-        // If it already has units, return as is
         if (cleanVal.includes('gb') || cleanVal.includes('mb') || cleanVal.includes('ريال')) {
             return val;
         }
@@ -231,12 +233,10 @@ export default function LandlineRedesignPage() {
         if (isNaN(num)) return val;
 
         if (activeTab === 'internet') {
-            // For ADSL, if the number is large it might be bytes/MB
             if (num > 100) {
                 if (num >= 1024) return `${(num / 1024).toFixed(2)} GB`;
                 return `${num.toFixed(2)} MB`;
             }
-            // If it's a small decimal, maybe it's already GB
             if (num > 0 && num < 100) return `${num.toFixed(2)} GB`;
         }
 
@@ -387,9 +387,23 @@ export default function LandlineRedesignPage() {
                             <Wallet className="w-8 h-8 text-primary" />
                         </div>
                         <AlertDialogTitle className="text-center font-black">تأكيد السداد</AlertDialogTitle>
-                        <div className="text-center text-base pt-2 text-muted-foreground">
-                            سيتم سداد مبلغ <span className="font-black text-primary text-xl">{amount} ريال</span> <br />
-                            للهاتف الثابت: <span className="font-black text-foreground">{phone}</span>
+                        <div className="space-y-3 pt-4 text-right text-sm">
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">رقم الهاتف:</span>
+                                <span className="font-bold">{phone}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">مبلغ الفاتورة:</span>
+                                <span className="font-bold">{amount} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة:</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                                <span className="font-black">إجمالي الخصم:</span>
+                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                            </div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex-row gap-3 mt-6">
@@ -406,15 +420,19 @@ export default function LandlineRedesignPage() {
                             <Zap className="w-8 h-8 text-primary" />
                         </div>
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                        <div className="py-4 text-center space-y-2">
-                            <p className="text-lg font-black text-primary">{selectedPackage?.name}</p>
-                            <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
-                            <div className="bg-muted/50 p-4 rounded-2xl border border-primary/5 mt-2">
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-bold text-muted-foreground">سعر التفعيل:</span>
-                                    <span className="text-sm font-black">{selectedPackage?.price.toLocaleString()} ريال</span>
-                                </div>
-                                <p className="text-[10px] text-destructive font-black text-center mt-2">سيتم خصم القيمة من محفظتك فوراً</p>
+                        <div className="py-4 space-y-3 text-right text-sm">
+                            <p className="text-center text-lg font-black text-primary mb-2">{selectedPackage?.name}</p>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">سعر التفعيل:</span>
+                                <span className="font-bold">{selectedPackage?.price.toLocaleString()} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة:</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                                <span className="font-black">الإجمالي المطلوب:</span>
+                                <span className="font-black text-primary text-lg">{(selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

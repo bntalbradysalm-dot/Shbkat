@@ -10,15 +10,10 @@ import {
   Wallet, 
   CheckCircle, 
   Loader2, 
-  Database, 
-  Calendar, 
   Zap, 
-  Globe, 
-  Clock, 
-  AlertCircle,
   Smartphone,
-  RefreshCw,
-  Search
+  Search,
+  Activity
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -62,12 +57,12 @@ type Offer = {
 };
 
 const YEMEN_4G_OFFERS: Offer[] = [
-    { offerId: '4g_15gb', offerName: 'فورجي 15 جيجا', price: 2400, data: '15 GB', validity: '30 يوم', offertype: '4G_15GB' },
-    { offerId: '4g_30gb', offerName: 'فورجي 30 جيجا', price: 4400, data: '30 GB', validity: '30 يوم', offertype: '4G_30GB' },
-    { offerId: '4g_60gb', offerName: 'فورجي 60 جيجا', price: 8500, data: '60 GB', validity: '30 يوم', offertype: '4G_60GB' },
-    { offerId: '4g_100gb', offerName: 'فورجي 100 جيجا', price: 13000, data: '100 GB', validity: '30 يوم', offertype: '4G_100GB' },
-    { offerId: '4g_200gb', offerName: 'فورجي 200 جيجا', price: 25000, data: '200 GB', validity: '30 يوم', offertype: '4G_200GB' },
-    { offerId: '4g_unlimited', offerName: 'فورجي لا محدود', price: 35000, data: 'Unlimited', validity: '30 يوم', offertype: '4G_UNLIMITED' },
+    { offerId: '4g_15gb', offerName: 'يمن فورجي 15 جيجا', price: 2400, data: '15 GB', validity: '30 يوم', offertype: '4G_15GB' },
+    { offerId: '4g_25gb', offerName: 'يمن فورجي 25 جيجا', price: 4000, data: '25 GB', validity: '30 يوم', offertype: '4G_25GB' },
+    { offerId: '4g_60gb', offerName: 'يمن فورجي 60 جيجا', price: 8000, data: '60 GB', validity: '30 يوم', offertype: '4G_60GB' },
+    { offerId: '4g_130gb', offerName: 'يمن فورجي 130 جيجا', price: 16000, data: '130 GB', validity: '30 يوم', offertype: '4G_130GB' },
+    { offerId: '4g_250gb', offerName: 'يمن فورجي 250 جيجا', price: 26000, data: '250 GB', validity: '30 يوم', offertype: '4G_250GB' },
+    { offerId: '4g_500gb', offerName: 'يمن فورجي 500 جيجا', price: 46000, data: '500 GB', validity: '30 يوم', offertype: '4G_500GB' },
 ];
 
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
@@ -185,11 +180,14 @@ export default function Yemen4GPage() {
 
     const handlePayment = async () => {
         if (!phone || !amount || !user || !userDocRef || !firestore) return;
-        const val = parseFloat(amount);
-        if (isNaN(val) || val <= 0) return;
+        const baseAmount = parseFloat(amount);
+        if (isNaN(baseAmount) || baseAmount <= 0) return;
 
-        if ((userProfile?.balance ?? 0) < val) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية.' });
+        const commission = Math.ceil(baseAmount * 0.05);
+        const totalToDeduct = baseAmount + commission;
+
+        if ((userProfile?.balance ?? 0) < totalToDeduct) {
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية شاملة النسبة.' });
             return;
         }
 
@@ -201,7 +199,7 @@ export default function Yemen4GPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    amount: val, 
+                    amount: baseAmount, 
                     action: 'bill',
                     service: 'yem4g',
                     type: '2', 
@@ -212,13 +210,13 @@ export default function Yemen4GPage() {
             if (!response.ok) throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
             
             const batch = writeBatch(firestore);
-            batch.update(userDocRef, { balance: increment(-val) });
+            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
-                amount: val,
+                amount: totalToDeduct,
                 transactionType: 'سداد يمن فورجي',
-                notes: `إلى رقم: ${phone}. المرجع: ${result.sequenceId || transid}`,
+                notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي`,
                 recipientPhoneNumber: phone
             });
             await batch.commit();
@@ -234,8 +232,12 @@ export default function Yemen4GPage() {
     const handleActivateOffer = async () => {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
-        if ((userProfile?.balance ?? 0) < selectedOffer.price) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة.' });
+        const basePrice = selectedOffer.price;
+        const commission = Math.ceil(basePrice * 0.05);
+        const totalToDeduct = basePrice + commission;
+
+        if ((userProfile?.balance ?? 0) < totalToDeduct) {
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل الباقة شاملة النسبة.' });
             return;
         }
 
@@ -249,7 +251,7 @@ export default function Yemen4GPage() {
                     mobile: phone, 
                     action: 'bill', 
                     service: 'yem4g', 
-                    amount: selectedOffer.price,
+                    amount: basePrice,
                     type: '1',
                     transid 
                 })
@@ -258,10 +260,10 @@ export default function Yemen4GPage() {
             if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
 
             const batch = writeBatch(firestore);
-            batch.update(userDocRef, { balance: increment(-selectedOffer.price) });
+            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
-                userId: user.uid, transactionDate: new Date().toISOString(), amount: selectedOffer.price,
-                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone
+                userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
+                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. تشمل النسبة: ${commission} ر.ي`, recipientPhoneNumber: phone
             });
             await batch.commit();
             toast({ title: 'تم التفعيل', description: 'تم تفعيل باقة الفورجي بنجاح' });
@@ -297,8 +299,8 @@ export default function Yemen4GPage() {
                         <CardContent className="p-8 space-y-6">
                             <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
                             <div className="bg-muted p-4 rounded-2xl">
-                                <p className="text-xs text-muted-foreground mb-1">المبلغ المخصوم</p>
-                                <p className="text-2xl font-black text-primary">{Number(amount).toLocaleString('en-US')} ريال</p>
+                                <p className="text-xs text-muted-foreground mb-1">المبلغ المخصوم (مع النسبة)</p>
+                                <p className="text-2xl font-black text-primary">{(parseFloat(amount) + Math.ceil(parseFloat(amount)*0.05)).toLocaleString('en-US')} ريال</p>
                             </div>
                             <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </CardContent>
@@ -362,7 +364,7 @@ export default function Yemen4GPage() {
 
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                                <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات المتاحة</TabsTrigger>
+                                <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                                 <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">سداد رصيد</TabsTrigger>
                             </TabsList>
 
@@ -408,7 +410,7 @@ export default function Yemen4GPage() {
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                         <div className="bg-primary/5 p-6 rounded-[40px] animate-pulse">
-                            <Smartphone className="w-12 h-12 text-primary/20" />
+                            <Activity className="w-12 h-12 text-primary/20" />
                         </div>
                         <div className="space-y-1">
                             <p className="text-sm font-black text-muted-foreground">بانتظار إدخال الرقم</p>
@@ -425,9 +427,23 @@ export default function Yemen4GPage() {
                             <Wallet className="w-8 h-8 text-primary" />
                         </div>
                         <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
-                        <div className="text-center text-base pt-2 text-muted-foreground">
-                            سيتم سداد مبلغ <span className="font-black text-primary text-xl">{amount} ريال</span> <br />
-                            للرقم <span className="font-black text-foreground">{phone}</span>
+                        <div className="space-y-3 pt-4 text-right text-sm">
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">رقم الهاتف:</span>
+                                <span className="font-bold">{phone}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">المبلغ الأساسي:</span>
+                                <span className="font-bold">{amount} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة:</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                                <span className="font-black">الإجمالي المطلوب:</span>
+                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
+                            </div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex-row gap-3 mt-6">
@@ -444,15 +460,19 @@ export default function Yemen4GPage() {
                             <Zap className="w-8 h-8 text-primary" />
                         </div>
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                        <div className="py-4 text-center space-y-2">
-                            <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
-                            <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
-                            <div className="bg-muted/50 p-4 rounded-2xl border border-primary/5 mt-2">
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-bold text-muted-foreground">سعر الباقة:</span>
-                                    <span className="text-sm font-black">{selectedOffer?.price.toLocaleString()} ريال</span>
-                                </div>
-                                <p className="text-[10px] text-destructive font-black text-center mt-2">سيتم الخصم من رصيدك الحالي فوراً</p>
+                        <div className="py-4 space-y-3 text-right text-sm">
+                            <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">سعر الباقة:</span>
+                                <span className="font-bold">{selectedOffer?.price.toLocaleString()} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة:</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.05)} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                                <span className="font-black">إجمالي الخصم:</span>
+                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.05)} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

@@ -121,16 +121,6 @@ const CATEGORIES = [
     icon: Zap,
     offers: [
       { 
-        offerId: '4g_4gb_net', 
-        offerName: 'باقة نت فورجي 4 قيقا', 
-        price: 2000, 
-        data: '4GB', 
-        sms: 'لا يوجد', 
-        minutes: 'لا يوجد', 
-        validity: 'شهر', 
-        offertype: 'A4821' 
-      },
-      { 
         offerId: 'super_4g', 
         offerName: 'سوبر فورجي', 
         price: 2000, 

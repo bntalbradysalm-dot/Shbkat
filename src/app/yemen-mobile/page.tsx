@@ -49,6 +49,7 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -465,6 +466,17 @@ export default function YemenMobilePage() {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
+        {/* Banner Image */}
+        <div className="overflow-hidden rounded-3xl shadow-sm bg-white dark:bg-slate-900 flex items-center justify-center border border-primary/5 animate-in fade-in-0 duration-700">
+            <Image
+                src="https://i.postimg.cc/V6YjZwsz/Photo-Room-20230331-185039.png"
+                alt="Yemen Mobile Banner"
+                width={600}
+                height={300}
+                className="w-full h-auto object-contain max-h-48 p-4"
+            />
+        </div>
+
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">

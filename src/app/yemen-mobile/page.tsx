@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -143,6 +144,16 @@ const CATEGORIES = [
         offertype: 'A5533822' 
       },
       { 
+        offerId: '4g_24h', 
+        offerName: 'مزايا فورجي 24 ساعة', 
+        price: 300, 
+        data: '512MB', 
+        sms: '30', 
+        minutes: '20', 
+        validity: 'يوم', 
+        offertype: 'A4826' 
+      },
+      { 
         offerId: '4g_48h', 
         offerName: 'مزايا فورجي 48 ساعة', 
         price: 600, 
@@ -163,6 +174,26 @@ const CATEGORIES = [
         offertype: 'A88336' 
       },
       { 
+        offerId: '4g_800sms', 
+        offerName: 'مزايا فورجي 800 رسالة', 
+        price: 1000, 
+        data: 'لا يوجد', 
+        sms: '800', 
+        minutes: 'لا يوجد', 
+        validity: 'شهر', 
+        offertype: 'A31338' 
+      },
+      { 
+        offerId: 'm_tawfeer', 
+        offerName: 'مزايا توفير الشهرية', 
+        price: 2400, 
+        data: '4GB', 
+        sms: '450', 
+        minutes: '450', 
+        validity: 'شهر', 
+        offertype: 'A3823' 
+      },
+      { 
         offerId: '4g_monthly', 
         offerName: 'مزايا فورجي الشهرية', 
         price: 2500, 
@@ -171,6 +202,26 @@ const CATEGORIES = [
         minutes: '300', 
         validity: 'شهر', 
         offertype: 'A88335' 
+      },
+      { 
+        offerId: 'm_max_4g', 
+        offerName: 'مزايا ماكس فورجي', 
+        price: 4000, 
+        data: '4GB', 
+        sms: '600', 
+        minutes: '1100', 
+        validity: 'شهر', 
+        offertype: 'A88441' 
+      },
+      { 
+        offerId: 'm_business_4g', 
+        offerName: 'مزايا أعمال فورجي', 
+        price: 5000, 
+        data: '6GB', 
+        sms: '1000', 
+        minutes: '1500', 
+        validity: 'شهر', 
+        offertype: 'A39053' 
       },
     ]
   },

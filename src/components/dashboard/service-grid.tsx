@@ -30,7 +30,7 @@ const services: Service[] = [
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
+  { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
 ];
 
 const ServiceItem = ({

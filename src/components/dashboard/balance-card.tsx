@@ -27,7 +27,7 @@ const availableServices = [
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'games', name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
+  { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
 ];
 
 type UserProfile = {

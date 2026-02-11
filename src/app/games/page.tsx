@@ -49,7 +49,6 @@ type Game = {
 
 const GAMES: Game[] = [
     { id: 'pubg', name: 'PUBG Mobile', type: 'pubg', logo: 'https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg', fields: ['playerid', 'uniqcode'] },
-    { id: 'freefire', name: 'Free Fire', type: 'freefire', logo: 'https://i.postimg.cc/3x7WLbRz/free-fire-cha7n.jpg', fields: ['playerid', 'uniqcode'] },
 ];
 
 export default function GamesPage() {
@@ -98,7 +97,6 @@ export default function GamesPage() {
             return;
         }
 
-        // إضافة عمولة 5%
         const commission = Math.ceil(price * 0.05);
         const totalToDeduct = price + commission;
 
@@ -111,7 +109,6 @@ export default function GamesPage() {
         try {
             const transid = Date.now().toString();
             
-            // تجميع الحقول المطلوبة فقط
             const payload: any = {
                 service: 'games',
                 type: selectedGame.type,
@@ -162,7 +159,7 @@ export default function GamesPage() {
                         </div>
                         <CardContent className="p-8 space-y-6">
                             <h2 className="text-2xl font-black text-green-600">تم الشحن بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم تنفيذ طلبك بنجاح. سيتم إضافة الرصيد للعبة قريباً.</p>
+                            <p className="text-sm text-muted-foreground">تم تنفيذ طلبك بنجاح. سيتم إضافة الشدات لحسابك قريباً.</p>
                             <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </CardContent>
                     </Card>
@@ -173,7 +170,7 @@ export default function GamesPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
-            <SimpleHeader title="معرض الألعاب" />
+            <SimpleHeader title="شدات ببجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
                 <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
@@ -191,7 +188,7 @@ export default function GamesPage() {
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 max-w-[240px] mx-auto">
                     {GAMES.map((game) => (
                         <Card 
                             key={game.id} 
@@ -223,29 +220,6 @@ export default function GamesPage() {
                                     placeholder="12345678" 
                                     value={formData.playerid} 
                                     onChange={e => handleInputChange('playerid', e.target.value)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        )}
-                        {selectedGame?.fields.includes('zoneid') && (
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-bold mr-1">زون آيدي (Zone ID)</Label>
-                                <Input 
-                                    placeholder="1234" 
-                                    value={formData.zoneid} 
-                                    onChange={e => handleInputChange('zoneid', e.target.value)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        )}
-                        {selectedGame?.fields.includes('email') && (
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-bold mr-1">البريد الإلكتروني</Label>
-                                <Input 
-                                    type="email"
-                                    placeholder="example@mail.com" 
-                                    value={formData.email} 
-                                    onChange={e => handleInputChange('email', e.target.value)}
                                     className="rounded-xl"
                                 />
                             </div>

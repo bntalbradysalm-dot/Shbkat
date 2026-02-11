@@ -48,8 +48,8 @@ type Game = {
 };
 
 const GAMES: Game[] = [
-    { id: 'pubg', name: 'PUBG Mobile', type: 'pubg', logo: 'https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg', fields: ['playerid', 'uniqcode'] },
-    { id: 'freefire', name: 'Free Fire', type: 'freefire', logo: 'https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg', fields: ['playerid', 'uniqcode'] },
+    { id: 'pubg', name: 'PUBG Mobile', type: 'pubg', logo: 'https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg', fields: ['playerid', 'uniqcode'] },
+    { id: 'freefire', name: 'Free Fire', type: 'freefire', logo: 'https://i.postimg.cc/3x7WLbRz/free-fire-cha7n.jpg', fields: ['playerid', 'uniqcode'] },
     { id: 'legends', name: 'Mobile Legends', type: 'legends', logo: 'https://placehold.co/100x100?text=ML', fields: ['playerid', 'zoneid', 'uniqcode'] },
     { id: 'ps_usa', name: 'بلايستيشن امريكي', type: 'plastationusa', logo: 'https://placehold.co/100x100?text=PS', fields: ['uniqcode', 'mobile'] },
     { id: 'google_usa', name: 'جوجل بلاي امريكي', type: 'googleplayusa', logo: 'https://placehold.co/100x100?text=GP', fields: ['uniqcode', 'mobile'] },
@@ -135,7 +135,7 @@ export default function GamesPage() {
             });
             const result = await response.json();
             
-            if (!response.ok) throw new Error(result.message || 'فشلت عملية الشحن.');
+            if (!response.ok) throw new Error(result.message || 'فشل عملية الشحن.');
 
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });

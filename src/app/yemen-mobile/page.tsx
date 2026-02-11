@@ -446,7 +446,10 @@ export default function YemenMobilePage() {
                                     <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
                                 </div>
                                 <div className="p-3">
-                                    <p className="text-[10px] font-bold text-orange-600 mb-1">فحص السلفة</p>
+                                    <p className="text-[10px] font-bold text-primary mb-1 flex items-center justify-center gap-1">
+                                        <AlertCircle className="w-3 h-3" />
+                                        فحص السلفة
+                                    </p>
                                     <div className="flex items-center justify-center gap-1">
                                         {billingInfo?.isLoan ? (
                                             <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">

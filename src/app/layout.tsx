@@ -36,7 +36,7 @@ export default function RootLayout({
       <head>
         <title>Shabakat Wallet</title>
         <meta name="description" content="Your Digital Wallet" />
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.cdnfonts.com/css/ge-ss-two" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background">
         <FirebaseProvider>

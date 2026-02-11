@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type {Config} from 'tailwind-merge';
 
 export default {
   darkMode: ['class'],
@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"IBM Plex Sans Arabic"', 'sans-serif'],
-        headline: ['"IBM Plex Sans Arabic"', 'sans-serif'],
+        body: ['"GE SS Two"', 'sans-serif'],
+        headline: ['"GE SS Two"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

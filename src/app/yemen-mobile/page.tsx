@@ -20,7 +20,8 @@ import {
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CalendarDays
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -231,9 +232,14 @@ const CATEGORIES = [
   {
     id: 'internet_10days',
     title: 'باقات الإنترنت 10 ايام',
-    badge: 'Net',
-    icon: Globe,
-    offers: []
+    badge: '10D',
+    icon: CalendarDays,
+    offers: [
+      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
+      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
+      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
+      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74351' },
+    ]
   }
 ];
 

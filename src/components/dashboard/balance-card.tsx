@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Ticket } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Gamepad2 } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,7 +27,7 @@ const availableServices = [
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'transfer', name: 'حجوزات', icon: Ticket, href: '#', isComingSoon: true },
+  { id: 'games', name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
 ];
 
 type UserProfile = {
@@ -43,7 +42,6 @@ export function BalanceCard() {
   const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
   const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 
   useEffect(() => {
@@ -93,15 +91,8 @@ export function BalanceCard() {
     };
     const clearTimer = () => clearTimeout(timer);
 
-    const handleClick = (e: React.MouseEvent) => {
-        if (service.isComingSoon) {
-            e.preventDefault();
-            setIsComingSoonOpen(true);
-        }
-    };
-
     return (
-      <Link href={service.href} className="flex-1" onClick={handleClick}>
+      <Link href={service.href} className="flex-1">
         <button
           onMouseDown={startTimer}
           onMouseUp={clearTimer}
@@ -182,25 +173,6 @@ export function BalanceCard() {
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="ghost" className="w-full rounded-2xl">إلغاء</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isComingSoonOpen} onOpenChange={setIsComingSoonOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
-          <DialogHeader>
-            <div className="bg-primary/10 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <Ticket className="text-primary h-8 w-8" />
-            </div>
-            <DialogTitle className="text-center text-xl font-black">قريباً</DialogTitle>
-            <DialogDescription className="text-center text-base font-bold">
-              هذه الخدمة ستكون متاحة قريباً في تحديثات التطبيق القادمة.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="pt-4">
-            <DialogClose asChild>
-              <Button className="w-full rounded-2xl h-12 font-black">حسناً</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

@@ -98,7 +98,7 @@ function NavItems() {
             )}
           >
             <div className="relative py-1">
-              <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
+              <item.icon className={cn("h-6 w-6 transition-transform duration-300", isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110")} />
               {showIndicator && (
                 <span className="absolute -top-1 -right-2 flex h-4 w-4 min-w-[18px] min-h-[18px] items-center justify-center rounded-full bg-destructive text-white text-[9px] font-black border-2 border-background shadow-sm">
                   {totalPending > 9 ? '+9' : totalPending}
@@ -107,14 +107,14 @@ function NavItems() {
             </div>
             
             <span className={cn(
-                "text-[9px] font-bold transition-all duration-300",
+                "text-[10px] font-bold transition-all duration-300",
                 isActive ? "opacity-100 scale-105" : "opacity-70"
             )}>
                 {item.name}
             </span>
 
             {isActive && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full animate-in zoom-in" />
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full animate-in zoom-in" />
             )}
           </Link>
         );
@@ -125,8 +125,8 @@ function NavItems() {
 
 export function BottomNav() {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-[340px]">
-        <nav className="flex h-14 items-center justify-around bg-card/90 dark:bg-slate-950/90 backdrop-blur-xl border border-border/50 shadow-2xl rounded-full px-4">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-[360px] px-4">
+        <nav className="flex h-16 items-center justify-around bg-card/90 dark:bg-slate-950/90 backdrop-blur-xl border border-border/50 shadow-2xl rounded-full px-2">
             <NavItems />
         </nav>
     </div>

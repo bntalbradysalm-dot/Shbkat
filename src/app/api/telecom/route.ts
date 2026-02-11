@@ -118,11 +118,6 @@ export async function POST(request: Request) {
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
             
-            // تحويل رسائل الخطأ الشائعة
-            if (errorMessage.includes('1009') || errorMessage.includes('منطقة التحصيل')) {
-                errorMessage = 'الرقم ليس من مناطق التحصيل المسموح بها';
-            }
-
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },

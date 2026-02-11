@@ -12,7 +12,8 @@ import {
   Search,
   Globe,
   Clock,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -53,11 +54,11 @@ type Offer = {
 };
 
 const ADEN_NET_OFFERS: Offer[] = [
-    { offerId: '20gb', offerName: 'عدن نت 20 قيقا', price: 3000, data: '20 GB', validity: 'شهر', num: '1' },
-    { offerId: '40gb', offerName: 'عدن نت 40 قيقا', price: 6000, data: '40 GB', validity: 'شهر', num: '2' },
-    { offerId: '60gb', offerName: 'عدن نت 60 قيقا', price: 9000, data: '60 GB', validity: 'شهر', num: '3' },
-    { offerId: '80gb', offerName: 'عدن نت 80 قيقا', price: 12000, data: '80 GB', validity: 'شهر', num: '4' },
-    { offerId: '120gb', offerName: 'عدن نت 120 قيقا', price: 30000, data: '120 GB', validity: 'شهر', num: '5' },
+    { offerId: '20gb', offerName: 'عدن نت 20 جيجا', price: 3000, data: '20 GB', validity: 'شهر', num: '1' },
+    { offerId: '40gb', offerName: 'عدن نت 40 جيجا', price: 6000, data: '40 GB', validity: 'شهر', num: '2' },
+    { offerId: '60gb', offerName: 'عدن نت 60 جيجا', price: 9000, data: '60 GB', validity: 'شهر', num: '3' },
+    { offerId: '80gb', offerName: 'عدن نت 80 جيجا', price: 12000, data: '80 GB', validity: 'شهر', num: '4' },
+    { offerId: '120gb', offerName: 'عدن نت 120 جيجا (تجارية)', price: 30000, data: '120 GB', validity: 'شهر', num: '5' },
 ];
 
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
@@ -128,6 +129,7 @@ export default function AdenNetPage() {
         setIsSearching(true);
         setQueryResult(null);
         try {
+            const transid = Date.now().toString();
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -135,10 +137,12 @@ export default function AdenNetPage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'adenet',
-                    num: '1'
+                    num: '1',
+                    transid: transid
                 })
             });
             const result = await response.json();
+            
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
             setQueryResult({
@@ -176,14 +180,14 @@ export default function AdenNetPage() {
                     action: 'bill', 
                     service: 'adenet', 
                     num: selectedOffer.num,
-                    transid 
+                    transid: transid 
                 })
             });
             const result = await response.json();
             
             const isSuccess = result.resultCode === "0" || result.resultCode === 0;
             if (!response.ok || !isSuccess) {
-                throw new Error(result.message || 'فشل تفعيل الباقة من المصدر.');
+                throw new Error(result.message || result.resultDesc || 'فشل تفعيل الباقة من المصدر.');
             }
 
             const batch = writeBatch(firestore);

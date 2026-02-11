@@ -223,6 +223,7 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               setActiveOffers(offerResult.offers);
           } else {
+              // Fallback data if needed
               setActiveOffers([
                   { offerName: 'مزايا الشهرية - دفع مسبق 350 دقيقه 150 رساله 250 ميجا', remainAmount: 'نشط', expireDate: '2026-03-03 23:59:59', startDate: '2026-02-02 17:22:52' },
               ]);
@@ -400,25 +401,18 @@ export default function YemenMobilePage() {
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center justify-end gap-2 text-[11px]">
                                                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.startDate || 'غير متوفر'}
+                                                        {off.startDate || '...'}
                                                     </span>
                                                     <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
                                                 </div>
                                                 
                                                 <div className="flex items-center justify-end gap-2 text-[11px]">
                                                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                        {off.expireDate}
+                                                        {off.expireDate || '...'}
                                                     </span>
                                                     <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
                                                 </div>
                                             </div>
-
-                                            {off.remainAmount !== 'نشط' && (
-                                                <div className="flex items-center justify-end gap-1.5 text-[9px] font-bold text-primary/70 bg-primary/5 p-1 rounded-lg">
-                                                    <span>{off.remainAmount} :المتبقي</span>
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 ))

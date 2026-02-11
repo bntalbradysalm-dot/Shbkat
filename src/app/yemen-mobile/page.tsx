@@ -455,6 +455,9 @@ export default function YemenMobilePage() {
     }
   };
 
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (
@@ -641,6 +644,25 @@ export default function YemenMobilePage() {
 
       <Toaster />
 
+      {showSuccess && (
+        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <CheckCircle className="h-20 w-20 text-white" />
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
+                    <div className="bg-muted p-4 rounded-2xl">
+                        <p className="text-xs text-muted-foreground mb-1">إجمالي المبلغ المخصوم</p>
+                        <p className="text-2xl font-black text-primary">{(parseFloat(amount || '0') + loanAmountToAdd).toLocaleString('en-US')} ريال</p>
+                    </div>
+                    <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+                </CardContent>
+            </Card>
+        </div>
+      )}
+
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
@@ -702,7 +724,7 @@ export default function YemenMobilePage() {
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
-                      {isActivatingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : 'تفعيل الآن'}
+                      تفعيل الآن
                   </AlertDialogAction>
               </AlertDialogFooter>
           </AlertDialogContent>

@@ -134,7 +134,7 @@ const CATEGORIES = [
       },
       { 
         offerId: 'super_4g_3gb', 
-        offerName: 'سوبر فورجي 2G | 4G - 1G | 3G', 
+        offerName: 'سوبر فورجي', 
         price: 2000, 
         data: '3GB', 
         sms: '250', 

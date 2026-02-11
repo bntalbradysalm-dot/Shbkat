@@ -129,7 +129,7 @@ export default function Yemen4GPage() {
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرقام' });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرققاً' });
             return;
         }
         setIsSearching(true);
@@ -315,6 +315,22 @@ export default function Yemen4GPage() {
             <SimpleHeader title="يمن فورجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
+                {/* Balance Card */}
+                <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
+                    <CardContent className="p-6 flex items-center justify-between">
+                        <div className="text-right">
+                            <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
+                            <div className="flex items-baseline gap-1">
+                                <h2 className="text-2xl font-black">{userProfile?.balance?.toLocaleString() || '0'}</h2>
+                                <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-white/20 rounded-2xl">
+                            <Wallet className="h-6 w-6 text-white" />
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم خدمة فورجي</Label>
@@ -345,7 +361,7 @@ export default function Yemen4GPage() {
                     </div>
                 </div>
 
-                {phone.length === 9 && phone.startsWith('10') ? (
+                {phone.length === 9 && phone.startsWith('10') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
@@ -406,16 +422,6 @@ export default function Yemen4GPage() {
                                 </div>
                             </TabsContent>
                         </Tabs>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                        <div className="bg-primary/5 p-6 rounded-[40px] animate-pulse">
-                            <Activity className="w-12 h-12 text-primary/20" />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-sm font-black text-muted-foreground">بانتظار إدخال الرقم</p>
-                            <p className="text-[10px] text-muted-foreground/60 font-bold">يجب أن يبدأ الرقم بـ 10 ويتكون من 9 أرقام</p>
-                        </div>
                     </div>
                 )}
             </div>

@@ -98,12 +98,12 @@ const CATEGORIES = [
       },
       { 
         offerId: 'm_weekly', 
-        offerName: 'مزايا الأسبوعية', 
+        offerName: 'مزايا الاسبوعة', 
         price: 485, 
         data: '90 MB', 
         sms: '30', 
         minutes: '100', 
-        validity: 'أسبوع', 
+        validity: 'اسبوع', 
         offertype: 'A64329' 
       },
       { 
@@ -124,9 +124,36 @@ const CATEGORIES = [
     badge: '4G',
     icon: Zap,
     offers: [
-      { offerId: '4g_6gb', offerName: '4G - 6 جيجا', price: 2400, data: '6 GB', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم', offertype: '4G_6GB' },
-      { offerId: '4g_12gb', offerName: '4G - 12 جيجا', price: 4400, data: '12 GB', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم', offertype: '4G_12GB' },
-      { offerId: '4g_25gb', offerName: '4G - 25 جيجا', price: 8500, data: '25 GB', sms: 'بلا حدود', minutes: 'بلا حدود', validity: '30 يوم', offertype: '4G_25GB' },
+      { 
+        offerId: '4g_48h', 
+        offerName: 'مزايا فورجي 48 ساعة', 
+        price: 600, 
+        data: '1GB', 
+        sms: '100', 
+        minutes: '50', 
+        validity: '48 ساعة', 
+        offertype: 'A88337' 
+      },
+      { 
+        offerId: '4g_weekly', 
+        offerName: 'مزايا فورجي الاسبوعية', 
+        price: 1500, 
+        data: '2GB', 
+        sms: '300', 
+        minutes: '200', 
+        validity: 'اسبوع', 
+        offertype: 'A88336' 
+      },
+      { 
+        offerId: '4g_monthly', 
+        offerName: 'مزايا فورجي الشهرية', 
+        price: 2500, 
+        data: '4GB', 
+        sms: '350', 
+        minutes: '300', 
+        validity: 'شهر', 
+        offertype: 'A88335' 
+      },
     ]
   },
   {
@@ -182,7 +209,9 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
       <div className="flex items-center justify-center mb-4">
-        <span className="text-2xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+        <span className="text-2xl font-black text-primary">
+            {offer.price.toLocaleString('en-US')}
+        </span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -396,7 +425,9 @@ export default function YemenMobilePage() {
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                     <div className="flex items-baseline gap-1">
-                        <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                        <h2 className="text-2xl font-black text-white">
+                            {userProfile?.balance?.toLocaleString('en-US') || '0'}
+                        </h2>
                         <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
@@ -439,21 +470,23 @@ export default function YemenMobilePage() {
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                                    <p className="text-sm font-black text-primary">{billingInfo?.balance.toLocaleString('en-US') || '0.00'}</p>
+                                    <p className="text-sm font-black text-primary">
+                                        {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
+                                    </p>
                                 </div>
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
                                     <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
                                 </div>
                                 <div className="p-3">
-                                    <p className="text-[10px] font-bold text-primary mb-1 flex items-center justify-center gap-1">
-                                        فحص السلفة
-                                    </p>
+                                    <p className="text-[10px] font-bold text-primary mb-1">فحص السلفة</p>
                                     <div className="flex items-center justify-center gap-1">
                                         {billingInfo?.isLoan ? (
                                             <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
                                                 <Frown className="h-3 w-3" />
-                                                <span className="text-[9px] font-black">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                                                <span className="text-[9px] font-black">
+                                                    {billingInfo.loanAmount?.toLocaleString('en-US')} ريال
+                                                </span>
                                             </Badge>
                                         ) : (
                                             <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
@@ -557,7 +590,9 @@ export default function YemenMobilePage() {
                         {amount && (
                             <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2">
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                <p className="text-xl font-black text-primary">{(parseFloat(amount) * 0.826).toFixed(2)}</p>
+                                <p className="text-xl font-black text-primary">
+                                    {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
                             </div>
                         )}
 
@@ -582,7 +617,9 @@ export default function YemenMobilePage() {
                 </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
                 <div className="text-center text-base pt-2 text-muted-foreground text-right">
-                    سيتم سداد مبلغ <span className="font-black text-primary text-xl">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span> <br />
+                    سيتم سداد مبلغ <span className="font-black text-primary text-xl">
+                        {parseFloat(amount || '0').toLocaleString('en-US')} ريال
+                    </span> <br />
                     للرقم <span className="font-black text-foreground">{phone}</span>
                 </div>
             </AlertDialogHeader>
@@ -604,7 +641,9 @@ export default function YemenMobilePage() {
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                       <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">
-                        <p className="text-xs font-bold">السعر: {selectedOffer?.price.toLocaleString('en-US')} ريال</p>
+                        <p className="text-xs font-bold">السعر: 
+                            {selectedOffer?.price.toLocaleString('en-US')} ريال
+                        </p>
                         <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
                   </div>

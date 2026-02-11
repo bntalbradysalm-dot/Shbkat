@@ -219,7 +219,6 @@ export default function YemenMobilePage() {
           });
           const offerResult = await offerResponse.json();
           if (offerResponse.ok && offerResult.offers) {
-              // Map the API fields start_date and expire_date to our component state
               const mappedOffers = offerResult.offers.map((off: any) => ({
                   offerName: off.offer_name || off.offerName,
                   startDate: off.start_date || off.startDate || '...',
@@ -227,7 +226,6 @@ export default function YemenMobilePage() {
               }));
               setActiveOffers(mappedOffers);
           } else {
-              // Fallback for UI visualization if API fails to return offers
               setActiveOffers([]);
           }
       }
@@ -314,8 +312,6 @@ export default function YemenMobilePage() {
         setIsActivatingOffer(false);
     }
   };
-
-  if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلب السداد..." />;
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">

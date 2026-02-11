@@ -313,8 +313,8 @@ export default function AccountPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-row gap-3 pt-4">
-                <AlertDialogCancel className="flex-1 rounded-2xl">إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout} className="flex-1 rounded-2xl bg-destructive hover:bg-destructive/90">
+                <AlertDialogCancel className="flex-1 rounded-2xl h-12">إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} className="flex-1 rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">
                   تأكيد الخروج
                 </AlertDialogAction>
               </AlertDialogFooter>

@@ -126,7 +126,6 @@ export default function TransferPage() {
       }
     };
     
-    // Debounce search
     const timerId = setTimeout(() => {
         handleSearch();
     }, 500);
@@ -166,16 +165,13 @@ export default function TransferPage() {
     try {
       const batch = writeBatch(firestore);
 
-      // 1. Decrement sender's balance
       batch.update(senderDocRef, { balance: increment(-totalDeduction) });
 
-      // 2. Increment recipient's balance
       const recipientDocRef = doc(firestore, 'users', recipient.id);
       batch.update(recipientDocRef, { balance: increment(numericAmount) });
 
       const now = new Date().toISOString();
 
-      // 3. Create transaction log for sender for the whole amount
       const senderTransactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(senderTransactionRef, {
         userId: user.uid,
@@ -185,7 +181,6 @@ export default function TransferPage() {
         notes: `شامل عمولة خدمات ${commission} ريال`
       });
 
-      // 4. Create transaction log for recipient
       const recipientTransactionRef = doc(collection(firestore, 'users', recipient.id, 'transactions'));
       batch.set(recipientTransactionRef, {
         userId: recipient.id,
@@ -220,8 +215,8 @@ export default function TransferPage() {
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-        <Card className="w-full max-w-sm text-center shadow-2xl">
-            <CardContent className="p-6">
+        <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
+            <CardContent className="p-8">
                 <div className="flex flex-col items-center justify-center gap-4">
                     <div className="bg-green-100 p-4 rounded-full">
                         <CheckCircle className="h-16 w-16 text-green-600" />
@@ -247,13 +242,13 @@ export default function TransferPage() {
                         </div>
                     </div>
                     <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                        <Button variant="outline" onClick={() => router.push('/')}>الرئيسية</Button>
+                        <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => router.push('/')}>الرئيسية</Button>
                         <Button onClick={() => {
                             setShowSuccess(false);
                             setRecipient(null);
                             setRecipientPhone('');
                             setAmount('');
-                        }} variant="default">
+                        }} className="flex-1 rounded-2xl h-12" variant="default">
                            تحويل جديد
                         </Button>
                     </div>
@@ -326,36 +321,34 @@ export default function TransferPage() {
     <Toaster />
 
     <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
-                <AlertDialogTitle className="text-center">تأكيد عملية التحويل</AlertDialogTitle>
-                <AlertDialogDescription asChild>
-                   <div className="space-y-2 pt-4 text-sm text-right">
-                        <div className="flex justify-between items-center">
-                            <span>المبلغ المراد تحويله:</span>
-                            <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span>عمولة خدمات:</span>
-                            <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between items-center text-base pt-2 border-t mt-2">
-                            <span className="font-semibold">الإجمالي المخصوم:</span>
-                            <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
-                        </div>
-                         <div className="text-center pt-4">
-                            <p className="text-sm text-muted-foreground">إلى المستلم:</p>
-                            <p className="font-bold text-base">{recipient?.displayName}</p>
-                            <p className="text-sm text-muted-foreground">({recipient?.phoneNumber})</p>
-                        </div>
+                <AlertDialogTitle className="text-center font-black">تأكيد عملية التحويل</AlertDialogTitle>
+                <div className="space-y-2 pt-4 text-sm text-right">
+                    <div className="flex justify-between items-center py-2 border-b border-dashed">
+                        <span className="text-muted-foreground">المبلغ المراد تحويله:</span>
+                        <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
                     </div>
-                </AlertDialogDescription>
+                    <div className="flex justify-between items-center py-2 border-b border-dashed">
+                        <span className="text-muted-foreground">عمولة خدمات:</span>
+                        <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
+                        <span className="font-black">الإجمالي المخصوم:</span>
+                        <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
+                    </div>
+                        <div className="text-center pt-4">
+                        <p className="text-xs text-muted-foreground">إلى المستلم:</p>
+                        <p className="font-bold text-base">{recipient?.displayName}</p>
+                        <p className="text-xs text-muted-foreground">({recipient?.phoneNumber})</p>
+                    </div>
+                </div>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
-                <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation} disabled={isProcessing}>
+            <AlertDialogFooter className="flex-row gap-3 pt-4">
+                <AlertDialogCancel className="flex-1 rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                <AlertDialogAction className="flex-1 rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
                     {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
                 </AlertDialogAction>
-                <AlertDialogCancel className="flex-1 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

@@ -441,7 +441,7 @@ export default function Yemen4GPage() {
                                 <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
-                                <span className="font-black">الإجمالي المطلوب:</span>
+                                <span className="font-black">إجمالي المطلوب:</span>
                                 <span className="font-black text-primary text-lg">{parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)} ريال</span>
                             </div>
                         </div>

@@ -129,6 +129,8 @@ export default function GamesPage() {
         }
     };
 
+    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ طلب الشحن..." />;
+
     if (showSuccess) {
         return (
             <>

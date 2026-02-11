@@ -334,6 +334,27 @@ export default function YemenMobilePage() {
     }
   };
 
+  const handleRenewOffer = (name: string) => {
+    let foundOffer: Offer | undefined;
+    for (const cat of CATEGORIES) {
+        foundOffer = cat.offers.find(o => 
+            name.toLowerCase().includes(o.offerName.toLowerCase()) || 
+            o.offerName.toLowerCase().includes(name.toLowerCase())
+        );
+        if (foundOffer) break;
+    }
+
+    if (foundOffer) {
+        setSelectedOffer(foundOffer);
+    } else {
+        toast({
+            variant: "destructive",
+            title: "عذراً",
+            description: "لم نتمكن من تحديد سعر التجديد لهذه الباقة تلقائياً. يرجى اختيارها من القائمة بالأسفل.",
+        });
+    }
+  };
+
   const handlePayment = async () => {
     if (!phone || !amount || !user || !userDocRef || !firestore) return;
     const val = parseFloat(amount);
@@ -506,10 +527,10 @@ export default function YemenMobilePage() {
                             <div className="p-4 space-y-4">
                                 {activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-4 items-start p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-primary/5 mb-3 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
-                                                    onClick={() => handleTabChange("packages")}
+                                                    onClick={() => handleRenewOffer(off.offerName)}
                                                     className="bg-primary p-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
                                                 >
                                                     <RefreshCw className="w-6 h-6 text-white" />
@@ -517,26 +538,11 @@ export default function YemenMobilePage() {
                                                 </button>
                                             </div>
 
-                                            <div className="flex-1 space-y-3">
+                                            <div className="flex-1">
                                                 <h4 className="text-sm font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                     {off.offerName}
                                                 </h4>
-                                                
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center justify-end gap-2 text-[11px]">
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                            {off.startDate}
-                                                        </span>
-                                                        <span className="font-black text-green-600 min-w-[60px]">الإشتراك:</span>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center justify-end gap-2 text-[11px]">
-                                                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 tracking-tighter">
-                                                            {off.expireDate}
-                                                        </span>
-                                                        <span className="font-black text-red-600 min-w-[60px]">الإنتهاء:</span>
-                                                    </div>
-                                                </div>
+                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">باقة نشطة حالياً</p>
                                             </div>
                                         </div>
                                     ))

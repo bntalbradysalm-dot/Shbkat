@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Alexandria"', 'sans-serif'],
-        headline: ['"Alexandria"', 'sans-serif'],
+        body: ['"IBM Plex Sans Arabic"', 'sans-serif'],
+        headline: ['"IBM Plex Sans Arabic"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

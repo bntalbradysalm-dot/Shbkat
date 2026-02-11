@@ -24,7 +24,7 @@ const telecomServices = [
   },
   {
     name: 'عدن نت',
-    logo: 'https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg',
+    logo: 'https://i.postimg.cc/FFV6dDqd/FB-IMG-1770843160346.jpg',
     href: '/aden-net',
     description: 'استعلام وسداد باقات عدن نت',
   },

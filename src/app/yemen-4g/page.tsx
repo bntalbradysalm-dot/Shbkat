@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -321,7 +322,7 @@ export default function Yemen4GPage() {
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black">{userProfile?.balance?.toLocaleString() || '0'}</h2>
+                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
                                 <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
                             </div>
                         </div>

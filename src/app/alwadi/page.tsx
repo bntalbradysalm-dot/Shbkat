@@ -59,14 +59,12 @@ export default function AlwadiPage() {
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch User Profile for balance
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
 
-  // Fetch Renewal Options
   const optionsCollection = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'alwadiOptions') : null),
     [firestore, user]
@@ -134,12 +132,10 @@ export default function AlwadiPage() {
 
     const batch = writeBatch(firestore);
     
-    // 1. Deduct balance
     batch.update(userDocRef, {
       balance: increment(-numericPrice),
     });
 
-    // 2. Create renewal request
     const renewalRequestsRef = collection(firestore, 'renewalRequests');
     const newRequestRef = doc(renewalRequestsRef);
     batch.set(newRequestRef, renewalRequestData);
@@ -178,8 +174,8 @@ export default function AlwadiPage() {
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-          <Card className="w-full max-w-sm text-center shadow-2xl">
-              <CardContent className="p-6">
+          <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
+              <CardContent className="p-8">
                   <div className="flex flex-col items-center justify-center gap-4">
                       <div className="bg-green-100 p-4 rounded-full">
                           <CheckCircle className="h-16 w-16 text-green-600" />
@@ -202,8 +198,8 @@ export default function AlwadiPage() {
                       </div>
 
                       <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                          <Button variant="outline" onClick={() => router.push('/login')}>الرئيسية</Button>
-                          <Button onClick={() => router.push('/transactions')}>
+                          <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => router.push('/login')}>الرئيسية</Button>
+                          <Button className="flex-1 rounded-2xl h-12" onClick={() => router.push('/transactions')}>
                              <History className="ml-2 h-4 w-4" />
                              العمليات
                           </Button>
@@ -220,7 +216,6 @@ export default function AlwadiPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Promotional Image */}
         <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center">
           <Image
             src="https://i.postimg.cc/mgMYL0dm/Screenshot-20260109-114041-One-Drive.png"
@@ -231,7 +226,6 @@ export default function AlwadiPage() {
           />
         </div>
 
-        {/* Form Section */}
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg">بيانات التجديد</CardTitle>
@@ -294,7 +288,7 @@ export default function AlwadiPage() {
                         <CheckCircle className="absolute top-1 right-1 h-4 w-4 text-primary" />
                       )}
                       <span className="text-xs font-bold">{option.title}</span>
-                      <span className="text-sm font-black text-primary">{option.price.toLocaleString()} ريال</span>
+                      <span className="text-sm font-black text-primary">{option.price.toLocaleString('en-US')} ريال</span>
                     </div>
                   ))}
                 </div>
@@ -307,7 +301,7 @@ export default function AlwadiPage() {
                   <Wallet className="h-5 w-5 text-primary" />
                   <span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span>
                 </div>
-                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString()} ريال يمني</span>
+                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال يمني</span>
               </div>
             )}
 
@@ -321,9 +315,9 @@ export default function AlwadiPage() {
                   تجديد الآن
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-2xl">
+              <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-center">تأكيد معلومات التجديد</AlertDialogTitle>
+                  <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
                     <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك لإتمام العملية.</p>
                     <div className="flex justify-between items-center py-2 border-b">
@@ -340,22 +334,21 @@ export default function AlwadiPage() {
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-muted-foreground">المبلغ:</span>
-                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString()} ريال</span>
+                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
                     </div>
                   </div>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="flex-row justify-center gap-2 pt-4">
-                  <AlertDialogAction className="flex-1" onClick={handleFinalConfirmation}>
+                <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
+                  <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                  <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>
                     تأكيد وإرسال
                   </AlertDialogAction>
-                  <AlertDialogCancel className="flex-1 mt-0">إلغاء</AlertDialogCancel>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </CardContent>
         </Card>
 
-        {/* External Link */}
         <a
           href="https://play.google.com/store/apps/details?id=com.app.dev.al_wadiapp"
           target="_blank"

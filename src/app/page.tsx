@@ -71,7 +71,8 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading) return <div className="fixed inset-0 flex items-center justify-center"><CustomLoader /></div>;
+  // تعديل الشرط ليشمل وجود المستخدم لمنع الوميض قبل التوجيه
+  if (isUserLoading || user) return <div className="fixed inset-0 flex items-center justify-center bg-background"><CustomLoader /></div>;
 
   return (
     <>

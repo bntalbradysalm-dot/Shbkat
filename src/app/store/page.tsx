@@ -167,7 +167,7 @@ export default function StorePage() {
               <Wallet className="h-6 w-6" />
               <div>
                 <p className="text-xs opacity-80">رصيدك المتوفر</p>
-                <p className="text-xl font-bold">{(userProfile?.balance ?? 0).toLocaleString()} ريال</p>
+                <p className="text-xl font-bold">{(userProfile?.balance ?? 0).toLocaleString('en-US')} ريال</p>
               </div>
             </div>
             <ShoppingBag className="h-8 w-8 opacity-20" />
@@ -208,7 +208,7 @@ export default function StorePage() {
                     data-ai-hint="store product"
                   />
                   <div className="absolute top-2 left-2">
-                    <Badge className="bg-primary/90 backdrop-blur-sm">{product.price.toLocaleString()} ريال</Badge>
+                    <Badge className="bg-primary/90 backdrop-blur-sm">{product.price.toLocaleString('en-US')} ريال</Badge>
                   </div>
                 </div>
                 <CardContent className="p-3 space-y-2">
@@ -245,7 +245,7 @@ export default function StorePage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-sm">{selectedProduct.name}</p>
-                  <p className="text-primary font-bold text-lg">{selectedProduct.price.toLocaleString()} ريال</p>
+                  <p className="text-primary font-bold text-lg">{selectedProduct.price.toLocaleString('en-US')} ريال</p>
                 </div>
               </div>
               <div className="space-y-2">

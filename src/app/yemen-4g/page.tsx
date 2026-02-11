@@ -390,10 +390,7 @@ export default function Yemen4GPage() {
 
                             <TabsContent value="balance" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                        <Smartphone className="w-8 h-8 text-primary" />
-                                    </div>
-                                    <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ السداد المباشر</Label>
+                                    <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
                                         <Input 
                                             type="number" 

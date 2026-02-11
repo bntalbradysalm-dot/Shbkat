@@ -130,7 +130,7 @@ const CATEGORIES = [
         sms: 'لا يوجد', 
         minutes: 'لا يوجد', 
         validity: 'شهر', 
-        offertype: 'A88332' 
+        offertype: 'A4821' 
       },
       { 
         offerId: 'super_4g_3gb', 

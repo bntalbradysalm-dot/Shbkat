@@ -14,7 +14,8 @@ import {
   Gamepad2,
   Zap,
   ShieldCheck,
-  Star
+  Star,
+  AlertCircle
 } from 'lucide-react';
 import {
   Dialog,
@@ -106,7 +107,18 @@ export default function GamesPage() {
             });
             const result = await response.json();
             
-            if (!response.ok) throw new Error(result.message || 'فشل عملية الشحن.');
+            if (!response.ok) {
+                // استخراج رسالة الخطأ من استجابة الـ API
+                throw new Error(result.message || result.resultDesc || 'فشل تنفيذ الطلب من المصدر.');
+            }
+
+            // التحقق من كود النتيجة بشكل إضافي لضمان الدقة
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (!isSuccess && !isPending) {
+                throw new Error(result.resultDesc || 'تم رفض العملية من قبل مزود الخدمة.');
+            }
 
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
@@ -114,8 +126,9 @@ export default function GamesPage() {
                 userId: user.uid, 
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
-                transactionType: `شحن ${selectedPackage.amount}`, 
-                notes: `اللاعب: ${playerId}. كود الفئة: ${selectedPackage.code}`, 
+                transactionType: `شحن شدات: ${selectedPackage.amount}`, 
+                notes: `رقم اللاعب: ${playerId}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`, 
+                recipientPhoneNumber: playerId
             });
             await batch.commit();
             
@@ -123,13 +136,18 @@ export default function GamesPage() {
             setSelectedPackage(null);
             setPlayerId('');
         } catch (e: any) {
-            toast({ variant: "destructive", title: "خطأ", description: e.message });
+            // إظهار الخطأ في واجهة التطبيق
+            toast({ 
+                variant: "destructive", 
+                title: "فشل في عملية الشحن", 
+                description: e.message 
+            });
         } finally {
             setIsProcessing(false);
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ طلب الشحن..." />;
+    if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
 
     if (showSuccess) {
         return (
@@ -141,8 +159,10 @@ export default function GamesPage() {
                             <CheckCircle className="h-20 w-20 text-white" />
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تم طلب الشحن بنجاح</h2>
-                            <p className="text-sm text-muted-foreground">تم تنفيذ طلبك بنجاح. سيتم إضافة الشدات لحسابك قريباً.</p>
+                            <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                تم قبول طلبك بنجاح. ستصل الشدات إلى حسابك (ID: {playerId}) قريباً.
+                            </p>
                             <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
                         </CardContent>
                     </Card>

@@ -225,7 +225,7 @@ export default function LandlineRedesignPage() {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
         } finally {
             setIsProcessing(false);
-            setIsConfirmingPayment(false);
+            setIsConfirming(false);
         }
     };
 
@@ -316,6 +316,14 @@ export default function LandlineRedesignPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
+                    <Button 
+                        className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                        onClick={handleSearch}
+                        disabled={isSearching || phone.length < 8}
+                    >
+                        {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                        استعلام عن الرقم
+                    </Button>
                 </div>
 
                 {phone.length === 8 && phone.startsWith('0') && (

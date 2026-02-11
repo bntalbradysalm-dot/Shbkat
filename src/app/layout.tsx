@@ -38,7 +38,7 @@ export default function RootLayout({
         <meta name="description" content="Your Digital Wallet" />
         <link href="https://fonts.cdnfonts.com/css/ge-ss-two" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-background">
+      <body className="antialiased bg-background" style={{ fontFamily: "'GE SS Two', sans-serif" }}>
         <FirebaseProvider>
           <ThemeProvider>
             <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">

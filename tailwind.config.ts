@@ -10,8 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"GE SS Two"', 'sans-serif'],
-        headline: ['"GE SS Two"', 'sans-serif'],
+        body: ["'GE SS Two'", 'sans-serif'],
+        headline: ["'GE SS Two'", 'sans-serif'],
+        sans: ["'GE SS Two'", 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -124,6 +123,16 @@ const CATEGORIES = [
     badge: '4G',
     icon: Zap,
     offers: [
+      { 
+        offerId: '4g_4gb_net', 
+        offerName: 'باقة نت فورجي 4 قيقا', 
+        price: 2000, 
+        data: '4GB', 
+        sms: 'لا يوجد', 
+        minutes: 'لا يوجد', 
+        validity: 'شهر', 
+        offertype: 'A88332' 
+      },
       { 
         offerId: '4g_48h', 
         offerName: 'مزايا فورجي 48 ساعة', 
@@ -335,7 +344,6 @@ export default function YemenMobilePage() {
   };
 
   const handleRenewOffer = (name: string) => {
-    // وظيفة لتطبيع النص العربي لضمان المطابقة رغم اختلاف التاء المربوطة أو الهمزات
     const normalize = (str: string) => 
         str.replace(/[أإآ]/g, 'ا')
            .replace(/ة/g, 'ه')
@@ -349,7 +357,6 @@ export default function YemenMobilePage() {
     for (const cat of CATEGORIES) {
         foundOffer = cat.offers.find(o => {
             const normalizedOfferName = normalize(o.offerName);
-            // البحث عن تطابق جزئي بين اسم الباقة الوارد واسم الباقة في النظام
             return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
         });
         if (foundOffer) break;
@@ -451,7 +458,6 @@ export default function YemenMobilePage() {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
-        {/* Balance Card */}
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">
@@ -592,7 +598,7 @@ export default function YemenMobilePage() {
 
                 <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                        <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ السداد</Label>
+                        <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                         <div className="relative max-w-[240px] mx-auto">
                             <Input 
                                 type="number" 

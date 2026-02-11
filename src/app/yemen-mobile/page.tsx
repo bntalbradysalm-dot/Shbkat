@@ -140,6 +140,12 @@ const CustomLoader = () => (
   </div>
 );
 
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
+    <CustomLoader />
+  </div>
+);
+
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
       className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-4 shadow-sm relative border border-primary/5 mb-3 text-right cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
@@ -352,6 +358,8 @@ export default function YemenMobilePage() {
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="يمن موبايل" />
       
+      {isSearching && activeTab === 'packages' && <LoadingSpinner />}
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
         {/* Balance Card */}
@@ -361,7 +369,7 @@ export default function YemenMobilePage() {
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                     <div className="flex items-baseline gap-1">
                         <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
-                        <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
+                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -392,10 +400,13 @@ export default function YemenMobilePage() {
                 </TabsList>
 
                 <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                    {/* Show spinner when packages tab is selected and we are searching/refreshing */}
-                    {isSearching && <div className="flex justify-center py-4"><CustomLoader /></div>}
-                    
-                    {!isSearching && (
+                    {/* Show skeleton while searching for the first time or refreshing */}
+                    {!billingInfo && isSearching ? (
+                        <div className="space-y-4">
+                            <Skeleton className="h-20 w-full rounded-3xl" />
+                            <Skeleton className="h-40 w-full rounded-3xl" />
+                        </div>
+                    ) : (
                         <>
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
@@ -517,7 +528,7 @@ export default function YemenMobilePage() {
                         {amount && (
                             <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2">
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                <p className="text-xl font-black text-primary">{(parseFloat(amount) * 0.826).toFixed(2)} ر.ي</p>
+                                <p className="text-xl font-black text-primary">{(parseFloat(amount) * 0.826).toFixed(2)}</p>
                             </div>
                         )}
 
@@ -541,7 +552,7 @@ export default function YemenMobilePage() {
                     <Wallet className="w-8 h-8 text-primary" />
                 </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
-                <div className="text-center text-base pt-2 text-muted-foreground">
+                <div className="text-center text-base pt-2 text-muted-foreground text-right">
                     سيتم سداد مبلغ <span className="font-black text-primary text-xl">{amount} ريال</span> <br />
                     للرقم <span className="font-black text-foreground">{phone}</span>
                 </div>
@@ -560,7 +571,7 @@ export default function YemenMobilePage() {
                       <Gift className="w-8 h-8 text-primary" />
                   </div>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                  <div className="py-4 text-center space-y-2">
+                  <div className="py-4 text-center space-y-2 text-right">
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                       <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">

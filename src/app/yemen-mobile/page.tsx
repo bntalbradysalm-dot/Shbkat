@@ -659,11 +659,11 @@ export default function YemenMobilePage() {
                   <div className="py-4 text-center space-y-2">
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
-                      <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">
-                        <p className="text-xs font-bold">السعر: 
-                            {selectedOffer?.price.toLocaleString('en-US')} ريال
+                      <div className="bg-muted/50 p-4 rounded-2xl border border-primary/5 mt-2">
+                        <p className="text-xs font-bold text-muted-foreground mb-1">السعر:</p>
+                        <p className="text-3xl font-black text-primary">
+                            {selectedOffer?.price.toLocaleString('en-US')} <span className="text-sm">ريال</span>
                         </p>
-                        <p className="text-xs text-destructive font-bold mt-1">سيتم خصم القيمة من رصيدك الحالي</p>
                       </div>
                   </div>
               </AlertDialogHeader>

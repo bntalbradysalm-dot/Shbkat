@@ -141,7 +141,6 @@ export default function GamesPage() {
             await batch.commit();
             
             setShowSuccess(true);
-            // Selected package kept for success view
         } catch (e: any) {
             toast({ 
                 variant: "destructive", 
@@ -215,7 +214,7 @@ export default function GamesPage() {
                 
                 <div className="relative w-full aspect-[21/9] rounded-[28px] overflow-hidden shadow-lg border border-primary/10 mb-2 animate-in fade-in-0 zoom-in-95 duration-500">
                     <Image 
-                        src="https://i.postimg.cc/853VqsmZ/Screenshot-2023-12-14-10-35-02-62-6012fa4d4ddec268fc5c7112cbb265e7.jpg" 
+                        src="https://i.postimg.cc/K8pPdgWg/112750758-whatsubject.jpg" 
                         alt="PUBG Mobile Banner" 
                         fill 
                         className="object-cover"

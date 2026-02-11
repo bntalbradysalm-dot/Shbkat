@@ -307,7 +307,7 @@ export default function LandlineRedesignPage() {
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                                    <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ سداد الإنترنت (ADSL)</Label>
+                                    <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
                                         <Input 
                                             type="number" 
@@ -330,7 +330,7 @@ export default function LandlineRedesignPage() {
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                                    <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ سداد الهاتف الثابت</Label>
+                                    <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
                                         <Input 
                                             type="number" 

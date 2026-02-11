@@ -99,7 +99,7 @@ export default function LandlineRedesignPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const [phone, setPhone] = useState('0');
+    const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("internet");
     const [isSearching, setIsSearching] = useState(false);
     const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
@@ -130,7 +130,7 @@ export default function LandlineRedesignPage() {
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 8 أرقام' });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم هاتف صحيح مكون من 8 أرقام' });
             return;
         }
         setIsSearching(true);
@@ -298,9 +298,7 @@ export default function LandlineRedesignPage() {
                             value={phone}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, '');
-                                if (val === '' || val.startsWith('0')) {
-                                    setPhone(val.slice(0, 8));
-                                }
+                                setPhone(val.slice(0, 8));
                             }}
                             className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
                         />
@@ -436,7 +434,7 @@ export default function LandlineRedesignPage() {
                                 <span className="font-bold text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
-                                <span className="font-black">الإجمالي المطلوب:</span>
+                                <span className="font-black">إجمالي المطلوب:</span>
                                 <span className="font-black text-primary text-lg">{(selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)} ريال</span>
                             </div>
                         </div>

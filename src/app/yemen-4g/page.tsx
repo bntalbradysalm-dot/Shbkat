@@ -97,7 +97,7 @@ export default function Yemen4GPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const [phone, setPhone] = useState('10');
+    const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("packages");
     const [isSearching, setIsSearching] = useState(false);
     const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
@@ -129,7 +129,7 @@ export default function Yemen4GPage() {
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرققاً' });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرقام' });
             return;
         }
         setIsSearching(true);
@@ -187,7 +187,7 @@ export default function Yemen4GPage() {
         const totalToDeduct = baseAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية شاملة النسبة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة النسبة.' });
             return;
         }
 
@@ -334,6 +334,7 @@ export default function Yemen4GPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
+                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
                     <div className="flex flex-col gap-2">
                         <Input
@@ -342,9 +343,7 @@ export default function Yemen4GPage() {
                             value={phone}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, '');
-                                if (val === '' || val.startsWith('10')) {
-                                    setPhone(val.slice(0, 9));
-                                }
+                                setPhone(val.slice(0, 9));
                             }}
                             className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
                         />

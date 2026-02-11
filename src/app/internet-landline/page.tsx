@@ -312,7 +312,7 @@ export default function LandlineRedesignPage() {
                                         <p className="text-base font-black">{formatDisplayValue(queryResult.balance)}</p>
                                     </div>
                                     <div className="p-4">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1حالة الخط</p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">حالة الخط</p>
                                         <div className="flex items-center justify-center gap-1">
                                             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                                             <p className="text-sm font-black">{queryResult.resultDesc}</p>

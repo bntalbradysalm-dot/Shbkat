@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,7 +16,6 @@ import {
   Zap, 
   ShieldCheck, 
   Database, 
-  ChevronDown,
   Globe,
   Mail,
   Phone as PhoneIcon,
@@ -49,7 +47,6 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,7 +116,7 @@ const CATEGORIES = [
   },
   {
     id: '4g',
-    title: 'باقات فورجي',
+    title: 'باقات مزايا فورجي',
     badge: '4G',
     icon: Zap,
     offers: [
@@ -227,7 +224,7 @@ const CATEGORIES = [
   },
   {
     id: 'data',
-    title: 'باقات النت',
+    title: 'باقات نت فورجي',
     badge: 'Net',
     icon: Database,
     offers: [
@@ -442,7 +439,7 @@ export default function YemenMobilePage() {
     const totalToDeduct = val + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام العملية شاملة السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة السلفة.' });
         return;
     }
 
@@ -652,7 +649,6 @@ export default function YemenMobilePage() {
                                                 {cat.badge}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
-                                            <ChevronDown className="w-5 h-5 text-white/70 group-data-[state=open]:rotate-180 transition-transform" />
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">

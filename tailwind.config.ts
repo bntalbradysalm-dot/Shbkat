@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"DIN Next LT Arabic"', 'sans-serif'],
-        headline: ['"DIN Next LT Arabic"', 'sans-serif'],
+        body: ['"Alexandria"', 'sans-serif'],
+        headline: ['"Alexandria"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

@@ -447,7 +447,6 @@ export default function YemenMobilePage() {
                                 </div>
                                 <div className="p-3">
                                     <p className="text-[10px] font-bold text-primary mb-1 flex items-center justify-center gap-1">
-                                        <span className="w-3.5 h-3.5 flex items-center justify-center bg-primary text-white rounded-full text-[10px] font-black leading-none">!</span>
                                         فحص السلفة
                                     </p>
                                     <div className="flex items-center justify-center gap-1">

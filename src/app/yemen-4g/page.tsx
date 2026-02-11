@@ -79,15 +79,13 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-          {/* الترتيب المعكوس: الملصق أولاً (يمين) والاسم ثانياً (يسار) في اتجاه RTL */}
           <div className="bg-primary text-white font-black text-[10px] px-2 py-1 rounded-lg uppercase">4G LTE</div>
           <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
       </div>
       
       <div className="flex items-baseline gap-1 justify-end mb-3">
-        {/* المبلغ والريال معكوسين: كلمة ريال أولاً (يمين) ثم المبلغ (يسار) */}
-        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
       </div>
       
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
@@ -135,16 +133,24 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length !== 9) {
+        if (phone.length === 9) {
+            if (!phone.startsWith('10')) {
+                toast({
+                    variant: 'destructive',
+                    title: 'خطأ في الرقم',
+                    description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
+                });
+                setQueryResult(null);
+                return;
+            }
+            handleSearch();
+        } else {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 9) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرقام' });
-            return;
-        }
+        if (!phone || phone.length !== 9 || !phone.startsWith('10')) return;
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -303,7 +309,6 @@ export default function Yemen4GPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
     if (showSuccess && lastTxDetails) {
@@ -364,7 +369,6 @@ export default function Yemen4GPage() {
             <SimpleHeader title="يمن فورجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                {/* Balance Card */}
                 <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
@@ -382,33 +386,19 @@ export default function Yemen4GPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (10xxxxxxx)</Label>
+                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <Input
-                            type="tel"
-                            placeholder="رقم الهاتف"
-                            value={phone}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, '');
-                                setPhone(val.slice(0, 9));
-                            }}
-                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
-                        />
-                        {phone.length === 9 && (
-                            <Button 
-                                onClick={handleSearch} 
-                                disabled={isSearching}
-                                className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
-                            >
-                                <Search className="w-5 h-5 ml-2" />
-                                استعلام
-                            </Button>
-                        )}
-                    </div>
+                    <Input
+                        type="tel"
+                        placeholder="10xxxxxxx"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    />
                 </div>
 
-                {phone.length === 9 && (
+                {phone.length === 9 && phone.startsWith('10') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">

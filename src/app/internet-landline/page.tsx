@@ -20,7 +20,7 @@ import {
   Calendar,
   History
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,16 +84,24 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length !== 8) {
+        if (phone.length === 8) {
+            if (!phone.startsWith('0')) {
+                toast({
+                    variant: 'destructive',
+                    title: 'خطأ في الرقم',
+                    description: 'رقم الثابت يجب أن يبدأ بـ 0'
+                });
+                setQueryResult(null);
+                return;
+            }
+            handleSearch();
+        } else {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 8) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم هاتف صحيح مكون من 8 أرقام' });
-            return;
-        }
+        if (!phone || phone.length !== 8 || !phone.startsWith('0')) return;
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -221,8 +229,7 @@ export default function LandlineRedesignPage() {
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
+    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -282,7 +289,6 @@ export default function LandlineRedesignPage() {
             <SimpleHeader title="الثابت والإنترنت الأرضي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                {/* Balance Card */}
                 <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
@@ -300,33 +306,19 @@ export default function LandlineRedesignPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (0xxxxxxx)</Label>
+                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <Input
-                            type="tel"
-                            placeholder="رقم الهاتف"
-                            value={phone}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, '');
-                                setPhone(val.slice(0, 8));
-                            }}
-                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
-                        />
-                        {phone.length === 8 && (
-                            <Button 
-                                onClick={handleSearch} 
-                                disabled={isSearching}
-                                className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
-                            >
-                                <Search className="w-5 h-5 ml-2" />
-                                {activeTab === 'internet' ? 'استعلام عن الانترنت' : 'استعلام عن الثابت'}
-                            </Button>
-                        )}
-                    </div>
+                    <Input
+                        type="tel"
+                        placeholder="0xxxxxxx"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    />
                 </div>
 
-                {phone.length === 8 && (
+                {phone.length === 8 && phone.startsWith('0') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">

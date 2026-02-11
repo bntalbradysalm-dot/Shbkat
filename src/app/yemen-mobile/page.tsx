@@ -352,6 +352,16 @@ export default function YemenMobilePage() {
 
   useEffect(() => {
     if (phone.length === 9) {
+      if (!phone.startsWith('77') && !phone.startsWith('78')) {
+          toast({
+              variant: 'destructive',
+              title: 'خطأ في الرقم',
+              description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
+          });
+          setBillingInfo(null);
+          setActiveOffers([]);
+          return;
+      }
       handleSearch();
     } else {
         setBillingInfo(null);
@@ -604,7 +614,7 @@ export default function YemenMobilePage() {
             />
         </div>
 
-        {phone.length === 9 && (
+        {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                     <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>

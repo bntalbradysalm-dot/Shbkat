@@ -123,16 +123,24 @@ export default function AdenNetPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length !== 9 || !phone.startsWith('79')) {
+        if (phone.length === 9) {
+            if (!phone.startsWith('79')) {
+                toast({
+                    variant: 'destructive',
+                    title: 'خطأ في الرقم',
+                    description: 'رقم عدن نت يجب أن يبدأ بـ 79'
+                });
+                setQueryResult(null);
+                return;
+            }
+            handleSearch();
+        } else {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 9 || !phone.startsWith('79')) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم عدن نت صحيح يبدأ بـ 79' });
-            return;
-        }
+        if (!phone || phone.length !== 9 || !phone.startsWith('79')) return;
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -225,7 +233,6 @@ export default function AdenNetPage() {
         }
     };
 
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام عن الرقم..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
     if (showSuccess && lastTxDetails) {
@@ -303,30 +310,16 @@ export default function AdenNetPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم عدن نت (يبدأ بـ 79)</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم عدن نت (79xxxxxxx)</Label>
+                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <Input
-                            type="tel"
-                            placeholder="79xxxxxxx"
-                            value={phone}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, '');
-                                setPhone(val.slice(0, 9));
-                            }}
-                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
-                        />
-                        {phone.length === 9 && phone.startsWith('79') && (
-                            <Button 
-                                onClick={handleSearch} 
-                                disabled={isSearching}
-                                className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
-                            >
-                                <Search className="w-5 h-5 ml-2" />
-                                استعلام عن الرقم
-                            </Button>
-                        )}
-                    </div>
+                    <Input
+                        type="tel"
+                        placeholder="79xxxxxxx"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    />
                 </div>
 
                 {phone.length === 9 && phone.startsWith('79') && (

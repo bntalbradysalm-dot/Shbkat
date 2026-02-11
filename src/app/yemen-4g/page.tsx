@@ -79,13 +79,15 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-          <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
+          {/* الترتيب المعكوس: الملصق أولاً (يمين) والاسم ثانياً (يسار) في اتجاه RTL */}
           <div className="bg-primary text-white font-black text-[10px] px-2 py-1 rounded-lg uppercase">4G LTE</div>
+          <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
       </div>
       
       <div className="flex items-baseline gap-1 justify-end mb-3">
-        <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+        {/* المبلغ والريال معكوسين: كلمة ريال أولاً (يمين) ثم المبلغ (يسار) */}
         <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
       </div>
       
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
@@ -335,7 +337,7 @@ export default function Yemen4GPage() {
                                     <span className="font-bold">{lastTxDetails.type}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
                                     <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">

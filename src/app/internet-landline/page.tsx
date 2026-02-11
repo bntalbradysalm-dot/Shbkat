@@ -208,6 +208,7 @@ export default function LandlineRedesignPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess) {
         return (
@@ -271,7 +272,7 @@ export default function LandlineRedesignPage() {
                                 disabled={isSearching}
                                 className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
                             >
-                                {isSearching ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : <Search className="w-5 h-5 ml-2" />}
+                                <Search className="w-5 h-5 ml-2" />
                                 {activeTab === 'internet' ? 'استعلام عن الانترنت' : 'استعلام عن الثابت'}
                             </Button>
                         )}

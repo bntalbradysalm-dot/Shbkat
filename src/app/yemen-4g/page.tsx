@@ -274,6 +274,8 @@ export default function Yemen4GPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
+    if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
     if (showSuccess) {
         return (
@@ -322,7 +324,6 @@ export default function Yemen4GPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
                     <div className="flex flex-col gap-2">
                         <Input
@@ -341,7 +342,7 @@ export default function Yemen4GPage() {
                                 disabled={isSearching}
                                 className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
                             >
-                                {isSearching ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : <Search className="w-5 h-5 ml-2" />}
+                                <Search className="w-5 h-5 ml-2" />
                                 استعلام
                             </Button>
                         )}
@@ -417,6 +418,8 @@ export default function Yemen4GPage() {
                 )}
             </div>
 
+            <Toaster />
+
             <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
@@ -476,13 +479,11 @@ export default function Yemen4GPage() {
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                         <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                         <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
-                            {isActivatingOffer ? <Loader2 className="w-5 h-5 animate-spin" /> : 'تفعيل الآن'}
+                            تفعيل الآن
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <Toaster />
         </div>
     );
 }

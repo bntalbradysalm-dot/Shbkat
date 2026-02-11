@@ -637,9 +637,6 @@ export default function YemenMobilePage() {
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-2">
-                    <Wallet className="w-8 h-8 text-primary" />
-                </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
                 <div className="text-center text-base pt-2 text-muted-foreground">
                     سيتم سداد مبلغ <span className="font-black text-primary text-xl">
@@ -658,9 +655,6 @@ export default function YemenMobilePage() {
       <AlertDialog open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
           <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-2">
-                      <Gift className="w-8 h-8 text-primary" />
-                  </div>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 text-center space-y-2">
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>

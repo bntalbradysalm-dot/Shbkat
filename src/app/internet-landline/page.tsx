@@ -359,9 +359,6 @@ export default function LandlineRedesignPage() {
             <AlertDialog open={isConfirmingPayment} onOpenChange={setIsConfirmingPayment}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
-                        <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-2">
-                            <Wallet className="w-8 h-8 text-primary" />
-                        </div>
                         <AlertDialogTitle className="text-center font-black">تأكيد السداد</AlertDialogTitle>
                         <div className="space-y-3 pt-4 text-right text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-dashed">

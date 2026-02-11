@@ -49,51 +49,6 @@ type QueryResult = {
     message?: string;
 };
 
-type InternetPackage = {
-    id: string;
-    name: string;
-    price: number;
-    speed: string;
-    description: string;
-};
-
-const INTERNET_PACKAGES: InternetPackage[] = [
-    { id: 'adsl_1m', name: 'إنترنت 1 ميجا', price: 1100, speed: '1 Mbps', description: 'باقة منزلية اقتصادية' },
-    { id: 'adsl_2m', name: 'إنترنت 2 ميجا', price: 2100, speed: '2 Mbps', description: 'باقة منزلية سريعة' },
-    { id: 'adsl_4m', name: 'إنترنت 4 ميجا', price: 4100, speed: '4 Mbps', description: 'باقة مميزة للعائلات' },
-    { id: 'adsl_8m', name: 'إنترنت 8 ميجا', price: 8100, speed: '8 Mbps', description: 'باقة فائقة السرعة' },
-    { id: 'fiber_20m', name: 'فايبر 20 ميجا', price: 15000, speed: '20 Mbps', description: 'تقنية الألياف الضوئية' },
-    { id: 'fiber_40m', name: 'فايبر 40 ميجا', price: 28000, speed: '40 Mbps', description: 'أعلى سرعة ممكنة' },
-];
-
-const PackageCard = ({ pkg, onClick }: { pkg: InternetPackage, onClick: () => void }) => (
-    <div 
-      className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-primary/5 mb-3 text-right cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group"
-      onClick={onClick}
-    >
-      <div className="flex justify-between items-start mb-2">
-          <div className="bg-primary/10 text-primary font-black text-[10px] px-2 py-1 rounded-lg flex items-center gap-1">
-            <Globe className="w-3 h-3" /> ADSL
-          </div>
-          <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{pkg.name}</h4>
-      </div>
-      
-      <div className="flex items-baseline gap-1 justify-end mb-3">
-        <span className="text-xl font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
-        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
-            <p className="text-[10px] font-bold">{pkg.speed}</p>
-        </div>
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
-            <p className="text-[10px] font-bold">30 يوم</p>
-        </div>
-      </div>
-    </div>
-);
-
 export default function LandlineRedesignPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -105,7 +60,6 @@ export default function LandlineRedesignPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [amount, setAmount] = useState('');
-    const [selectedPackage, setSelectedPackage] = useState<InternetPackage | null>(null);
     const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -237,7 +191,6 @@ export default function LandlineRedesignPage() {
         } finally {
             setIsProcessing(false);
             setIsConfirmingPayment(false);
-            setSelectedPackage(null);
         }
     };
 
@@ -340,14 +293,28 @@ export default function LandlineRedesignPage() {
                             </TabsList>
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="grid grid-cols-1 gap-1">
-                                    {INTERNET_PACKAGES.map((pkg) => (
-                                        <PackageCard 
-                                            key={pkg.id} 
-                                            pkg={pkg} 
-                                            onClick={() => setSelectedPackage(pkg)} 
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                        <Globe className="w-8 h-8 text-primary" />
+                                    </div>
+                                    <Label className="text-sm font-black text-muted-foreground block mb-4">أدخل مبلغ سداد الإنترنت (ADSL)</Label>
+                                    <div className="relative max-w-[240px] mx-auto">
+                                        <Input 
+                                            type="number" 
+                                            placeholder="0.00" 
+                                            value={amount} 
+                                            onChange={(e) => setAmount(e.target.value)} 
+                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
                                         />
-                                    ))}
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                    </div>
+                                    <Button 
+                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                                        onClick={() => setIsConfirmingPayment(true)} 
+                                        disabled={!amount}
+                                    >
+                                        تسديد الآن
+                                    </Button>
                                 </div>
                             </TabsContent>
 
@@ -409,37 +376,7 @@ export default function LandlineRedesignPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                         <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
-                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={() => handlePayment(parseFloat(amount), 'هاتف ثابت')}>تأكيد</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-            
-            <AlertDialog open={!!selectedPackage} onOpenChange={() => setSelectedPackage(null)}>
-                <AlertDialogContent className="rounded-[32px]">
-                    <AlertDialogHeader>
-                        <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-2">
-                            <Zap className="w-8 h-8 text-primary" />
-                        </div>
-                        <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                        <div className="py-4 space-y-3 text-right text-sm">
-                            <p className="text-center text-lg font-black text-primary mb-2">{selectedPackage?.name}</p>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">سعر التفعيل:</span>
-                                <span className="font-bold">{selectedPackage?.price.toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
-                                <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{((selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)).toLocaleString('en-US')} ريال</span>
-                            </div>
-                        </div>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => selectedPackage && handlePayment(selectedPackage.price, selectedPackage.name)} className="w-full rounded-2xl h-12 font-bold">تفعيل</AlertDialogAction>
+                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={() => handlePayment(parseFloat(amount), activeTab === 'internet' ? 'إنترنت (ADSL)' : 'هاتف ثابت')}>تأكيد</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

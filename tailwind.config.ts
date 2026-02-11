@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Alexandria"', 'sans-serif'],
-        headline: ['"Alexandria"', 'sans-serif'],
+        body: ['"Hanimation Arabic"', '"Alexandria"', 'sans-serif'],
+        headline: ['"Hanimation Arabic"', '"Alexandria"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

@@ -54,11 +54,11 @@ type Offer = {
 };
 
 const ADEN_NET_OFFERS: Offer[] = [
-    { offerId: '20gb', offerName: 'عدن نت 20 جيجا', price: 3000, data: '20 GB', validity: 'شهر', num: '20' },
-    { offerId: '40gb', offerName: 'عدن نت 40 جيجا', price: 6000, data: '40 GB', validity: 'شهر', num: '40' },
-    { offerId: '60gb', offerName: 'عدن نت 60 جيجا', price: 9000, data: '60 GB', validity: 'شهر', num: '60' },
-    { offerId: '80gb', offerName: 'عدن نت 80 جيجا', price: 12000, data: '80 GB', validity: 'شهر', num: '80' },
-    { offerId: '120gb', offerName: 'عدن نت 120 جيجا (تجارية)', price: 30000, data: '120 GB', validity: 'شهر', num: '120' },
+    { offerId: '20gb', offerName: 'عدن نت 20 جيجا', price: 3000, data: '20 GB', validity: 'شهر', num: '3000' },
+    { offerId: '40gb', offerName: 'عدن نت 40 جيجا', price: 6000, data: '40 GB', validity: 'شهر', num: '6000' },
+    { offerId: '60gb', offerName: 'عدن نت 60 جيجا', price: 9000, data: '60 GB', validity: 'شهر', num: '9000' },
+    { offerId: '80gb', offerName: 'عدن نت 80 جيجا', price: 12000, data: '80 GB', validity: 'شهر', num: '12000' },
+    { offerId: '120gb', offerName: 'عدن نت 120 جيجا (تجارية)', price: 30000, data: '120 GB', validity: 'شهر', num: '30000' },
 ];
 
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
@@ -137,7 +137,7 @@ export default function AdenNetPage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'adenet',
-                    num: '20',
+                    num: '3000',
                     transid: transid
                 })
             });

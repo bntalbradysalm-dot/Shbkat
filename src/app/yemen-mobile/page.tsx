@@ -263,6 +263,34 @@ const CATEGORIES = [
   }
 ];
 
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path
+          d="M15 25 A10 10 0 0 0 35 25"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40 15 A15 15 0 0 1 40 35"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className="opacity-30"
+        />
+      </svg>
+    </div>
+  </div>
+);
+
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
       className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
@@ -539,10 +567,7 @@ export default function YemenMobilePage() {
       
       {isSearching && activeTab === 'packages' && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-background/20 backdrop-blur-[2px]">
-              <div className="bg-card p-4 rounded-3xl shadow-xl flex items-center gap-3">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <span className="font-bold text-sm">جاري الاستعلام...</span>
-              </div>
+              <CustomLoader />
           </div>
       )}
 

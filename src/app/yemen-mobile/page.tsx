@@ -335,12 +335,23 @@ export default function YemenMobilePage() {
   };
 
   const handleRenewOffer = (name: string) => {
+    // وظيفة لتطبيع النص العربي لضمان المطابقة رغم اختلاف التاء المربوطة أو الهمزات
+    const normalize = (str: string) => 
+        str.replace(/[أإآ]/g, 'ا')
+           .replace(/ة/g, 'ه')
+           .replace(/ى/g, 'ي')
+           .toLowerCase()
+           .trim();
+
+    const normalizedInput = normalize(name);
+
     let foundOffer: Offer | undefined;
     for (const cat of CATEGORIES) {
-        foundOffer = cat.offers.find(o => 
-            name.toLowerCase().includes(o.offerName.toLowerCase()) || 
-            o.offerName.toLowerCase().includes(name.toLowerCase())
-        );
+        foundOffer = cat.offers.find(o => {
+            const normalizedOfferName = normalize(o.offerName);
+            // البحث عن تطابق جزئي بين اسم الباقة الوارد واسم الباقة في النظام
+            return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
+        });
         if (foundOffer) break;
     }
 
@@ -449,7 +460,7 @@ export default function YemenMobilePage() {
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
-                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
+                        <span className="text-sm font-bold text-white/80">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -615,6 +626,8 @@ export default function YemenMobilePage() {
         )}
       </div>
 
+      <Toaster />
+
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
@@ -622,7 +635,7 @@ export default function YemenMobilePage() {
                     <Wallet className="w-8 h-8 text-primary" />
                 </div>
                 <AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
-                <div className="text-center text-base pt-2 text-muted-foreground text-right">
+                <div className="text-center text-base pt-2 text-muted-foreground">
                     سيتم سداد مبلغ <span className="font-black text-primary text-xl">
                         {parseFloat(amount || '0').toLocaleString('en-US')} ريال
                     </span> <br />
@@ -643,7 +656,7 @@ export default function YemenMobilePage() {
                       <Gift className="w-8 h-8 text-primary" />
                   </div>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
-                  <div className="py-4 text-center space-y-2 text-right">
+                  <div className="py-4 text-center space-y-2">
                       <p className="text-lg font-black text-primary">{selectedOffer?.offerName}</p>
                       <p className="text-sm font-bold text-muted-foreground">للرقم: {phone}</p>
                       <div className="bg-muted/50 p-3 rounded-2xl border border-primary/5 mt-2">
@@ -662,8 +675,6 @@ export default function YemenMobilePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-
-      <Toaster />
     </div>
   );
 }

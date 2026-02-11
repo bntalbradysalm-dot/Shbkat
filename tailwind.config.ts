@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ["'GE SS Two'", 'sans-serif'],
-        headline: ["'GE SS Two'", 'sans-serif'],
-        sans: ["'GE SS Two'", 'sans-serif'],
+        body: ["'Bahij TheSansArabic'", 'sans-serif'],
+        headline: ["'Bahij TheSansArabic'", 'sans-serif'],
+        sans: ["'Bahij TheSansArabic'", 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

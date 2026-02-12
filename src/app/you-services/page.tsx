@@ -112,12 +112,12 @@ const YOU_CATEGORIES = [
       { 
         offerId: 'sawa_mix', 
         offerName: 'سوا مكس 1200', 
-        price: 4900, 
+        price: 5000, 
         data: '1GB', 
         minutes: '1200', 
         sms: '800', 
         validity: 'شهر', 
-        offertype: '' 
+        offertype: 'Mix_5000_PRE' 
       },
       { 
         offerId: '4g_mix_12gb', 
@@ -563,8 +563,6 @@ export default function YouServicesPage() {
                     </Card>
                 </div>
             )}
-
-            <Toaster />
 
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">

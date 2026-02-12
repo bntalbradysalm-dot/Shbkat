@@ -304,7 +304,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center gap-1 mb-4" dir="ltr">
+      <div className="flex items-baseline justify-center mb-4" dir="ltr">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
@@ -394,6 +394,7 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               mappedOffers = offerResult.offers.map((off: any) => ({
                   offerName: off.offer_name || off.offerName,
+                  // استخراج التواريخ بشكل صحيح من الربط
                   startDate: off.start_date || off.startDate || '...',
                   expireDate: off.expire_date || off.expireDate || '...'
               }));
@@ -716,13 +717,14 @@ export default function YemenMobilePage() {
                                                     {off.offerName}
                                                 </h4>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                        <Calendar className="w-3 h-3 text-primary/60" />
-                                                        <span className="text-[9px] font-bold">الاشتراك: {off.startDate}</span>
-                                                    </div>
+                                                    {/* تبديل الترتيب وجلب التواريخ من الربط */}
                                                     <div className="flex items-center gap-1.5 text-destructive/80">
                                                         <Clock className="w-3 h-3 text-destructive/60" />
                                                         <span className="text-[9px] font-bold">الانتهاء: {off.expireDate}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        <span className="text-[9px] font-bold">الاشتراك: {off.startDate}</span>
                                                     </div>
                                                 </div>
                                             </div>

@@ -58,13 +58,13 @@ type FastOffer = {
 };
 
 const YOU_FAST_OFFERS: FastOffer[] = [
-    { num: '11', value: '1000', price: 1250, title: 'شحن 1000 ريال' },
-    { num: '4', value: '410', price: 513, title: 'شحن 410 ريال' },
-    { num: '6', value: '830', price: 984, title: 'شحن 830 ريال' },
-    { num: '7', value: '1250', price: 1481, title: 'شحن 1250 ريال' },
-    { num: '8', value: '2500', price: 2963, title: 'شحن 2500 ريال' },
-    { num: '9', value: '5000', price: 5925, title: 'شحن 5000 ريال' },
-    { num: '10', value: '7500', price: 8888, title: 'شحن 7500 ريال' },
+    { num: '4', value: '410', price: 1700, title: 'شحن 410 ريال' },
+    { num: '6', value: '830', price: 3500, title: 'شحن 830 ريال' },
+    { num: '11', value: '1000', price: 4000, title: 'شحن 1000 ريال' },
+    { num: '7', value: '1250', price: 5000, title: 'شحن 1250 ريال' },
+    { num: '8', value: '2500', price: 10000, title: 'شحن 2500 ريال' },
+    { num: '9', value: '5000', price: 19000, title: 'شحن 5000 ريال' },
+    { num: '10', value: '7500', price: 29000, title: 'شحن 7500 ريال' },
 ];
 
 const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => void }) => (
@@ -268,8 +268,8 @@ export default function YouServicesPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold" onClick={() => router.push('/transactions')}>
+                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
                                     <History className="ml-2 h-4 w-4" /> العمليات
                                 </Button>
                             </div>

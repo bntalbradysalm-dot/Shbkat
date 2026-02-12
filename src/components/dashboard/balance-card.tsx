@@ -23,11 +23,11 @@ const availableServices = [
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' }, // الموقع الخامس
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
+  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' }, // الموقع التاسع
 ];
 
 type UserProfile = {

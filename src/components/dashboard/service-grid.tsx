@@ -26,11 +26,11 @@ const services: Service[] = [
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { name: 'شدات ببجي', icon: Gamepad2, href: '/games' }, // أصبح الآن في الموقع الخامس
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
+  { name: 'المشتريات', icon: ShoppingBag, href: '/store' }, // أصبح الآن في الموقع التاسع
 ];
 
 const ServiceItem = ({

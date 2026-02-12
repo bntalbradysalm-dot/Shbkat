@@ -50,6 +50,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,8 +143,10 @@ const CATEGORIES = [
     badge: '10',
     icon: Clock,
     offers: [
-      { offerId: 'net_10d_500mb', offerName: 'نت 500 ميجا 10 ايام', price: 600, data: '500MB', validity: '10 ايام', offertype: 'A300071' },
-      { offerId: 'net_10d_1gb', offerName: 'نت 1 جيجا 10 ايام', price: 1000, data: '1GB', validity: '10 ايام', offertype: 'A300072' },
+      { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
+      { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
+      { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74351' },
     ]
   }
 ];
@@ -443,6 +446,9 @@ export default function YemenMobilePage() {
     }
   };
 
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (
@@ -493,7 +499,6 @@ export default function YemenMobilePage() {
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
-                        {/* Account Info Grid - Above Current Subscriptions */}
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">

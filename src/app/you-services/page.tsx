@@ -36,6 +36,7 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,17 +63,30 @@ const YOU_FAST_OFFERS: FastOffer[] = [
 
 const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => void }) => (
     <div 
-      className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-primary/5 mb-3 text-right cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group"
+      className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-2">
-          <div className="bg-[#FFCC00] text-black font-black text-[10px] px-2 py-1 rounded-lg uppercase">YOU FAST</div>
-          <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
+      <div className="flex items-center gap-4">
+          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white">
+              <Image 
+                  src="https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg" 
+                  alt="YOU" 
+                  fill 
+                  className="object-cover"
+              />
+          </div>
+          <div className="text-right">
+              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
+              <p className="text-[10px] font-bold text-muted-foreground">شحن فوري مباشر</p>
+          </div>
       </div>
       
-      <div className="flex items-baseline gap-1 justify-end">
-        <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+      <div className="text-left">
+        <div className="flex items-baseline gap-1 justify-end">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        </div>
+        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
     </div>
 );
@@ -84,7 +98,7 @@ export default function YouServicesPage() {
     const { user } = useUser();
 
     const [phone, setPhone] = useState('');
-    const [activeTab, setActiveTab] = useState("balance");
+    const [activeTab, setActiveTab] = useState("packages");
     const [lineType, setLineType] = useState("prepaid");
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
@@ -119,8 +133,8 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        // Multiply balance amount by 4 as per request
-        const finalPayAmount = typeLabel.includes('رصيد') ? payAmount * 4 : payAmount;
+        // Multiply balance amount by 4 if it's manual balance top-up
+        const finalPayAmount = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
         const totalToDeduct = finalPayAmount;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -139,8 +153,8 @@ export default function YouServicesPage() {
                 transid: transid,
             };
 
-            if (typeLabel.includes('رصيد')) {
-                apiPayload.num = payAmount; // We send the original requested amount to the API
+            if (typeLabel === 'رصيد') {
+                apiPayload.num = payAmount; 
                 apiPayload.israsid = '1';
                 apiPayload.type = lineType;
             } else {
@@ -169,7 +183,7 @@ export default function YouServicesPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد YOU ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. النوع: ${typeLabel.includes('رصيد') ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. النوع: ${typeLabel === 'رصيد' ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -192,59 +206,6 @@ export default function YouServicesPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ العملية..." />;
-
-    if (showSuccess && lastTxDetails) {
-        return (
-            <>
-                <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                        <div className="bg-green-500 p-8 flex justify-center">
-                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                                <CheckCircle className="h-20 w-20 text-white" />
-                            </div>
-                        </div>
-                        <CardContent className="p-8 space-y-6">
-                            <div>
-                                <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                                <p className="text-sm text-muted-foreground mt-1">تم تنفيذ الطلب بنجاح</p>
-                            </div>
-
-                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
-                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span>
-                                    <span className="font-bold">{lastTxDetails.type}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-1">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
-                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
-                                    <History className="ml-2 h-4 w-4" /> العمليات
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </>
-        );
-    }
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -281,12 +242,32 @@ export default function YouServicesPage() {
 
                 {phone.length === 9 && phone.startsWith('73') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        <Tabs defaultValue="balance" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                                <TabsTrigger value="balance" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">رصيد</TabsTrigger>
-                                <TabsTrigger value="fast" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوري</TabsTrigger>
                                 <TabsTrigger value="packages" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
+                                <TabsTrigger value="fast" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوري</TabsTrigger>
+                                <TabsTrigger value="balance" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">رصيد</TabsTrigger>
                             </TabsList>
+
+                            <TabsContent value="packages" className="pt-2 animate-in fade-in-0 duration-300">
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-sm border border-primary/5 text-center">
+                                    <Package className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+                                    <h3 className="text-lg font-black text-muted-foreground">الباقات قريباً</h3>
+                                    <p className="text-xs font-bold text-muted-foreground mt-2">سيتم إضافة باقات شركة YOU في التحديث القادم</p>
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="fast" className="pt-2 animate-in fade-in-0 duration-300">
+                                <div className="grid grid-cols-1 gap-1">
+                                    {YOU_FAST_OFFERS.map((offer) => (
+                                        <FastOfferCard 
+                                            key={offer.num} 
+                                            offer={offer} 
+                                            onClick={() => setSelectedFastOffer(offer)} 
+                                        />
+                                    ))}
+                                </div>
+                            </TabsContent>
 
                             <TabsContent value="balance" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 space-y-6">
@@ -352,32 +333,61 @@ export default function YouServicesPage() {
                                     </Button>
                                 </div>
                             </TabsContent>
-
-                            <TabsContent value="fast" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="grid grid-cols-1 gap-1">
-                                    {YOU_FAST_OFFERS.map((offer) => (
-                                        <FastOfferCard 
-                                            key={offer.num} 
-                                            offer={offer} 
-                                            onClick={() => setSelectedFastOffer(offer)} 
-                                        />
-                                    ))}
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="packages" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-sm border border-primary/5 text-center">
-                                    <Package className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-                                    <h3 className="text-lg font-black text-muted-foreground">الباقات قريباً</h3>
-                                    <p className="text-xs font-bold text-muted-foreground mt-2">سيتم إضافة باقات شركة YOU في التحديث القادم</p>
-                                </div>
-                            </TabsContent>
                         </Tabs>
                     </div>
                 )}
             </div>
 
             <Toaster />
+
+            {showSuccess && lastTxDetails && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
+                    <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+                        <div className="bg-green-500 p-8 flex justify-center">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <CardContent className="p-8 space-y-6">
+                            <div>
+                                <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                                <p className="text-sm text-muted-foreground mt-1">تم تنفيذ الطلب بنجاح</p>
+                            </div>
+
+                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span>
+                                    <span className="font-bold">{lastTxDetails.type}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
+                                    <History className="ml-2 h-4 w-4" /> العمليات
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">

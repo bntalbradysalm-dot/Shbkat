@@ -462,10 +462,10 @@ export default function YemenMobilePage() {
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                     <div className="flex items-baseline gap-1" dir="rtl">
-                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
+                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -687,7 +687,7 @@ export default function YemenMobilePage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                            <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>

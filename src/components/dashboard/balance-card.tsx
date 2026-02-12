@@ -126,7 +126,6 @@ export function BalanceCard() {
             </div>
 
             <div className="flex items-baseline justify-center gap-2" dir="rtl">
-                <span className="text-sm font-bold text-white/80">ريال يمني</span>
                 <h2 className="text-4xl font-black tracking-tight text-white">
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />
@@ -136,6 +135,7 @@ export function BalanceCard() {
                     "******"
                 )}
                 </h2>
+                <span className="text-sm font-bold text-white/80">ريال يمني</span>
             </div>
           </div>
 

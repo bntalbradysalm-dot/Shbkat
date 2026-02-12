@@ -15,9 +15,23 @@ import {
   Smartphone,
   Package,
   Info,
-  Loader2
+  Loader2,
+  Globe,
+  Mail,
+  Phone as PhoneIcon,
+  Clock,
+  Zap,
+  ShieldCheck,
+  Database,
+  ArrowUpDown
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +65,17 @@ type FastOffer = {
     title: string;
 };
 
+type Offer = {
+    offerName: string;
+    offerId: string;
+    price: number;
+    data?: string;
+    sms?: string;
+    minutes?: string;
+    validity?: string;
+    offertype: string; 
+};
+
 const YOU_FAST_OFFERS: FastOffer[] = [
     { num: '4', value: '410', price: 1700, title: 'شحن 410 ريال' },
     { num: '6', value: '830', price: 3500, title: 'شحن 830 ريال' },
@@ -61,12 +86,105 @@ const YOU_FAST_OFFERS: FastOffer[] = [
     { num: '10', value: '7500', price: 29000, title: 'شحن 7500 ريال' },
 ];
 
+const YOU_CATEGORIES = [
+  {
+    id: 'unified',
+    title: 'باقات السعر الموحد',
+    badge: 'YOU',
+    icon: ShieldCheck,
+    offers: [
+      { 
+        offerId: 'unified_4gb', 
+        offerName: 'باقة السعر الموحد 4 قيقا', 
+        price: 2904, 
+        data: '4GB', 
+        minutes: '300', 
+        sms: '200', 
+        validity: 'شهر', 
+        offertype: '' 
+      },
+      { 
+        offerId: 'unified_300', 
+        offerName: 'باقة السعر الموحد 300', 
+        price: 2904, 
+        data: '500MB', 
+        minutes: '300', 
+        sms: '300', 
+        validity: 'شهر', 
+        offertype: '' 
+      },
+      { 
+        offerId: 'sawa_mix', 
+        offerName: 'سوا مكس 1200', 
+        price: 4900, 
+        data: '1GB', 
+        minutes: '1200', 
+        sms: '800', 
+        validity: 'شهر', 
+        offertype: '' 
+      },
+      { 
+        offerId: '4g_mix_12gb', 
+        offerName: 'فورجي مكس 12جيجا', 
+        price: 9874, 
+        data: '12GB', 
+        minutes: '600', 
+        sms: '200', 
+        validity: 'شهر', 
+        offertype: '' 
+      },
+      { 
+        offerId: 'smart_4g_15gb', 
+        offerName: 'سمارت فورجي 15 جيجا', 
+        price: 15000, 
+        data: '15GB', 
+        minutes: '-', 
+        sms: '-', 
+        validity: 'شهر', 
+        offertype: '' 
+      },
+    ]
+  }
+];
+
+const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
+    <div 
+      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      onClick={onClick}
+    >
+      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
+      <div className="flex items-center justify-center mb-4">
+        <span className="text-2xl font-black text-primary">
+            {offer.price.toLocaleString('en-US')} ريال
+        </span>
+      </div>
+      
+      <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
+        <div className="space-y-1.5">
+            <Globe className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.data || '-'}</p>
+        </div>
+        <div className="space-y-1.5">
+            <Mail className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.sms || '-'}</p>
+        </div>
+        <div className="space-y-1.5">
+            <PhoneIcon className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.minutes || '-'}</p>
+        </div>
+        <div className="space-y-1.5">
+            <Clock className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-[11px] font-black text-foreground truncate">{offer.validity || '-'}</p>
+        </div>
+      </div>
+    </div>
+);
+
 const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => void }) => (
     <div 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -82,11 +200,9 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1 flex-row-reverse">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        <div className="flex items-baseline gap-1">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')} ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -104,8 +220,10 @@ export default function YouServicesPage() {
     const [lineType, setLineType] = useState("prepaid");
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
+    const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
     const [isConfirmingBalance, setIsConfirmingBalance] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isActivatingOffer, setIsActivatingOffer] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [lastTxDetails, setLastTxDetails] = useState<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -135,11 +253,9 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        // Multiply amount by 4 for Balance tab as requested
-        const finalPayAmount = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
-        const totalToDeduct = finalPayAmount;
+        const finalToDeduct = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
 
-        if ((userProfile?.balance ?? 0) < totalToDeduct) {
+        if ((userProfile?.balance ?? 0) < finalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
             return;
         }
@@ -147,7 +263,6 @@ export default function YouServicesPage() {
         setIsProcessing(true);
         try {
             const transid = Date.now().toString().slice(-8);
-            
             const apiPayload: any = {
                 mobile: phone,
                 action: 'bill',
@@ -179,13 +294,13 @@ export default function YouServicesPage() {
             }
             
             const batch = writeBatch(firestore);
-            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
+            batch.update(userDocRef, { balance: increment(-finalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid,
                 transactionDate: new Date().toISOString(),
-                amount: totalToDeduct,
+                amount: finalToDeduct,
                 transactionType: `سداد YOU ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. النوع: ${typeLabel === 'رصيد' ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -194,7 +309,7 @@ export default function YouServicesPage() {
             setLastTxDetails({
                 type: `سداد YOU ${typeLabel}`,
                 phone: phone,
-                amount: totalToDeduct,
+                amount: finalToDeduct,
                 transid: transid
             });
             setShowSuccess(true);
@@ -207,7 +322,53 @@ export default function YouServicesPage() {
         }
     };
 
+    const handleActivateOffer = async () => {
+        if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
+        
+        const totalToDeduct = selectedOffer.price;
+
+        if ((userProfile?.balance ?? 0) < totalToDeduct) {
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
+            return;
+        }
+
+        setIsActivatingOffer(true);
+        try {
+            const transid = Date.now().toString().slice(-8);
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: phone, action: 'billover', service: 'you', offertype: selectedOffer.offertype, transid })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
+
+            const batch = writeBatch(firestore);
+            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
+            batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
+                userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
+                transactionType: `تفعيل باقة YOU: ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone,
+                transid: transid
+            });
+            await batch.commit();
+            
+            setLastTxDetails({
+                type: `تفعيل ${selectedOffer.offerName}`,
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
+            setShowSuccess(true);
+            setSelectedOffer(null);
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "خطأ", description: e.message });
+        } finally {
+            setIsActivatingOffer(false);
+        }
+    };
+
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ العملية..." />;
+    if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -252,11 +413,25 @@ export default function YouServicesPage() {
                             </TabsList>
 
                             <TabsContent value="packages" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-sm border border-primary/5 text-center">
-                                    <Package className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-                                    <h3 className="text-lg font-black text-muted-foreground">الباقات قريباً</h3>
-                                    <p className="text-xs font-bold text-muted-foreground mt-2">سيتم إضافة باقات شركة YOU في التحديث القادم</p>
-                                </div>
+                                <Accordion type="single" collapsible className="w-full space-y-3">
+                                    {YOU_CATEGORIES.map((cat) => (
+                                        <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                            <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
+                                                        {cat.badge}
+                                                    </div>
+                                                    <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                                {cat.offers.map((o) => (
+                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                                ))}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
                             </TabsContent>
 
                             <TabsContent value="fast" className="pt-2 animate-in fade-in-0 duration-300">
@@ -409,7 +584,7 @@ export default function YouServicesPage() {
                                 <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة (4%):</span>
+                                <span className="text-muted-foreground">النسبة (4 أضعاف):</span>
                                 <span className="font-bold">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
@@ -444,6 +619,31 @@ export default function YouServicesPage() {
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                         <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
                         <AlertDialogAction onClick={() => selectedFastOffer && handleProcessPayment(selectedFastOffer.price, selectedFastOffer.title, selectedFastOffer.num)} className="w-full rounded-2xl h-12 font-bold">
+                            تفعيل الآن
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
+                <AlertDialogContent className="rounded-[32px]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
+                        <div className="py-4 space-y-3 text-right text-sm">
+                            <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">رقم الهاتف:</span>
+                                <span className="font-bold">{phone}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
+                                <span className="font-black">إجمالي الخصم:</span>
+                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                            </div>
+                        </div>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
                             تفعيل الآن
                         </AlertDialogAction>
                     </AlertDialogFooter>

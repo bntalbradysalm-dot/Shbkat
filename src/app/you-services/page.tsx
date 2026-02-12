@@ -137,7 +137,7 @@ const YOU_CATEGORIES = [
         minutes: '-', 
         sms: '-', 
         validity: 'شهر', 
-        offertype: '' 
+        offertype: 'Smart15Giga_4G_PRE' 
       },
     ]
   }
@@ -153,7 +153,6 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
-        <span className="text-xs font-bold text-primary/60">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -197,7 +196,7 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      <div className="flex flex-col items-end text-left shrink-0">
+      <div className="flex flex-col items-center justify-center shrink-0">
         <div className="flex items-baseline gap-1">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] font-bold text-muted-foreground">ريال</span>

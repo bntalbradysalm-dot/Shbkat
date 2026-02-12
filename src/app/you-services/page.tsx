@@ -188,7 +188,6 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -204,11 +203,9 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -387,7 +384,7 @@ export default function YouServicesPage() {
                     mobile: phone, 
                     action: 'bill', 
                     service: 'you', 
-                    num: selectedOffer.id || selectedOffer.price, // استخدام المعرف الرقمي إذا وجد
+                    num: selectedOffer.id || selectedOffer.price,
                     offertype: selectedOffer.offertype, 
                     type: lineType,
                     transid 

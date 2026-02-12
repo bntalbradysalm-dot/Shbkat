@@ -623,9 +623,6 @@ export default function YemenMobilePage() {
     }
   };
 
-  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (

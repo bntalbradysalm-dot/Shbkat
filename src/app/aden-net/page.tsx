@@ -12,7 +12,6 @@ import {
   Search,
   Globe,
   Clock,
-  Loader2,
   Hash,
   Calendar,
   History,
@@ -239,6 +238,7 @@ export default function AdenNetPage() {
     };
 
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -331,7 +331,7 @@ export default function AdenNetPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                <Search className="ml-2 h-4 w-4" />
                                 استعلام
                             </Button>
                         </div>

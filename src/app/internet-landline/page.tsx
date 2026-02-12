@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Loader2, 
   Search,
   Hash,
   Calendar,
@@ -231,6 +230,7 @@ export default function LandlineRedesignPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -263,7 +263,7 @@ export default function LandlineRedesignPage() {
                                     <span className="font-bold">{lastTxDetails.type}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
                                     <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
@@ -323,7 +323,7 @@ export default function LandlineRedesignPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                <Search className="ml-2 h-4 w-4" />
                                 استعلام
                             </Button>
                         </div>

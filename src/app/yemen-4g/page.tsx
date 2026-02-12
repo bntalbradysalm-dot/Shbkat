@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Loader2, 
-  Zap, 
   Search,
   Hash,
   Calendar,
@@ -313,6 +311,7 @@ export default function Yemen4GPage() {
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -405,7 +404,7 @@ export default function Yemen4GPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                <Search className="ml-2 h-4 w-4" />
                                 استعلام
                             </Button>
                         </div>

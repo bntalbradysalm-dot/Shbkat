@@ -357,6 +357,18 @@ export default function YemenMobilePage() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
+  const formatDateSafe = (dateStr: string, formatStr: string) => {
+    if (!dateStr || dateStr === '...' || dateStr === '..') return '...';
+    try {
+        // تنظيف التاريخ وتبديل الفواصل لدعم المتصفحات المختلفة
+        const d = new Date(dateStr.replace(/-/g, '/'));
+        if (isNaN(d.getTime())) return dateStr;
+        return format(d, formatStr, { locale: ar });
+    } catch (e) {
+        return dateStr;
+    }
+  };
+
   const handleSearch = useCallback(async () => {
     if (!phone || phone.length !== 9) return;
     setIsSearching(true);
@@ -394,7 +406,6 @@ export default function YemenMobilePage() {
           if (offerResponse.ok && offerResult.offers) {
               mappedOffers = offerResult.offers.map((off: any) => ({
                   offerName: off.offer_name || off.offerName,
-                  // استخراج التواريخ بشكل صحيح من الربط
                   startDate: off.start_date || off.startDate || '...',
                   expireDate: off.expire_date || off.expireDate || '...'
               }));
@@ -717,14 +728,13 @@ export default function YemenMobilePage() {
                                                     {off.offerName}
                                                 </h4>
                                                 <div className="flex flex-col gap-0.5">
-                                                    {/* تبديل الترتيب وجلب التواريخ من الربط */}
                                                     <div className="flex items-center gap-1.5 text-destructive/80">
                                                         <Clock className="w-3 h-3 text-destructive/60" />
-                                                        <span className="text-[9px] font-bold">الانتهاء: {off.expireDate}</span>
+                                                        <span className="text-[9px] font-bold">الانتهاء: {formatDateSafe(off.expireDate, 'd/MMMM/yyyy')}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-muted-foreground">
                                                         <Calendar className="w-3 h-3 text-primary/60" />
-                                                        <span className="text-[9px] font-bold">الاشتراك: {off.startDate}</span>
+                                                        <span className="text-[9px] font-bold">الاشتراك: {formatDateSafe(off.startDate, 'd MMMM yyyy')}</span>
                                                     </div>
                                                 </div>
                                             </div>

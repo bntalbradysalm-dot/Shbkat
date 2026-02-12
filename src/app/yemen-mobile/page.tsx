@@ -368,12 +368,40 @@ export default function YemenMobilePage() {
       });
       const solfaResult = await solfaResponse.json();
 
+      const offerResponse = await fetch('/api/telecom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
+      });
+      const offerResult = await offerResponse.json();
+
       if (queryResponse.ok) {
-          let typeLabel = queryResult.mobileTy || '';
-          if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
-              typeLabel = 'فوترة';
-          } else {
-              typeLabel = 'دفع مسبق';
+          // دقة الكشف عن نوع الرقم
+          let detectedType = 'دفع مسبق';
+          const mobileTy = (queryResult.mobileTy || '').toLowerCase();
+          
+          if (mobileTy.includes('فوترة') || mobileTy.includes('postpaid')) {
+              detectedType = 'فوترة';
+          }
+
+          let mappedOffers: ActiveOffer[] = [];
+          if (offerResponse.ok && offerResult.offers) {
+              mappedOffers = offerResult.offers.map((off: any) => ({
+                  offerName: off.offer_name || off.offerName,
+                  startDate: off.start_date || off.startDate || '...',
+                  expireDate: off.expire_date || off.expireDate || '...'
+              }));
+              
+              // فحص إضافي من العروض: إذا وجدت كلمة "فوترة" في أي عرض نشط، نعتبر الرقم فوترة
+              if (detectedType === 'دفع مسبق') {
+                  const hasPostpaidOffer = mappedOffers.some(off => 
+                      off.offerName.toLowerCase().includes('فوترة') || 
+                      off.offerName.toLowerCase().includes('postpaid')
+                  );
+                  if (hasPostpaidOffer) {
+                      detectedType = 'فوترة';
+                  }
+              }
           }
 
           const isLoan = solfaResult.status === "1" || solfaResult.status === 1;
@@ -381,28 +409,13 @@ export default function YemenMobilePage() {
 
           setBillingInfo({ 
               balance: parseFloat(queryResult.balance || "0"), 
-              customer_type: typeLabel,
+              customer_type: detectedType,
               resultDesc: queryResult.resultDesc,
               isLoan: isLoan,
               loanAmount: loanAmt
           });
           
-          const offerResponse = await fetch('/api/telecom', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
-          });
-          const offerResult = await offerResponse.json();
-          if (offerResponse.ok && offerResult.offers) {
-              const mappedOffers = offerResult.offers.map((off: any) => ({
-                  offerName: off.offer_name || off.offerName,
-                  startDate: off.start_date || off.startDate || '...',
-                  expireDate: off.expire_date || off.expireDate || '...'
-              }));
-              setActiveOffers(mappedOffers);
-          } else {
-              setActiveOffers([]);
-          }
+          setActiveOffers(mappedOffers);
       }
     } catch (e) {
         console.error("Search Error:", e);
@@ -419,14 +432,14 @@ export default function YemenMobilePage() {
               title: 'خطأ في الرقم',
               description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
           });
-          setBillingInfo(prev => prev === null ? null : null);
-          setActiveOffers(prev => prev.length === 0 ? prev : []);
+          setBillingInfo(null);
+          setActiveOffers([]);
           return;
       }
       handleSearch();
     } else {
-        setBillingInfo(prev => prev === null ? null : null);
-        setActiveOffers(prev => prev.length === 0 ? prev : []);
+        setBillingInfo(null);
+        setActiveOffers([]);
     }
   }, [phone, toast, handleSearch]);
 
@@ -808,9 +821,7 @@ export default function YemenMobilePage() {
 
                     <div className="grid grid-cols-2 gap-3">
                         <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                            <History className="ml-2 h-4 w-4" /> العمليات
-                        </Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={handleSearch}>تحديث</Button>
                     </div>
                 </CardContent>
             </Card>

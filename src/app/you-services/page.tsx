@@ -37,9 +37,9 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
@@ -111,7 +111,7 @@ const YOU_CATEGORIES = [
         minutes: '300', 
         sms: '300', 
         validity: 'شهر', 
-        offertype: '' 
+        offertype: 'Sawa_300_PRE' 
       },
       { 
         offerId: 'sawa_mix', 
@@ -153,10 +153,11 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-center justify-center mb-4">
+      <div className="flex items-baseline justify-center gap-1 mb-4 flex-row-reverse">
         <span className="text-2xl font-black text-primary">
-            {offer.price.toLocaleString('en-US')} ريال
+            {offer.price.toLocaleString('en-US')}
         </span>
+        <span className="text-sm font-bold text-primary/60">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -185,6 +186,7 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
+      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -200,9 +202,11 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
+      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')} ريال</span>
+        <div className="flex items-baseline gap-1 flex-row-reverse">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -565,6 +569,8 @@ export default function YouServicesPage() {
                     </Card>
                 </div>
             )}
+
+            <Toaster />
 
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">

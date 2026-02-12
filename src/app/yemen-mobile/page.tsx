@@ -700,7 +700,7 @@ export default function YemenMobilePage() {
                             <div className="p-4 space-y-2">
                                 {activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-3 items-center p-2.5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
                                                     onClick={() => handleRenewOffer(off.offerName)}
@@ -711,11 +711,20 @@ export default function YemenMobilePage() {
                                                 </button>
                                             </div>
 
-                                            <div className="flex-1">
+                                            <div className="flex-1 space-y-1">
                                                 <h4 className="text-xs font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                     {off.offerName}
                                                 </h4>
-                                                <p className="text-[9px] font-bold text-muted-foreground mt-0.5">باقة نشطة حالياً</p>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        <span className="text-[9px] font-bold">الاشتراك: {off.startDate}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-destructive/80">
+                                                        <Clock className="w-3 h-3 text-destructive/60" />
+                                                        <span className="text-[9px] font-bold">الانتهاء: {off.expireDate}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))

@@ -34,7 +34,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,16 +357,30 @@ export default function YemenMobilePage() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  const formatDateSafe = (dateStr: string, formatStr: string) => {
-    if (!dateStr || dateStr === '...' || dateStr === '..') return '...';
-    try {
-        // تنظيف التاريخ وتبديل الفواصل لدعم المتصفحات المختلفة
-        const d = new Date(dateStr.replace(/-/g, '/'));
-        if (isNaN(d.getTime())) return dateStr;
-        return format(d, formatStr, { locale: ar });
-    } catch (e) {
-        return dateStr;
-    }
+  const parseTelecomDate = (dateStr: string) => {
+    if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 8) return null;
+    // YYYYMMDDHHMMSS
+    const year = parseInt(dateStr.substring(0, 4));
+    const month = parseInt(dateStr.substring(4, 6)) - 1;
+    const day = parseInt(dateStr.substring(6, 8));
+    const hour = parseInt(dateStr.substring(8, 10) || "0");
+    const minute = parseInt(dateStr.substring(10, 12) || "0");
+    const second = parseInt(dateStr.substring(12, 14) || "0");
+    const d = new Date(year, month, day, hour, minute, second);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const formatSubscriptionDate = (dateStr: string) => {
+    const d = parseTelecomDate(dateStr);
+    if (!d) return '...';
+    return format(d, 'd MMMM yyyy', { locale: ar });
+  };
+
+  const formatExpiryDate = (dateStr: string) => {
+    const d = parseTelecomDate(dateStr);
+    if (!d) return '...';
+    // Format: 25/فبراير/2025
+    return `${format(d, 'd', { locale: ar })}/${format(d, 'MMMM', { locale: ar })}/${format(d, 'yyyy', { locale: ar })}`;
   };
 
   const handleSearch = useCallback(async () => {
@@ -405,9 +419,9 @@ export default function YemenMobilePage() {
           let mappedOffers: ActiveOffer[] = [];
           if (offerResponse.ok && offerResult.offers) {
               mappedOffers = offerResult.offers.map((off: any) => ({
-                  offerName: off.offer_name || off.offerName,
-                  startDate: off.start_date || off.startDate || '...',
-                  expireDate: off.expire_date || off.expireDate || '...'
+                  offerName: off.offerName || off.offer_name || '...',
+                  startDate: off.offerStartDate || off.start_date || off.startDate || '...',
+                  expireDate: off.offerEndDate || off.expire_date || off.expireDate || '...'
               }));
               
               if (detectedType === 'دفع مسبق') {
@@ -730,11 +744,11 @@ export default function YemenMobilePage() {
                                                 <div className="flex flex-col gap-0.5">
                                                     <div className="flex items-center gap-1.5 text-destructive/80">
                                                         <Clock className="w-3 h-3 text-destructive/60" />
-                                                        <span className="text-[9px] font-bold">الانتهاء: {formatDateSafe(off.expireDate, 'd/MMMM/yyyy')}</span>
+                                                        <span className="text-[9px] font-bold">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-muted-foreground">
                                                         <Calendar className="w-3 h-3 text-primary/60" />
-                                                        <span className="text-[9px] font-bold">الاشتراك: {formatDateSafe(off.startDate, 'd MMMM yyyy')}</span>
+                                                        <span className="text-[9px] font-bold">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
                                                     </div>
                                                 </div>
                                             </div>

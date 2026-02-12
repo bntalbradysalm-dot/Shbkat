@@ -308,7 +308,6 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
-        <span className="text-sm font-bold text-primary/60">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">

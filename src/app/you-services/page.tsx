@@ -13,7 +13,8 @@ import {
   Calendar,
   History,
   Smartphone,
-  Package
+  Package,
+  Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -82,6 +83,7 @@ export default function YouServicesPage() {
 
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("balance");
+    const [lineType, setLineType] = useState("prepaid");
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
     const [isConfirmingBalance, setIsConfirmingBalance] = useState(false);
@@ -125,18 +127,30 @@ export default function YouServicesPage() {
         setIsProcessing(true);
         try {
             const transid = Date.now().toString().slice(-8);
+            
+            // تجهيز البيانات بناءً على نوع العملية
+            const apiPayload: any = {
+                mobile: phone,
+                action: 'bill',
+                service: 'you',
+                transid: transid,
+            };
+
+            if (typeLabel === 'رصيد') {
+                // تسديد رصيد مفتوح
+                apiPayload.num = payAmount;
+                apiPayload.israsid = '1';
+                apiPayload.type = lineType; // prepaid or postpaid
+            } else {
+                // شحن فوري (باقات محددة)
+                apiPayload.num = numCode;
+                apiPayload.type = 'prepaid';
+            }
+
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mobile: phone, 
-                    amount: payAmount, 
-                    action: 'bill',
-                    service: 'you',
-                    num: numCode,
-                    type: 'prepaid', // Default to prepaid
-                    transid: transid,
-                })
+                body: JSON.stringify(apiPayload)
             });
             const result = await response.json();
             
@@ -154,7 +168,7 @@ export default function YouServicesPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد YOU ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. النوع: ${typeLabel === 'رصيد' ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -274,21 +288,66 @@ export default function YouServicesPage() {
                             </TabsList>
 
                             <TabsContent value="balance" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                                    <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
-                                    <div className="relative max-w-[240px] mx-auto">
-                                        <Input 
-                                            type="number" 
-                                            placeholder="0.00" 
-                                            value={amount} 
-                                            onChange={(e) => setAmount(e.target.value)} 
-                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
-                                        />
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 space-y-6">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="grid grid-cols-2 gap-2 w-full max-w-[240px] bg-muted/20 p-1 rounded-xl">
+                                            <button 
+                                                onClick={() => setLineType('prepaid')}
+                                                className={cn(
+                                                    "py-2 rounded-lg text-[10px] font-black transition-all",
+                                                    lineType === 'prepaid' ? "bg-primary text-white shadow-sm" : "text-muted-foreground"
+                                                )}
+                                            >
+                                                دفع مسبق
+                                            </button>
+                                            <button 
+                                                onClick={() => setLineType('postpaid')}
+                                                className={cn(
+                                                    "py-2 rounded-lg text-[10px] font-black transition-all",
+                                                    lineType === 'postpaid' ? "bg-primary text-white shadow-sm" : "text-muted-foreground"
+                                                )}
+                                            >
+                                                فوترة
+                                            </button>
+                                        </div>
+
+                                        <div className="w-full text-center">
+                                            <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
+                                            <div className="relative max-w-[240px] mx-auto">
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="0.00" 
+                                                    value={amount} 
+                                                    onChange={(e) => setAmount(e.target.value)} 
+                                                    className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                                />
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {amount && parseFloat(amount) >= 200 && (
+                                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3 animate-in zoom-in-95">
+                                            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-black text-primary uppercase mb-1">توضيح العملية</p>
+                                                <p className="text-[11px] font-bold text-muted-foreground leading-relaxed">
+                                                    سيتم خصم <span className="text-primary font-black">{parseFloat(amount).toLocaleString()} ريال</span> من محفظتك، وسيصل للرقم رصيد صافي بقيمة تقريبية <span className="text-primary font-black">{(parseFloat(amount) * 0.828).toFixed(2)} ريال</span> بعد خصم الضرائب.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
-                                        onClick={() => setIsConfirmingBalance(true)} 
+                                        className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20" 
+                                        onClick={() => {
+                                            const val = parseFloat(amount);
+                                            if (isNaN(val) || val < 200 || val > 100000) {
+                                                toast({ variant: 'destructive', title: 'خطأ في المبلغ', description: 'المبلغ يجب أن يكون بين 200 و 100,000 ريال.' });
+                                                return;
+                                            }
+                                            setIsConfirmingBalance(true);
+                                        }} 
                                         disabled={!amount}
                                     >
                                         تنفيذ السداد
@@ -331,6 +390,10 @@ export default function YouServicesPage() {
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">نوع الخط:</span>
+                                <span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي المطلوب:</span>

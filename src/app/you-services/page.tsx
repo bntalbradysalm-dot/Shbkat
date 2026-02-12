@@ -154,7 +154,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center mb-4">
+      <div className="flex items-baseline justify-center mb-4" dir="ltr">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
@@ -186,6 +186,7 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
+      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -201,6 +202,7 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
+      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
@@ -383,6 +385,7 @@ export default function YouServicesPage() {
                     mobile: phone, 
                     action: 'bill', 
                     service: 'you', 
+                    num: selectedOffer.price, // num is required and should be numeric
                     offertype: selectedOffer.offertype, 
                     type: lineType,
                     transid 

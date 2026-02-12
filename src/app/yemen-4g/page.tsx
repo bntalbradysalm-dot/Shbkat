@@ -474,7 +474,7 @@ export default function Yemen4GPage() {
                                         onClick={() => setIsConfirming(true)} 
                                         disabled={!amount}
                                     >
-                                        تنفيذ السداد
+                                        تسديد الآن
                                     </Button>
                                 </div>
                             </TabsContent>
@@ -513,9 +513,9 @@ export default function Yemen4GPage() {
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                         <div className="py-4 space-y-3 text-right text-sm">
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg" dir="ltr">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

@@ -83,10 +83,10 @@ export default function LandlineRedesignPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم الثابت يجب أن يبدأ بـ 0'
             });
-            setQueryResult(null);
         }
+        
         if (phone.length !== 8) {
-            setQueryResult(null);
+            setQueryResult(prev => prev === null ? null : null);
         }
     }, [phone, toast]);
 

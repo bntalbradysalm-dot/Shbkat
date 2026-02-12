@@ -126,10 +126,10 @@ export default function AdenNetPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم عدن نت يجب أن يبدأ بـ 79'
             });
-            setQueryResult(null);
         }
+        
         if (phone.length !== 9) {
-            setQueryResult(null);
+            setQueryResult(prev => prev === null ? null : null);
         }
     }, [phone, toast]);
 

@@ -129,7 +129,6 @@ export default function YouServicesPage() {
         try {
             const transid = Date.now().toString().slice(-8);
             
-            // تجهيز البيانات بناءً على نوع العملية
             const apiPayload: any = {
                 mobile: phone,
                 action: 'bill',
@@ -138,12 +137,10 @@ export default function YouServicesPage() {
             };
 
             if (typeLabel === 'رصيد') {
-                // تسديد رصيد مفتوح
                 apiPayload.num = payAmount;
                 apiPayload.israsid = '1';
-                apiPayload.type = lineType; // prepaid or postpaid
+                apiPayload.type = lineType;
             } else {
-                // شحن فوري (باقات محددة)
                 apiPayload.num = numCode;
                 apiPayload.type = 'prepaid';
             }
@@ -382,7 +379,6 @@ export default function YouServicesPage() {
 
             <Toaster />
 
-            {/* Confirm Manual Balance Dialog */}
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
@@ -409,7 +405,6 @@ export default function YouServicesPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Confirm Fast Charge Dialog */}
             <AlertDialog open={!!selectedFastOffer} onOpenChange={setSelectedFastOffer(null)}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>

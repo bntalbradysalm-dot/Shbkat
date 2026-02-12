@@ -133,10 +133,10 @@ export default function Yemen4GPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
             });
-            setQueryResult(null);
         }
+        
         if (phone.length !== 9) {
-            setQueryResult(null);
+            setQueryResult(prev => prev === null ? null : null);
         }
     }, [phone, toast]);
 

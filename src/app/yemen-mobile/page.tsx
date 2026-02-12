@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -350,26 +350,7 @@ export default function YemenMobilePage() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  useEffect(() => {
-    if (phone.length === 9) {
-      if (!phone.startsWith('77') && !phone.startsWith('78')) {
-          toast({
-              variant: 'destructive',
-              title: 'خطأ في الرقم',
-              description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
-          });
-          setBillingInfo(null);
-          setActiveOffers([]);
-          return;
-      }
-      handleSearch();
-    } else {
-        setBillingInfo(null);
-        setActiveOffers([]);
-    }
-  }, [phone, toast]);
-
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!phone || phone.length !== 9) return;
     setIsSearching(true);
     try {
@@ -428,7 +409,32 @@ export default function YemenMobilePage() {
     } finally {
         setIsSearching(false);
     }
-  };
+  }, [phone]);
+
+  useEffect(() => {
+    if (phone.length === 9) {
+      if (!phone.startsWith('77') && !phone.startsWith('78')) {
+          toast({
+              variant: 'destructive',
+              title: 'خطأ في الرقم',
+              description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
+          });
+          setBillingInfo(null);
+          setActiveOffers([]);
+          return;
+      }
+      handleSearch();
+    } else {
+        setBillingInfo(prev => prev === null ? null : null);
+        setActiveOffers(prev => prev.length === 0 ? prev : []);
+    }
+  }, [phone, toast, handleSearch]);
+
+  useEffect(() => {
+    if (showSuccess && audioRef.current) {
+        audioRef.current.play().catch(e => console.error("Audio play failed", e));
+    }
+  }, [showSuccess]);
 
   const handleTabChange = (val: string) => {
     setActiveTab(val);

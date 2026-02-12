@@ -83,6 +83,13 @@ type Offer = {
     offertype: string; 
 };
 
+const HADAYA_OFFERS: Offer[] = [
+  { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
+  { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
+  { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
+  { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
+];
+
 const CATEGORIES = [
   {
     id: 'mazaya',
@@ -297,10 +304,11 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-center justify-center mb-4">
+      <div className="flex items-baseline justify-center gap-1 mb-4" dir="ltr">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
+        <span className="text-sm font-bold text-primary/60">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -376,7 +384,6 @@ export default function YemenMobilePage() {
       const offerResult = await offerResponse.json();
 
       if (queryResponse.ok) {
-          // دقة الكشف عن نوع الرقم
           let detectedType = 'دفع مسبق';
           const mobileTy = (queryResult.mobileTy || '').toLowerCase();
           
@@ -392,7 +399,6 @@ export default function YemenMobilePage() {
                   expireDate: off.expire_date || off.expireDate || '...'
               }));
               
-              // فحص إضافي من العروض: إذا وجدت كلمة "فوترة" في أي عرض نشط، نعتبر الرقم فوترة
               if (detectedType === 'دفع مسبق') {
                   const hasPostpaidOffer = mappedOffers.some(off => 
                       off.offerName.toLowerCase().includes('فوترة') || 
@@ -473,6 +479,13 @@ export default function YemenMobilePage() {
             return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
         });
         if (foundOffer) break;
+    }
+
+    if (!foundOffer && billingInfo?.customer_type === 'فوترة') {
+        foundOffer = HADAYA_OFFERS.find(o => {
+            const normalizedOfferName = normalize(o.offerName);
+            return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
+        });
     }
 
     if (foundOffer) {
@@ -717,27 +730,37 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                            {CATEGORIES.map((cat) => (
-                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
-                                    <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
-                                                {cat.badge}
+                            {CATEGORIES.map((cat) => {
+                                let categoryTitle = cat.title;
+                                let categoryOffers = cat.offers;
+                                
+                                if (cat.id === 'mazaya' && billingInfo?.customer_type === 'فوترة') {
+                                    categoryTitle = 'باقات هدايا';
+                                    categoryOffers = HADAYA_OFFERS;
+                                }
+
+                                return (
+                                    <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                        <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
+                                                    {cat.badge}
+                                                </div>
+                                                <span className="text-sm font-black flex-1 mr-4 text-right">{categoryTitle}</span>
                                             </div>
-                                            <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {cat.offers.length > 0 ? (
-                                            cat.offers.map((o) => (
-                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                            ))
-                                        ) : (
-                                            <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                            {categoryOffers.length > 0 ? (
+                                                categoryOffers.map((o) => (
+                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                                ))
+                                            ) : (
+                                                <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
+                                            )}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                );
+                            })}
                         </Accordion>
                         </>
                     )}
@@ -758,7 +781,7 @@ export default function YemenMobilePage() {
                         </div>
                         
                         {amount && (
-                            <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2">
+                            <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
                                 <p className="text-xl font-black text-primary">
                                     {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +58,7 @@ export default function AlwadiPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [lastTxId, setLastTxId] = useState('');
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -117,6 +120,8 @@ export default function AlwadiPage() {
     setIsProcessing(true);
     const numericPrice = selectedOption.price;
     const currentBalance = userProfile.balance ?? 0;
+    const txId = Math.random().toString(36).substring(2, 10).toUpperCase();
+    setLastTxId(txId);
 
     const renewalRequestData = {
       userId: user.uid,
@@ -128,6 +133,7 @@ export default function AlwadiPage() {
       cardNumber: cardNumber,
       status: 'pending',
       requestTimestamp: new Date().toISOString(),
+      transid: txId,
     };
 
     const batch = writeBatch(firestore);
@@ -173,37 +179,48 @@ export default function AlwadiPage() {
     return (
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-          <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
-              <CardContent className="p-8">
-                  <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="bg-green-100 p-4 rounded-full">
-                          <CheckCircle className="h-16 w-16 text-green-600" />
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+          <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+              <div className="bg-green-500 p-8 flex justify-center items-center">
+                  <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                    <CheckCircle className="h-16 w-16 text-white" />
+                  </div>
+              </div>
+              <CardContent className="p-8 space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-black text-green-600">تم إرسال الطلب بنجاح</h2>
+                    <p className="text-sm text-muted-foreground mt-1">سيتم تنفيذ طلبك خلال دقائق</p>
+                  </div>
+                  
+                  <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                      <div className="flex justify-between items-center border-b border-muted pb-2">
+                          <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                          <span className="font-mono font-black text-primary">{lastTxId}</span>
                       </div>
-                      <h2 className="text-xl font-bold">تم إرسال طلبك بنجاح</h2>
-                      
-                      <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2 text-right">
-                         <div className="flex justify-between">
-                              <span className="text-muted-foreground">الفئة:</span>
-                              <span className="font-semibold">{selectedOption?.title}</span>
-                          </div>
-                          <div className="flex justify-between">
-                              <span className="text-muted-foreground">المبلغ:</span>
-                              <span className="font-semibold text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
-                          </div>
-                           <div className="flex justify-between">
-                              <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                              <span className="font-semibold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
-                          </div>
+                      <div className="flex justify-between items-center border-b border-muted pb-2">
+                          <span className="text-muted-foreground flex items-center gap-2"><SatelliteDish className="w-3.5 h-3.5" /> باقة التجديد:</span>
+                          <span className="font-bold">{selectedOption?.title}</span>
                       </div>
+                      <div className="flex justify-between items-center border-b border-muted pb-2">
+                          <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
+                          <span className="font-mono font-bold tracking-widest">{cardNumber}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-muted pb-2">
+                          <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                          <span className="font-black text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1">
+                          <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                          <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                      </div>
+                  </div>
 
-                      <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                          <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => router.push('/login')}>الرئيسية</Button>
-                          <Button className="flex-1 rounded-2xl h-12" onClick={() => router.push('/transactions')}>
-                             <History className="ml-2 h-4 w-4" />
-                             العمليات
-                          </Button>
-                      </div>
+                  <div className="w-full grid grid-cols-2 gap-3 pt-2">
+                      <Button variant="outline" className="flex-1 rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                      <Button className="flex-1 rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                         <History className="ml-2 h-4 w-4" />
+                         العمليات
+                      </Button>
                   </div>
               </CardContent>
           </Card>

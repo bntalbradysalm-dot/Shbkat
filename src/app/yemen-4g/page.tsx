@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Loader2, 
-  Zap, 
-  Smartphone,
   Search,
-  Activity
+  Hash,
+  Calendar,
+  History,
+  Globe,
+  Clock,
+  Phone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -31,8 +33,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +73,7 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-          <div className="bg-primary/10 text-primary font-black text-[10px] px-2 py-1 rounded-lg">4G LTE</div>
+          <div className="bg-primary text-white font-black text-[10px] px-2 py-1 rounded-lg uppercase">4G LTE</div>
           <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
       </div>
       
@@ -82,9 +84,11 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
         <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
+            <Globe className="w-3 h-3 text-primary" />
             <p className="text-[10px] font-bold">{offer.data}</p>
         </div>
         <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
+            <Clock className="w-3 h-3 text-primary" />
             <p className="text-[10px] font-bold">{offer.validity}</p>
         </div>
       </div>
@@ -107,6 +111,7 @@ export default function Yemen4GPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isActivatingOffer, setIsActivatingOffer] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [lastTxDetails, setLastTxDetails] = useState<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const userDocRef = useMemoFirebase(
@@ -122,16 +127,31 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
+        if (phone.length === 9 && !phone.startsWith('10')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
+            });
+            setQueryResult(null);
+        }
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone]);
+    }, [phone, toast]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 9) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم هاتف صحيح مكون من 9 أرقام' });
+        if (!phone || phone.length !== 9) return;
+        
+        if (!phone.startsWith('10')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي'
+            });
             return;
         }
+
         setIsSearching(true);
         setQueryResult(null);
         try {
@@ -180,7 +200,7 @@ export default function Yemen4GPage() {
         const baseAmount = parseFloat(amount);
         if (isNaN(baseAmount) || baseAmount <= 0) return;
 
-        const commission = Math.ceil(baseAmount * 0.05);
+        const commission = Math.ceil(baseAmount * 0.10);
         const totalToDeduct = baseAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -190,7 +210,7 @@ export default function Yemen4GPage() {
 
         setIsProcessing(true);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -214,9 +234,17 @@ export default function Yemen4GPage() {
                 amount: totalToDeduct,
                 transactionType: 'سداد يمن فورجي',
                 notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي`,
-                recipientPhoneNumber: phone
+                recipientPhoneNumber: phone,
+                transid: transid
             });
             await batch.commit();
+            
+            setLastTxDetails({
+                type: 'سداد رصيد يمن فورجي',
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
             setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
@@ -230,17 +258,17 @@ export default function Yemen4GPage() {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
         const basePrice = selectedOffer.price;
-        const commission = Math.ceil(basePrice * 0.05);
+        const commission = Math.ceil(basePrice * 0.10);
         const totalToDeduct = basePrice + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل الباقة شاملة النسبة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة شاملة النسبة.' });
             return;
         }
 
         setIsActivatingOffer(true);
         try {
-            const transid = Date.now().toString();
+            const transid = Date.now().toString().slice(-8);
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -260,10 +288,18 @@ export default function Yemen4GPage() {
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. تشمل النسبة: ${commission} ر.ي`, recipientPhoneNumber: phone
+                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. تشمل النسبة: ${commission} ر.ي`, recipientPhoneNumber: phone,
+                transid: transid
             });
             await batch.commit();
-            toast({ title: 'تم التفعيل', description: 'تم تفعيل باقة الفورجي بنجاح' });
+            
+            setLastTxDetails({
+                type: `تفعيل ${selectedOffer.offerName}`,
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
+            setShowSuccess(true);
             setSelectedOffer(null);
             handleSearch();
         } catch (e: any) {
@@ -274,25 +310,55 @@ export default function Yemen4GPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
-    if (showSuccess) {
+    if (showSuccess && lastTxDetails) {
         return (
             <>
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
-                            <CheckCircle className="h-20 w-20 text-white" />
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
                         </div>
                         <CardContent className="p-8 space-y-6">
-                            <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
-                            <div className="bg-muted p-4 rounded-2xl">
-                                <p className="text-xs text-muted-foreground mb-1">المبلغ المخصوم (مع النسبة)</p>
-                                <p className="text-2xl font-black text-primary">{(parseFloat(amount) + Math.ceil(parseFloat(amount)*0.05)).toLocaleString('en-US')} ريال</p>
+                            <div>
+                                <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                                <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
                             </div>
-                            <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+
+                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
+                                    <span className="font-bold">{lastTxDetails.type}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                                    <History className="ml-2 h-4 w-4" /> العمليات
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -305,7 +371,6 @@ export default function Yemen4GPage() {
             <SimpleHeader title="يمن فورجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                {/* Balance Card */}
                 <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
@@ -325,31 +390,28 @@ export default function Yemen4GPage() {
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <Input
-                            type="tel"
-                            placeholder="رقم الهاتف"
-                            value={phone}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, '');
-                                setPhone(val.slice(0, 9));
-                            }}
-                            className="text-center font-bold text-2xl h-14 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all tracking-widest"
-                        />
-                        {phone.length === 9 && (
+                    <Input
+                        type="tel"
+                        placeholder="10xxxxxxx"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    />
+                    {phone.length === 9 && phone.startsWith('10') && (
+                        <div className="animate-in fade-in zoom-in duration-300">
                             <Button 
-                                onClick={handleSearch} 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                onClick={handleSearch}
                                 disabled={isSearching}
-                                className="h-12 rounded-2xl font-bold animate-in slide-in-from-top-2 fade-in-0"
                             >
-                                <Search className="w-5 h-5 ml-2" />
+                                <Search className="ml-2 h-4 w-4" />
                                 استعلام
                             </Button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
-                {phone.length === 9 && (
+                {phone.length === 9 && phone.startsWith('10') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
@@ -431,12 +493,12 @@ export default function Yemen4GPage() {
                                 <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
+                                <span className="text-muted-foreground">النسبة (10%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.10).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                                 <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.10)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -458,12 +520,12 @@ export default function Yemen4GPage() {
                                 <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
+                                <span className="text-muted-foreground">النسبة (10%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.10).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.05)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.10)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

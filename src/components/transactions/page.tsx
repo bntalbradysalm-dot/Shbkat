@@ -6,7 +6,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, SatelliteDish, User as UserIcon, CreditCard, Trash2, Calendar, Clock, Archive, Tag, Banknote } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import {
@@ -217,35 +217,35 @@ export default function TransactionsPage() {
                         </DialogHeader>
                         <div className="space-y-4 py-4 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">الباقة:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4 text-primary"/> الباقة:</span>
                                 <span className="font-semibold">{selectedTx.transactionType}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Banknote className="h-4 w-4 text-primary"/> المبلغ:</span>
                                 <span className={`font-bold ${selectedTx.transactionType === 'تغذية رصيد' ? 'text-green-600' : 'text-destructive'}`}>
                                     {selectedTx.transactionType !== 'تغذية رصيد' && '-'}
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4"/> التاريخ:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4 text-primary"/> التاريخ:</span>
                                 <span className="font-semibold text-right">
                                 {format(parseISO(selectedTx.transactionDate), 'eeee, d MMMM yyyy', { locale: ar })}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/> الوقت:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> الوقت:</span>
                                 <span className="font-semibold">{format(parseISO(selectedTx.transactionDate), 'h:mm:ss a', { locale: ar })}</span>
                             </div>
                             {selectedTx.subscriberName && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4"/> اسم المشترك:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary"/> اسم المشترك:</span>
                                     <span className="font-semibold">{selectedTx.subscriberName}</span>
                                 </div>
                             )}
                             {selectedTx.cardNumber && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4"/> رقم الكرت:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary"/> رقم الكرت:</span>
                                     <span className="font-semibold">{selectedTx.cardNumber}</span>
                                 </div>
                             )}

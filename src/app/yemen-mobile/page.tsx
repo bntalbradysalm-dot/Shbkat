@@ -22,7 +22,11 @@ import {
   Clock,
   AlertCircle,
   CalendarDays,
-  ArrowUpDown
+  ArrowUpDown,
+  Hash,
+  Calendar,
+  History,
+  Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -49,6 +53,8 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -257,32 +263,30 @@ const CATEGORIES = [
   }
 ];
 
-const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
-    <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
-        <div className="relative w-12 h-12">
-        <svg
-            viewBox="0 0 50 50"
-            className="absolute inset-0 w-full h-full animate-spin"
-            style={{ animationDuration: '1.2s' }}
-        >
-            <path
-            d="M15 25 A10 10 0 0 0 35 25"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="5"
-            strokeLinecap="round"
-            />
-            <path
-            d="M40 15 A15 15 0 0 1 40 35"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="5"
-            strokeLinecap="round"
-            className="opacity-30"
-            />
-        </svg>
-        </div>
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path
+          d="M15 25 A10 10 0 0 0 35 25"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40 15 A15 15 0 0 1 40 35"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="5"
+          strokeLinecap="round"
+          className="opacity-30"
+        />
+      </svg>
     </div>
   </div>
 );
@@ -337,6 +341,7 @@ export default function YemenMobilePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isActivatingOffer, setIsActivatingOffer] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [lastTxDetails, setLastTxDetails] = useState<any>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
@@ -347,12 +352,22 @@ export default function YemenMobilePage() {
 
   useEffect(() => {
     if (phone.length === 9) {
+      if (!phone.startsWith('77') && !phone.startsWith('78')) {
+          toast({
+              variant: 'destructive',
+              title: 'خطأ في الرقم',
+              description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
+          });
+          setBillingInfo(null);
+          setActiveOffers([]);
+          return;
+      }
       handleSearch();
     } else {
         setBillingInfo(null);
         setActiveOffers([]);
     }
-  }, [phone]);
+  }, [phone, toast]);
 
   const handleSearch = async () => {
     if (!phone || phone.length !== 9) return;
@@ -467,7 +482,7 @@ export default function YemenMobilePage() {
 
     setIsProcessing(true);
     try {
-        const transid = Date.now().toString();
+        const transid = Date.now().toString().slice(-8);
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -484,9 +499,17 @@ export default function YemenMobilePage() {
             amount: totalToDeduct,
             transactionType: 'سداد يمن موبايل', 
             notes: `إلى رقم: ${phone}. مبلغ السداد: ${val}${loanAmt > 0 ? ` + سلفة: ${loanAmt}` : ''}.`, 
-            recipientPhoneNumber: phone
+            recipientPhoneNumber: phone,
+            transid: transid
         });
         await batch.commit();
+        
+        setLastTxDetails({
+            type: 'سداد رصيد يمن موبايل',
+            phone: phone,
+            amount: totalToDeduct,
+            transid: transid
+        });
         setShowSuccess(true);
     } catch (e: any) {
         toast({ variant: "destructive", title: "فشل السداد", description: e.message });
@@ -503,13 +526,13 @@ export default function YemenMobilePage() {
     const totalToDeduct = selectedOffer.price + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة شاملة السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة السلفة.' });
         return;
     }
 
     setIsActivatingOffer(true);
     try {
-        const transid = Date.now().toString();
+        const transid = Date.now().toString().slice(-8);
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -522,10 +545,18 @@ export default function YemenMobilePage() {
         batch.update(userDocRef, { balance: increment(-totalToDeduct) });
         batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
             userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}${loanAmt > 0 ? ` شامل سلفة: ${loanAmt}` : ''}`, recipientPhoneNumber: phone
+            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}${loanAmt > 0 ? ` شامل سلفة: ${loanAmt}` : ''}`, recipientPhoneNumber: phone,
+            transid: transid
         });
         await batch.commit();
-        toast({ title: 'تم التفعيل', description: 'تم تفعيل الباقة بنجاح' });
+        
+        setLastTxDetails({
+            type: `تفعيل ${selectedOffer.offerName}`,
+            phone: phone,
+            amount: totalToDeduct,
+            transid: transid
+        });
+        setShowSuccess(true);
         setSelectedOffer(null);
         handleSearch();
     } catch (e: any) {
@@ -544,7 +575,11 @@ export default function YemenMobilePage() {
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="يمن موبايل" />
       
-      {isSearching && activeTab === 'packages' && <LoadingSpinner />}
+      {isSearching && activeTab === 'packages' && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-background/20 backdrop-blur-[2px]">
+              <CustomLoader />
+          </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
@@ -579,7 +614,7 @@ export default function YemenMobilePage() {
             />
         </div>
 
-        {phone.length === 9 && (
+        {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                     <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
@@ -727,20 +762,50 @@ export default function YemenMobilePage() {
 
       <Toaster />
 
-      {showSuccess && (
-        <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+      {showSuccess && lastTxDetails && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
             <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none">
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                 <div className="bg-green-500 p-8 flex justify-center">
-                    <CheckCircle className="h-20 w-20 text-white" />
+                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                        <CheckCircle className="h-16 w-16 text-white" />
+                    </div>
                 </div>
                 <CardContent className="p-8 space-y-6">
-                    <h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2>
-                    <div className="bg-muted p-4 rounded-2xl">
-                        <p className="text-xs text-muted-foreground mb-1">إجمالي المبلغ المخصوم</p>
-                        <p className="text-2xl font-black text-primary">{(parseFloat(amount || '0') + loanAmountToAdd).toLocaleString('en-US')} ريال</p>
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                        <p className="text-sm text-muted-foreground mt-1">تم قبول طلبك وتنفيذه فورياً</p>
                     </div>
-                    <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>العودة للرئيسية</Button>
+
+                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
+                            <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
+                            <span className="font-bold">{lastTxDetails.type}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                            <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                            <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                            <History className="ml-2 h-4 w-4" /> العمليات
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -28,7 +28,8 @@ import {
   TrendingUp,
   Banknote,
   Search,
-  Filter
+  Filter,
+  Tag
 } from 'lucide-react';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -308,7 +309,7 @@ export default function TransactionsPage() {
                         </DialogHeader>
                         <div className="space-y-4 py-4 text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">نوع العملية:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4 text-primary"/> نوع العملية:</span>
                                 <span className="font-bold">{selectedTx.transactionType}</span>
                             </div>
                              {selectedTx.notes && (selectedTx.transactionType.includes('شراء كرت') || selectedTx.transactionType.includes('تجديد')) && (
@@ -324,7 +325,7 @@ export default function TransactionsPage() {
                                 </div>
                             )}
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="text-muted-foreground flex items-center gap-2"><Banknote className="h-4 w-4 text-primary"/> المبلغ:</span>
                                 <span className={`font-black text-lg ${selectedTx.transactionType.includes('تغذية') || selectedTx.transactionType.includes('استلام') || selectedTx.transactionType.includes('أرباح') || selectedTx.transactionType.includes('استرجاع') || selectedTx.transactionType.includes('إيداع') ? 'text-green-600' : 'text-destructive'}`}>
                                     {selectedTx.amount.toLocaleString('en-US')} ريال
                                 </span>

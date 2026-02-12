@@ -13,8 +13,6 @@ import {
   Calendar,
   History,
   Smartphone,
-  Package,
-  Info,
   Loader2,
   Globe,
   Mail,
@@ -22,8 +20,6 @@ import {
   Clock,
   Zap,
   ShieldCheck,
-  Database,
-  ArrowUpDown
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -101,7 +97,7 @@ const YOU_CATEGORIES = [
         minutes: '300', 
         sms: '200', 
         validity: 'شهر', 
-        offertype: '' 
+        offertype: 'Mix_4GB_4G_PRE' 
       },
       { 
         offerId: 'unified_300', 
@@ -153,11 +149,11 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center gap-1 mb-4 flex-row-reverse">
+      <div className="flex items-baseline justify-center gap-1 mb-4">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
-        <span className="text-sm font-bold text-primary/60">ريال</span>
+        <span className="text-xs font-bold text-primary/60">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -186,7 +182,6 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -202,9 +197,8 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1 flex-row-reverse">
+        <div className="flex items-baseline gap-1">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
@@ -542,7 +536,7 @@ export default function YouServicesPage() {
                                     <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">

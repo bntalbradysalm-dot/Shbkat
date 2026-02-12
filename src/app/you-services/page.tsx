@@ -127,7 +127,7 @@ const YOU_CATEGORIES = [
         minutes: '600', 
         sms: '200', 
         validity: 'شهر', 
-        offertype: '' 
+        offertype: 'Mix_12Giga_4G_PRE' 
       },
       { 
         offerId: 'smart_4g_15gb', 

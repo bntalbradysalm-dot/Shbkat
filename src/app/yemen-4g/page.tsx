@@ -11,9 +11,7 @@ import {
   CheckCircle, 
   Loader2, 
   Zap, 
-  Smartphone,
   Search,
-  Activity,
   Hash,
   Calendar,
   History,
@@ -37,9 +35,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -134,10 +129,18 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
+        if (phone.length === 9 && !phone.startsWith('10')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
+            });
+            setQueryResult(null);
+        }
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone]);
+    }, [phone, toast]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
@@ -148,7 +151,6 @@ export default function Yemen4GPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي'
             });
-            setQueryResult(null);
             return;
         }
 
@@ -387,8 +389,7 @@ export default function Yemen4GPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (10xxxxxxx)</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
                     <Input
                         type="tel"
@@ -398,14 +399,16 @@ export default function Yemen4GPage() {
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
                     {phone.length === 9 && phone.startsWith('10') && (
-                        <Button 
-                            className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                            onClick={handleSearch}
-                            disabled={isSearching}
-                        >
-                            {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
-                            استعلام
-                        </Button>
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                            >
+                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                استعلام
+                            </Button>
+                        </div>
                     )}
                 </div>
 

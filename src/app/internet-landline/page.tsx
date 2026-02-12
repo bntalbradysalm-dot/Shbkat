@@ -11,14 +11,10 @@ import {
   CheckCircle, 
   Loader2, 
   Search,
-  Wifi,
-  Phone,
-  Globe,
-  Zap,
-  Activity,
   Hash,
   Calendar,
-  History
+  History,
+  Phone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -36,8 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -84,10 +78,18 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
+        if (phone.length === 8 && !phone.startsWith('0')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم الثابت يجب أن يبدأ بـ 0'
+            });
+            setQueryResult(null);
+        }
         if (phone.length !== 8) {
             setQueryResult(null);
         }
-    }, [phone]);
+    }, [phone, toast]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) return;
@@ -98,7 +100,6 @@ export default function LandlineRedesignPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم الثابت يجب أن يبدأ بـ 0'
             });
-            setQueryResult(null);
             return;
         }
 
@@ -306,8 +307,7 @@ export default function LandlineRedesignPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (0xxxxxxx)</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
                     <Input
                         type="tel"
@@ -317,14 +317,16 @@ export default function LandlineRedesignPage() {
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
                     {phone.length === 8 && phone.startsWith('0') && (
-                        <Button 
-                            className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                            onClick={handleSearch}
-                            disabled={isSearching}
-                        >
-                            {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
-                            استعلام
-                        </Button>
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                            >
+                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                استعلام
+                            </Button>
+                        </div>
                     )}
                 </div>
 

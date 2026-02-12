@@ -13,11 +13,9 @@ import {
   Globe,
   Clock,
   Loader2,
-  AlertCircle,
   Hash,
   Calendar,
   History,
-  Globe2,
   Phone
 } from 'lucide-react';
 import {
@@ -35,7 +33,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -124,10 +121,18 @@ export default function AdenNetPage() {
     }, [showSuccess]);
 
     useEffect(() => {
+        if (phone.length === 9 && !phone.startsWith('79')) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ في الرقم',
+                description: 'رقم عدن نت يجب أن يبدأ بـ 79'
+            });
+            setQueryResult(null);
+        }
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone]);
+    }, [phone, toast]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
@@ -138,7 +143,6 @@ export default function AdenNetPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت'
             });
-            setQueryResult(null);
             return;
         }
 
@@ -311,8 +315,7 @@ export default function AdenNetPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (79xxxxxxx)</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
                     <Input
                         type="tel"
@@ -322,14 +325,16 @@ export default function AdenNetPage() {
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
                     {phone.length === 9 && phone.startsWith('79') && (
-                        <Button 
-                            className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                            onClick={handleSearch}
-                            disabled={isSearching}
-                        >
-                            {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
-                            استعلام
-                        </Button>
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                            >
+                                {isSearching ? <Loader2 className="animate-spin ml-2 h-4 w-4" /> : <Search className="ml-2 h-4 w-4" />}
+                                استعلام
+                            </Button>
+                        </div>
                     )}
                 </div>
 
@@ -388,7 +393,7 @@ export default function AdenNetPage() {
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.10)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{( (selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.10) ).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

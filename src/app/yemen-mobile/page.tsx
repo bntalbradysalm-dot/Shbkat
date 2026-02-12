@@ -26,8 +26,7 @@ import {
   Hash,
   Calendar,
   History,
-  Smartphone,
-  Search
+  Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -368,7 +367,7 @@ export default function YemenMobilePage() {
         setBillingInfo(null);
         setActiveOffers([]);
     }
-  }, [phone]);
+  }, [phone, toast]);
 
   const handleSearch = async () => {
     if (!phone || phone.length !== 9) return;

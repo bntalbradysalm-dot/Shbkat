@@ -26,8 +26,7 @@ import {
   Hash,
   Calendar,
   History,
-  Smartphone,
-  Search
+  Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -50,8 +49,6 @@ import { doc, writeBatch, increment, collection as firestoreCollection } from 'f
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -97,36 +94,9 @@ const CATEGORIES = [
     badge: '3G',
     icon: ShieldCheck,
     offers: [
-      { 
-        offerId: 'm_monthly', 
-        offerName: 'مزايا الشهرية', 
-        price: 1300, 
-        data: '250 MB', 
-        sms: '350', 
-        minutes: '350', 
-        validity: 'شهر', 
-        offertype: 'A38394' 
-      },
-      { 
-        offerId: 'm_weekly', 
-        offerName: 'مزايا الاسبوعة', 
-        price: 485, 
-        data: '90 MB', 
-        sms: '30', 
-        minutes: '100', 
-        validity: 'اسبوع', 
-        offertype: 'A64329' 
-      },
-      { 
-        offerId: 'm_max', 
-        offerName: 'مزايا ماكس الشهرية', 
-        price: 2000, 
-        data: '600 MB', 
-        sms: '200', 
-        minutes: '500', 
-        validity: 'شهر', 
-        offertype: 'A75328' 
-      },
+      { offerId: 'm_monthly', offerName: 'مزايا الشهرية', price: 1300, data: '250 MB', sms: '350', minutes: '350', validity: 'شهر', offertype: 'A38394' },
+      { offerId: 'm_weekly', offerName: 'مزايا الاسبوعة', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: 'اسبوع', offertype: 'A64329' },
+      { offerId: 'm_max', offerName: 'مزايا ماكس الشهرية', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: 'شهر', offertype: 'A75328' },
     ]
   },
   {
@@ -135,96 +105,13 @@ const CATEGORIES = [
     badge: '4G',
     icon: Zap,
     offers: [
-      { 
-        offerId: 'super_4g', 
-        offerName: 'سوبر فورجي', 
-        price: 2000, 
-        data: '3GB', 
-        sms: '250', 
-        minutes: '250', 
-        validity: 'شهر', 
-        offertype: 'A5533822' 
-      },
-      { 
-        offerId: '4g_24h', 
-        offerName: 'مزايا فورجي 24 ساعة', 
-        price: 300, 
-        data: '512MB', 
-        sms: '30', 
-        minutes: '20', 
-        validity: 'يوم', 
-        offertype: 'A4826' 
-      },
-      { 
-        offerId: '4g_48h', 
-        offerName: 'مزايا فورجي 48 ساعة', 
-        price: 600, 
-        data: '1GB', 
-        sms: '100', 
-        minutes: '50', 
-        validity: 'ساعة 48', 
-        offertype: 'A88337' 
-      },
-      { 
-        offerId: '4g_weekly', 
-        offerName: 'مزايا فورجي الاسبوعية', 
-        price: 1500, 
-        data: '2GB', 
-        sms: '300', 
-        minutes: '200', 
-        validity: 'اسبوع', 
-        offertype: 'A88336' 
-      },
-      { 
-        offerId: '4g_800sms', 
-        offerName: 'مزايا فورجي 800 رسالة', 
-        price: 1000, 
-        data: 'لا يوجد', 
-        sms: '800', 
-        minutes: 'لا يوجد', 
-        validity: 'شهر', 
-        offertype: 'A31338' 
-      },
-      { 
-        offerId: 'm_tawfeer', 
-        offerName: 'مزايا توفير الشهرية', 
-        price: 2400, 
-        data: '4GB', 
-        sms: '450', 
-        minutes: '450', 
-        validity: 'شهر', 
-        offertype: 'A3823' 
-      },
-      { 
-        offerId: '4g_monthly', 
-        offerName: 'مزايا فورجي الشهرية', 
-        price: 2500, 
-        data: '4GB', 
-        sms: '350', 
-        minutes: '300', 
-        validity: 'شهر', 
-        offertype: 'A88335' 
-      },
-      { 
-        offerId: 'm_max_4g', 
-        offerName: 'مزايا ماكس فورجي', 
-        price: 4000, 
-        data: '4GB', 
-        sms: '600', 
-        minutes: '1100', 
-        validity: 'شهر', 
-        offertype: 'A88441' 
-      },
-      { 
-        offerId: 'm_business_4g', 
-        offerName: 'مزايا أعمال فورجي', 
-        price: 5000, 
-        data: '6GB', 
-        sms: '1000', 
-        minutes: '1500', 
-        validity: 'شهر', 
-        offertype: 'A39053' 
-      },
+      { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: 'شهر', offertype: 'A5533822' },
+      { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: 'يوم', offertype: 'A4826' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: 'ساعة 48', offertype: 'A88337' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: 'اسبوع', offertype: 'A88336' },
+      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: 'شهر', offertype: 'A3823' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: 'شهر', offertype: 'A88335' },
+      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', sms: '600', minutes: '1100', validity: 'شهر', offertype: 'A88441' },
     ]
   },
   {
@@ -237,35 +124,6 @@ const CATEGORIES = [
       { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A3435' },
       { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A3436' },
       { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A3825' },
-      { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A3822' },
-      { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4828' },
-      { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A34346' },
-      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: 'يوم 40', offertype: 'A3347' },
-      { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4830' },
-    ]
-  },
-  {
-    id: 'internet_monthly',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: ArrowUpDown,
-    offers: [
-      { offerId: 'net_3g_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_3g_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_3g_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_3g_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
-    ]
-  },
-  {
-    id: 'internet_10days',
-    title: 'باقات الإنترنت 10 ايام',
-    badge: '10',
-    icon: CalendarDays,
-    offers: [
-      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: 'ايام 10', offertype: 'A74332' },
-      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: 'ايام 10', offertype: 'A74339' },
-      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: 'ايام 10', offertype: 'A44345' },
-      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: 'ايام 10', offertype: 'A74351' },
     ]
   }
 ];
@@ -397,7 +255,6 @@ export default function YemenMobilePage() {
               }));
           }
 
-          // Robust Postpaid Detection - Advanced
           const allDataString = JSON.stringify({
               q: queryResult,
               o: offerResult,
@@ -439,13 +296,6 @@ export default function YemenMobilePage() {
     }
   }, [phone, handleSearch]);
 
-  useEffect(() => {
-    if (phone.length !== 9) {
-        setBillingInfo(null);
-        setActiveOffers([]);
-    }
-  }, [phone]);
-
   const handleRenewOffer = (name: string) => {
     const normalize = (str: string) => 
         str.replace(/[أإآ]/g, 'ا')
@@ -457,19 +307,14 @@ export default function YemenMobilePage() {
     const normalizedInput = normalize(name);
 
     let foundOffer: Offer | undefined;
-    for (const cat of CATEGORIES) {
-        foundOffer = cat.offers.find(o => {
+    const categoriesToSearch = billingInfo?.customer_type === 'فوترة' ? [...CATEGORIES, { id: 'h', offers: HADAYA_OFFERS }] : CATEGORIES;
+    
+    for (const cat of categoriesToSearch) {
+        foundOffer = (cat as any).offers.find((o: Offer) => {
             const normalizedOfferName = normalize(o.offerName);
             return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
         });
         if (foundOffer) break;
-    }
-
-    if (!foundOffer && billingInfo?.customer_type === 'فوترة') {
-        foundOffer = HADAYA_OFFERS.find(o => {
-            const normalizedOfferName = normalize(o.offerName);
-            return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
-        });
     }
 
     if (foundOffer) {
@@ -478,7 +323,7 @@ export default function YemenMobilePage() {
         toast({
             variant: "destructive",
             title: "عذراً",
-            description: "لم نتمكن من تحديد سعر التجديد لهذه الباقة تلقائياً. يرجى اختيارها من القائمة بالأسفل.",
+            description: "لم نتمكن من تحديد سعر التجديد تلقائياً. يرجى اختيار الباقة من القائمة.",
         });
     }
   };
@@ -594,11 +439,11 @@ export default function YemenMobilePage() {
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                    <div className="flex items-baseline gap-1">
+                    <div className="flex items-baseline gap-1" dir="ltr">
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
-                        <span className="text-sm font-bold text-white/80">ريال يمني</span>
+                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -612,13 +457,15 @@ export default function YemenMobilePage() {
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
                 {isSearching && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
             </div>
-            <Input
-                type="tel"
-                placeholder="77xxxxxxx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
-            />
+            <div className="relative">
+                <Input
+                    type="tel"
+                    placeholder="77xxxxxxx"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                />
+            </div>
         </div>
 
         {phone.length === 9 && billingInfo && (
@@ -727,13 +574,9 @@ export default function YemenMobilePage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {categoryOffers.length > 0 ? (
-                                            categoryOffers.map((o) => (
-                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                            ))
-                                        ) : (
-                                            <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
-                                        )}
+                                        {categoryOffers.map((o) => (
+                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                        ))}
                                     </AccordionContent>
                                 </AccordionItem>
                             );

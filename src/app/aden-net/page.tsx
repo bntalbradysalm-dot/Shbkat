@@ -70,23 +70,9 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      <div className="text-right">
-        <div className="flex items-baseline gap-1 justify-start">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
-        </div>
-        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
-      </div>
-
-      <div className="flex items-center gap-4 flex-row-reverse">
-          <div className="text-left">
-              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Globe className="w-3 h-3"/> {offer.data}</span>
-                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3"/> {offer.validity}</span>
-              </div>
-          </div>
-          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white">
+      {/* اليمين: الشعار والمعلومات */}
+      <div className="flex items-center gap-4 text-right">
+          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
                   src="https://i.postimg.cc/FFV6dDqd/FB-IMG-1770843160346.jpg" 
                   alt="Aden Net" 
@@ -94,6 +80,22 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
                   className="object-cover"
               />
           </div>
+          <div className="flex flex-col items-start">
+              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Globe className="w-3 h-3"/> {offer.data}</span>
+                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3"/> {offer.validity}</span>
+              </div>
+          </div>
+      </div>
+
+      {/* اليسار: السعر والزر */}
+      <div className="flex flex-col items-end text-left shrink-0">
+        <div className="flex items-baseline gap-1 flex-row-reverse">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        </div>
+        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
     </div>
 );

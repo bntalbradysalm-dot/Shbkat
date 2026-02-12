@@ -66,20 +66,9 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      <div className="text-right">
-        <div className="flex items-baseline gap-1 justify-start">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
-        </div>
-        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
-      </div>
-
-      <div className="flex items-center gap-4 flex-row-reverse">
-          <div className="text-left">
-              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
-              <p className="text-[10px] font-bold text-muted-foreground">شحن فوري مباشر</p>
-          </div>
-          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white">
+      {/* اليمين: الشعار والمعلومات */}
+      <div className="flex items-center gap-4 text-right">
+          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
                   src="https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg" 
                   alt="YOU" 
@@ -87,6 +76,19 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
                   className="object-cover"
               />
           </div>
+          <div className="flex flex-col items-start">
+              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
+              <p className="text-[10px] font-bold text-muted-foreground">شحن فوري مباشر</p>
+          </div>
+      </div>
+
+      {/* اليسار: السعر والزر */}
+      <div className="flex flex-col items-end text-left shrink-0">
+        <div className="flex items-baseline gap-1 flex-row-reverse">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        </div>
+        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
     </div>
 );
@@ -133,6 +135,7 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
+        // Multiply amount by 4 for Balance tab as requested
         const finalPayAmount = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
         const totalToDeduct = finalPayAmount;
 
@@ -378,8 +381,8 @@ export default function YouServicesPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
+                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
                                     <History className="ml-2 h-4 w-4" /> العمليات
                                 </Button>
                             </div>

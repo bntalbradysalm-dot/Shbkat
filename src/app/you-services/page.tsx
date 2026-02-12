@@ -9,15 +9,11 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Search,
   Hash,
   Calendar,
   History,
   Smartphone,
-  Zap,
-  Clock,
-  Package,
-  Loader2
+  Package
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -42,12 +38,6 @@ export const dynamic = 'force-dynamic';
 
 type UserProfile = {
   balance?: number;
-};
-
-type QueryResult = {
-    balance?: string;
-    customer_type?: string;
-    message?: string;
 };
 
 type FastOffer = {
@@ -92,8 +82,6 @@ export default function YouServicesPage() {
 
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("balance");
-    const [isSearching, setIsSearching] = useState(false);
-    const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
     const [isConfirmingBalance, setIsConfirmingBalance] = useState(false);
@@ -121,43 +109,8 @@ export default function YouServicesPage() {
                 title: 'خطأ في الرقم',
                 description: 'رقم YOU يجب أن يبدأ بـ 73'
             });
-            setQueryResult(null);
-        }
-        if (phone.length !== 9) {
-            setQueryResult(null);
         }
     }, [phone, toast]);
-
-    const handleSearch = async () => {
-        if (!phone || phone.length !== 9 || !phone.startsWith('73')) return;
-        
-        setIsSearching(true);
-        setQueryResult(null);
-        try {
-            const response = await fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mobile: phone, 
-                    action: 'query', 
-                    service: 'you'
-                })
-            });
-            const result = await response.json();
-            
-            if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
-            
-            setQueryResult({
-                balance: result.balance || '0.00',
-                customer_type: result.mobileTy || '...',
-                message: result.resultDesc
-            });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
-        } finally {
-            setIsSearching(false);
-        }
-    };
 
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
@@ -309,37 +262,10 @@ export default function YouServicesPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
-                    {phone.length === 9 && phone.startsWith('73') && (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                            <Button 
-                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                                onClick={handleSearch}
-                                disabled={isSearching}
-                            >
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                                استعلام
-                            </Button>
-                        </div>
-                    )}
                 </div>
 
                 {phone.length === 9 && phone.startsWith('73') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                        <p className="text-sm font-black">{queryResult.balance} ر.ي</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الرقم</p>
-                                        <p className="text-sm font-black">{queryResult.customer_type}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         <Tabs defaultValue="balance" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                                 <TabsTrigger value="balance" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">رصيد</TabsTrigger>

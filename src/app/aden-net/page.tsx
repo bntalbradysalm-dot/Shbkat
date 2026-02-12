@@ -17,7 +17,8 @@ import {
   Hash,
   Calendar,
   History,
-  Globe2
+  Globe2,
+  Phone
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -135,7 +136,7 @@ export default function AdenNetPage() {
             toast({
                 variant: 'destructive',
                 title: 'خطأ في الرقم',
-                description: 'رقم عدن نت يجب أن يبدأ بـ 79'
+                description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت'
             });
             setQueryResult(null);
             return;
@@ -258,7 +259,7 @@ export default function AdenNetPage() {
                                     <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Globe2 className="w-3.5 h-3.5" /> رقم عدن نت:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -310,7 +311,7 @@ export default function AdenNetPage() {
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم عدن نت (79xxxxxxx)</Label>
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف (79xxxxxxx)</Label>
                         {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
                     <Input

@@ -18,7 +18,8 @@ import {
   Calendar,
   History,
   Globe,
-  Clock
+  Clock,
+  Phone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -145,7 +146,7 @@ export default function Yemen4GPage() {
             toast({
                 variant: 'destructive',
                 title: 'خطأ في الرقم',
-                description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
+                description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي'
             });
             setQueryResult(null);
             return;
@@ -334,7 +335,7 @@ export default function Yemen4GPage() {
                                     <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">

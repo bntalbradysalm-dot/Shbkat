@@ -43,7 +43,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 
   useEffect(() => {
     if (!auth) {
-        setUserAuthState({ user: null, isUserLoading: false, userError: null });
+        setUserAuthState(prev => 
+            prev.isUserLoading ? { user: null, isUserLoading: false, userError: null } : prev
+        );
         return;
     }
 
@@ -81,7 +83,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
 export const useFirebase = (): FirebaseContextState => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
-    // Return a safe default instead of crashing during build
     return {
         firebaseApp: undefined,
         firestore: undefined,

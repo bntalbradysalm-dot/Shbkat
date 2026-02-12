@@ -166,12 +166,10 @@ export default function LandlineRedesignPage() {
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        const baseAmount = payAmount;
-        const commission = Math.ceil(baseAmount * 0.05);
-        const totalToDeduct = baseAmount + commission;
+        const totalToDeduct = payAmount;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة النسبة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
             return;
         }
 
@@ -185,7 +183,7 @@ export default function LandlineRedesignPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    amount: baseAmount, 
+                    amount: payAmount, 
                     action: 'bill',
                     service: 'post',
                     type: serviceType,
@@ -208,7 +206,7 @@ export default function LandlineRedesignPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -416,17 +414,9 @@ export default function LandlineRedesignPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">مبلغ الفاتورة:</span>
-                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة:</span>
-                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

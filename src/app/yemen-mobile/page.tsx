@@ -419,8 +419,8 @@ export default function YemenMobilePage() {
               title: 'خطأ في الرقم',
               description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
           });
-          setBillingInfo(null);
-          setActiveOffers([]);
+          setBillingInfo(prev => prev === null ? null : null);
+          setActiveOffers(prev => prev.length === 0 ? prev : []);
           return;
       }
       handleSearch();

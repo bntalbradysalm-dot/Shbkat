@@ -200,11 +200,10 @@ export default function Yemen4GPage() {
         const baseAmount = parseFloat(amount);
         if (isNaN(baseAmount) || baseAmount <= 0) return;
 
-        const commission = Math.ceil(baseAmount * 0.10);
-        const totalToDeduct = baseAmount + commission;
+        const totalToDeduct = baseAmount;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة النسبة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
             return;
         }
 
@@ -233,7 +232,7 @@ export default function Yemen4GPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: 'سداد يمن فورجي',
-                notes: `إلى رقم: ${phone}. تشمل النسبة: ${commission} ر.ي`,
+                notes: `إلى رقم: ${phone}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -258,11 +257,10 @@ export default function Yemen4GPage() {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
         const basePrice = selectedOffer.price;
-        const commission = Math.ceil(basePrice * 0.10);
-        const totalToDeduct = basePrice + commission;
+        const totalToDeduct = basePrice;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل هذه الباقة شاملة النسبة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
             return;
         }
 
@@ -288,7 +286,7 @@ export default function Yemen4GPage() {
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. تشمل النسبة: ${commission} ر.ي`, recipientPhoneNumber: phone,
+                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone,
                 transid: transid
             });
             await batch.commit();
@@ -321,7 +319,7 @@ export default function Yemen4GPage() {
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
                             <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                                <CheckCircle className="h-16 w-16 text-white" />
+                                <CheckCircle className="h-20 w-20 text-white" />
                             </div>
                         </div>
                         <CardContent className="p-8 space-y-6">
@@ -488,17 +486,9 @@ export default function Yemen4GPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">المبلغ الأساسي:</span>
-                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة (10%):</span>
-                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.10).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.10)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -515,17 +505,9 @@ export default function Yemen4GPage() {
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                         <div className="py-4 space-y-3 text-right text-sm">
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">سعر الباقة:</span>
-                                <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">النسبة (10%):</span>
-                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.10).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.10)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

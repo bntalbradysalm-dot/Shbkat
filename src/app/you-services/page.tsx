@@ -100,12 +100,6 @@ export default function YouServicesPage() {
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {
-        if (showSuccess && audioRef.current) {
-            audioRef.current.play().catch(e => console.error("Audio play failed", e));
-        }
-    }, [showSuccess]);
-
-    useEffect(() => {
         if (phone.length === 9 && !phone.startsWith('73')) {
             toast({
                 variant: 'destructive',
@@ -114,6 +108,12 @@ export default function YouServicesPage() {
             });
         }
     }, [phone, toast]);
+
+    useEffect(() => {
+        if (showSuccess && audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Audio play failed", e));
+        }
+    }, [showSuccess]);
 
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
@@ -136,7 +136,7 @@ export default function YouServicesPage() {
                 transid: transid,
             };
 
-            if (typeLabel === 'رصيد') {
+            if (typeLabel.includes('رصيد')) {
                 apiPayload.num = payAmount;
                 apiPayload.israsid = '1';
                 apiPayload.type = lineType;
@@ -166,7 +166,7 @@ export default function YouServicesPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد YOU ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. النوع: ${typeLabel === 'رصيد' ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. النوع: ${typeLabel.includes('رصيد') ? (lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة') : 'فوري'}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -405,7 +405,7 @@ export default function YouServicesPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={!!selectedFastOffer} onOpenChange={setSelectedFastOffer(null)}>
+            <AlertDialog open={!!selectedFastOffer} onOpenChange={() => setSelectedFastOffer(null)}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-center font-black">تأكيد شحن فوري</AlertDialogTitle>

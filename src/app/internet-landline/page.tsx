@@ -225,7 +225,7 @@ export default function LandlineRedesignPage() {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
         } finally {
             setIsProcessing(false);
-            setIsConfirming(false);
+            setIsConfirmingPayment(false);
         }
     };
 
@@ -316,7 +316,7 @@ export default function LandlineRedesignPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
-                    {phone.length === 8 && (
+                    {phone.length === 8 && phone.startsWith('0') && (
                         <Button 
                             className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
                             onClick={handleSearch}

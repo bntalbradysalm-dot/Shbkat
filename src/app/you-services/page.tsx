@@ -70,6 +70,7 @@ type Offer = {
     minutes?: string;
     validity?: string;
     offertype: string; 
+    id?: string; // المعرف الرقمي المطلوب لـ num
 };
 
 type BillingInfo = {
@@ -96,13 +97,14 @@ const YOU_CATEGORIES = [
     offers: [
       { 
         offerId: 'unified_4gb', 
-        offerName: 'باقة السعر الموحد 4 قيقا', 
+        offerName: 'باقة السعر الموحد 4 جيجا فورجي', 
         price: 2904, 
         data: '4GB', 
         minutes: '300', 
         sms: '200', 
         validity: 'شهر', 
-        offertype: 'Mix_4GB_4G_PRE' 
+        offertype: 'Mix_4GB_4G_PRE',
+        id: '1020843' 
       },
       { 
         offerId: 'unified_300', 
@@ -385,7 +387,7 @@ export default function YouServicesPage() {
                     mobile: phone, 
                     action: 'bill', 
                     service: 'you', 
-                    num: selectedOffer.price, // num is required and should be numeric
+                    num: selectedOffer.id || selectedOffer.price, // استخدام المعرف الرقمي إذا وجد
                     offertype: selectedOffer.offertype, 
                     type: lineType,
                     transid 

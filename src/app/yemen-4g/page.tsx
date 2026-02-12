@@ -15,7 +15,8 @@ import {
   History,
   Globe,
   Clock,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -73,7 +74,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -92,7 +92,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
@@ -135,28 +134,16 @@ export default function Yemen4GPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 9 && !phone.startsWith('10')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم يمن فورجي يجب أن يبدأ بـ 10'
-            });
-        }
-        
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone, toast]);
+    }, [phone]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
         
         if (!phone.startsWith('10')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي'
-            });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي' });
             return;
         }
 
@@ -189,14 +176,8 @@ export default function Yemen4GPage() {
                 expiry = result.expireDate;
             }
             
-            setQueryResult({
-                balance,
-                packagePrice: price,
-                expireDate: expiry,
-                message: result.resultDesc
-            });
+            setQueryResult({ balance, packagePrice: price, expireDate: expiry, message: result.resultDesc });
         } catch (error: any) {
-            console.error("Search Error:", error);
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
             setIsSearching(false);
@@ -246,12 +227,7 @@ export default function Yemen4GPage() {
             });
             await batch.commit();
             
-            setLastTxDetails({
-                type: 'سداد رصيد يمن فورجي',
-                phone: phone,
-                amount: totalToDeduct,
-                transid: transid
-            });
+            setLastTxDetails({ type: 'سداد رصيد يمن فورجي', phone: phone, amount: totalToDeduct, transid: transid });
             setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
@@ -299,12 +275,7 @@ export default function Yemen4GPage() {
             });
             await batch.commit();
             
-            setLastTxDetails({
-                type: `تفعيل ${selectedOffer.offerName}`,
-                phone: phone,
-                amount: totalToDeduct,
-                transid: transid
-            });
+            setLastTxDetails({ type: `تفعيل ${selectedOffer.offerName}`, phone: phone, amount: totalToDeduct, transid: transid });
             setShowSuccess(true);
             setSelectedOffer(null);
             handleSearch();
@@ -317,7 +288,6 @@ export default function Yemen4GPage() {
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -361,9 +331,7 @@ export default function Yemen4GPage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                                    <History className="ml-2 h-4 w-4" /> العمليات
-                                </Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -410,33 +378,31 @@ export default function Yemen4GPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                <Search className="ml-2 h-4 w-4" />
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
                     )}
                 </div>
 
-                {phone.length === 9 && phone.startsWith('10') && (
+                {phone.length === 9 && queryResult && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                        <p className="text-sm font-black">{queryResult.balance}</p>
-                                    </div>
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                        <p className="text-sm font-black" dir="ltr">{queryResult.packagePrice} ر.ي</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                    </div>
+                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                    <p className="text-sm font-black">{queryResult.balance}</p>
+                                </div>
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                    <p className="text-sm font-black" dir="ltr">{queryResult.packagePrice} ر.ي</p>
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                    <p className="text-sm font-black">{queryResult.expireDate}</p>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

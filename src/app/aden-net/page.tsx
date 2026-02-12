@@ -15,7 +15,8 @@ import {
   Hash,
   Calendar,
   History,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -70,7 +71,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -89,7 +89,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
@@ -128,28 +127,16 @@ export default function AdenNetPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 9 && !phone.startsWith('79')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم عدن نت يجب أن يبدأ بـ 79'
-            });
-        }
-        
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone, toast]);
+    }, [phone]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
         
         if (!phone.startsWith('79')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت'
-            });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت' });
             return;
         }
 
@@ -245,7 +232,6 @@ export default function AdenNetPage() {
     };
 
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -338,29 +324,27 @@ export default function AdenNetPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                <Search className="ml-2 h-4 w-4" />
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
                     )}
                 </div>
 
-                {phone.length === 9 && phone.startsWith('79') && (
+                {phone.length === 9 && queryResult && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
-                                        <p className="text-sm font-black">{queryResult.balance}</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                    </div>
+                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
+                                    <p className="text-sm font-black">{queryResult.balance}</p>
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                    <p className="text-sm font-black">{queryResult.expireDate}</p>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         <div className="pt-2 pb-10">
                             <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 px-1">باقات عدن نت المتوفرة</h3>

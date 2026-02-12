@@ -20,6 +20,7 @@ import {
   Clock,
   Zap,
   ShieldCheck,
+  Search
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -241,7 +242,15 @@ export default function YouServicesPage() {
 
     const handleSearch = useCallback(async () => {
         if (!phone || phone.length !== 9) return;
+        
+        if (!phone.startsWith('73')) {
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم YOU يجب أن يبدأ بـ 73' });
+            return;
+        }
+
         setIsSearching(true);
+        setBillingInfo(null);
+
         try {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
@@ -251,41 +260,32 @@ export default function YouServicesPage() {
             const result = await response.json();
 
             if (response.ok) {
-                let typeLabel = result.mobileTy || '';
-                let detectedType = 'prepaid';
-                if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
-                    detectedType = 'postpaid';
-                }
+                // Scan all response data for "فوترة" or "postpaid"
+                const searchData = JSON.stringify(result).toLowerCase();
+                const isPostpaid = searchData.includes('فوترة') || searchData.includes('postpaid');
+                
+                const detectedType = isPostpaid ? 'postpaid' : 'prepaid';
                 
                 setLineType(detectedType);
                 setBillingInfo({ 
                     balance: parseFloat(result.balance || "0"), 
-                    customer_type: detectedType === 'postpaid' ? 'فوترة' : 'دفع مسبق'
+                    customer_type: isPostpaid ? 'فوترة' : 'دفع مسبق'
                 });
+            } else {
+                throw new Error(result.message || 'فشل الاستعلام من المزود.');
             }
-        } catch (e) {
-            console.error("YOU Search Error:", e);
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: e.message });
         } finally {
             setIsSearching(false);
         }
-    }, [phone]);
+    }, [phone, toast]);
 
     useEffect(() => {
-        if (phone.length === 9) {
-            if (!phone.startsWith('73')) {
-                toast({
-                    variant: 'destructive',
-                    title: 'خطأ في الرقم',
-                    description: 'رقم YOU يجب أن يبدأ بـ 73'
-                });
-                setBillingInfo(null);
-                return;
-            }
-            handleSearch();
-        } else {
+        if (phone.length !== 9) {
             setBillingInfo(null);
         }
-    }, [phone, toast, handleSearch]);
+    }, [phone]);
 
     useEffect(() => {
         if (showSuccess && audioRef.current) {
@@ -440,7 +440,6 @@ export default function YouServicesPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
-                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
                     <Input
                         type="tel"
@@ -449,24 +448,34 @@ export default function YouServicesPage() {
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                         className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
                     />
+                    {phone.length === 9 && phone.startsWith('73') && (
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                            >
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
+                                استعلام
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
-                {phone.length === 9 && phone.startsWith('73') && (
+                {phone.length === 9 && billingInfo && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {billingInfo && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الرقم</p>
-                                        <p className="text-sm font-black" dir="ltr">{billingInfo.balance.toLocaleString('en-US')} ر.ي</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
-                                        <p className="text-sm font-black">{billingInfo.customer_type}</p>
-                                    </div>
+                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الرقم</p>
+                                    <p className="text-sm font-black" dir="ltr">{billingInfo.balance.toLocaleString('en-US')} ر.ي</p>
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
+                                    <p className="text-sm font-black">{billingInfo.customer_type}</p>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
@@ -511,29 +520,6 @@ export default function YouServicesPage() {
 
                             <TabsContent value="balance" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 space-y-6">
-                                    {!billingInfo && (
-                                        <div className="grid grid-cols-2 gap-2 w-full max-w-[240px] mx-auto bg-muted/20 p-1 rounded-xl">
-                                            <button 
-                                                onClick={() => setLineType('prepaid')}
-                                                className={cn(
-                                                    "py-2 rounded-lg text-[10px] font-black transition-all",
-                                                    lineType === 'prepaid' ? "bg-primary text-white shadow-sm" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                دفع مسبق
-                                            </button>
-                                            <button 
-                                                onClick={() => setLineType('postpaid')}
-                                                className={cn(
-                                                    "py-2 rounded-lg text-[10px] font-black transition-all",
-                                                    lineType === 'postpaid' ? "bg-primary text-white shadow-sm" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                فوترة
-                                            </button>
-                                        </div>
-                                    )}
-
                                     <div className="w-full text-center">
                                         <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                         <div className="relative max-w-[240px] mx-auto">
@@ -620,9 +606,7 @@ export default function YouServicesPage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                                    <History className="ml-2 h-4 w-4" /> العمليات
-                                </Button>
+                                <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>

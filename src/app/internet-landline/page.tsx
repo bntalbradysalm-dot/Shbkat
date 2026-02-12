@@ -13,7 +13,8 @@ import {
   Hash,
   Calendar,
   History,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -77,28 +78,16 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 8 && !phone.startsWith('0')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الثابت يجب أن يبدأ بـ 0'
-            });
-        }
-        
         if (phone.length !== 8) {
-            setQueryResult(prev => prev === null ? null : null);
+            setQueryResult(null);
         }
-    }, [phone, toast]);
+    }, [phone]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) return;
         
         if (!phone.startsWith('0')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الثابت يجب أن يبدأ بـ 0'
-            });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الثابت يجب أن يبدأ بـ 0' });
             return;
         }
 
@@ -110,12 +99,7 @@ export default function LandlineRedesignPage() {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mobile: phone, 
-                    action: 'query', 
-                    service: 'post',
-                    type: searchType 
-                })
+                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post', type: searchType })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
@@ -137,30 +121,12 @@ export default function LandlineRedesignPage() {
                 expiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
             }
             
-            setQueryResult({
-                balance,
-                packagePrice: price,
-                expireDate: expiry,
-                message: result.resultDesc
-            });
+            setQueryResult({ balance, packagePrice: price, expireDate: expiry, message: result.resultDesc });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
             setIsSearching(false);
         }
-    };
-
-    const handleOpenConfirm = () => {
-        const val = parseFloat(amount);
-        if (isNaN(val) || val < 250) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في المبلغ',
-                description: 'أقل مبلغ للسداد هو 250 ريال.',
-            });
-            return;
-        }
-        setIsConfirmingPayment(true);
     };
 
     const handlePayment = async (payAmount: number, typeLabel: string) => {
@@ -212,12 +178,7 @@ export default function LandlineRedesignPage() {
             });
             await batch.commit();
             
-            setLastTxDetails({
-                type: `سداد ${typeLabel}`,
-                phone: phone,
-                amount: totalToDeduct,
-                transid: transid
-            });
+            setLastTxDetails({ type: `سداد ${typeLabel}`, phone: phone, amount: totalToDeduct, transid: transid });
             setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
@@ -228,7 +189,6 @@ export default function LandlineRedesignPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (
@@ -272,9 +232,7 @@ export default function LandlineRedesignPage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
-                                    <History className="ml-2 h-4 w-4" /> العمليات
-                                </Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -321,33 +279,31 @@ export default function LandlineRedesignPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                <Search className="ml-2 h-4 w-4" />
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
                     )}
                 </div>
 
-                {phone.length === 8 && phone.startsWith('0') && (
+                {phone.length === 8 && queryResult && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                        <p className="text-sm font-black">{queryResult.balance}</p>
-                                    </div>
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                        <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                    </div>
+                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                    <p className="text-sm font-black">{queryResult.balance}</p>
+                                </div>
+                                <div className="p-3 border-l border-white/10">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                    <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                    <p className="text-sm font-black">{queryResult.expireDate}</p>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

@@ -94,7 +94,7 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
 
       {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
@@ -351,7 +351,7 @@ export default function Yemen4GPage() {
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                    <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
                                     <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
@@ -381,7 +381,7 @@ export default function Yemen4GPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1">
+                            <div className="flex items-baseline gap-1" dir="ltr">
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
                                 <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                             </div>
@@ -428,7 +428,7 @@ export default function Yemen4GPage() {
                                     </div>
                                     <div className="p-3 border-l border-white/10">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                        <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                        <p className="text-sm font-black" dir="ltr">{queryResult.packagePrice} ر.ي</p>
                                     </div>
                                     <div className="p-3">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
@@ -496,7 +496,7 @@ export default function Yemen4GPage() {
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -515,7 +515,7 @@ export default function Yemen4GPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

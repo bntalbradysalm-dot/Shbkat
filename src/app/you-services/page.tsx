@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -70,6 +70,11 @@ type Offer = {
     minutes?: string;
     validity?: string;
     offertype: string; 
+};
+
+type BillingInfo = {
+    balance: number;
+    customer_type: string;
 };
 
 const YOU_FAST_OFFERS: FastOffer[] = [
@@ -196,8 +201,8 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center shrink-0">
-        <div className="flex items-baseline gap-1">
+      <div className="flex flex-col items-end text-left shrink-0">
+        <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
@@ -215,6 +220,8 @@ export default function YouServicesPage() {
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("packages");
     const [lineType, setLineType] = useState('prepaid');
+    const [isSearching, setIsSearching] = useState(false);
+    const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
@@ -231,15 +238,53 @@ export default function YouServicesPage() {
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-    useEffect(() => {
-        if (phone.length === 9 && !phone.startsWith('73')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم YOU يجب أن يبدأ بـ 73'
+    const handleSearch = useCallback(async () => {
+        if (!phone || phone.length !== 9) return;
+        setIsSearching(true);
+        try {
+            const response = await fetch('/api/telecom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: phone, action: 'query', service: 'you' }),
             });
+            const result = await response.json();
+
+            if (response.ok) {
+                let typeLabel = result.mobileTy || '';
+                let detectedType = 'prepaid';
+                if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
+                    detectedType = 'postpaid';
+                }
+                
+                setLineType(detectedType);
+                setBillingInfo({ 
+                    balance: parseFloat(result.balance || "0"), 
+                    customer_type: detectedType === 'postpaid' ? 'فوترة' : 'دفع مسبق'
+                });
+            }
+        } catch (e) {
+            console.error("YOU Search Error:", e);
+        } finally {
+            setIsSearching(false);
         }
-    }, [phone, toast]);
+    }, [phone]);
+
+    useEffect(() => {
+        if (phone.length === 9) {
+            if (!phone.startsWith('73')) {
+                toast({
+                    variant: 'destructive',
+                    title: 'خطأ في الرقم',
+                    description: 'رقم YOU يجب أن يبدأ بـ 73'
+                });
+                setBillingInfo(null);
+                return;
+            }
+            handleSearch();
+        } else {
+            setBillingInfo(null);
+        }
+    }, [phone, toast, handleSearch]);
 
     useEffect(() => {
         if (showSuccess && audioRef.current) {
@@ -250,7 +295,7 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        const finalToDeduct = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
+        const finalToDeduct = typeLabel.includes('شحن') ? payAmount : payAmount * 4;
 
         if ((userProfile?.balance ?? 0) < finalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
@@ -265,15 +310,14 @@ export default function YouServicesPage() {
                 action: 'bill',
                 service: 'you',
                 transid: transid,
+                type: lineType,
             };
 
             if (typeLabel === 'رصيد') {
                 apiPayload.num = payAmount; 
                 apiPayload.israsid = '1';
-                apiPayload.type = lineType;
             } else {
                 apiPayload.num = numCode;
-                apiPayload.type = 'prepaid';
             }
 
             const response = await fetch('/api/telecom', {
@@ -332,7 +376,6 @@ export default function YouServicesPage() {
         setIsActivatingOffer(true);
         try {
             const transid = Date.now().toString().slice(-8);
-            // تم تغيير الأكشن إلى bill لحل مشكلة !Action parametr is required, and must be (bill)
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -341,6 +384,7 @@ export default function YouServicesPage() {
                     action: 'bill', 
                     service: 'you', 
                     offertype: selectedOffer.offertype, 
+                    type: lineType,
                     transid 
                 })
             });
@@ -371,9 +415,6 @@ export default function YouServicesPage() {
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ العملية..." />;
-    if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
             <SimpleHeader title="خدمات YOU" />
@@ -383,7 +424,7 @@ export default function YouServicesPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1">
+                            <div className="flex items-baseline gap-1" dir="ltr">
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
                                 <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                             </div>
@@ -397,6 +438,7 @@ export default function YouServicesPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
+                        {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     </div>
                     <Input
                         type="tel"
@@ -409,6 +451,21 @@ export default function YouServicesPage() {
 
                 {phone.length === 9 && phone.startsWith('73') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                        {billingInfo && (
+                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الرقم</p>
+                                        <p className="text-sm font-black" dir="ltr">{billingInfo.balance.toLocaleString('en-US')} ر.ي</p>
+                                    </div>
+                                    <div className="p-3">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
+                                        <p className="text-sm font-black">{billingInfo.customer_type}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                                 <TabsTrigger value="packages" className="rounded-xl font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
@@ -452,8 +509,8 @@ export default function YouServicesPage() {
 
                             <TabsContent value="balance" className="pt-2 animate-in fade-in-0 duration-300">
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 space-y-6">
-                                    <div className="flex flex-col items-center gap-4">
-                                        <div className="grid grid-cols-2 gap-2 w-full max-w-[240px] bg-muted/20 p-1 rounded-xl">
+                                    {!billingInfo && (
+                                        <div className="grid grid-cols-2 gap-2 w-full max-w-[240px] mx-auto bg-muted/20 p-1 rounded-xl">
                                             <button 
                                                 onClick={() => setLineType('prepaid')}
                                                 className={cn(
@@ -473,19 +530,19 @@ export default function YouServicesPage() {
                                                 فوترة
                                             </button>
                                         </div>
+                                    )}
 
-                                        <div className="w-full text-center">
-                                            <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
-                                            <div className="relative max-w-[240px] mx-auto">
-                                                <Input 
-                                                    type="number" 
-                                                    placeholder="0.00" 
-                                                    value={amount} 
-                                                    onChange={(e) => setAmount(e.target.value)} 
-                                                    className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
-                                                />
-                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
-                                            </div>
+                                    <div className="w-full text-center">
+                                        <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
+                                        <div className="relative max-w-[240px] mx-auto">
+                                            <Input 
+                                                type="number" 
+                                                placeholder="0.00" 
+                                                value={amount} 
+                                                onChange={(e) => setAmount(e.target.value)} 
+                                                className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                            />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
                                         </div>
                                     </div>
 
@@ -502,8 +559,8 @@ export default function YouServicesPage() {
                                         className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
                                         onClick={() => {
                                             const val = parseFloat(amount);
-                                            if (isNaN(val) || val < 200 || val > 100000) {
-                                                toast({ variant: 'destructive', title: 'خطأ في المبلغ', description: 'المبلغ يجب أن يكون بين 200 و 100,000 ريال.' });
+                                            if (isNaN(val) || val < 200) {
+                                                toast({ variant: 'destructive', title: 'خطأ في المبلغ', description: 'أقل مبلغ للسداد هو 200 ريال.' });
                                                 return;
                                             }
                                             setIsConfirmingBalance(true);
@@ -551,7 +608,7 @@ export default function YouServicesPage() {
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                    <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
                                     <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
@@ -585,15 +642,15 @@ export default function YouServicesPage() {
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">المبلغ:</span>
-                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                 <span className="text-muted-foreground">النسبة (4 أضعاف):</span>
-                                <span className="font-bold">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span>
+                                <span className="font-bold" dir="ltr">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span>
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -614,9 +671,13 @@ export default function YouServicesPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">نوع الخط:</span>
+                                <span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(selectedFastOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{(selectedFastOffer?.price || 0).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -639,9 +700,13 @@ export default function YouServicesPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">نوع الخط:</span>
+                                <span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

@@ -66,7 +66,19 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      <div className="flex items-center gap-4">
+      <div className="text-right">
+        <div className="flex items-baseline gap-1 justify-start">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
+        </div>
+        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
+      </div>
+
+      <div className="flex items-center gap-4 flex-row-reverse">
+          <div className="text-left">
+              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
+              <p className="text-[10px] font-bold text-muted-foreground">شحن فوري مباشر</p>
+          </div>
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white">
               <Image 
                   src="https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg" 
@@ -75,18 +87,6 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
                   className="object-cover"
               />
           </div>
-          <div className="text-right">
-              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.title}</h4>
-              <p className="text-[10px] font-bold text-muted-foreground">شحن فوري مباشر</p>
-          </div>
-      </div>
-      
-      <div className="text-left">
-        <div className="flex items-baseline gap-1 justify-end">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
-        </div>
-        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
     </div>
 );
@@ -133,7 +133,6 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        // Multiply balance amount by 4 if it's manual balance top-up
         const finalPayAmount = typeLabel === 'رصيد' ? payAmount * 4 : payAmount;
         const totalToDeduct = finalPayAmount;
 

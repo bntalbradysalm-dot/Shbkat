@@ -34,6 +34,7 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,28 +67,33 @@ const ADEN_NET_OFFERS: Offer[] = [
 
 const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-primary/5 mb-3 text-right cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group"
+      className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-2">
-          <div className="bg-blue-600 text-white font-black text-[10px] px-2 py-1 rounded-lg uppercase">Aden Net</div>
-          <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
-      </div>
-      
-      <div className="flex items-baseline gap-1 justify-end mb-3">
-        <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-        <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-primary/5">
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
-            <Globe className="w-3 h-3 text-primary" />
-            <p className="text-[10px] font-bold">{offer.data}</p>
+      <div className="text-right">
+        <div className="flex items-baseline gap-1 justify-start">
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
-        <div className="flex items-center justify-center gap-2 bg-muted/30 p-1.5 rounded-xl text-center">
-            <Clock className="w-3 h-3 text-primary" />
-            <p className="text-[10px] font-bold">{offer.validity}</p>
-        </div>
+        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
+      </div>
+
+      <div className="flex items-center gap-4 flex-row-reverse">
+          <div className="text-left">
+              <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.offerName}</h4>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Globe className="w-3 h-3"/> {offer.data}</span>
+                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3"/> {offer.validity}</span>
+              </div>
+          </div>
+          <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white">
+              <Image 
+                  src="https://i.postimg.cc/FFV6dDqd/FB-IMG-1770843160346.jpg" 
+                  alt="Aden Net" 
+                  fill 
+                  className="object-cover"
+              />
+          </div>
       </div>
     </div>
 );
@@ -129,7 +135,7 @@ export default function AdenNetPage() {
         }
         
         if (phone.length !== 9) {
-            setQueryResult(prev => prev === null ? null : null);
+            setQueryResult(null);
         }
     }, [phone, toast]);
 

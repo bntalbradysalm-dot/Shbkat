@@ -130,11 +130,10 @@ const CATEGORIES = [
     badge: 'Net',
     icon: Globe,
     offers: [
-      { offerId: 'net_3g_1gb', offerName: 'باقة 1 جيجا شهرية', price: 1400, data: '1GB', validity: '30 يوم', offertype: 'A300068' },
-      { offerId: 'net_3g_2gb', offerName: 'باقة 2 جيجا شهرية', price: 2600, data: '2GB', validity: '30 يوم', offertype: 'A300069' },
-      { offerId: 'net_3g_4gb', offerName: 'باقة 4 جيجا شهرية', price: 4800, data: '4GB', validity: '30 يوم', offertype: 'A300070' },
-      { offerId: 'net_3g_6gb', offerName: 'باقة 6 جيجا شهرية', price: 7000, data: '6GB', validity: '30 يوم', offertype: 'A300073' },
-      { offerId: 'net_3g_12gb', offerName: 'باقة 12 جيجا شهرية', price: 13000, data: '12GB', validity: '30 يوم', offertype: 'A300074' },
+      { offerId: 'net_3g_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_3g_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_3g_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_3g_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
     ]
   },
   {
@@ -494,7 +493,7 @@ export default function YemenMobilePage() {
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
-                        {/* Account Info Grid - NOW AT THE TOP OF PACKAGES TAB CONTENT */}
+                        {/* Account Info Grid - Above Current Subscriptions */}
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">

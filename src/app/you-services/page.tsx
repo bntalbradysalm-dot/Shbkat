@@ -71,7 +71,7 @@ type Offer = {
     minutes?: string;
     validity?: string;
     offertype: string; 
-    id?: string; // المعرف الرقمي المطلوب لـ num
+    id?: string; 
 };
 
 type BillingInfo = {
@@ -207,6 +207,7 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1" dir="ltr">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -260,9 +261,12 @@ export default function YouServicesPage() {
             const result = await response.json();
 
             if (response.ok) {
-                // Scan all response data for "فوترة" or "postpaid"
-                const searchData = JSON.stringify(result).toLowerCase();
-                const isPostpaid = searchData.includes('فوترة') || searchData.includes('postpaid');
+                // Robust Postpaid Detection - Comprehensive
+                const allDataString = JSON.stringify(result).toLowerCase();
+                const isPostpaid = allDataString.includes('فوترة') || 
+                                   allDataString.includes('postpaid') || 
+                                   allDataString.includes('post_paid') ||
+                                   allDataString.includes('باقة فوترة');
                 
                 const detectedType = isPostpaid ? 'postpaid' : 'prepaid';
                 

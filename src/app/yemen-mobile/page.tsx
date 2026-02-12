@@ -397,14 +397,18 @@ export default function YemenMobilePage() {
               }));
           }
 
-          // Robust Postpaid Detection (Scans all fields for "فوترة" or "postpaid")
-          const fullSearchText = (
-              (queryResult.mobileTy || '') + 
-              (queryResult.resultDesc || '') + 
-              (mappedOffers.map(o => o.offerName).join(' '))
-          ).toLowerCase();
+          // Robust Postpaid Detection - Advanced
+          const allDataString = JSON.stringify({
+              q: queryResult,
+              o: offerResult,
+              s: solfaResult
+          }).toLowerCase();
           
-          const isPostpaid = fullSearchText.includes('فوترة') || fullSearchText.includes('postpaid');
+          const isPostpaid = allDataString.includes('فوترة') || 
+                             allDataString.includes('postpaid') || 
+                             allDataString.includes('post_paid') ||
+                             allDataString.includes('باقة فوترة');
+                             
           const detectedTypeLabel = isPostpaid ? 'فوترة' : 'دفع مسبق';
 
           const isLoan = solfaResult.status === "1" || solfaResult.status === 1;
@@ -428,6 +432,12 @@ export default function YemenMobilePage() {
         setIsSearching(false);
     }
   }, [phone, toast]);
+
+  useEffect(() => {
+    if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78'))) {
+        handleSearch();
+    }
+  }, [phone, handleSearch]);
 
   useEffect(() => {
     if (phone.length !== 9) {
@@ -600,6 +610,7 @@ export default function YemenMobilePage() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
             <div className="flex justify-between items-center mb-2 px-1">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
+                {isSearching && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
             </div>
             <Input
                 type="tel"
@@ -608,18 +619,6 @@ export default function YemenMobilePage() {
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
             />
-            {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
-                <div className="animate-in fade-in zoom-in duration-300">
-                    <Button 
-                        className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
-                        onClick={handleSearch}
-                        disabled={isSearching}
-                    >
-                        {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                        استعلام
-                    </Button>
-                </div>
-            )}
         </div>
 
         {phone.length === 9 && billingInfo && (
@@ -634,7 +633,7 @@ export default function YemenMobilePage() {
                         <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                             <div className="p-3 border-l">
                                 <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                                <p className="text-sm font-black text-primary">
+                                <p className="text-sm font-black text-primary" dir="ltr">
                                     {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
                                 </p>
                             </div>
@@ -838,17 +837,17 @@ export default function YemenMobilePage() {
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground">المبلغ المكتوب:</span>
-                        <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                        <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                     </div>
                     {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
                             <span className="text-muted-foreground">مبلغ السلفة:</span>
-                            <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                            <span className="font-bold text-destructive" dir="ltr">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                     )}
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <span className="font-black text-primary text-lg">
+                        <span className="font-black text-primary text-lg" dir="ltr">
                             {(parseFloat(amount || '0') + loanAmountToAdd).toLocaleString('en-US')} ريال
                         </span>
                     </div>
@@ -869,19 +868,22 @@ export default function YemenMobilePage() {
                       <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">سعر الباقة:</span>
-                          <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
+                          <span className="font-bold" dir="ltr">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
                       {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
                             <span className="text-muted-foreground">مبلغ السلفة:</span>
-                            <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                            <span className="font-bold text-destructive" dir="ltr">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <p className="text-3xl font-black text-primary">
-                            {((selectedOffer?.price || 0) + loanAmountToAdd).toLocaleString('en-US')} <span className="text-sm">ريال</span>
-                        </p>
+                        <div className="flex items-baseline gap-1" dir="ltr">
+                            <p className="text-3xl font-black text-primary">
+                                {((selectedOffer?.price || 0) + loanAmountToAdd).toLocaleString('en-US')}
+                            </p>
+                            <span className="text-sm font-black text-primary">ريال</span>
+                        </div>
                       </div>
                   </div>
               </AlertDialogHeader>

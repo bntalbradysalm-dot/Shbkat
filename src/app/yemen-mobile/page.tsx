@@ -23,7 +23,6 @@ import {
   AlertCircle,
   Hash,
   Calendar,
-  History,
   Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -190,7 +189,7 @@ export default function YemenMobilePage() {
   const { user } = useUser();
 
   const [phone, setPhone] = useState('');
-  const [activeTab, setActiveTab] = useState("packages");
+  const [activeTab, setActiveTab] = useState("balance");
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -274,7 +273,6 @@ export default function YemenMobilePage() {
               }));
           }
 
-          // Combined search for "Postpaid" or "فوترة" in ALL result fields for better accuracy
           const searchIn = (obj: any) => JSON.stringify(obj).toLowerCase();
           const combinedResults = searchIn(queryResult) + searchIn(offerResult) + searchIn(solfaResult);
           
@@ -489,46 +487,6 @@ export default function YemenMobilePage() {
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                {/* Fixed Account Info Grid (Shows Account Balance, Type, and Loan) */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
-                    <div className="grid grid-cols-3 text-center border-b bg-muted/10">
-                        <div className="p-3 border-l">
-                            <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                            {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                <p className="text-sm font-black text-primary" dir="ltr">
-                                    {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
-                                </p>
-                            )}
-                        </div>
-                        <div className="p-3 border-l">
-                            <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
-                            {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
-                            )}
-                        </div>
-                        <div className="p-3">
-                            <p className="text-[10px] font-bold text-primary mb-1">فحص السلفة</p>
-                            {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                <div className="flex items-center justify-center gap-1">
-                                    {billingInfo?.isLoan ? (
-                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
-                                            <Frown className="h-3 w-3" />
-                                            <span className="text-[9px] font-black">
-                                                {billingInfo.loanAmount?.toLocaleString('en-US')} ريال
-                                            </span>
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
-                                            <Smile className="h-3 w-3" />
-                                            <span className="text-[9px] font-black">غير متسلف</span>
-                                        </Badge>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                         <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
@@ -582,6 +540,46 @@ export default function YemenMobilePage() {
                                         <p className="text-xs text-muted-foreground font-bold">لا توجد باقات نشطة حالياً</p>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Account Info Grid - MOVED TO UNDER PACKAGES TAB CONTENT */}
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                            <div className="grid grid-cols-3 text-center border-b bg-muted/10">
+                                <div className="p-3 border-l">
+                                    <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <p className="text-sm font-black text-primary" dir="ltr">
+                                            {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="p-3 border-l">
+                                    <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
+                                    )}
+                                </div>
+                                <div className="p-3">
+                                    <p className="text-[10px] font-bold text-primary mb-1">فحص السلفة</p>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <div className="flex items-center justify-center gap-1">
+                                            {billingInfo?.isLoan ? (
+                                                <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
+                                                    <Frown className="h-3 w-3" />
+                                                    <span className="text-[9px] font-black">
+                                                        {billingInfo.loanAmount?.toLocaleString('en-US')}
+                                                    </span>
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
+                                                    <Smile className="h-3 w-3" />
+                                                    <span className="text-[9px] font-black">غير متسلف</span>
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

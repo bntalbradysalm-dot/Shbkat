@@ -52,6 +52,9 @@ export async function POST(request: Request) {
     } else if (service === 'adenet') {
         endpoint = 'adenet';
         apiRequestParams.action = action;
+    } else if (service === 'you') {
+        endpoint = 'mtn';
+        apiRequestParams.action = action;
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 

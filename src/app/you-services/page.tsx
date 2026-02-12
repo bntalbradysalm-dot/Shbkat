@@ -14,7 +14,8 @@ import {
   History,
   Smartphone,
   Package,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -118,7 +119,9 @@ export default function YouServicesPage() {
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        const totalToDeduct = payAmount;
+        // Multiply balance amount by 4 as per request
+        const finalPayAmount = typeLabel.includes('رصيد') ? payAmount * 4 : payAmount;
+        const totalToDeduct = finalPayAmount;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
@@ -137,7 +140,7 @@ export default function YouServicesPage() {
             };
 
             if (typeLabel.includes('رصيد')) {
-                apiPayload.num = payAmount;
+                apiPayload.num = payAmount; // We send the original requested amount to the API
                 apiPayload.israsid = '1';
                 apiPayload.type = lineType;
             } else {
@@ -325,19 +328,16 @@ export default function YouServicesPage() {
                                     </div>
 
                                     {amount && parseFloat(amount) >= 200 && (
-                                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3 animate-in zoom-in-95">
-                                            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-black text-primary uppercase mb-1">توضيح العملية</p>
-                                                <p className="text-[11px] font-bold text-muted-foreground leading-relaxed">
-                                                    سيتم خصم <span className="text-primary font-black">{parseFloat(amount).toLocaleString()} ريال</span> من محفظتك، وسيصل للرقم رصيد صافي بقيمة تقريبية <span className="text-primary font-black">{(parseFloat(amount) * 0.828).toFixed(2)} ريال</span> بعد خصم الضرائب.
-                                                </p>
-                                            </div>
+                                        <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
+                                            <p className="text-xl font-black text-primary">
+                                                {(parseFloat(amount) * 0.828).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </p>
                                         </div>
                                     )}
 
                                     <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20" 
+                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
                                         onClick={() => {
                                             const val = parseFloat(amount);
                                             if (isNaN(val) || val < 200 || val > 100000) {
@@ -392,9 +392,17 @@ export default function YouServicesPage() {
                                 <span className="text-muted-foreground">نوع الخط:</span>
                                 <span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (4%):</span>
+                                <span className="font-bold">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
-                                <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-black">إجمالي الخصم:</span>
+                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

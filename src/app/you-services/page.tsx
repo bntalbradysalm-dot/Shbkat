@@ -34,6 +34,7 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -409,7 +410,7 @@ export default function YouServicesPage() {
             </AlertDialog>
 
             {/* Confirm Fast Charge Dialog */}
-            <AlertDialog open={!!selectedFastOffer} onOpenChange={() => setSelectedFastOffer(null)}>
+            <AlertDialog open={!!selectedFastOffer} onOpenChange={setSelectedFastOffer(null)}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-center font-black">تأكيد شحن فوري</AlertDialogTitle>

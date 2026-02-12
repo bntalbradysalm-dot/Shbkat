@@ -349,9 +349,9 @@ export default function Yemen4GPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1" dir="ltr">
-                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                            <div className="flex items-baseline gap-1" dir="rtl">
                                 <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
+                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl">
@@ -385,24 +385,26 @@ export default function Yemen4GPage() {
                     )}
                 </div>
 
-                {phone.length === 9 && queryResult && (
+                {phone.length === 9 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                            <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
-                                <div className="p-3 border-l border-white/10">
-                                    <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                    <p className="text-sm font-black">{queryResult.balance}</p>
-                                </div>
-                                <div className="p-3 border-l border-white/10">
-                                    <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                    <p className="text-sm font-black" dir="ltr">{queryResult.packagePrice} ر.ي</p>
-                                </div>
-                                <div className="p-3">
-                                    <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                    <p className="text-sm font-black">{queryResult.expireDate}</p>
+                        {queryResult && (
+                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                        <p className="text-sm font-black">{queryResult.balance}</p>
+                                    </div>
+                                    <div className="p-3 border-l border-white/10">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                        <p className="text-sm font-black" dir="ltr">{queryResult.packagePrice} ر.ي</p>
+                                    </div>
+                                    <div className="p-3">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

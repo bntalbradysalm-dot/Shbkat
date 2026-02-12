@@ -80,10 +80,10 @@ type Offer = {
 };
 
 const HADAYA_OFFERS: Offer[] = [
-  { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: '30 يوم', offertype: 'A68329' },
-  { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: '7 أيام', offertype: 'A44330' },
-  { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 أيام', offertype: 'A66328' },
-  { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: '30 يوم', offertype: 'A76328' },
+  { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
+  { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
+  { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
+  { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
 ];
 
 const CATEGORIES = [
@@ -134,6 +134,8 @@ const CATEGORIES = [
       { offerId: 'net_3g_1gb', offerName: 'باقة 1 جيجا شهرية', price: 1400, data: '1GB', validity: '30 يوم', offertype: 'A300068' },
       { offerId: 'net_3g_2gb', offerName: 'باقة 2 جيجا شهرية', price: 2600, data: '2GB', validity: '30 يوم', offertype: 'A300069' },
       { offerId: 'net_3g_4gb', offerName: 'باقة 4 جيجا شهرية', price: 4800, data: '4GB', validity: '30 يوم', offertype: 'A300070' },
+      { offerId: 'net_3g_6gb', offerName: 'باقة 6 جيجا شهرية', price: 7000, data: '6GB', validity: '30 يوم', offertype: 'A300073' },
+      { offerId: 'net_3g_12gb', offerName: 'باقة 12 جيجا شهرية', price: 13000, data: '12GB', validity: '30 يوم', offertype: 'A300074' },
     ]
   },
   {
@@ -239,24 +241,26 @@ export default function YemenMobilePage() {
     setActiveOffers([]);
 
     try {
+      const transid = Date.now().toString().slice(-8);
+      
       const queryResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'query' }),
+          body: JSON.stringify({ mobile: phoneNumber, action: 'query', transid }),
       });
       const queryResult = await queryResponse.json();
 
       const solfaResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'solfa' }),
+          body: JSON.stringify({ mobile: phoneNumber, action: 'solfa', transid }),
       });
       const solfaResult = await solfaResponse.json();
 
       const offerResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'queryoffer' }),
+          body: JSON.stringify({ mobile: phoneNumber, action: 'queryoffer', transid }),
       });
       const offerResult = await offerResponse.json();
 

@@ -94,7 +94,7 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
 
       {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1 flex-row-reverse">
+        <div className="flex items-baseline gap-1">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>

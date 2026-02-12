@@ -149,7 +149,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center gap-1 mb-4">
+      <div className="flex items-baseline justify-center mb-4">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
@@ -214,7 +214,7 @@ export default function YouServicesPage() {
 
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("packages");
-    const [lineType, setLineType] = useState("prepaid");
+    const [lineType, setLineType] = useState('prepaid');
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
@@ -332,10 +332,17 @@ export default function YouServicesPage() {
         setIsActivatingOffer(true);
         try {
             const transid = Date.now().toString().slice(-8);
+            // تم تغيير الأكشن إلى bill لحل مشكلة !Action parametr is required, and must be (bill)
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'billover', service: 'you', offertype: selectedOffer.offertype, transid })
+                body: JSON.stringify({ 
+                    mobile: phone, 
+                    action: 'bill', 
+                    service: 'you', 
+                    offertype: selectedOffer.offertype, 
+                    transid 
+                })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
@@ -535,7 +542,7 @@ export default function YouServicesPage() {
                                     <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">

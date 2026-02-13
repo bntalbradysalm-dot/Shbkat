@@ -16,7 +16,8 @@ import {
   Globe,
   Clock,
   Phone,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -183,6 +184,35 @@ export default function Yemen4GPage() {
         }
     };
 
+    const handleContactPick = async () => {
+        if (!('contacts' in navigator && 'ContactsManager' in window)) {
+            toast({
+                variant: "destructive",
+                title: "غير مدعوم",
+                description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
+            });
+            return;
+        }
+
+        try {
+            const props = ['tel'];
+            const opts = { multiple: false };
+            const contacts = await (navigator as any).contacts.select(props, opts);
+            
+            if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+                let selectedNumber = contacts[0].tel[0];
+                selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+                if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
+                if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
+                if (selectedNumber.startsWith('010')) selectedNumber = selectedNumber.substring(1);
+                
+                setPhone(selectedNumber.slice(0, 9));
+            }
+        } catch (err) {
+            console.error("Contacts selection failed:", err);
+        }
+    };
+
     const handlePayment = async () => {
         if (!phone || !amount || !user || !userDocRef || !firestore) return;
         const baseAmount = parseFloat(amount);
@@ -287,61 +317,6 @@ export default function Yemen4GPage() {
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-    if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
-
-    if (showSuccess && lastTxDetails) {
-        return (
-            <>
-                <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                        <div className="bg-green-500 p-8 flex justify-center">
-                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                                <CheckCircle className="h-20 w-20 text-white" />
-                            </div>
-                        </div>
-                        <CardContent className="p-8 space-y-6">
-                            <div>
-                                <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                                <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
-                            </div>
-
-                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
-                                    <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
-                                    <span className="font-bold">{lastTxDetails.type}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-1">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
-                                    <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </>
-        );
-    }
-
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
             <SimpleHeader title="يمن فورجي" />
@@ -366,13 +341,22 @@ export default function Yemen4GPage() {
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
-                    <Input
-                        type="tel"
-                        placeholder="10xxxxxxx"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
-                    />
+                    <div className="relative">
+                        <Input
+                            type="tel"
+                            placeholder="10xxxxxxx"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
+                        />
+                        <button 
+                            onClick={handleContactPick}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                            title="جهات الاتصال"
+                        >
+                            <Users className="h-5 w-5" />
+                        </button>
+                    </div>
                     {phone.length === 9 && phone.startsWith('10') && (
                         <div className="animate-in fade-in zoom-in duration-300">
                             <Button 

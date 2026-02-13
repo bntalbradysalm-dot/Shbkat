@@ -23,7 +23,8 @@ import {
   AlertCircle,
   Hash,
   Calendar,
-  Smartphone
+  Smartphone,
+  Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -425,6 +426,35 @@ export default function YemenMobilePage() {
     }
   };
 
+  const handleContactPick = async () => {
+    if (!('contacts' in navigator && 'ContactsManager' in window)) {
+        toast({
+            variant: "destructive",
+            title: "غير مدعوم",
+            description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
+        });
+        return;
+    }
+
+    try {
+        const props = ['tel'];
+        const opts = { multiple: false };
+        const contacts = await (navigator as any).contacts.select(props, opts);
+        
+        if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+            let selectedNumber = contacts[0].tel[0];
+            selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+            if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
+            if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
+            if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
+            
+            handlePhoneChange(selectedNumber);
+        }
+    } catch (err) {
+        console.error("Contacts selection failed:", err);
+    }
+  };
+
   const handleRenewOffer = (name: string) => {
     const normalize = (str: string) => 
         str.replace(/[أإآ]/g, 'ا')
@@ -592,8 +622,15 @@ export default function YemenMobilePage() {
                     placeholder="77xxxxxxx"
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
                 />
+                <button 
+                    onClick={handleContactPick}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                    title="جهات الاتصال"
+                >
+                    <Users className="h-5 w-5" />
+                </button>
             </div>
         </div>
 
@@ -613,8 +650,8 @@ export default function YemenMobilePage() {
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
+                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
@@ -707,12 +744,12 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                            {currentCategories.map((cat) => (
+                            {currentCategories.map((cat, index) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
-                                                {cat.badge}
+                                                {index === 4 ? 'VoLTE' : (cat.badge || (index + 1))}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
                                         </div>
@@ -844,7 +881,7 @@ export default function YemenMobilePage() {
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
                       تفعيل الآن
-                  </AlertDialogAction>
+                  </AccordionAction>
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>

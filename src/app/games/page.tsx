@@ -249,7 +249,6 @@ export default function GamesPage() {
                                     <div className="text-left">
                                         <div className="flex items-baseline gap-1 justify-end">
                                             <span className="text-lg font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
-                                            <span className="text-[9px] font-bold text-muted-foreground">ريال</span>
                                         </div>
                                         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">شراء</Button>
                                     </div>

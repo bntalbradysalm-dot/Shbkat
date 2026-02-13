@@ -13,7 +13,8 @@ import {
   Hash,
   Calendar,
   History,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -77,28 +78,16 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 8 && !phone.startsWith('0')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الثابت يجب أن يبدأ بـ 0'
-            });
-        }
-        
         if (phone.length !== 8) {
-            setQueryResult(prev => prev === null ? null : null);
+            setQueryResult(null);
         }
-    }, [phone, toast]);
+    }, [phone]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) return;
         
         if (!phone.startsWith('0')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الثابت يجب أن يبدأ بـ 0'
-            });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الثابت يجب أن يبدأ بـ 0' });
             return;
         }
 
@@ -110,12 +99,7 @@ export default function LandlineRedesignPage() {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mobile: phone, 
-                    action: 'query', 
-                    service: 'post',
-                    type: searchType 
-                })
+                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post', type: searchType })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
@@ -137,12 +121,7 @@ export default function LandlineRedesignPage() {
                 expiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
             }
             
-            setQueryResult({
-                balance,
-                packagePrice: price,
-                expireDate: expiry,
-                message: result.resultDesc
-            });
+            setQueryResult({ balance, packagePrice: price, expireDate: expiry, message: result.resultDesc });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
@@ -150,26 +129,14 @@ export default function LandlineRedesignPage() {
         }
     };
 
-    const handleOpenConfirm = () => {
-        const val = parseFloat(amount);
-        if (isNaN(val) || val < 250) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في المبلغ',
-                description: 'أقل مبلغ للسداد هو 250 ريال.',
-            });
-            return;
-        }
-        setIsConfirmingPayment(true);
-    };
-
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        const totalToDeduct = payAmount;
+        const commission = Math.ceil(payAmount * 0.05);
+        const totalToDeduct = payAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة العمولة.' });
             return;
         }
 
@@ -206,18 +173,13 @@ export default function LandlineRedesignPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. سداد: ${payAmount} + عمولة: ${commission}.`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
             await batch.commit();
             
-            setLastTxDetails({
-                type: `سداد ${typeLabel}`,
-                phone: phone,
-                amount: totalToDeduct,
-                transid: transid
-            });
+            setLastTxDetails({ type: `سداد ${typeLabel}`, phone: phone, amount: totalToDeduct, transid: transid });
             setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
@@ -272,9 +234,7 @@ export default function LandlineRedesignPage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/transactions')}>
-                                    <History className="ml-2 h-4 w-4" /> العمليات
-                                </Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -294,7 +254,7 @@ export default function LandlineRedesignPage() {
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
+                                <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl">
@@ -321,14 +281,14 @@ export default function LandlineRedesignPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                <Search className="ml-2 h-4 w-4" />
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
                     )}
                 </div>
 
-                {phone.length === 8 && phone.startsWith('0') && (
+                {phone.length === 8 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
@@ -370,7 +330,7 @@ export default function LandlineRedesignPage() {
                                     </div>
                                     <Button 
                                         className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
-                                        onClick={handleOpenConfirm} 
+                                        onClick={() => setIsConfirmingPayment(true)} 
                                         disabled={!amount}
                                     >
                                         تسديد الآن
@@ -393,7 +353,7 @@ export default function LandlineRedesignPage() {
                                     </div>
                                     <Button 
                                         className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
-                                        onClick={handleOpenConfirm} 
+                                        onClick={() => setIsConfirmingPayment(true)} 
                                         disabled={!amount}
                                     >
                                         تسديد الآن
@@ -405,6 +365,8 @@ export default function LandlineRedesignPage() {
                 )}
             </div>
 
+            <Toaster />
+
             <AlertDialog open={isConfirmingPayment} onOpenChange={setIsConfirmingPayment}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
@@ -414,9 +376,17 @@ export default function LandlineRedesignPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (5%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

@@ -15,7 +15,8 @@ import {
   Hash,
   Calendar,
   History,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -70,7 +71,6 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5 mb-3 cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] group flex items-center justify-between"
       onClick={onClick}
     >
-      {/* اليمين: الشعار والمعلومات */}
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-primary/10 bg-white shrink-0">
               <Image 
@@ -89,11 +89,9 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
           </div>
       </div>
 
-      {/* اليسار: السعر والزر */}
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1 flex-row-reverse">
+        <div className="flex items-baseline gap-1">
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] font-bold text-muted-foreground">ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -128,28 +126,16 @@ export default function AdenNetPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length === 9 && !phone.startsWith('79')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم عدن نت يجب أن يبدأ بـ 79'
-            });
-        }
-        
         if (phone.length !== 9) {
             setQueryResult(null);
         }
-    }, [phone, toast]);
+    }, [phone]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
         
         if (!phone.startsWith('79')) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ في الرقم',
-                description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت'
-            });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت' });
             return;
         }
 
@@ -188,10 +174,11 @@ export default function AdenNetPage() {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
         const basePrice = selectedOffer.price;
-        const totalToDeduct = basePrice;
+        const commission = Math.ceil(basePrice * 0.05);
+        const totalToDeduct = basePrice + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل الباقة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لتفعيل الباقة شاملة العمولة.' });
             return;
         }
 
@@ -223,7 +210,7 @@ export default function AdenNetPage() {
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
                 transactionType: `تفعيل ${selectedOffer.offerName}`, 
-                notes: `للرقم: ${phone}`, 
+                notes: `للرقم: ${phone}. سعر: ${basePrice} + عمولة: ${commission}.`, 
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -311,7 +298,7 @@ export default function AdenNetPage() {
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
+                                <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl">
@@ -338,14 +325,14 @@ export default function AdenNetPage() {
                                 onClick={handleSearch}
                                 disabled={isSearching}
                             >
-                                <Search className="ml-2 h-4 w-4" />
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
                     )}
                 </div>
 
-                {phone.length === 9 && phone.startsWith('79') && (
+                {phone.length === 9 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
@@ -390,9 +377,17 @@ export default function AdenNetPage() {
                                 <span className="text-muted-foreground">رقم المشترك:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">سعر الباقة:</span>
+                                <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (5%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

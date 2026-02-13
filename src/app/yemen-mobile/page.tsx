@@ -21,11 +21,8 @@ import {
   Phone as PhoneIcon,
   Clock,
   AlertCircle,
-  CalendarDays,
-  ArrowUpDown,
   Hash,
   Calendar,
-  History,
   Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,12 +46,12 @@ import { doc, writeBatch, increment, collection as firestoreCollection } from 'f
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
-import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,43 +80,18 @@ type Offer = {
     offertype: string; 
 };
 
-const CATEGORIES = [
+// --- DATA DEFINITIONS ---
+
+const PREPAID_CATEGORIES = [
   {
     id: 'mazaya',
     title: 'باقات مزايا',
     badge: '3G',
     icon: ShieldCheck,
     offers: [
-      { 
-        offerId: 'm_monthly', 
-        offerName: 'مزايا الشهرية', 
-        price: 1300, 
-        data: '250 MB', 
-        sms: '350', 
-        minutes: '350', 
-        validity: 'شهر', 
-        offertype: 'A38394' 
-      },
-      { 
-        offerId: 'm_weekly', 
-        offerName: 'مزايا الاسبوعة', 
-        price: 485, 
-        data: '90 MB', 
-        sms: '30', 
-        minutes: '100', 
-        validity: 'اسبوع', 
-        offertype: 'A64329' 
-      },
-      { 
-        offerId: 'm_max', 
-        offerName: 'مزايا ماكس الشهرية', 
-        price: 2000, 
-        data: '600 MB', 
-        sms: '200', 
-        minutes: '500', 
-        validity: 'شهر', 
-        offertype: 'A75328' 
-      },
+      { offerId: 'm_monthly', offerName: 'مزايا الشهرية', price: 1300, data: '250 MB', sms: '350', minutes: '350', validity: '30 يوم', offertype: 'A38394' },
+      { offerId: 'm_weekly', offerName: 'مزايا الاسبوعة', price: 485, data: '90 MB', sms: '30', minutes: '100', validity: '7 أيام', offertype: 'A64329' },
+      { offerId: 'm_max', offerName: 'مزايا ماكس الشهرية', price: 2000, data: '600 MB', sms: '200', minutes: '500', validity: '30 يوم', offertype: 'A75328' },
     ]
   },
   {
@@ -128,96 +100,13 @@ const CATEGORIES = [
     badge: '4G',
     icon: Zap,
     offers: [
-      { 
-        offerId: 'super_4g', 
-        offerName: 'سوبر فورجي', 
-        price: 2000, 
-        data: '3GB', 
-        sms: '250', 
-        minutes: '250', 
-        validity: 'شهر', 
-        offertype: 'A5533822' 
-      },
-      { 
-        offerId: '4g_24h', 
-        offerName: 'مزايا فورجي 24 ساعة', 
-        price: 300, 
-        data: '512MB', 
-        sms: '30', 
-        minutes: '20', 
-        validity: 'يوم', 
-        offertype: 'A4826' 
-      },
-      { 
-        offerId: '4g_48h', 
-        offerName: 'مزايا فورجي 48 ساعة', 
-        price: 600, 
-        data: '1GB', 
-        sms: '100', 
-        minutes: '50', 
-        validity: 'ساعة 48', 
-        offertype: 'A88337' 
-      },
-      { 
-        offerId: '4g_weekly', 
-        offerName: 'مزايا فورجي الاسبوعية', 
-        price: 1500, 
-        data: '2GB', 
-        sms: '300', 
-        minutes: '200', 
-        validity: 'اسبوع', 
-        offertype: 'A88336' 
-      },
-      { 
-        offerId: '4g_800sms', 
-        offerName: 'مزايا فورجي 800 رسالة', 
-        price: 1000, 
-        data: 'لا يوجد', 
-        sms: '800', 
-        minutes: 'لا يوجد', 
-        validity: 'شهر', 
-        offertype: 'A31338' 
-      },
-      { 
-        offerId: 'm_tawfeer', 
-        offerName: 'مزايا توفير الشهرية', 
-        price: 2400, 
-        data: '4GB', 
-        sms: '450', 
-        minutes: '450', 
-        validity: 'شهر', 
-        offertype: 'A3823' 
-      },
-      { 
-        offerId: '4g_monthly', 
-        offerName: 'مزايا فورجي الشهرية', 
-        price: 2500, 
-        data: '4GB', 
-        sms: '350', 
-        minutes: '300', 
-        validity: 'شهر', 
-        offertype: 'A88335' 
-      },
-      { 
-        offerId: 'm_max_4g', 
-        offerName: 'مزايا ماكس فورجي', 
-        price: 4000, 
-        data: '4GB', 
-        sms: '600', 
-        minutes: '1100', 
-        validity: 'شهر', 
-        offertype: 'A88441' 
-      },
-      { 
-        offerId: 'm_business_4g', 
-        offerName: 'مزايا أعمال فورجي', 
-        price: 5000, 
-        data: '6GB', 
-        sms: '1000', 
-        minutes: '1500', 
-        validity: 'شهر', 
-        offertype: 'A39053' 
-      },
+      { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: '30 يوم', offertype: 'A5533822' },
+      { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: '24 ساعة', offertype: 'A4826' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: '7 أيام', offertype: 'A88336' },
+      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: '30 يوم', offertype: 'A3823' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: '30 يوم', offertype: 'A88335' },
+      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', sms: '600', minutes: '1100', validity: '30 يوم', offertype: 'A88441' },
     ]
   },
   {
@@ -226,78 +115,158 @@ const CATEGORIES = [
     badge: '4G',
     icon: Database,
     offers: [
-      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4821' },
-      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A3435' },
-      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A3436' },
-      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A3825' },
-      { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A3822' },
-      { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4828' },
-      { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A34346' },
-      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: 'يوم 40', offertype: 'A3347' },
-      { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4830' },
+      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: '30 يوم', offertype: 'A4821' },
+      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: '7 أيام', offertype: 'A3435' },
+      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: '30 يوم', offertype: 'A3436' },
+      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: '30 يوم', offertype: 'A3825' },
     ]
   },
   {
-    id: 'internet_monthly',
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4826' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990004' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990005' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
+    ]
+  },
+  {
+    id: 'monthly_net',
     title: 'باقات الانترنت الشهرية',
     badge: 'Net',
-    icon: ArrowUpDown,
+    icon: Globe,
     offers: [
-      { offerId: 'net_3g_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_3g_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_3g_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_3g_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
     ]
   },
   {
-    id: 'internet_10days',
+    id: '10day_net',
     title: 'باقات الإنترنت 10 ايام',
     badge: '10',
-    icon: CalendarDays,
+    icon: Clock,
     offers: [
-      { offerId: 'net_3g_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: 'ايام 10', offertype: 'A74332' },
-      { offerId: 'net_3g_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: 'ايام 10', offertype: 'A74339' },
-      { offerId: 'net_3g_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: 'ايام 10', offertype: 'A44345' },
-      { offerId: 'net_3g_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: 'ايام 10', offertype: 'A74351' },
+      { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
+      { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
+      { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74351' },
     ]
   }
 ];
 
-const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
-    <div className="relative w-12 h-12">
-      <svg
-        viewBox="0 0 50 50"
-        className="absolute inset-0 w-full h-full animate-spin"
-        style={{ animationDuration: '1.2s' }}
-      >
-        <path
-          d="M15 25 A10 10 0 0 0 35 25"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M40 15 A15 15 0 0 1 40 35"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-          className="opacity-30"
-        />
-      </svg>
-    </div>
-  </div>
-);
+const POSTPAID_CATEGORIES = [
+  {
+    id: 'mazaya',
+    title: 'باقات هدايا',
+    badge: '3G',
+    icon: ShieldCheck,
+    offers: [
+      { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
+      { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
+      { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
+      { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
+    ]
+  },
+  {
+    id: '4g_mazaya',
+    title: 'باقات مزايا فورجي',
+    badge: '4G',
+    icon: Zap,
+    offers: [
+      { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: 'شهر', offertype: 'A5533821' },
+      { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: 'يوم', offertype: 'A4825' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A4990003' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: 'اسبوع', offertype: 'A88339' },
+      { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
+      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A88338' },
+      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', minutes: '1100', sms: '600', validity: 'شهر', offertype: 'A88440' },
+      { offerId: 'm_aamal_4g', offerName: 'مزايا أعمال فورجي', price: 5000, data: '6GB', minutes: '1500', sms: '1000', validity: 'شهر', offertype: 'A49053' },
+    ]
+  },
+  {
+    id: '4g_net',
+    title: 'باقات نت فورجي',
+    badge: '4G',
+    icon: Database,
+    offers: [
+      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4820' },
+      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A44355' },
+      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A44356' },
+      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A4819' },
+      { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A4818' },
+      { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4822' },
+      { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A44345' },
+      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: '40 يوم', offertype: 'A44347' },
+      { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4829' },
+    ]
+  },
+  {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990002' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
+    ]
+  },
+  {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
+    ]
+  },
+  {
+    id: '10day_net',
+    title: 'باقات الإنترنت 10 ايام',
+    badge: '10',
+    icon: Clock,
+    offers: [
+      { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74385' },
+      { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74340' },
+      { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A74348' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74354' },
+    ]
+  }
+];
+
+// --- COMPONENT ---
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
-      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-center justify-center mb-4">
+      <div className="flex justify-center mb-3">
+          <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md">
+              <Image 
+                  src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" 
+                  alt="Yemen Mobile" 
+                  fill 
+                  className="object-cover"
+              />
+          </div>
+      </div>
+      <h4 className="text-sm font-black text-primary mb-1 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
+      <div className="flex items-baseline justify-center mb-4">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
@@ -318,7 +287,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
         </div>
         <div className="space-y-1.5">
             <Clock className="w-5 h-5 mx-auto text-primary" />
-            <p className="text-[11px] font-black text-foreground truncate">{offer.validity ? offer.validity.split(' ').reverse().join(' ') : '-'}</p>
+            <p className="text-[11px] font-black text-foreground truncate">{offer.validity || '-'}</p>
         </div>
       </div>
     </div>
@@ -332,6 +301,7 @@ export default function YemenMobilePage() {
 
   const [phone, setPhone] = useState('');
   const [activeTab, setActiveTab] = useState("balance");
+  const [lineTypeTab, setLineTypeTab] = useState('prepaid');
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -350,96 +320,108 @@ export default function YemenMobilePage() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  const handleSearch = useCallback(async () => {
-    if (!phone || phone.length !== 9) return;
+  const parseTelecomDate = (dateStr: string) => {
+    if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 8) return null;
+    const year = parseInt(dateStr.substring(0, 4));
+    const month = parseInt(dateStr.substring(4, 6)) - 1;
+    const day = parseInt(dateStr.substring(6, 8));
+    const hour = parseInt(dateStr.substring(8, 10) || "0");
+    const minute = parseInt(dateStr.substring(10, 12) || "0");
+    const d = new Date(year, month, day, hour, minute);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const formatSubscriptionDate = (dateStr: string) => {
+    const d = parseTelecomDate(dateStr);
+    if (!d) return '...';
+    return format(d, 'd MMMM yyyy', { locale: ar });
+  };
+
+  const formatExpiryDate = (dateStr: string) => {
+    const d = parseTelecomDate(dateStr);
+    if (!d) return '...';
+    return `${format(d, 'd', { locale: ar })}/${format(d, 'MMMM', { locale: ar })}/${format(d, 'yyyy', { locale: ar })}`;
+  };
+
+  const handleSearch = useCallback(async (phoneNumber: string) => {
+    if (!phoneNumber || phoneNumber.length !== 9) return;
+    
     setIsSearching(true);
+    setBillingInfo(null);
+    setActiveOffers([]);
+
     try {
+      const transid = Date.now().toString().slice(-8);
+      
       const queryResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phone, action: 'query' }),
+          body: JSON.stringify({ mobile: phoneNumber, action: 'query', transid }),
       });
       const queryResult = await queryResponse.json();
 
       const solfaResponse = await fetch('/api/telecom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phone, action: 'solfa' }),
+          body: JSON.stringify({ mobile: phoneNumber, action: 'solfa', transid }),
       });
       const solfaResult = await solfaResponse.json();
 
+      const offerResponse = await fetch('/api/telecom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phoneNumber, action: 'queryoffer', transid }),
+      });
+      const offerResult = await offerResponse.json();
+
       if (queryResponse.ok) {
-          let typeLabel = queryResult.mobileTy || '';
-          if (typeLabel.includes('فوترة') || typeLabel.toLowerCase().includes('postpaid')) {
-              typeLabel = 'فوترة';
-          } else {
-              typeLabel = 'دفع مسبق';
+          let mappedOffers: ActiveOffer[] = [];
+          if (offerResponse.ok && offerResult.offers) {
+              mappedOffers = offerResult.offers.map((off: any) => ({
+                  offerName: off.offerName || off.offer_name || '...',
+                  startDate: off.offerStartDate || off.start_date || off.startDate || '...',
+                  expireDate: off.offerEndDate || off.expire_date || off.expireDate || '...'
+              }));
           }
+
+          const searchIn = (obj: any) => JSON.stringify(obj).toLowerCase();
+          const combinedResults = searchIn(queryResult) + searchIn(offerResult) + searchIn(solfaResult);
+          
+          const isPostpaid = combinedResults.includes('فوترة') || 
+                             combinedResults.includes('postpaid') || 
+                             combinedResults.includes('post_paid') ||
+                             combinedResults.includes('باقة فوترة');
+                             
+          const detectedTypeLabel = isPostpaid ? 'فوترة' : 'دفع مسبق';
+          setLineTypeTab(isPostpaid ? 'postpaid' : 'prepaid');
 
           const isLoan = solfaResult.status === "1" || solfaResult.status === 1;
           const loanAmt = isLoan ? parseFloat(solfaResult.loan_amount || "0") : 0;
 
           setBillingInfo({ 
               balance: parseFloat(queryResult.balance || "0"), 
-              customer_type: typeLabel,
+              customer_type: detectedTypeLabel,
               resultDesc: queryResult.resultDesc,
               isLoan: isLoan,
               loanAmount: loanAmt
           });
           
-          const offerResponse = await fetch('/api/telecom', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mobile: phone, action: 'queryoffer' }),
-          });
-          const offerResult = await offerResponse.json();
-          if (offerResponse.ok && offerResult.offers) {
-              const mappedOffers = offerResult.offers.map((off: any) => ({
-                  offerName: off.offer_name || off.offerName,
-                  startDate: off.start_date || off.startDate || '...',
-                  expireDate: off.expire_date || off.expireDate || '...'
-              }));
-              setActiveOffers(mappedOffers);
-          } else {
-              setActiveOffers([]);
-          }
+          setActiveOffers(mappedOffers);
+      } else {
+          throw new Error(queryResult.message || 'فشل الاستعلام من المزود.');
       }
-    } catch (e) {
-        console.error("Search Error:", e);
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: e.message });
     } finally {
         setIsSearching(false);
     }
-  }, [phone]);
+  }, [toast]);
 
-  useEffect(() => {
-    if (phone.length === 9) {
-      if (!phone.startsWith('77') && !phone.startsWith('78')) {
-          toast({
-              variant: 'destructive',
-              title: 'خطأ في الرقم',
-              description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
-          });
-          setBillingInfo(prev => prev === null ? null : null);
-          setActiveOffers(prev => prev.length === 0 ? prev : []);
-          return;
-      }
-      handleSearch();
-    } else {
-        setBillingInfo(prev => prev === null ? null : null);
-        setActiveOffers(prev => prev.length === 0 ? prev : []);
-    }
-  }, [phone, toast, handleSearch]);
-
-  useEffect(() => {
-    if (showSuccess && audioRef.current) {
-        audioRef.current.play().catch(e => console.error("Audio play failed", e));
-    }
-  }, [showSuccess]);
-
-  const handleTabChange = (val: string) => {
-    setActiveTab(val);
-    if (val === 'packages' && phone.length === 9) {
-        handleSearch();
+  const handlePhoneChange = (val: string) => {
+    const cleaned = val.replace(/\D/g, '').slice(0, 9);
+    setPhone(cleaned);
+    if (cleaned.length === 9 && (cleaned.startsWith('77') || cleaned.startsWith('78'))) {
+        handleSearch(cleaned);
     }
   };
 
@@ -452,10 +434,11 @@ export default function YemenMobilePage() {
            .trim();
 
     const normalizedInput = normalize(name);
+    const activeCategories = lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES;
 
     let foundOffer: Offer | undefined;
-    for (const cat of CATEGORIES) {
-        foundOffer = cat.offers.find(o => {
+    for (const cat of activeCategories) {
+        foundOffer = (cat as any).offers.find((o: Offer) => {
             const normalizedOfferName = normalize(o.offerName);
             return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
         });
@@ -468,7 +451,7 @@ export default function YemenMobilePage() {
         toast({
             variant: "destructive",
             title: "عذراً",
-            description: "لم نتمكن من تحديد سعر التجديد لهذه الباقة تلقائياً. يرجى اختيارها من القائمة بالأسفل.",
+            description: "لم نتمكن من تحديد سعر التجديد تلقائياً. يرجى اختيار الباقة من القائمة.",
         });
     }
   };
@@ -564,7 +547,7 @@ export default function YemenMobilePage() {
         });
         setShowSuccess(true);
         setSelectedOffer(null);
-        handleSearch();
+        handleSearch(phone);
     } catch (e: any) {
         toast({ variant: "destructive", title: "خطأ", description: e.message });
     } finally {
@@ -572,21 +555,13 @@ export default function YemenMobilePage() {
     }
   };
 
-  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-
+  const currentCategories = lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES;
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="يمن موبايل" />
       
-      {isSearching && activeTab === 'packages' && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-background/20 backdrop-blur-[2px]">
-              <CustomLoader />
-          </div>
-      )}
-
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
@@ -597,7 +572,7 @@ export default function YemenMobilePage() {
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
-                        <span className="text-sm font-bold text-white/80">ريال يمني</span>
+                        <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -609,61 +584,75 @@ export default function YemenMobilePage() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
             <div className="flex justify-between items-center mb-2 px-1">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
-                {isSearching && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                {isSearching && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
             </div>
-            <Input
-                type="tel"
-                placeholder="77xxxxxxx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
-            />
+            <div className="relative">
+                <Input
+                    type="tel"
+                    placeholder="77xxxxxxx"
+                    value={phone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                />
+            </div>
         </div>
 
-        {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                    <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
-                    <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
-                </TabsList>
+        {phone.length === 9 && (
+            <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+                
+                {activeTab === 'packages' && (
+                    <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
+                        <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[200px]">
+                            <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-primary/5">
+                                <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                )}
 
-                <TabsContent value="packages" className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                    {!billingInfo && isSearching ? (
-                        <div className="space-y-4">
-                            <Skeleton className="h-20 w-full rounded-3xl" />
-                            <Skeleton className="h-40 w-full rounded-3xl" />
-                        </div>
-                    ) : (
-                        <>
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
+                    <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
+                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
+                        <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="packages" className="space-y-4">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5 mt-2">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
-                                    <p className="text-sm font-black text-primary">
-                                        {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
-                                    </p>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <p className="text-sm font-black text-primary">
+                                            {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
-                                    <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
+                                    )}
                                 </div>
                                 <div className="p-3">
                                     <p className="text-[10px] font-bold text-primary mb-1">فحص السلفة</p>
-                                    <div className="flex items-center justify-center gap-1">
-                                        {billingInfo?.isLoan ? (
-                                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
-                                                <Frown className="h-3 w-3" />
-                                                <span className="text-[9px] font-black">
-                                                    {billingInfo.loanAmount?.toLocaleString('en-US')} ريال
-                                                </span>
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
-                                                <Smile className="h-3 w-3" />
-                                                <span className="text-[9px] font-black">غير متسلف</span>
-                                            </Badge>
-                                        )}
-                                    </div>
+                                    {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
+                                        <div className="flex items-center justify-center gap-1">
+                                            {billingInfo?.isLoan ? (
+                                                <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
+                                                    <Frown className="h-3 w-3" />
+                                                    <span className="text-[9px] font-black">
+                                                        {billingInfo.loanAmount?.toLocaleString('en-US')}
+                                                    </span>
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 h-6">
+                                                    <Smile className="h-3 w-3" />
+                                                    <span className="text-[9px] font-black">غير متسلف</span>
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -673,9 +662,14 @@ export default function YemenMobilePage() {
                                 <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
                             </div>
                             <div className="p-4 space-y-2">
-                                {activeOffers.length > 0 ? (
+                                {isSearching ? (
+                                    <div className="space-y-3">
+                                        <Skeleton className="h-16 w-full rounded-2xl" />
+                                        <Skeleton className="h-16 w-full rounded-2xl" />
+                                    </div>
+                                ) : activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-3 items-center p-2.5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
                                                     onClick={() => handleRenewOffer(off.offerName)}
@@ -686,11 +680,20 @@ export default function YemenMobilePage() {
                                                 </button>
                                             </div>
 
-                                            <div className="flex-1">
+                                            <div className="flex-1 space-y-1">
                                                 <h4 className="text-xs font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
                                                     {off.offerName}
                                                 </h4>
-                                                <p className="text-[9px] font-bold text-muted-foreground mt-0.5">باقة نشطة حالياً</p>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center gap-1.5 text-destructive/80">
+                                                        <Clock className="w-3 h-3 text-destructive/60" />
+                                                        <span className="text-[9px] font-bold">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        <span className="text-[9px] font-bold">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
@@ -704,7 +707,7 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                            {CATEGORIES.map((cat) => (
+                            {currentCategories.map((cat) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
@@ -715,107 +718,58 @@ export default function YemenMobilePage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {cat.offers.length > 0 ? (
-                                            cat.offers.map((o) => (
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {cat.offers.map((o) => (
                                                 <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                            ))
-                                        ) : (
-                                            <p className="text-center py-4 text-xs text-muted-foreground">لا توجد باقات في هذه الفئة حالياً.</p>
-                                        )}
+                                            ))}
+                                        </div>
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
                         </Accordion>
-                        </>
-                    )}
-                </TabsContent>
+                    </TabsContent>
 
-                <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
-                        <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
-                        <div className="relative max-w-[240px] mx-auto">
-                            <Input 
-                                type="number" 
-                                placeholder="0.00" 
-                                value={amount} 
-                                onChange={(e) => setAmount(e.target.value)} 
-                                className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
-                            />
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
-                        </div>
-                        
-                        {amount && (
-                            <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2">
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                <p className="text-xl font-black text-primary">
-                                    {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
+                    <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                            <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
+                            <div className="relative max-w-[240px] mx-auto">
+                                <Input 
+                                    type="number" 
+                                    placeholder="0.00" 
+                                    value={amount} 
+                                    onChange={(e) => setAmount(e.target.value)} 
+                                    className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
                             </div>
-                        )}
+                            
+                            {amount && (
+                                <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
+                                    <p className="text-xl font-black text-primary">
+                                        {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال
+                                    </p>
+                                </div>
+                            )}
 
-                        <Button 
-                            className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
-                            onClick={() => setIsConfirming(true)} 
-                            disabled={!amount}
-                        >
-                            تنفيذ السداد
-                        </Button>
-                    </div>
-                </TabsContent>
-            </Tabs>
+                            <Button 
+                                className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                                onClick={() => setIsConfirming(true)} 
+                                disabled={!amount}
+                            >
+                                تنفيذ السداد
+                            </Button>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            </div>
         )}
       </div>
 
       <Toaster />
 
-      {showSuccess && lastTxDetails && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
-            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
-                <CardContent className="p-8 space-y-6">
-                    <div>
-                        <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                        <p className="text-sm text-muted-foreground mt-1">تم قبول طلبك وتنفيذه فورياً</p>
-                    </div>
-
-                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
-                            <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
-                            <span className="font-bold">{lastTxDetails.type}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-1">
-                            <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
-                            <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                            <History className="ml-2 h-4 w-4" /> العمليات
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-      )}
+      {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
+      {isActivatingOffer && <ProcessingOverlay message="جاري تفعيل الباقة..." />}
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
@@ -827,7 +781,11 @@ export default function YemenMobilePage() {
                         <span className="font-bold">{phone}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground">المبلغ المكتوب:</span>
+                        <span className="text-muted-foreground">نوع الخط:</span>
+                        <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-dashed">
+                        <span className="text-muted-foreground">المبلغ:</span>
                         <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                     </div>
                     {billingInfo?.isLoan && (
@@ -858,6 +816,10 @@ export default function YemenMobilePage() {
                   <div className="py-4 space-y-3 text-right text-sm">
                       <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
+                          <span className="text-muted-foreground">نوع الخط:</span>
+                          <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">سعر الباقة:</span>
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
@@ -869,9 +831,12 @@ export default function YemenMobilePage() {
                       )}
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <p className="text-3xl font-black text-primary">
-                            {((selectedOffer?.price || 0) + loanAmountToAdd).toLocaleString('en-US')} <span className="text-sm">ريال</span>
-                        </p>
+                        <div className="flex items-baseline gap-1">
+                            <p className="text-3xl font-black text-primary">
+                                {((selectedOffer?.price || 0) + loanAmountToAdd).toLocaleString('en-US')}
+                            </p>
+                            <span className="text-sm font-black text-primary">ريال</span>
+                        </div>
                       </div>
                   </div>
               </AlertDialogHeader>
@@ -883,6 +848,53 @@ export default function YemenMobilePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+
+      {showSuccess && lastTxDetails && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
+            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                        <CheckCircle className="h-16 w-16 text-white" />
+                    </div>
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                        <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
+                    </div>
+
+                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
+                            <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
+                            <span className="font-bold">{lastTxDetails.type}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                            <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                            <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      )}
     </div>
   );
 }

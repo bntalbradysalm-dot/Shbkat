@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -88,6 +89,20 @@ const HADAYA_OFFERS: Offer[] = [
 
 const CATEGORIES = [
   {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4826' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990004' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990005' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
+    ]
+  },
+  {
     id: 'mazaya',
     title: 'باقات مزايا',
     badge: '3G',
@@ -135,6 +150,11 @@ const CATEGORIES = [
       { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
       { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
       { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
+      { offerId: 'net_1gb', offerName: 'باقة 1 جيجا', price: 1400, data: '1GB', validity: 'شهر', offertype: 'A300068' },
+      { offerId: 'net_2gb', offerName: 'باقة 2 جيجا', price: 2600, data: '2GB', validity: 'شهر', offertype: 'A300069' },
+      { offerId: 'net_4gb', offerName: 'باقة 4 جيجا', price: 4800, data: '4GB', validity: 'شهر', offertype: 'A300070' },
+      { offerId: 'net_6gb', offerName: 'باقة 6 جيجا', price: 7000, data: '6GB', validity: 'شهر', offertype: 'A300073' },
+      { offerId: 'net_12gb', offerName: 'باقة 12 جيجا', price: 13000, data: '12GB', validity: 'شهر', offertype: 'A300074' },
     ]
   },
   {
@@ -143,6 +163,8 @@ const CATEGORIES = [
     badge: '10',
     icon: Clock,
     offers: [
+      { offerId: 'net_10d_500mb', offerName: 'نت 500 ميجا', price: 600, data: '500MB', validity: '10 ايام', offertype: 'A300071' },
+      { offerId: 'net_10d_1gb_old', offerName: 'نت 1 جيجا', price: 1000, data: '1GB', validity: '10 ايام', offertype: 'A300072' },
       { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
       { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
       { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },

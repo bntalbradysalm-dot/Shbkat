@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -51,6 +52,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -251,10 +253,20 @@ const POSTPAID_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-[32px] p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
-      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
+      <div className="flex justify-center mb-3">
+          <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md">
+              <Image 
+                  src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" 
+                  alt="Yemen Mobile" 
+                  fill 
+                  className="object-cover"
+              />
+          </div>
+      </div>
+      <h4 className="text-sm font-black text-primary mb-1 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4" dir="ltr">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
@@ -588,7 +600,7 @@ export default function YemenMobilePage() {
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                         <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>

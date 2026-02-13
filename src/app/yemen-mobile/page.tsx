@@ -590,12 +590,23 @@ export default function YemenMobilePage() {
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
                         <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
+                        <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
                     </TabsList>
 
+                    {activeTab === 'packages' && (
+                        <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
+                            <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[240px]">
+                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-10 p-1 shadow-sm border border-primary/5">
+                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+                    )}
+
                     <TabsContent value="packages" className="space-y-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5 mt-2">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
@@ -632,15 +643,6 @@ export default function YemenMobilePage() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="flex justify-center -mt-2">
-                            <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[240px]">
-                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-10 p-1 shadow-sm border border-primary/5">
-                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
-                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
@@ -694,7 +696,7 @@ export default function YemenMobilePage() {
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
                             {currentCategories.map((cat) => (
-                                AccordionItem && <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">

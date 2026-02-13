@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -132,10 +133,11 @@ export default function LandlineRedesignPage() {
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        const totalToDeduct = payAmount;
+        const commission = Math.ceil(payAmount * 0.05);
+        const totalToDeduct = payAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة العمولة.' });
             return;
         }
 
@@ -172,7 +174,7 @@ export default function LandlineRedesignPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`,
+                notes: `إلى رقم: ${phone}. سداد: ${payAmount} + عمولة: ${commission}.`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -374,9 +376,17 @@ export default function LandlineRedesignPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (5%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

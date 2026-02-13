@@ -85,20 +85,6 @@ type Offer = {
 
 const PREPAID_CATEGORIES = [
   {
-    id: 'volte',
-    title: 'باقات فولتي',
-    badge: 'VoLTE',
-    icon: Zap,
-    offers: [
-      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4826' },
-      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990004' },
-      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990005' },
-      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
-      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
-      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
-    ]
-  },
-  {
     id: 'mazaya',
     title: 'باقات مزايا',
     badge: '3G',
@@ -149,6 +135,20 @@ const PREPAID_CATEGORIES = [
     ]
   },
   {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4826' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990004' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990005' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
+    ]
+  },
+  {
     id: '10day_net',
     title: 'باقات الإنترنت 10 ايام',
     badge: '10',
@@ -163,20 +163,6 @@ const PREPAID_CATEGORIES = [
 ];
 
 const POSTPAID_CATEGORIES = [
-  {
-    id: 'volte',
-    title: 'باقات فولتي',
-    badge: 'VoLTE',
-    icon: Zap,
-    offers: [
-      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
-      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
-      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990002' },
-      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
-      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
-      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
-    ]
-  },
   {
     id: 'mazaya',
     title: 'باقات هدايا',
@@ -233,6 +219,20 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
       { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
       { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
+    ]
+  },
+  {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990002' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
     ]
   },
   {
@@ -600,22 +600,23 @@ export default function YemenMobilePage() {
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+                
+                {activeTab === 'packages' && (
+                    <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
+                        <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[200px]">
+                            <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-primary/5">
+                                <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                )}
+
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                         <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
                     </TabsList>
-
-                    {activeTab === 'packages' && (
-                        <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
-                            <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[240px]">
-                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-10 p-1 shadow-sm border border-primary/5">
-                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
-                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-                        </div>
-                    )}
 
                     <TabsContent value="packages" className="space-y-4">
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5 mt-2">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -189,10 +190,11 @@ export default function Yemen4GPage() {
         const baseAmount = parseFloat(amount);
         if (isNaN(baseAmount) || baseAmount <= 0) return;
 
-        const totalToDeduct = baseAmount;
+        const commission = Math.ceil(baseAmount * 0.05);
+        const totalToDeduct = baseAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة العمولة.' });
             return;
         }
 
@@ -221,7 +223,7 @@ export default function Yemen4GPage() {
                 transactionDate: new Date().toISOString(),
                 amount: totalToDeduct,
                 transactionType: 'سداد يمن فورجي',
-                notes: `إلى رقم: ${phone}`,
+                notes: `إلى رقم: ${phone}. مبلغ: ${baseAmount} + عمولة: ${commission}.`,
                 recipientPhoneNumber: phone,
                 transid: transid
             });
@@ -241,10 +243,11 @@ export default function Yemen4GPage() {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
         const basePrice = selectedOffer.price;
-        const totalToDeduct = basePrice;
+        const commission = Math.ceil(basePrice * 0.05);
+        const totalToDeduct = basePrice + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة العمولة.' });
             return;
         }
 
@@ -270,7 +273,7 @@ export default function Yemen4GPage() {
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
                 userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone,
+                transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. سعر: ${basePrice} + عمولة: ${commission}.`, recipientPhoneNumber: phone,
                 transid: transid
             });
             await batch.commit();
@@ -462,9 +465,17 @@ export default function Yemen4GPage() {
                                 <span className="text-muted-foreground">رقم الهاتف:</span>
                                 <span className="font-bold">{phone}</span>
                             </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">المبلغ:</span>
+                                <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (5%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي المطلوب:</span>
-                                <span className="font-black text-primary text-lg" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg" dir="ltr">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
@@ -481,9 +492,17 @@ export default function Yemen4GPage() {
                         <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                         <div className="py-4 space-y-3 text-right text-sm">
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">سعر الباقة:</span>
+                                <span className="font-bold">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                <span className="text-muted-foreground">النسبة (5%):</span>
+                                <span className="font-bold text-orange-600">{Math.ceil((selectedOffer?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
+                            </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-primary text-lg">{((selectedOffer?.price || 0) + Math.ceil((selectedOffer?.price || 0) * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>

@@ -267,11 +267,11 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
           </div>
       </div>
       <h4 className="text-sm font-black text-primary mb-1 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center mb-4" dir="ltr">
+      <div className="flex items-baseline justify-center mb-4">
+        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
-        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -570,11 +570,11 @@ export default function YemenMobilePage() {
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                    <div className="flex items-baseline gap-1" dir="ltr">
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
-                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -625,7 +625,7 @@ export default function YemenMobilePage() {
                                 <div className="p-3 border-l">
                                     <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
                                     {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                        <p className="text-sm font-black text-primary" dir="ltr">
+                                        <p className="text-sm font-black text-primary">
                                             {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
                                         </p>
                                     )}
@@ -643,7 +643,7 @@ export default function YemenMobilePage() {
                                             {billingInfo?.isLoan ? (
                                                 <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
                                                     <Frown className="h-3 w-3" />
-                                                    <span className="text-[9px] font-black" dir="ltr">
+                                                    <span className="text-[9px] font-black">
                                                         {billingInfo.loanAmount?.toLocaleString('en-US')}
                                                     </span>
                                                 </Badge>
@@ -748,7 +748,7 @@ export default function YemenMobilePage() {
                             {amount && (
                                 <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                    <p className="text-xl font-black text-primary" dir="ltr">
+                                    <p className="text-xl font-black text-primary">
                                         {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال
                                     </p>
                                 </div>
@@ -788,17 +788,17 @@ export default function YemenMobilePage() {
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground">المبلغ:</span>
-                        <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
+                        <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                     </div>
                     {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
                             <span className="text-muted-foreground">مبلغ السلفة:</span>
-                            <span className="font-bold text-destructive" dir="ltr">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                            <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                     )}
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <span className="font-black text-primary text-lg" dir="ltr">
+                        <span className="font-black text-primary text-lg">
                             {(parseFloat(amount || '0') + loanAmountToAdd).toLocaleString('en-US')} ريال
                         </span>
                     </div>
@@ -823,15 +823,15 @@ export default function YemenMobilePage() {
                       </div>
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">سعر الباقة:</span>
-                          <span className="font-bold" dir="ltr">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
+                          <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
                       {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
                             <span className="text-muted-foreground">مبلغ السلفة:</span>
-                            <span className="font-bold text-destructive" dir="ltr">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                            <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr">
+                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                         <span className="font-black">إجمالي الخصم:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-3xl font-black text-primary">
@@ -881,7 +881,7 @@ export default function YemenMobilePage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                            <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                            <span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>

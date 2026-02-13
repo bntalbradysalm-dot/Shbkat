@@ -126,7 +126,7 @@ export function BalanceCard() {
                 </Button>
             </div>
 
-            <div className="flex items-baseline justify-center gap-2" dir="ltr">
+            <div className="flex items-baseline justify-center gap-2">
                 <h2 className="text-4xl font-black tracking-tight text-white">
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />

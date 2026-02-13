@@ -110,11 +110,11 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       onClick={onClick}
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
-      <div className="flex items-baseline justify-center mb-4" dir="ltr">
+      <div className="flex items-baseline justify-center mb-4">
+        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
-        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -154,9 +154,9 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
       </div>
 
       <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1" dir="ltr">
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+        <div className="flex items-baseline gap-1">
             <span className="text-[10px] font-bold text-muted-foreground ml-1">ريال</span>
+            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -353,9 +353,9 @@ export default function YouServicesPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1" dir="ltr">
-                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                            <div className="flex items-baseline gap-1">
                                 <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
+                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl"><Wallet className="h-6 w-6 text-white" /></div>
@@ -390,7 +390,7 @@ export default function YouServicesPage() {
                                 <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
                                     <div className="p-3 border-l border-white/10">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الرقم</p>
-                                        <p className="text-sm font-black" dir="ltr">{billingInfo.balance.toLocaleString('en-US')} ريال</p>
+                                        <p className="text-sm font-black">{billingInfo.balance.toLocaleString('en-US')} ريال</p>
                                     </div>
                                     <div className="p-3">
                                         <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
@@ -449,7 +449,7 @@ export default function YouServicesPage() {
                                     {amount && parseFloat(amount) >= 200 && (
                                         <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
                                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                            <p className="text-xl font-black text-primary" dir="ltr">{(parseFloat(amount) * 0.828).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال</p>
+                                            <p className="text-xl font-black text-primary">{(parseFloat(amount) * 0.828).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال</p>
                                         </div>
                                     )}
                                     <Button className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" onClick={() => {
@@ -477,7 +477,7 @@ export default function YouServicesPage() {
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-primary">{lastTxDetails.transid}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span></div>
                                 <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
                             </div>
                             <div className="grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button><Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button></div>
@@ -492,9 +492,9 @@ export default function YouServicesPage() {
                         <div className="space-y-3 pt-4 text-right text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">المبلغ:</span><span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span></div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">النسبة (4 أضعاف):</span><span className="font-bold" dir="ltr">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">المبلغ:</span><span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">النسبة (4 أضعاف):</span><span className="font-bold">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel><AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={() => handleProcessPayment(parseFloat(amount), 'رصيد')}>تأكيد</AlertDialogAction></AlertDialogFooter>
@@ -508,7 +508,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedFastOffer?.title}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedFastOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedFastOffer?.price || 0).toLocaleString('en-US')}</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel><AlertDialogAction onClick={() => selectedFastOffer && handleProcessPayment(selectedFastOffer.price, selectedFastOffer.title, selectedFastOffer.num)} className="w-full rounded-2xl h-12 font-bold">تفعيل الآن</AlertDialogAction></AlertDialogFooter>
@@ -522,7 +522,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedOffer?.price || 0).toLocaleString('en-US')}</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel><AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>تفعيل الآن</AlertDialogAction></AlertDialogFooter>

@@ -190,6 +190,7 @@ export default function LandlineRedesignPage() {
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (

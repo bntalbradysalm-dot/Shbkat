@@ -233,6 +233,7 @@ export default function AdenNetPage() {
     };
 
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (

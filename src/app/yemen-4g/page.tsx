@@ -290,6 +290,7 @@ export default function Yemen4GPage() {
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
     if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
+    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
 
     if (showSuccess && lastTxDetails) {
         return (

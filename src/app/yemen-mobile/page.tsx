@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -81,13 +80,6 @@ type Offer = {
 };
 
 // --- DATA DEFINITIONS ---
-
-const HADAYA_OFFERS: Offer[] = [
-  { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
-  { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
-  { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
-  { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
-];
 
 const PREPAID_CATEGORIES = [
   {
@@ -188,7 +180,12 @@ const POSTPAID_CATEGORIES = [
     title: 'باقات هدايا',
     badge: '3G',
     icon: ShieldCheck,
-    offers: HADAYA_OFFERS
+    offers: [
+      { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
+      { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
+      { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
+      { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
+    ]
   },
   {
     id: '4g_mazaya',
@@ -591,13 +588,6 @@ export default function YemenMobilePage() {
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="prepaid" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
-                        <TabsTrigger value="postpaid" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
@@ -642,6 +632,15 @@ export default function YemenMobilePage() {
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="flex justify-center -mt-2">
+                            <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[240px]">
+                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-10 p-1 shadow-sm border border-primary/5">
+                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
@@ -695,7 +694,7 @@ export default function YemenMobilePage() {
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
                             {currentCategories.map((cat) => (
-                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                AccordionItem && <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">

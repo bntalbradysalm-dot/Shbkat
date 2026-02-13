@@ -80,6 +80,8 @@ type Offer = {
     offertype: string; 
 };
 
+// --- DATA DEFINITIONS ---
+
 const HADAYA_OFFERS: Offer[] = [
   { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
   { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
@@ -87,7 +89,7 @@ const HADAYA_OFFERS: Offer[] = [
   { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
 ];
 
-const CATEGORIES = [
+const PREPAID_CATEGORIES = [
   {
     id: 'volte',
     title: 'باقات فولتي',
@@ -150,11 +152,6 @@ const CATEGORIES = [
       { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
       { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
       { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
-      { offerId: 'net_1gb', offerName: 'باقة 1 جيجا', price: 1400, data: '1GB', validity: 'شهر', offertype: 'A300068' },
-      { offerId: 'net_2gb', offerName: 'باقة 2 جيجا', price: 2600, data: '2GB', validity: 'شهر', offertype: 'A300069' },
-      { offerId: 'net_4gb', offerName: 'باقة 4 جيجا', price: 4800, data: '4GB', validity: 'شهر', offertype: 'A300070' },
-      { offerId: 'net_6gb', offerName: 'باقة 6 جيجا', price: 7000, data: '6GB', validity: 'شهر', offertype: 'A300073' },
-      { offerId: 'net_12gb', offerName: 'باقة 12 جيجا', price: 13000, data: '12GB', validity: 'شهر', offertype: 'A300074' },
     ]
   },
   {
@@ -163,8 +160,6 @@ const CATEGORIES = [
     badge: '10',
     icon: Clock,
     offers: [
-      { offerId: 'net_10d_500mb', offerName: 'نت 500 ميجا', price: 600, data: '500MB', validity: '10 ايام', offertype: 'A300071' },
-      { offerId: 'net_10d_1gb_old', offerName: 'نت 1 جيجا', price: 1000, data: '1GB', validity: '10 ايام', offertype: 'A300072' },
       { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
       { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
       { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
@@ -172,6 +167,90 @@ const CATEGORIES = [
     ]
   }
 ];
+
+const POSTPAID_CATEGORIES = [
+  {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990002' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
+    ]
+  },
+  {
+    id: 'mazaya',
+    title: 'باقات هدايا',
+    badge: '3G',
+    icon: ShieldCheck,
+    offers: HADAYA_OFFERS
+  },
+  {
+    id: '4g_mazaya',
+    title: 'باقات مزايا فورجي',
+    badge: '4G',
+    icon: Zap,
+    offers: [
+      { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: 'شهر', offertype: 'A5533821' },
+      { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: 'يوم', offertype: 'A4825' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A4990003' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: 'اسبوع', offertype: 'A88339' },
+      { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
+      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A88338' },
+      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', minutes: '1100', sms: '600', validity: 'شهر', offertype: 'A88440' },
+      { offerId: 'm_aamal_4g', offerName: 'مزايا أعمال فورجي', price: 5000, data: '6GB', minutes: '1500', sms: '1000', validity: 'شهر', offertype: 'A49053' },
+    ]
+  },
+  {
+    id: '4g_net',
+    title: 'باقات نت فورجي',
+    badge: '4G',
+    icon: Database,
+    offers: [
+      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: 'شهر', offertype: 'A4820' },
+      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: 'شهر', offertype: 'A44355' },
+      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: 'شهر', offertype: 'A44356' },
+      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: 'شهر', offertype: 'A4819' },
+      { offerId: 'net_tawfeer_7gb', offerName: 'نت توفير 7 قيقا', price: 3000, data: '7GB', validity: 'شهر', offertype: 'A4818' },
+      { offerId: 'net_tawfeer_8gb', offerName: 'نت توفير 8 قيقا', price: 3900, data: '8GB', validity: 'شهر', offertype: 'A4822' },
+      { offerId: 'net_tawfeer_11gb', offerName: 'نت توفير 11 قيقا', price: 4125, data: '11GB', validity: 'شهر', offertype: 'A44345' },
+      { offerId: 'net_tawfeer_25gb', offerName: 'نت توفير 25 قيقا', price: 8830, data: '25GB', validity: '40 يوم', offertype: 'A44347' },
+      { offerId: 'net_tawfeer_20gb', offerName: 'نت توفير 20 قيقا', price: 9700, data: '20GB', validity: 'شهر', offertype: 'A4829' },
+    ]
+  },
+  {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
+    ]
+  },
+  {
+    id: '10day_net',
+    title: 'باقات الإنترنت 10 ايام',
+    badge: '10',
+    icon: Clock,
+    offers: [
+      { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74385' },
+      { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74340' },
+      { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A74348' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74354' },
+    ]
+  }
+];
+
+// --- COMPONENT ---
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
@@ -214,6 +293,7 @@ export default function YemenMobilePage() {
 
   const [phone, setPhone] = useState('');
   const [activeTab, setActiveTab] = useState("balance");
+  const [lineTypeTab, setLineTypeTab] = useState('prepaid');
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -239,8 +319,7 @@ export default function YemenMobilePage() {
     const day = parseInt(dateStr.substring(6, 8));
     const hour = parseInt(dateStr.substring(8, 10) || "0");
     const minute = parseInt(dateStr.substring(10, 12) || "0");
-    const second = parseInt(dateStr.substring(12, 14) || "0");
-    const d = new Date(year, month, day, hour, minute, second);
+    const d = new Date(year, month, day, hour, minute);
     return isNaN(d.getTime()) ? null : d;
   };
 
@@ -306,6 +385,7 @@ export default function YemenMobilePage() {
                              combinedResults.includes('باقة فوترة');
                              
           const detectedTypeLabel = isPostpaid ? 'فوترة' : 'دفع مسبق';
+          setLineTypeTab(isPostpaid ? 'postpaid' : 'prepaid');
 
           const isLoan = solfaResult.status === "1" || solfaResult.status === 1;
           const loanAmt = isLoan ? parseFloat(solfaResult.loan_amount || "0") : 0;
@@ -346,11 +426,10 @@ export default function YemenMobilePage() {
            .trim();
 
     const normalizedInput = normalize(name);
+    const activeCategories = lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES;
 
     let foundOffer: Offer | undefined;
-    const categoriesToSearch = billingInfo?.customer_type === 'فوترة' ? [...CATEGORIES, { id: 'h', offers: HADAYA_OFFERS }] : CATEGORIES;
-    
-    for (const cat of categoriesToSearch) {
+    for (const cat of activeCategories) {
         foundOffer = (cat as any).offers.find((o: Offer) => {
             const normalizedOfferName = normalize(o.offerName);
             return normalizedInput.includes(normalizedOfferName) || normalizedOfferName.includes(normalizedInput);
@@ -468,9 +547,7 @@ export default function YemenMobilePage() {
     }
   };
 
-  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-  if (isActivatingOffer) return <ProcessingOverlay message="جاري تفعيل الباقة..." />;
-
+  const currentCategories = lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES;
   const loanAmountToAdd = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (
@@ -514,10 +591,17 @@ export default function YemenMobilePage() {
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
+                <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
+                        <TabsTrigger value="prepaid" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                        <TabsTrigger value="postpaid" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
+                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
@@ -610,33 +694,23 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                            {CATEGORIES.map((cat) => {
-                                let categoryTitle = cat.title;
-                                let categoryOffers = cat.offers;
-                                
-                                if (cat.id === 'mazaya' && billingInfo?.customer_type === 'فوترة') {
-                                    categoryTitle = 'باقات هدايا';
-                                    categoryOffers = HADAYA_OFFERS;
-                                }
-
-                                return (
-                                    <AccordionItem key={cat.id} value={cat.id} className="border-none">
-                                        <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
-                                                    {cat.badge}
-                                                </div>
-                                                <span className="text-sm font-black flex-1 mr-4 text-right">{categoryTitle}</span>
+                            {currentCategories.map((cat) => (
+                                <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                                    <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
+                                                {cat.badge}
                                             </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                            {categoryOffers.map((o) => (
-                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                            ))}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                );
-                            })}
+                                            <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                        {cat.offers.map((o) => (
+                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                        ))}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
                         </Accordion>
                     </TabsContent>
 
@@ -679,6 +753,9 @@ export default function YemenMobilePage() {
 
       <Toaster />
 
+      {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
+      {isActivatingOffer && <ProcessingOverlay message="جاري تفعيل الباقة..." />}
+
       {showSuccess && lastTxDetails && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
             <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
@@ -691,7 +768,7 @@ export default function YemenMobilePage() {
                 <CardContent className="p-8 space-y-6">
                     <div>
                         <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                        <p className="text-sm text-muted-foreground mt-1">تم قبول طلبك وتنفيذه فورياً</p>
+                        <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
                     </div>
 
                     <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -736,7 +813,11 @@ export default function YemenMobilePage() {
                         <span className="font-bold">{phone}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground">المبلغ المكتوب:</span>
+                        <span className="text-muted-foreground">نوع الخط:</span>
+                        <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-dashed">
+                        <span className="text-muted-foreground">المبلغ:</span>
                         <span className="font-bold" dir="ltr">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                     </div>
                     {billingInfo?.isLoan && (
@@ -766,6 +847,10 @@ export default function YemenMobilePage() {
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 space-y-3 text-right text-sm">
                       <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
+                      <div className="flex justify-between items-center py-2 border-b border-dashed">
+                          <span className="text-muted-foreground">نوع الخط:</span>
+                          <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
+                      </div>
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">سعر الباقة:</span>
                           <span className="font-bold" dir="ltr">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>

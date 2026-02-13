@@ -14,7 +14,8 @@ import {
   Calendar,
   History,
   Phone,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -126,6 +127,36 @@ export default function LandlineRedesignPage() {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    const handleContactPick = async () => {
+        if (!('contacts' in navigator && 'ContactsManager' in window)) {
+            toast({
+                variant: "destructive",
+                title: "غير مدعوم",
+                description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
+            });
+            return;
+        }
+
+        try {
+            const props = ['tel'];
+            const opts = { multiple: false };
+            const contacts = await (navigator as any).contacts.select(props, opts);
+            
+            if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+                let selectedNumber = contacts[0].tel[0];
+                selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+                if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
+                if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
+                // For landline, we need it to start with 0 and have 8 digits
+                if (!selectedNumber.startsWith('0')) selectedNumber = '0' + selectedNumber;
+                
+                setPhone(selectedNumber.slice(0, 8));
+            }
+        } catch (err) {
+            console.error("Contacts selection failed:", err);
         }
     };
 
@@ -267,13 +298,22 @@ export default function LandlineRedesignPage() {
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
                     </div>
-                    <Input
-                        type="tel"
-                        placeholder="0xxxxxxx"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                        className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
-                    />
+                    <div className="relative">
+                        <Input
+                            type="tel"
+                            placeholder="0xxxxxxx"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                            className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
+                        />
+                        <button 
+                            onClick={handleContactPick}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                            title="جهات الاتصال"
+                        >
+                            <Users className="h-5 w-5" />
+                        </button>
+                    </div>
                     {phone.length === 8 && phone.startsWith('0') && (
                         <div className="animate-in fade-in zoom-in duration-300">
                             <Button 

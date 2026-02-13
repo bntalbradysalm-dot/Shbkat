@@ -23,7 +23,8 @@ import {
   AlertCircle,
   Hash,
   Calendar,
-  Smartphone
+  Smartphone,
+  Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -122,6 +123,18 @@ const PREPAID_CATEGORIES = [
     ]
   },
   {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
+    ]
+  },
+  {
     id: 'volte',
     title: 'باقات فولتي',
     badge: 'VoLTE',
@@ -133,18 +146,6 @@ const PREPAID_CATEGORIES = [
       { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
       { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
       { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
-    ]
-  },
-  {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: Globe,
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
     ]
   },
   {
@@ -183,7 +184,7 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: 'شهر', offertype: 'A5533821' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: 'يوم', offertype: 'A4825' },
       { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A4990003' },
-      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: 'اسبوع', offertype: 'A88339' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '200', minutes: '300', validity: 'اسبوع يوم', offertype: 'A88339' },
       { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
       { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A88338' },
@@ -209,20 +210,6 @@ const POSTPAID_CATEGORIES = [
     ]
   },
   {
-    id: 'volte',
-    title: 'باقات فولتي',
-    badge: 'VoLTE',
-    icon: Zap,
-    offers: [
-      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
-      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
-      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990002' },
-      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
-      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
-      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
-    ]
-  },
-  {
     id: 'monthly_net',
     title: 'باقات الانترنت الشهرية',
     badge: 'Net',
@@ -232,6 +219,20 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
       { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
       { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
+    ]
+  },
+  {
+    id: 'volte',
+    title: 'باقات فولتي',
+    badge: 'VoLTE',
+    icon: Zap,
+    offers: [
+      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4825' },
+      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990008' },
+      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع يوم', offertype: 'A4990002' },
+      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
+      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
+      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
     ]
   },
   {
@@ -425,6 +426,35 @@ export default function YemenMobilePage() {
     }
   };
 
+  const handleContactPick = async () => {
+    if (!('contacts' in navigator && 'ContactsManager' in window)) {
+        toast({
+            variant: "destructive",
+            title: "غير مدعوم",
+            description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
+        });
+        return;
+    }
+
+    try {
+        const props = ['tel'];
+        const opts = { multiple: false };
+        const contacts = await (navigator as any).contacts.select(props, opts);
+        
+        if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+            let selectedNumber = contacts[0].tel[0];
+            selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+            if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
+            if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
+            if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
+            
+            handlePhoneChange(selectedNumber);
+        }
+    } catch (err) {
+        console.error("Contacts selection failed:", err);
+    }
+  };
+
   const handleRenewOffer = (name: string) => {
     const normalize = (str: string) => 
         str.replace(/[أإآ]/g, 'ا')
@@ -592,29 +622,24 @@ export default function YemenMobilePage() {
                     placeholder="77xxxxxxx"
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all"
+                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
                 />
+                <button 
+                    onClick={handleContactPick}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                    title="جهات الاتصال"
+                >
+                    <Users className="h-5 w-5" />
+                </button>
             </div>
         </div>
 
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
-                
-                {activeTab === 'packages' && (
-                    <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
-                        <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[200px]">
-                            <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-primary/5">
-                                <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
-                                <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
-                )}
-
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                         <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
+                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
@@ -655,6 +680,15 @@ export default function YemenMobilePage() {
                                     )}
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
+                            <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[200px]">
+                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-primary/5">
+                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
@@ -707,12 +741,12 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-3">
-                            {currentCategories.map((cat) => (
+                            {currentCategories.map((cat, index) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
-                                                {cat.badge}
+                                                {cat.badge || (index + 1)}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
                                         </div>

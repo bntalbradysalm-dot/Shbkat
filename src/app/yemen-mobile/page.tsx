@@ -749,7 +749,7 @@ export default function YemenMobilePage() {
                                     <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
-                                                {index === 4 ? 'VoLTE' : (cat.badge || (index + 1))}
+                                                {cat.badge || (index + 1)}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
                                         </div>
@@ -881,7 +881,7 @@ export default function YemenMobilePage() {
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
                       تفعيل الآن
-                  </AccordionAction>
+                  </AlertDialogAction>
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -111,10 +110,10 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
     >
       <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
+        <span className="text-xs font-bold text-muted-foreground mr-1">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -153,12 +152,9 @@ const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => vo
           </div>
       </div>
 
-      <div className="flex flex-col items-end text-left shrink-0">
-        <div className="flex items-baseline gap-1">
-            <span className="text-[10px] font-bold text-muted-foreground ml-1">ريال</span>
-            <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
-        </div>
-        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
+      <div className="flex items-baseline text-left shrink-0">
+        <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+        <span className="text-[10px] font-bold text-muted-foreground mr-1">ريال</span>
       </div>
     </div>
 );
@@ -354,8 +350,8 @@ export default function YouServicesPage() {
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                                <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl"><Wallet className="h-6 w-6 text-white" /></div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -123,6 +122,18 @@ const PREPAID_CATEGORIES = [
     ]
   },
   {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
+    ]
+  },
+  {
     id: 'volte',
     title: 'باقات فولتي',
     badge: 'VoLTE',
@@ -134,18 +145,6 @@ const PREPAID_CATEGORIES = [
       { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
       { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
       { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
-    ]
-  },
-  {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: Globe,
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
     ]
   },
   {
@@ -210,6 +209,18 @@ const POSTPAID_CATEGORIES = [
     ]
   },
   {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
+    ]
+  },
+  {
     id: 'volte',
     title: 'باقات فولتي',
     badge: 'VoLTE',
@@ -221,18 +232,6 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
       { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
       { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
-    ]
-  },
-  {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: Globe,
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
     ]
   },
   {
@@ -253,7 +252,7 @@ const POSTPAID_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-[32px] p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
+      className="bg-accent/10 dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
       <div className="flex justify-center mb-3">
@@ -268,10 +267,10 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       </div>
       <h4 className="text-sm font-black text-primary mb-1 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
+        <span className="text-xs font-bold text-muted-foreground mr-1">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -571,10 +570,10 @@ export default function YemenMobilePage() {
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
+                        <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                     </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -881,7 +880,7 @@ export default function YemenMobilePage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                            <span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span>
+                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>

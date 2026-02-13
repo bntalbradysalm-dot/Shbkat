@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -95,8 +94,8 @@ const PackageCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) 
 
       <div className="flex flex-col items-end text-left shrink-0">
         <div className="flex items-baseline gap-1">
-            <span className="text-[10px] font-bold text-muted-foreground ml-1">ريال</span>
             <span className="text-xl font-black text-primary">{offer.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] font-bold text-muted-foreground mr-1">ريال</span>
         </div>
         <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">سداد</Button>
       </div>
@@ -324,7 +323,7 @@ export default function Yemen4GPage() {
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span>
+                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
                                     <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
@@ -353,8 +352,8 @@ export default function Yemen4GPage() {
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-[10px] font-bold opacity-70 text-white">ريال يمني</span>
                                 <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
+                                <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                             </div>
                         </div>
                         <div className="p-3 bg-white/20 rounded-2xl">

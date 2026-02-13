@@ -123,18 +123,6 @@ const PREPAID_CATEGORIES = [
     ]
   },
   {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: Globe,
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
-    ]
-  },
-  {
     id: 'volte',
     title: 'باقات فولتي',
     badge: 'VoLTE',
@@ -146,6 +134,18 @@ const PREPAID_CATEGORIES = [
       { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
       { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
       { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
+    ]
+  },
+  {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
     ]
   },
   {
@@ -210,18 +210,6 @@ const POSTPAID_CATEGORIES = [
     ]
   },
   {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    icon: Globe,
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
-    ]
-  },
-  {
     id: 'volte',
     title: 'باقات فولتي',
     badge: 'VoLTE',
@@ -233,6 +221,18 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990001' },
       { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A43000' },
       { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A42000' },
+    ]
+  },
+  {
+    id: 'monthly_net',
+    title: 'باقات الانترنت الشهرية',
+    badge: 'Net',
+    icon: Globe,
+    offers: [
+      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69351' },
+      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69352' },
+      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69355' },
+      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69356' },
     ]
   },
   {
@@ -271,6 +271,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
         </span>
+        <span className="text-xs font-bold text-muted-foreground ml-1">ريال</span>
       </div>
       
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
@@ -569,7 +570,7 @@ export default function YemenMobilePage() {
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                    <div className="flex items-baseline gap-1" dir="rtl">
+                    <div className="flex items-baseline gap-1" dir="ltr">
                         <h2 className="text-2xl font-black text-white">
                             {userProfile?.balance?.toLocaleString('en-US') || '0'}
                         </h2>
@@ -642,7 +643,7 @@ export default function YemenMobilePage() {
                                             {billingInfo?.isLoan ? (
                                                 <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-1.5 h-6">
                                                     <Frown className="h-3 w-3" />
-                                                    <span className="text-[9px] font-black">
+                                                    <span className="text-[9px] font-black" dir="ltr">
                                                         {billingInfo.loanAmount?.toLocaleString('en-US')}
                                                     </span>
                                                 </Badge>
@@ -719,9 +720,11 @@ export default function YemenMobilePage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
-                                        {cat.offers.map((o) => (
-                                            <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
-                                        ))}
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {cat.offers.map((o) => (
+                                                <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                            ))}
+                                        </div>
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -745,8 +748,8 @@ export default function YemenMobilePage() {
                             {amount && (
                                 <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                    <p className="text-xl font-black text-primary">
-                                        {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    <p className="text-xl font-black text-primary" dir="ltr">
+                                        {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال
                                     </p>
                                 </div>
                             )}
@@ -769,53 +772,6 @@ export default function YemenMobilePage() {
 
       {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
       {isActivatingOffer && <ProcessingOverlay message="جاري تفعيل الباقة..." />}
-
-      {showSuccess && lastTxDetails && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
-            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
-                <CardContent className="p-8 space-y-6">
-                    <div>
-                        <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
-                        <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
-                    </div>
-
-                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
-                            <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
-                            <span className="font-bold">{lastTxDetails.type}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                            <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-1">
-                            <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
-                            <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-      )}
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[32px]">
@@ -875,9 +831,9 @@ export default function YemenMobilePage() {
                             <span className="font-bold text-destructive" dir="ltr">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
+                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2" dir="ltr">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <div className="flex items-baseline gap-1" dir="ltr">
+                        <div className="flex items-baseline gap-1">
                             <p className="text-3xl font-black text-primary">
                                 {((selectedOffer?.price || 0) + loanAmountToAdd).toLocaleString('en-US')}
                             </p>
@@ -894,6 +850,53 @@ export default function YemenMobilePage() {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+
+      {showSuccess && lastTxDetails && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
+            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                        <CheckCircle className="h-16 w-16 text-white" />
+                    </div>
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2>
+                        <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
+                    </div>
+
+                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
+                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
+                            <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> نوع العملية:</span>
+                            <span className="font-bold">{lastTxDetails.type}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-muted pb-2">
+                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
+                            <span className="font-black text-primary" dir="ltr">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                            <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
+                            <span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      )}
     </div>
   );
 }

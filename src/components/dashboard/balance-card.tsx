@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,11 +24,11 @@ const availableServices = [
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' }, // الموقع الخامس
+  { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' }, // الموقع التاسع
+  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' },
 ];
 
 type UserProfile = {
@@ -125,7 +126,7 @@ export function BalanceCard() {
                 </Button>
             </div>
 
-            <div className="flex items-baseline justify-center gap-2" dir="rtl">
+            <div className="flex items-baseline justify-center gap-2" dir="ltr">
                 <h2 className="text-4xl font-black tracking-tight text-white">
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />

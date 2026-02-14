@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 
 const BASE_URL = 'https://api.alwaadi.net';
-const DB = 'alwaadi_prod';
+const DB = 'alwaadi_prod'; // تم اعتماد الاسم الذي ذكرته سابقاً لبيئة الإنتاج
 const LOGIN = '770326M';
 const PASSWORD = '770326828moh';
 
@@ -30,7 +30,6 @@ async function authenticate() {
     throw new Error(data.error.data?.message || 'فشل تسجيل الدخول للمنظومة');
   }
 
-  // الحصول على Session ID من ملفات تعريف الارتباط أو الرد
   const setCookie = response.headers.get('set-cookie');
   const sessionId = setCookie?.split(';')[0]?.split('=')[1] || data.result.session_id;
 
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم أو اسم المشترك باستخدام web_search_read مع معامل ilike
+      // البحث برقم أو اسم المشترك باستخدام web_search_read
       endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
       methodParams = {
         model: 'subscribers',
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
             name_subscriber: {},
             number_subscriber: {}
           },
-          // استخدام OR للبحث في الرقم أو الاسم وتحويله لبحث جزئي يبدأ بالمدخلات
+          // البحث في الرقم أو الاسم بحيث يبدأ بالنص المدخل (ilike مع %)
           domain: ['|', ['number_subscriber', 'ilike', payload.number + '%'], ['name_subscriber', 'ilike', payload.number + '%']],
           offset: 0,
           limit: 10

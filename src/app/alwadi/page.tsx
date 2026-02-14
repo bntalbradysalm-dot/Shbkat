@@ -6,13 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X } from 'lucide-react';
+import { User, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -87,7 +86,7 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (searchNumber.length >= 3 && !selectedSubscriber) {
+      if (searchNumber.length >= 2 && !selectedSubscriber) {
         setIsSearchingSub(true);
         try {
           const response = await fetch('/api/alwadi', {
@@ -102,25 +101,22 @@ export default function AlwadiPage() {
           }
 
           const results = await response.json();
-          // Odoo web_search_read returns { records: [...], length: ... }
           const records = results.records;
           
           if (records && Array.isArray(records)) {
-              // تطبيق منطق التحقق (startsWith) كما في طلبك
+              // تطبيق منطق التحقق (startsWith) لضمان الدقة
               const matched = records.find((r: any) => 
                 (r.name_subscriber && String(r.name_subscriber).startsWith(searchNumber)) ||
                 (r.number_subscriber && String(r.number_subscriber).startsWith(searchNumber))
               );
 
               if (matched) {
-                console.log("اسم المشترك المطابق:", matched.name_subscriber || matched.display_name);
-              } else {
-                console.log("لم يتم العثور على مشترك مطابق لبداية النص");
+                console.log("تم العثور على تطابق:", matched.name_subscriber || matched.display_name);
               }
 
               const mapped = records.map((r: any) => ({ 
                 id: r.id, 
-                name: r.display_name || r.name_subscriber || 'مشترك مجهول',
+                name: r.name_subscriber || r.display_name || 'مشترك مجهول',
                 number: r.number_subscriber 
               }));
               setSearchResults(mapped);
@@ -150,27 +146,15 @@ export default function AlwadiPage() {
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!selectedSubscriber) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء البحث واختيار مشترك من القائمة",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء البحث واختيار مشترك من القائمة" });
       return;
     }
     if (!selectedOption) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء اختيار فئة التجديد",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء اختيار فئة التجديد" });
       return;
     }
     if ((userProfile?.balance ?? 0) < selectedOption.price) {
-      toast({
-        variant: "destructive",
-        title: "رصيد غير كاف",
-        description: "رصيدك الحالي لا يكفي لإتمام هذه العملية.",
-      });
+      toast({ variant: "destructive", title: "رصيد غير كاف", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
       return;
     }
     setShowDialog(true);
@@ -201,10 +185,7 @@ export default function AlwadiPage() {
         }
 
         const batch = writeBatch(firestore);
-        
-        batch.update(userDocRef, {
-            balance: increment(-numericPrice),
-        });
+        batch.update(userDocRef, { balance: increment(-numericPrice) });
 
         const renewalRequestData = {
             userId: user.uid,
@@ -220,11 +201,8 @@ export default function AlwadiPage() {
             remoteResult: apiResult
         };
 
-        const newRequestRef = doc(collection(firestore, 'renewalRequests'));
-        batch.set(newRequestRef, renewalRequestData);
-
-        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
-        batch.set(transactionRef, {
+        batch.set(doc(collection(firestore, 'renewalRequests')), renewalRequestData);
+        batch.set(doc(collection(firestore, 'users', user.uid, 'transactions')), {
             userId: user.uid,
             transactionDate: new Date().toISOString(),
             amount: numericPrice,
@@ -237,20 +215,14 @@ export default function AlwadiPage() {
         setShowSuccessOverlay(true);
 
     } catch (e: any) {
-        toast({
-            variant: "destructive",
-            title: "فشلت العملية",
-            description: e.message || "حدث خطأ غير متوقع أثناء الاتصال بالمنظومة.",
-        });
+        toast({ variant: "destructive", title: "فشلت العملية", description: e.message });
     } finally {
         setIsProcessing(false);
         setShowDialog(false);
     }
   };
 
-  if (isProcessing) {
-    return <ProcessingOverlay message="جاري تنفيذ التجديد في المنظومة..." />;
-  }
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد في المنظومة..." />;
 
   if (showSuccessOverlay) {
     return (
@@ -259,9 +231,7 @@ export default function AlwadiPage() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
           <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
               <div className="bg-green-500 p-8 flex justify-center items-center">
-                  <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                    <CheckCircle className="h-16 w-16 text-white" />
-                  </div>
+                  <div className="bg-white/20 p-4 rounded-full animate-bounce"><CheckCircle className="h-16 w-16 text-white" /></div>
               </div>
               <CardContent className="p-8 space-y-6">
                   <div>
@@ -294,10 +264,7 @@ export default function AlwadiPage() {
 
                   <div className="w-full grid grid-cols-2 gap-3 pt-2">
                       <Button variant="outline" className="flex-1 rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                      <Button className="flex-1 rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                         <History className="ml-2 h-4 w-4" />
-                         العمليات
-                      </Button>
+                      <Button className="flex-1 rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}><History className="ml-2 h-4 w-4" />العمليات</Button>
                   </div>
               </CardContent>
           </Card>
@@ -311,13 +278,7 @@ export default function AlwadiPage() {
       <SimpleHeader title="منظومة الوادي (تجديد آلي)" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center">
-          <Image
-            src="https://i.postimg.cc/mgMYL0dm/Screenshot-20260109-114041-One-Drive.png"
-            alt="Alwadi Promotion"
-            width={600}
-            height={300}
-            className="w-full h-auto object-contain max-h-40"
-          />
+          <Image src="https://i.postimg.cc/mgMYL0dm/Screenshot-20260109-114041-One-Drive.png" alt="Alwadi" width={600} height={300} className="w-full h-auto object-contain max-h-40" />
         </div>
 
         <Card className="shadow-lg border-primary/10">
@@ -328,10 +289,7 @@ export default function AlwadiPage() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="subscriberNumber" className="flex items-center gap-2">
-                  <Hash className="h-4 w-4 text-primary" />
-                  رقم أو اسم المشترك
-                </Label>
+                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><Hash className="h-4 w-4 text-primary" />رقم أو اسم المشترك</Label>
                 <div className="relative">
                     <Input
                         id="subscriberNumber"
@@ -348,27 +306,15 @@ export default function AlwadiPage() {
                         {isSearchingSub ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-muted-foreground" />}
                     </div>
                     {selectedSubscriber && (
-                        <button 
-                            onClick={() => { setSelectedSubscriber(null); setSearchNumber(''); }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-muted rounded-md"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
+                        <button onClick={() => { setSelectedSubscriber(null); setSearchNumber(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-muted rounded-md"><X className="h-3 w-3" /></button>
                     )}
                 </div>
 
                 {searchResults.length > 0 && !selectedSubscriber && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto">
                         {searchResults.map((sub) => (
-                            <div 
-                                key={sub.id} 
-                                onClick={() => setSelectedSubscriber(sub)}
-                                className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center"
-                            >
-                                <div className='flex flex-col'>
-                                    <span className="text-sm font-bold">{sub.name}</span>
-                                    <span className="text-[10px] text-muted-foreground">رقم: {sub.number}</span>
-                                </div>
+                            <div key={sub.id} onClick={() => setSelectedSubscriber(sub)} className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center">
+                                <div className='flex flex-col'><span className="text-sm font-bold">{sub.name}</span><span className="text-[10px] text-muted-foreground">رقم: {sub.number}</span></div>
                                 <CheckCircle className="h-4 w-4 text-primary opacity-0 hover:opacity-100" />
                             </div>
                         ))}
@@ -378,14 +324,9 @@ export default function AlwadiPage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <SatelliteDish className="h-4 w-4 text-primary" />
-                اختر فئة التجديد
-              </Label>
+              <Label className="flex items-center gap-2"><SatelliteDish className="h-4 w-4 text-primary" />اختر فئة التجديد</Label>
               {isOptionsLoading ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-                </div>
+                <div className="grid grid-cols-2 gap-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {sortedOptions.map((option) => (
@@ -394,14 +335,10 @@ export default function AlwadiPage() {
                       onClick={() => setSelectedOption(option)}
                       className={cn(
                         "relative p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center gap-1 text-center",
-                        selectedOption?.id === option.id
-                          ? "border-primary bg-primary/5 shadow-md"
-                          : "border-border hover:border-primary/30"
+                        selectedOption?.id === option.id ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/30"
                       )}
                     >
-                      {selectedOption?.id === option.id && (
-                        <CheckCircle className="absolute top-1 right-1 h-4 w-4 text-primary" />
-                      )}
+                      {selectedOption?.id === option.id && <CheckCircle className="absolute top-1 right-1 h-4 w-4 text-primary" />}
                       <span className="text-xs font-bold">{option.title}</span>
                       <span className="text-sm font-black text-primary">{option.price.toLocaleString('en-US')} ريال</span>
                     </div>
@@ -412,52 +349,28 @@ export default function AlwadiPage() {
 
             {selectedOption && (
               <div className="p-3 bg-muted rounded-xl flex items-center justify-between animate-in fade-in-0 slide-in-from-top-2">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span>
-                </div>
+                <div className="flex items-center gap-2"><Wallet className="h-5 w-5 text-primary" /><span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span></div>
                 <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال</span>
               </div>
             )}
 
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogTrigger asChild>
-                <Button 
-                  className="w-full h-12 text-lg font-bold rounded-xl" 
-                  onClick={handleConfirmClick}
-                  disabled={!selectedOption || !selectedSubscriber}
-                >
-                  تجديد آلي الآن
-                </Button>
+                <Button className="w-full h-12 text-lg font-bold rounded-xl" onClick={handleConfirmClick} disabled={!selectedOption || !selectedSubscriber}>تجديد آلي الآن</Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
-                    <p className='text-sm text-center text-muted-foreground pb-2 flex items-center justify-center gap-2'><CheckCircle className="w-4 h-4 text-green-500"/> سيتم التجديد آلياً فور التأكيد</p>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">اسم المشترك:</span>
-                      <span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">رقم المشترك:</span>
-                      <span className="font-mono font-bold text-primary">{selectedSubscriber?.number}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">الفئة:</span>
-                      <span className="font-bold">{selectedOption?.title}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-muted-foreground">المبلغ المخصوم:</span>
-                      <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
-                    </div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">اسم المشترك:</span><span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم المشترك:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.number}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة:</span><span className="font-bold">{selectedOption?.title}</span></div>
+                    <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
-                  <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>
-                    تأكيد وتنفيذ
-                  </AlertDialogAction>
+                  <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>تأكيد وتنفيذ</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -467,9 +380,8 @@ export default function AlwadiPage() {
         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
-                <li>يرجى التأكد من رقم المشترك قبل التأكيد.</li>
                 <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم.</li>
-                <li>في حال واجهت مشكلة، يرجى التواصل مع الدعم الفني برقم العملية.</li>
+                <li>يرجى التحقق من اسم المشترك قبل الضغط على تنفيذ.</li>
             </ul>
         </div>
       </div>

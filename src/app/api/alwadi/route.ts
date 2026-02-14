@@ -30,7 +30,6 @@ async function authenticate() {
     throw new Error(data.error.data?.message || 'فشل تسجيل الدخول للمنظومة');
   }
 
-  // الحصول على Session ID من الكوكيز أو من النتيجة مباشرة
   const setCookie = response.headers.get('set-cookie');
   const sessionId = setCookie?.split(';')[0]?.split('=')[1] || data.result.session_id;
 
@@ -42,12 +41,11 @@ export async function POST(request: Request) {
     const { action, payload } = await request.json();
     const sessionId = await authenticate();
 
-    let endpoint = '';
+    let endpoint = '/web/dataset/call_kw';
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم المشترك باستخدام المطابقة التامة (equals) وفق توثيق Odoo API
-      endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
+      // البحث برقم الجوال (mobile) وفق توثيق الحقول الجديد
       methodParams = {
         model: 'subscribers',
         method: 'web_search_read',
@@ -55,19 +53,29 @@ export async function POST(request: Request) {
         kwargs: {
           specification: { 
             name_subscriber: {},
-            number_subscriber: { equals: payload.number }
+            mobile: {},
+            num_card: {},
+            expiry_date: {}
           },
-          limit: 10
+          domain: [['mobile', '=', payload.number]],
+          limit: 5
         }
       };
     } else if (action === 'renew') {
-      // تنفيذ عملية التجديد الآلي للمشترك المختار
-      endpoint = '/web/dataset/call_kw/renewal.proces/create_other';
+      // تنفيذ عملية التجديد الآلي باستخدام الهيكلية الجديدة create_other
       methodParams = {
         model: 'renewal.proces',
         method: 'create_other',
-        args: [[payload.subscriberId]],
-        kwargs: {}
+        args: [],
+        kwargs: {
+          values: {
+            "subscriber": payload.subscriberId,
+            "renewal_categories": payload.categoryId, // يجب أن يكون ID الفئة في Odoo
+            "mobile": payload.mobile,
+            "payment_type": "cash",
+            "price": payload.price
+          }
+        }
       };
     }
 
@@ -93,7 +101,6 @@ export async function POST(request: Request) {
         );
     }
 
-    // إرجاع النتيجة (التي تحتوي عادة على records في حالة البحث)
     return NextResponse.json(data.result);
 
   } catch (error: any) {

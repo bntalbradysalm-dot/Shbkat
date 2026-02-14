@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +23,6 @@ import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@
 import { collection, doc, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -46,27 +45,35 @@ type UserProfile = {
   displayName?: string;
 };
 
+type RemoteSubscriber = {
+    id: number;
+    name: string;
+};
+
 export default function AlwadiPage() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const [subscriberName, setSubscriberName] = useState('');
+  const [searchQuery, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<RemoteSubscriber[]>([]);
+  const [isSearchingSub, setIsSearchingSub] = useState(false);
+  const [selectedSubscriber, setSelectedSubscriber] = useState<RemoteSubscriber | null>(null);
+  
   const [cardNumber, setCardNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [lastTxId, setLastTxId] = useState('');
-  const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
-  const { data: userProfile, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const optionsCollection = useMemoFirebase(
     () => (firestore && user ? collection(firestore, 'alwadiOptions') : null),
@@ -79,6 +86,34 @@ export default function AlwadiPage() {
     return [...renewalOptions].sort((a, b) => a.price - b.price);
   }, [renewalOptions]);
 
+  // البحث عن مشترك عبر API
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length >= 3) {
+        setIsSearchingSub(true);
+        try {
+          const response = await fetch('/api/alwadi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'search', payload: { name: searchQuery } })
+          });
+          const results = await response.json();
+          // Odoo name_search returns [[id, name], ...]
+          const mapped = results.map((r: any) => ({ id: r[0], name: r[1] }));
+          setSearchResults(mapped);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsSearchingSub(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   useEffect(() => {
     if (showSuccessOverlay && audioRef.current) {
       audioRef.current.play().catch(e => console.error("Audio play failed:", e));
@@ -87,11 +122,11 @@ export default function AlwadiPage() {
 
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (!subscriberName || !cardNumber) {
+    if (!selectedSubscriber) {
       toast({
         variant: "destructive",
         title: "خطأ",
-        description: "الرجاء إدخال اسم المشترك ورقم الكرت",
+        description: "الرجاء البحث واختيار مشترك من القائمة",
       });
       return;
     }
@@ -115,64 +150,81 @@ export default function AlwadiPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !firestore || !selectedOption || !userProfile || !userProfile.displayName || !userProfile.phoneNumber || !userDocRef) return;
+    if (!user || !firestore || !selectedOption || !userProfile || !userDocRef || !selectedSubscriber) return;
 
     setIsProcessing(true);
     const numericPrice = selectedOption.price;
-    const currentBalance = userProfile.balance ?? 0;
     const txId = Math.random().toString(36).substring(2, 10).toUpperCase();
     setLastTxId(txId);
 
-    const renewalRequestData = {
-      userId: user.uid,
-      userName: userProfile.displayName,
-      userPhoneNumber: userProfile.phoneNumber,
-      packageTitle: selectedOption.title,
-      packagePrice: numericPrice,
-      subscriberName: subscriberName,
-      cardNumber: cardNumber,
-      status: 'pending',
-      requestTimestamp: new Date().toISOString(),
-      transid: txId,
-    };
-
-    const batch = writeBatch(firestore);
-    
-    batch.update(userDocRef, {
-      balance: increment(-numericPrice),
-    });
-
-    const renewalRequestsRef = collection(firestore, 'renewalRequests');
-    const newRequestRef = doc(renewalRequestsRef);
-    batch.set(newRequestRef, renewalRequestData);
-    
-    batch.commit().then(() => {
-        setFinalRemainingBalance(currentBalance - numericPrice);
-        setShowSuccessOverlay(true);
-    }).catch(serverError => {
-         const permissionError = new FirestorePermissionError({
-            operation: 'write',
-            path: `users/${user.uid} and renewalRequests/${newRequestRef.id}`,
-            requestResourceData: { 
-                balanceUpdate: `increment(${-numericPrice})`,
-                renewalRequest: renewalRequestData 
-            },
+    try {
+        // 1. استدعاء API التجديد (Odoo)
+        const response = await fetch('/api/alwadi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'renew', 
+                payload: { subscriberId: selectedSubscriber.id } 
+            })
         });
-        errorEmitter.emit('permission-error', permissionError);
+
+        const apiResult = await response.json();
+
+        if (!response.ok) {
+            throw new Error(apiResult.message || 'فشل التجديد من المنظومة الأساسية');
+        }
+
+        // 2. تحديث الرصيد وسجل العمليات في Firebase
+        const batch = writeBatch(firestore);
         
+        batch.update(userDocRef, {
+            balance: increment(-numericPrice),
+        });
+
+        const renewalRequestData = {
+            userId: user.uid,
+            userName: userProfile.displayName,
+            userPhoneNumber: userProfile.phoneNumber,
+            packageTitle: selectedOption.title,
+            packagePrice: numericPrice,
+            subscriberName: selectedSubscriber.name,
+            subscriberId: selectedSubscriber.id,
+            status: 'approved', // تمت الموافقة آلياً
+            requestTimestamp: new Date().toISOString(),
+            transid: txId,
+            remoteResult: apiResult
+        };
+
+        const newRequestRef = doc(collection(firestore, 'renewalRequests'));
+        batch.set(newRequestRef, renewalRequestData);
+
+        const transactionRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
+        batch.set(transactionRef, {
+            userId: user.uid,
+            transactionDate: new Date().toISOString(),
+            amount: numericPrice,
+            transactionType: `تجديد آلي: ${selectedOption.title}`,
+            notes: `للمشترك: ${selectedSubscriber.name}`,
+            transid: txId
+        });
+        
+        await batch.commit();
+        setShowSuccessOverlay(true);
+
+    } catch (e: any) {
         toast({
             variant: "destructive",
-            title: "فشل إرسال الطلب",
-            description: "حدث خطأ أثناء محاولة إرسال طلب التجديد. لم يتم خصم المبلغ.",
+            title: "فشلت العملية",
+            description: e.message || "حدث خطأ غير متوقع أثناء الاتصال بالمنظومة.",
         });
-    }).finally(() => {
+    } finally {
         setIsProcessing(false);
         setShowDialog(false);
-    });
+    }
   };
 
   if (isProcessing) {
-    return <ProcessingOverlay message="جاري إرسال طلبك..." />;
+    return <ProcessingOverlay message="جاري تنفيذ التجديد في المنظومة..." />;
   }
 
   if (showSuccessOverlay) {
@@ -188,8 +240,8 @@ export default function AlwadiPage() {
               </div>
               <CardContent className="p-8 space-y-6">
                   <div>
-                    <h2 className="text-2xl font-black text-green-600">تم إرسال الطلب بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">سيتم تنفيذ طلبك خلال دقائق</p>
+                    <h2 className="text-2xl font-black text-green-600">تم التجديد بنجاح</h2>
+                    <p className="text-sm text-muted-foreground mt-1">تم تفعيل الاشتراك في نظام الوادي</p>
                   </div>
                   
                   <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -198,12 +250,12 @@ export default function AlwadiPage() {
                           <span className="font-mono font-black text-primary">{lastTxId}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
-                          <span className="text-muted-foreground flex items-center gap-2"><SatelliteDish className="w-3.5 h-3.5" /> باقة التجديد:</span>
-                          <span className="font-bold">{selectedOption?.title}</span>
+                          <span className="text-muted-foreground flex items-center gap-2"><User className="w-3.5 h-3.5" /> المشترك:</span>
+                          <span className="font-bold truncate max-w-[150px]">{selectedSubscriber?.name}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
-                          <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
-                          <span className="font-mono font-bold tracking-widest">{cardNumber}</span>
+                          <span className="text-muted-foreground flex items-center gap-2"><SatelliteDish className="w-3.5 h-3.5" /> باقة التجديد:</span>
+                          <span className="font-bold">{selectedOption?.title}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
                           <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
@@ -231,7 +283,7 @@ export default function AlwadiPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="منظومة الوادي" />
+      <SimpleHeader title="منظومة الوادي (تجديد آلي)" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center">
           <Image
@@ -246,36 +298,55 @@ export default function AlwadiPage() {
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg">بيانات التجديد</CardTitle>
-            <CardDescription className="text-center">أدخل بيانات الكرت واختر فئة التجديد</CardDescription>
+            <CardDescription className="text-center">ابحث عن اسم المشترك واختر فئة التجديد</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="subscriberName" className="flex items-center gap-2">
+              <div className="space-y-2 relative">
+                <Label htmlFor="subscriberSearch" className="flex items-center gap-2">
                   <User className="h-4 w-4 text-primary" />
-                  اسم المشترك
+                  البحث عن مشترك
                 </Label>
-                <Input
-                  id="subscriberName"
-                  placeholder="اسم المشترك"
-                  value={subscriberName}
-                  onChange={(e) => setSubscriberName(e.target.value)}
-                  className="rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardNumber" className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  رقم الكرت
-                </Label>
-                <Input
-                  id="cardNumber"
-                  inputMode="numeric"
-                  placeholder="ادخل رقم الكرت"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  className="rounded-xl"
-                />
+                <div className="relative">
+                    <Input
+                        id="subscriberSearch"
+                        placeholder="اكتب 3 أحرف من اسم المشترك..."
+                        value={selectedSubscriber ? selectedSubscriber.name : searchQuery}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            if (selectedSubscriber) setSelectedSubscriber(null);
+                        }}
+                        className="rounded-xl pr-10"
+                        readOnly={!!selectedSubscriber}
+                    />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                        {isSearchingSub ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    {selectedSubscriber && (
+                        <button 
+                            onClick={() => { setSelectedSubscriber(null); setSearchTerm(''); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-muted rounded-md"
+                        >
+                            <Hash className="h-3 w-3" />
+                        </button>
+                    )}
+                </div>
+
+                {/* قائمة نتائج البحث */}
+                {searchResults.length > 0 && !selectedSubscriber && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        {searchResults.map((sub) => (
+                            <div 
+                                key={sub.id} 
+                                onClick={() => setSelectedSubscriber(sub)}
+                                className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center"
+                            >
+                                <span className="text-sm font-bold">{sub.name}</span>
+                                <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full">ID: {sub.id}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
               </div>
             </div>
 
@@ -327,30 +398,30 @@ export default function AlwadiPage() {
                 <Button 
                   className="w-full h-12 text-lg font-bold rounded-xl" 
                   onClick={handleConfirmClick}
-                  disabled={!selectedOption || !subscriberName || !cardNumber}
+                  disabled={!selectedOption || !selectedSubscriber}
                 >
-                  تجديد الآن
+                  تجديد آلي الآن
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
-                    <p className='text-sm text-center text-muted-foreground pb-2'>سيتم خصم المبلغ من رصيدك لإتمام العملية.</p>
+                    <p className='text-sm text-center text-muted-foreground pb-2 flex items-center justify-center gap-2'><CheckCircle className="w-4 h-4 text-green-500"/> سيتم التجديد آلياً فور التأكيد</p>
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-muted-foreground">اسم المشترك:</span>
-                      <span className="font-bold">{subscriberName}</span>
+                      <span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">رقم الكرت:</span>
-                      <span className="font-bold">{cardNumber}</span>
+                      <span className="text-muted-foreground">كود المشترك:</span>
+                      <span className="font-mono font-bold text-primary">{selectedSubscriber?.id}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-muted-foreground">الفئة:</span>
                       <span className="font-bold">{selectedOption?.title}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-muted-foreground">المبلغ:</span>
+                      <span className="text-muted-foreground">المبلغ المخصوم:</span>
                       <span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
                     </div>
                   </div>
@@ -358,7 +429,7 @@ export default function AlwadiPage() {
                 <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                   <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation}>
-                    تأكيد وإرسال
+                    تأكيد وتنفيذ
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -366,15 +437,14 @@ export default function AlwadiPage() {
           </CardContent>
         </Card>
 
-        <a
-          href="https://play.google.com/store/apps/details?id=com.app.dev.al_wadiapp"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block py-4 text-center text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <p>لمعرفة صلاحية الفترة المتبقية في الكرت</p>
-          <span className="underline font-semibold">اضغط هنا لتحميل تطبيق الوادي</span>
-        </a>
+        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+            <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
+            <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
+                <li>يرجى التأكد من اسم المشترك في نظام الوادي قبل التأكيد.</li>
+                <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم.</li>
+                <li>في حال واجهت مشكلة، يرجى التواصل مع الدعم الفني برقم العملية.</li>
+            </ul>
+        </div>
       </div>
       <Toaster />
     </div>

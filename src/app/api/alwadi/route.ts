@@ -30,6 +30,7 @@ async function authenticate() {
     throw new Error(data.error.data?.message || 'فشل تسجيل الدخول للمنظومة');
   }
 
+  // الحصول على Session ID من الكوكيز أو من النتيجة مباشرة
   const setCookie = response.headers.get('set-cookie');
   const sessionId = setCookie?.split(';')[0]?.split('=')[1] || data.result.session_id;
 
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم المشترك باستخدام المطابقة التامة (equals) في الـ specification
+      // البحث برقم المشترك باستخدام المطابقة التامة (equals) وفق توثيق Odoo API
       endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
       methodParams = {
         model: 'subscribers',
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
         }
       };
     } else if (action === 'renew') {
+      // تنفيذ عملية التجديد الآلي للمشترك المختار
       endpoint = '/web/dataset/call_kw/renewal.proces/create_other';
       methodParams = {
         model: 'renewal.proces',

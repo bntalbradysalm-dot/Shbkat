@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, doc, increment, writeBatch } from 'firebase/firestore';
@@ -89,6 +88,8 @@ export default function AlwadiPage() {
 
     setIsSearchingSub(true);
     setSelectedSubscriber(null);
+    setSearchResults([]);
+    
     try {
       const response = await fetch('/api/alwadi', {
         method: 'POST',
@@ -102,7 +103,8 @@ export default function AlwadiPage() {
       }
 
       const result = await response.json();
-      // Odoo web_search_read returns { length: X, records: [...] }
+      
+      // Odoo web_search_read يرجع كائن يحتوي على records
       if (result && result.records && Array.isArray(result.records)) {
           const mapped = result.records.map((r: any) => ({ 
             id: r.id, 
@@ -372,15 +374,19 @@ export default function AlwadiPage() {
             )}
 
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-              <AlertDialogTrigger asChild>
-                <Button className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg" onClick={handleConfirmClick} disabled={!selectedOption || !selectedSubscriber}>تجديد آلي الآن</Button>
-              </AlertDialogTrigger>
+              <Button 
+                className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg" 
+                onClick={handleConfirmClick} 
+                disabled={!selectedOption || !selectedSubscriber}
+              >
+                تجديد آلي الآن
+              </Button>
               <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">اسم المشترك:</span><span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span></div>
-                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم المشترك:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.number}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم المشترك:</span><span className="font-mono font-bold text-primary">{searchNumber}</span></div>
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة المختارة:</span><span className="font-bold">{selectedOption?.title}</span></div>
                     <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>

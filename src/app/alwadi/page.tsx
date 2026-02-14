@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle } from 'lucide-react';
+import { User, CreditCard, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,12 +101,24 @@ export default function AlwadiPage() {
               return;
           }
 
-          const data = await response.json();
-          // web_search_read returns { records: [...] }
-          const results = data.records;
+          const results = await response.json();
+          // Odoo web_search_read returns { records: [...], length: ... }
+          const records = results.records;
           
-          if (results && Array.isArray(results)) {
-              const mapped = results.map((r: any) => ({ 
+          if (records && Array.isArray(records)) {
+              // تطبيق منطق التحقق (startsWith) كما في طلبك
+              const matched = records.find((r: any) => 
+                (r.name_subscriber && String(r.name_subscriber).startsWith(searchNumber)) ||
+                (r.number_subscriber && String(r.number_subscriber).startsWith(searchNumber))
+              );
+
+              if (matched) {
+                console.log("اسم المشترك المطابق:", matched.name_subscriber || matched.display_name);
+              } else {
+                console.log("لم يتم العثور على مشترك مطابق لبداية النص");
+              }
+
+              const mapped = records.map((r: any) => ({ 
                 id: r.id, 
                 name: r.display_name || r.name_subscriber || 'مشترك مجهول',
                 number: r.number_subscriber 
@@ -319,13 +330,13 @@ export default function AlwadiPage() {
               <div className="space-y-2 relative">
                 <Label htmlFor="subscriberNumber" className="flex items-center gap-2">
                   <Hash className="h-4 w-4 text-primary" />
-                  رقم المشترك (Subscriber Number)
+                  رقم أو اسم المشترك
                 </Label>
                 <div className="relative">
                     <Input
                         id="subscriberNumber"
-                        placeholder="أدخل رقم المشترك للبحث..."
-                        value={selectedSubscriber ? selectedSubscriber.number : searchNumber}
+                        placeholder="أدخل رقم أو اسم المشترك للبحث..."
+                        value={selectedSubscriber ? (selectedSubscriber.number || selectedSubscriber.name) : searchNumber}
                         onChange={(e) => {
                             setSearchNumber(e.target.value);
                             if (selectedSubscriber) setSelectedSubscriber(null);

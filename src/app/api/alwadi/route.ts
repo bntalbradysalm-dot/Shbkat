@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم المشترك باستخدام web_search_read
+      // البحث برقم أو اسم المشترك باستخدام web_search_read مع معامل ilike
       endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
       methodParams = {
         model: 'subscribers',
@@ -55,11 +55,13 @@ export async function POST(request: Request) {
         kwargs: {
           specification: { 
             display_name: {},
+            name_subscriber: {},
             number_subscriber: {}
           },
-          domain: [['number_subscriber', '=', payload.number]],
+          // استخدام OR للبحث في الرقم أو الاسم وتحويله لبحث جزئي يبدأ بالمدخلات
+          domain: ['|', ['number_subscriber', 'ilike', payload.number + '%'], ['name_subscriber', 'ilike', payload.number + '%']],
           offset: 0,
-          limit: 5
+          limit: 10
         }
       };
     } else if (action === 'renew') {

@@ -1,10 +1,9 @@
-
 'use server';
 
 import { NextResponse } from 'next/server';
 
 const BASE_URL = 'https://api.alwaadi.net';
-const DB = 'alwaadi';
+const DB = 'alwaadi_prod';
 const LOGIN = '770326M';
 const PASSWORD = '770326828moh';
 
@@ -95,7 +94,6 @@ export async function POST(request: Request) {
         );
     }
 
-    // Odoo web_search_read returns { records: [], length: X } or sometimes just the list depending on config
     return NextResponse.json(data.result);
 
   } catch (error: any) {

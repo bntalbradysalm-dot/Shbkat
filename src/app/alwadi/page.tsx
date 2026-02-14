@@ -86,7 +86,7 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (searchNumber.length >= 2 && !selectedSubscriber) {
+      if (searchNumber.length >= 1 && !selectedSubscriber) {
         setIsSearchingSub(true);
         try {
           const response = await fetch('/api/alwadi', {
@@ -100,23 +100,12 @@ export default function AlwadiPage() {
               return;
           }
 
-          const results = await response.json();
-          const records = results.records;
-          
-          if (records && Array.isArray(records)) {
-              // تطبيق منطق التحقق (startsWith) لضمان الدقة
-              const matched = records.find((r: any) => 
-                (r.name_subscriber && String(r.name_subscriber).startsWith(searchNumber)) ||
-                (r.number_subscriber && String(r.number_subscriber).startsWith(searchNumber))
-              );
-
-              if (matched) {
-                console.log("تم العثور على تطابق:", matched.name_subscriber || matched.display_name);
-              }
-
-              const mapped = records.map((r: any) => ({ 
+          const result = await response.json();
+          // Odoo web_search_read returns { length: X, records: [...] }
+          if (result && result.records && Array.isArray(result.records)) {
+              const mapped = result.records.map((r: any) => ({ 
                 id: r.id, 
-                name: r.name_subscriber || r.display_name || 'مشترك مجهول',
+                name: r.name_subscriber || 'مشترك مجهول',
                 number: r.number_subscriber 
               }));
               setSearchResults(mapped);
@@ -146,7 +135,7 @@ export default function AlwadiPage() {
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!selectedSubscriber) {
-      toast({ variant: "destructive", title: "خطأ", description: "الرجاء البحث واختيار مشترك من القائمة" });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم المشترك الصحيح" });
       return;
     }
     if (!selectedOption) {
@@ -284,17 +273,17 @@ export default function AlwadiPage() {
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg">بيانات التجديد</CardTitle>
-            <CardDescription className="text-center">ابحث برقم المشترك واختر فئة التجديد</CardDescription>
+            <CardDescription className="text-center">أدخل رقم المشترك لتأكيد الهوية واختيار الفئة</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><Hash className="h-4 w-4 text-primary" />رقم أو اسم المشترك</Label>
+                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><Hash className="h-4 w-4 text-primary" />رقم المشترك</Label>
                 <div className="relative">
                     <Input
                         id="subscriberNumber"
-                        placeholder="أدخل رقم أو اسم المشترك للبحث..."
-                        value={selectedSubscriber ? (selectedSubscriber.number || selectedSubscriber.name) : searchNumber}
+                        placeholder="أدخل رقم المشترك للبحث..."
+                        value={selectedSubscriber ? selectedSubscriber.number : searchNumber}
                         onChange={(e) => {
                             setSearchNumber(e.target.value);
                             if (selectedSubscriber) setSelectedSubscriber(null);
@@ -314,7 +303,7 @@ export default function AlwadiPage() {
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto">
                         {searchResults.map((sub) => (
                             <div key={sub.id} onClick={() => setSelectedSubscriber(sub)} className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center">
-                                <div className='flex flex-col'><span className="text-sm font-bold">{sub.name}</span><span className="text-[10px] text-muted-foreground">رقم: {sub.number}</span></div>
+                                <div className='flex flex-col'><span className="text-sm font-bold">{sub.name}</span><span className="text-[10px] text-muted-foreground">رقم المشترك: {sub.number}</span></div>
                                 <CheckCircle className="h-4 w-4 text-primary opacity-0 hover:opacity-100" />
                             </div>
                         ))}

@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 
 const BASE_URL = 'https://api.alwaadi.net';
-const DB = 'alwaadi_prod'; // تم اعتماد الاسم الذي ذكرته سابقاً لبيئة الإنتاج
+const DB = 'alwaadi_prod'; 
 const LOGIN = '770326M';
 const PASSWORD = '770326828moh';
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم أو اسم المشترك باستخدام web_search_read
+      // البحث برقم المشترك باستخدام المطابقة التامة (equals) في الـ specification
       endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
       methodParams = {
         model: 'subscribers',
@@ -53,14 +53,10 @@ export async function POST(request: Request) {
         args: [],
         kwargs: {
           specification: { 
-            display_name: {},
             name_subscriber: {},
-            number_subscriber: {}
+            number_subscriber: { equals: payload.number }
           },
-          // البحث في الرقم أو الاسم بحيث يبدأ بالنص المدخل (ilike مع %)
-          domain: ['|', ['number_subscriber', 'ilike', payload.number + '%'], ['name_subscriber', 'ilike', payload.number + '%']],
-          offset: 0,
-          limit: 10
+          limit: 1
         }
       };
     } else if (action === 'renew') {

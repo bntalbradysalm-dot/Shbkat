@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 const BASE_URL = 'https://api.alwaadi.net';
 const DB = 'api.alwaadi'; 
 const LOGIN = '770326M';
-const PASSWORD = '770326828moh';
+const PASSWORD = '2e679271d1f9426f10e1f00100afc2016a33cd54';
 
 /**
  * وظيفة للمصادقة والحصول على Session ID

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -61,7 +60,6 @@ export default function AlwadiPage() {
   const [isSearchingSub, setIsSearchingSub] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<RemoteSubscriber | null>(null);
   
-  const [cardNumber, setCardNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,10 +84,9 @@ export default function AlwadiPage() {
     return [...renewalOptions].sort((a, b) => a.price - b.price);
   }, [renewalOptions]);
 
-  // البحث عن مشترك عبر API
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (searchQuery.length >= 3) {
+      if (searchQuery.length >= 3 && !selectedSubscriber) {
         setIsSearchingSub(true);
         try {
           const response = await fetch('/api/alwadi', {
@@ -97,12 +94,24 @@ export default function AlwadiPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'search', payload: { name: searchQuery } })
           });
+          
+          if (!response.ok) {
+              setSearchResults([]);
+              return;
+          }
+
           const results = await response.json();
-          // Odoo name_search returns [[id, name], ...]
-          const mapped = results.map((r: any) => ({ id: r[0], name: r[1] }));
-          setSearchResults(mapped);
+          
+          if (Array.isArray(results)) {
+              // Odoo name_search returns [[id, name], ...]
+              const mapped = results.map((r: any) => ({ id: r[0], name: r[1] }));
+              setSearchResults(mapped);
+          } else {
+              setSearchResults([]);
+          }
         } catch (e) {
-          console.error(e);
+          console.error("Search error:", e);
+          setSearchResults([]);
         } finally {
           setIsSearchingSub(false);
         }
@@ -112,7 +121,7 @@ export default function AlwadiPage() {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, selectedSubscriber]);
 
   useEffect(() => {
     if (showSuccessOverlay && audioRef.current) {
@@ -158,7 +167,6 @@ export default function AlwadiPage() {
     setLastTxId(txId);
 
     try {
-        // 1. استدعاء API التجديد (Odoo)
         const response = await fetch('/api/alwadi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -174,7 +182,6 @@ export default function AlwadiPage() {
             throw new Error(apiResult.message || 'فشل التجديد من المنظومة الأساسية');
         }
 
-        // 2. تحديث الرصيد وسجل العمليات في Firebase
         const batch = writeBatch(firestore);
         
         batch.update(userDocRef, {
@@ -189,7 +196,7 @@ export default function AlwadiPage() {
             packagePrice: numericPrice,
             subscriberName: selectedSubscriber.name,
             subscriberId: selectedSubscriber.id,
-            status: 'approved', // تمت الموافقة آلياً
+            status: 'approved',
             requestTimestamp: new Date().toISOString(),
             transid: txId,
             remoteResult: apiResult
@@ -332,7 +339,6 @@ export default function AlwadiPage() {
                     )}
                 </div>
 
-                {/* قائمة نتائج البحث */}
                 {searchResults.length > 0 && !selectedSubscriber && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto">
                         {searchResults.map((sub) => (
@@ -389,7 +395,7 @@ export default function AlwadiPage() {
                   <Wallet className="h-5 w-5 text-primary" />
                   <span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span>
                 </div>
-                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال يمني</span>
+                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال</span>
               </div>
             )}
 
@@ -437,7 +443,7 @@ export default function AlwadiPage() {
           </CardContent>
         </Card>
 
-        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
                 <li>يرجى التأكد من اسم المشترك في نظام الوادي قبل التأكيد.</li>

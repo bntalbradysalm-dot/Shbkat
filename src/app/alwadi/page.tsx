@@ -84,47 +84,46 @@ export default function AlwadiPage() {
     return [...renewalOptions].sort((a, b) => a.price - b.price);
   }, [renewalOptions]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchNumber.length >= 1 && !selectedSubscriber) {
-        setIsSearchingSub(true);
-        try {
-          const response = await fetch('/api/alwadi', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'search', payload: { number: searchNumber } })
-          });
-          
-          if (!response.ok) {
-              setSearchResults([]);
-              return;
-          }
+  const handleSearch = async () => {
+    if (!searchNumber) return;
 
-          const result = await response.json();
-          // Odoo web_search_read returns { length: X, records: [...] }
-          if (result && result.records && Array.isArray(result.records)) {
-              const mapped = result.records.map((r: any) => ({ 
-                id: r.id, 
-                name: r.name_subscriber || 'مشترك مجهول',
-                number: r.number_subscriber 
-              }));
-              setSearchResults(mapped);
-          } else {
-              setSearchResults([]);
-          }
-        } catch (e) {
-          console.error("Search error:", e);
-          setSearchResults([]);
-        } finally {
-          setIsSearchingSub(false);
-        }
-      } else {
-        setSearchResults([]);
+    setIsSearchingSub(true);
+    setSelectedSubscriber(null);
+    try {
+      const response = await fetch('/api/alwadi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'search', payload: { number: searchNumber } })
+      });
+      
+      if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || 'فشل البحث');
       }
-    }, 600);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchNumber, selectedSubscriber]);
+      const result = await response.json();
+      // Odoo web_search_read returns { length: X, records: [...] }
+      if (result && result.records && Array.isArray(result.records)) {
+          const mapped = result.records.map((r: any) => ({ 
+            id: r.id, 
+            name: r.name_subscriber || 'مشترك مجهول',
+            number: searchNumber 
+          }));
+          setSearchResults(mapped);
+          if (mapped.length === 0) {
+              toast({ title: "لا توجد نتائج", description: "لم يتم العثور على مشترك بهذا الرقم." });
+          }
+      } else {
+          setSearchResults([]);
+      }
+    } catch (e: any) {
+      console.error("Search error:", e);
+      toast({ variant: "destructive", title: "خطأ في البحث", description: e.message });
+      setSearchResults([]);
+    } finally {
+      setIsSearchingSub(false);
+    }
+  };
 
   useEffect(() => {
     if (showSuccessOverlay && audioRef.current) {
@@ -135,7 +134,7 @@ export default function AlwadiPage() {
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!selectedSubscriber) {
-      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم المشترك الصحيح" });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء البحث واختيار المشترك" });
       return;
     }
     if (!selectedOption) {
@@ -204,7 +203,7 @@ export default function AlwadiPage() {
         setShowSuccessOverlay(true);
 
     } catch (e: any) {
-        toast({ variant: "destructive", title: "فشلت العملية", description: e.message });
+        toast({ variant: "destructive", title: "فشل تنفيذ الطلب", description: e.message });
     } finally {
         setIsProcessing(false);
         setShowDialog(false);
@@ -272,45 +271,74 @@ export default function AlwadiPage() {
 
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
-            <CardTitle className="text-center text-lg">بيانات التجديد</CardTitle>
-            <CardDescription className="text-center">أدخل رقم المشترك لتأكيد الهوية واختيار الفئة</CardDescription>
+            <CardTitle className="text-center text-lg">بحث المشترك</CardTitle>
+            <CardDescription className="text-center">أدخل رقم المشترك للتحقق من هويته وتنفيذ التجديد</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
                 <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><Hash className="h-4 w-4 text-primary" />رقم المشترك</Label>
-                <div className="relative">
-                    <Input
-                        id="subscriberNumber"
-                        placeholder="أدخل رقم المشترك للبحث..."
-                        value={selectedSubscriber ? selectedSubscriber.number : searchNumber}
-                        onChange={(e) => {
-                            setSearchNumber(e.target.value);
-                            if (selectedSubscriber) setSelectedSubscriber(null);
-                        }}
-                        className="rounded-xl pr-10 font-bold"
-                        readOnly={!!selectedSubscriber}
-                    />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        {isSearchingSub ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <Input
+                            id="subscriberNumber"
+                            placeholder="مثال: 157"
+                            value={searchNumber}
+                            onChange={(e) => {
+                                setSearchNumber(e.target.value);
+                                if (selectedSubscriber) {
+                                    setSelectedSubscriber(null);
+                                    setSearchResults([]);
+                                }
+                            }}
+                            className="rounded-xl pr-10 font-bold h-12"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Search className="h-4 w-4 text-muted-foreground" />
+                        </div>
                     </div>
-                    {selectedSubscriber && (
-                        <button onClick={() => { setSelectedSubscriber(null); setSearchNumber(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-muted rounded-md"><X className="h-3 w-3" /></button>
-                    )}
+                    <Button 
+                        onClick={handleSearch} 
+                        disabled={isSearchingSub || !searchNumber}
+                        className="rounded-xl h-12 w-12 p-0"
+                    >
+                        {isSearchingSub ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+                    </Button>
                 </div>
 
                 {searchResults.length > 0 && !selectedSubscriber && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in-0 slide-in-from-top-2">
                         {searchResults.map((sub) => (
-                            <div key={sub.id} onClick={() => setSelectedSubscriber(sub)} className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center">
-                                <div className='flex flex-col'><span className="text-sm font-bold">{sub.name}</span><span className="text-[10px] text-muted-foreground">رقم المشترك: {sub.number}</span></div>
-                                <CheckCircle className="h-4 w-4 text-primary opacity-0 hover:opacity-100" />
+                            <div 
+                                key={sub.id} 
+                                onClick={() => setSelectedSubscriber(sub)} 
+                                className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center transition-colors"
+                            >
+                                <div className='flex flex-col'>
+                                    <span className="text-sm font-bold text-foreground">{sub.name}</span>
+                                    <span className="text-[10px] text-muted-foreground">معرف النظام: {sub.id}</span>
+                                </div>
+                                <CheckCircle className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100" />
                             </div>
                         ))}
                     </div>
                 )}
               </div>
             </div>
+
+            {selectedSubscriber && (
+                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-in zoom-in-95">
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-primary uppercase">المشترك المختار:</p>
+                            <p className="text-sm font-black text-foreground">{selectedSubscriber.name}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setSelectedSubscriber(null)}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-3">
               <Label className="flex items-center gap-2"><SatelliteDish className="h-4 w-4 text-primary" />اختر فئة التجديد</Label>
@@ -345,7 +373,7 @@ export default function AlwadiPage() {
 
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <AlertDialogTrigger asChild>
-                <Button className="w-full h-12 text-lg font-bold rounded-xl" onClick={handleConfirmClick} disabled={!selectedOption || !selectedSubscriber}>تجديد آلي الآن</Button>
+                <Button className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg" onClick={handleConfirmClick} disabled={!selectedOption || !selectedSubscriber}>تجديد آلي الآن</Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
@@ -353,7 +381,7 @@ export default function AlwadiPage() {
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">اسم المشترك:</span><span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span></div>
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم المشترك:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.number}</span></div>
-                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة:</span><span className="font-bold">{selectedOption?.title}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة المختارة:</span><span className="font-bold">{selectedOption?.title}</span></div>
                     <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>
                 </AlertDialogHeader>
@@ -369,8 +397,8 @@ export default function AlwadiPage() {
         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
-                <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم.</li>
-                <li>يرجى التحقق من اسم المشترك قبل الضغط على تنفيذ.</li>
+                <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم من رصيدك.</li>
+                <li>يرجى التحقق من اسم المشترك ورقم الـ ID الظاهر قبل الضغط على تنفيذ.</li>
             </ul>
         </div>
       </div>

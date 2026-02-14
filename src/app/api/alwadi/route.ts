@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             name_subscriber: {},
             number_subscriber: { equals: payload.number }
           },
-          limit: 1
+          limit: 10
         }
       };
     } else if (action === 'renew') {
@@ -91,6 +91,7 @@ export async function POST(request: Request) {
         );
     }
 
+    // إرجاع النتيجة (التي تحتوي عادة على records في حالة البحث)
     return NextResponse.json(data.result);
 
   } catch (error: any) {

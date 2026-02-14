@@ -47,12 +47,21 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      endpoint = '/web/dataset/call_kw/subscribers/name_search';
+      // البحث برقم المشترك باستخدام web_search_read
+      endpoint = '/web/dataset/call_kw/subscribers/web_search_read';
       methodParams = {
         model: 'subscribers',
-        method: 'name_search',
+        method: 'web_search_read',
         args: [],
-        kwargs: { name: payload.name || '', limit: 10 }
+        kwargs: {
+          specification: { 
+            display_name: {},
+            number_subscriber: {}
+          },
+          domain: [['number_subscriber', '=', payload.number]],
+          offset: 0,
+          limit: 5
+        }
       };
     } else if (action === 'renew') {
       endpoint = '/web/dataset/call_kw/renewal.proces/create_other';
@@ -60,9 +69,7 @@ export async function POST(request: Request) {
         model: 'renewal.proces',
         method: 'create_other',
         args: [[payload.subscriberId]],
-        kwargs: { 
-            // يمكن إضافة حقول إضافية هنا إذا تطلب الـ API
-        }
+        kwargs: {}
       };
     }
 
@@ -88,6 +95,7 @@ export async function POST(request: Request) {
         );
     }
 
+    // Odoo web_search_read returns { records: [], length: X } or sometimes just the list depending on config
     return NextResponse.json(data.result);
 
   } catch (error: any) {

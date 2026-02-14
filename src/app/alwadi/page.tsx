@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -47,6 +48,7 @@ type UserProfile = {
 type RemoteSubscriber = {
     id: number;
     name: string;
+    number?: string;
 };
 
 export default function AlwadiPage() {
@@ -55,7 +57,7 @@ export default function AlwadiPage() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const [searchQuery, setSearchTerm] = useState('');
+  const [searchNumber, setSearchNumber] = useState('');
   const [searchResults, setSearchResults] = useState<RemoteSubscriber[]>([]);
   const [isSearchingSub, setIsSearchingSub] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<RemoteSubscriber | null>(null);
@@ -86,13 +88,13 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (searchQuery.length >= 3 && !selectedSubscriber) {
+      if (searchNumber.length >= 3 && !selectedSubscriber) {
         setIsSearchingSub(true);
         try {
           const response = await fetch('/api/alwadi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'search', payload: { name: searchQuery } })
+            body: JSON.stringify({ action: 'search', payload: { number: searchNumber } })
           });
           
           if (!response.ok) {
@@ -100,11 +102,16 @@ export default function AlwadiPage() {
               return;
           }
 
-          const results = await response.json();
+          const data = await response.json();
+          // web_search_read returns { records: [...] }
+          const results = data.records;
           
-          if (Array.isArray(results)) {
-              // Odoo name_search returns [[id, name], ...]
-              const mapped = results.map((r: any) => ({ id: r[0], name: r[1] }));
+          if (results && Array.isArray(results)) {
+              const mapped = results.map((r: any) => ({ 
+                id: r.id, 
+                name: r.display_name || r.name_subscriber || 'مشترك مجهول',
+                number: r.number_subscriber 
+              }));
               setSearchResults(mapped);
           } else {
               setSearchResults([]);
@@ -118,10 +125,10 @@ export default function AlwadiPage() {
       } else {
         setSearchResults([]);
       }
-    }, 500);
+    }, 600);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, selectedSubscriber]);
+  }, [searchNumber, selectedSubscriber]);
 
   useEffect(() => {
     if (showSuccessOverlay && audioRef.current) {
@@ -305,25 +312,25 @@ export default function AlwadiPage() {
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg">بيانات التجديد</CardTitle>
-            <CardDescription className="text-center">ابحث عن اسم المشترك واختر فئة التجديد</CardDescription>
+            <CardDescription className="text-center">ابحث برقم المشترك واختر فئة التجديد</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="subscriberSearch" className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-primary" />
-                  البحث عن مشترك
+                <Label htmlFor="subscriberNumber" className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-primary" />
+                  رقم المشترك (Subscriber Number)
                 </Label>
                 <div className="relative">
                     <Input
-                        id="subscriberSearch"
-                        placeholder="اكتب 3 أحرف من اسم المشترك..."
-                        value={selectedSubscriber ? selectedSubscriber.name : searchQuery}
+                        id="subscriberNumber"
+                        placeholder="أدخل رقم المشترك للبحث..."
+                        value={selectedSubscriber ? selectedSubscriber.number : searchNumber}
                         onChange={(e) => {
-                            setSearchTerm(e.target.value);
+                            setSearchNumber(e.target.value);
                             if (selectedSubscriber) setSelectedSubscriber(null);
                         }}
-                        className="rounded-xl pr-10"
+                        className="rounded-xl pr-10 font-bold"
                         readOnly={!!selectedSubscriber}
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -331,10 +338,10 @@ export default function AlwadiPage() {
                     </div>
                     {selectedSubscriber && (
                         <button 
-                            onClick={() => { setSelectedSubscriber(null); setSearchTerm(''); }}
+                            onClick={() => { setSelectedSubscriber(null); setSearchNumber(''); }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-muted rounded-md"
                         >
-                            <Hash className="h-3 w-3" />
+                            <X className="h-3 w-3" />
                         </button>
                     )}
                 </div>
@@ -347,8 +354,11 @@ export default function AlwadiPage() {
                                 onClick={() => setSelectedSubscriber(sub)}
                                 className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center"
                             >
-                                <span className="text-sm font-bold">{sub.name}</span>
-                                <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full">ID: {sub.id}</span>
+                                <div className='flex flex-col'>
+                                    <span className="text-sm font-bold">{sub.name}</span>
+                                    <span className="text-[10px] text-muted-foreground">رقم: {sub.number}</span>
+                                </div>
+                                <CheckCircle className="h-4 w-4 text-primary opacity-0 hover:opacity-100" />
                             </div>
                         ))}
                     </div>
@@ -419,8 +429,8 @@ export default function AlwadiPage() {
                       <span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-muted-foreground">كود المشترك:</span>
-                      <span className="font-mono font-bold text-primary">{selectedSubscriber?.id}</span>
+                      <span className="text-muted-foreground">رقم المشترك:</span>
+                      <span className="font-mono font-bold text-primary">{selectedSubscriber?.number}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-muted-foreground">الفئة:</span>
@@ -446,7 +456,7 @@ export default function AlwadiPage() {
         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
-                <li>يرجى التأكد من اسم المشترك في نظام الوادي قبل التأكيد.</li>
+                <li>يرجى التأكد من رقم المشترك قبل التأكيد.</li>
                 <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم.</li>
                 <li>في حال واجهت مشكلة، يرجى التواصل مع الدعم الفني برقم العملية.</li>
             </ul>

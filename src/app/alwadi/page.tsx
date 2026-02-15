@@ -76,7 +76,7 @@ export default function AlwadiPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  // جلب الفئات من الـ API
+  // جلب الفئات الرسمية المحدثة من الـ API
   useEffect(() => {
     const fetchCategories = async () => {
       try {

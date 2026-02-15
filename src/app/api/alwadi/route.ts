@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             num_card: {},
             expiry_date: {}
           },
-          // تم التغيير للبحث برقم الكرت بدلاً من الهاتف
+          // البحث برقم الكرت حصرياً
           domain: [['num_card', '=', payload.number]],
           limit: 5
         }

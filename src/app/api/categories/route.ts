@@ -5,10 +5,10 @@ import { NextResponse } from "next/server";
  */
 export async function GET() {
   const categories = [
-    { id: 1, name: "شهرين", price: 3000, months: 2 },
-    { id: 3, name: "4 أشهر", price: 6000, months: 4 },
-    { id: 7, name: "6 أشهر", price: 9000, months: 6 },
-    { id: 9, name: "سنة كاملة", price: 15000, months: 12 }
+    { id: 1, name: "شهرين", price: 3000, duration_months: 2 },
+    { id: 3, name: "4 أشهر", price: 6000, duration_months: 4 },
+    { id: 7, name: "6 أشهر", price: 9000, duration_months: 6 },
+    { id: 9, name: "سنة", price: 15000, duration_months: 12 }
   ];
 
   return NextResponse.json({

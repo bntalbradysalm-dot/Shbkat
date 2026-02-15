@@ -8,13 +8,15 @@ const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
 
 /**
- * وظيفة إنشاء الرمز المميز (Token) بناءً على المواصفات:
- * hashPassword = md5(Password)
- * token = md5(hashPassword + transid + Username + mobile)
+ * وظيفة إنشاء الرمز المميز (Token)
+ * لعمليات الرصيد: الهاش يعتمد على كلمة المرور، رقم العملية، واسم المستخدم فقط.
+ * للعمليات الأخرى: يضاف رقم الهاتف للسلسلة.
  */
-const generateToken = (transid: string, mobile: string) => {
+const generateToken = (transid: string, identifier: string, isBalance: boolean) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  const tokenString = hashPassword + transid + USERNAME + mobile;
+  const tokenString = isBalance 
+    ? hashPassword + transid + USERNAME
+    : hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
 
@@ -23,18 +25,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, service, ...payload } = body;
     
-    // في حالة الاستعلام عن الرصيد أو الحالات العامة، نستخدم اسم المستخدم كمعرف للتوكن إذا لم يتوفر موبايل
-    const identifier = payload.mobile || payload.playerid || (action === 'balance' ? USERNAME : '000');
+    const isBalanceReq = action === 'balance';
+    const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد إذا لم يتوفر
-    const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
-    const token = generateToken(transid, identifier);
+    // توليد رقم عملية بطول معقول (10 أرقام) لضمان التوافق
+    const transid = payload.transid || `${Date.now()}`.slice(-10);
+    const token = generateToken(transid, identifier, isBalanceReq);
 
-    // الرابط الأساسي للمزود
     let apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
     let endpoint = '';
     
-    // إعداد المعايير المرسلة للـ API
     let apiRequestParams: any = {
       userid: USERID,
       transid: transid,
@@ -42,7 +42,6 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد النطاق والمسار بناءً على نوع الخدمة
     if (service === 'post') {
         endpoint = 'post';
         apiRequestParams.action = action;
@@ -74,8 +73,6 @@ export async function POST(request: Request) {
                     apiRequestParams.offerkey = apiRequestParams.offertype;
                     delete apiRequestParams.offertype;
                 }
-                if (!apiRequestParams.method) apiRequestParams.method = 'New';
-                if (!apiRequestParams.solfa) apiRequestParams.solfa = 'N';
                 break;
             case 'status':
             case 'balance':
@@ -88,14 +85,13 @@ export async function POST(request: Request) {
         }
     }
 
-    // إزالة المعايير الداخلية
     delete apiRequestParams.service;
 
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
         const response = await fetch(fullUrl, {
@@ -112,15 +108,18 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود.' }), { status: 502 });
+            console.error('API Parse Error:', responseText);
+            return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
         }
         
-        // في حالة طلب الرصيد، نتحقق من وجود حقل الرصيد مباشرة
-        if (action === 'balance' && data.balance !== undefined) {
-            return NextResponse.json(data);
+        // التحقق من الرصيد بشكل خاص
+        if (isBalanceReq) {
+            if (data.balance !== undefined) {
+                return NextResponse.json(data);
+            }
+            return new NextResponse(JSON.stringify({ message: data.resultDesc || 'فشل جلب الرصيد', ...data }), { status: 400 });
         }
 
-        // تحويل النتيجة لنص ومسح الفراغات لضمان دقة التحقق
         const code = data.resultCode?.toString().trim();
         const isSuccess = code === "0";
         const isPending = code === "-2";
@@ -137,16 +136,13 @@ export async function POST(request: Request) {
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود.' }), { status: 504 });
-        }
-        throw fetchError;
+        return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود.' }), { status: 504 });
     }
 
   } catch (error: any) {
     return new NextResponse(
-      JSON.stringify({ message: `خطأ في المعالجة: ${error.message}` }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ message: `خطأ داخلي: ${error.message}` }),
+      { status: 500 }
     );
   }
 }

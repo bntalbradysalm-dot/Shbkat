@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 
 const BASE_URL = 'https://api.alwaadi.net';
-const DB = 'studio-239662212-1b7b6'; 
+const DB = 'alwaadi'; 
 const LOGIN = '770326M';
 const PASSWORD = '2e679271d1f9426f10e1f00100afc2016a33cd54';
 
@@ -45,7 +45,6 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث برقم الجوال (mobile) وفق توثيق الحقول الجديد
       methodParams = {
         model: 'subscribers',
         method: 'web_search_read',
@@ -62,7 +61,6 @@ export async function POST(request: Request) {
         }
       };
     } else if (action === 'renew') {
-      // تنفيذ عملية التجديد الآلي باستخدام الهيكلية الجديدة create_other
       methodParams = {
         model: 'renewal.proces',
         method: 'create_other',
@@ -70,7 +68,7 @@ export async function POST(request: Request) {
         kwargs: {
           values: {
             "subscriber": payload.subscriberId,
-            "renewal_categories": payload.categoryId, // يجب أن يكون ID الفئة في Odoo
+            "renewal_categories": payload.categoryId,
             "mobile": payload.mobile,
             "payment_type": "cash",
             "price": payload.price

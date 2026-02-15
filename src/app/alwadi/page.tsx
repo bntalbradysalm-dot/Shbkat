@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -31,7 +31,7 @@ import { ar } from 'date-fns/locale';
 export const dynamic = 'force-dynamic';
 
 type RenewalOption = {
-  id: string; // هذا يجب أن يطابق ID الفئة في Odoo
+  id: string; 
   title: string;
   price: number;
 };
@@ -61,6 +61,8 @@ export default function AlwadiPage() {
   const [isSearchingSub, setIsSearchingSub] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<RemoteSubscriber | null>(null);
   
+  const [renewalOptions, setRenewalOptions] = useState<RenewalOption[]>([]);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,14 +76,30 @@ export default function AlwadiPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  const optionsCollection = useMemoFirebase(
-    () => (firestore && user ? collection(firestore, 'alwadiOptions') : null),
-    [firestore, user]
-  );
-  const { data: renewalOptions, isLoading: isOptionsLoading } = useCollection<RenewalOption>(optionsCollection);
+  // جلب الفئات من الـ API الجديد
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const result = await response.json();
+        if (result.success) {
+          const mapped = result.data.map((c: any) => ({
+            id: String(c.id),
+            title: c.name,
+            price: c.price
+          }));
+          setRenewalOptions(mapped);
+        }
+      } catch (e) {
+        console.error("Failed to fetch categories:", e);
+      } finally {
+        setIsOptionsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const sortedOptions = useMemo(() => {
-    if (!renewalOptions) return [];
     return [...renewalOptions].sort((a, b) => a.price - b.price);
   }, [renewalOptions]);
 
@@ -162,7 +180,7 @@ export default function AlwadiPage() {
                 action: 'renew', 
                 payload: { 
                     subscriberId: selectedSubscriber.id,
-                    categoryId: parseInt(selectedOption.id), // إرسال ID الفئة كـ Integer
+                    categoryId: parseInt(selectedOption.id),
                     mobile: selectedSubscriber.mobile,
                     price: numericPrice
                 } 

@@ -6,7 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X, CreditCard, Smartphone } from 'lucide-react';
+import { 
+  CheckCircle, 
+  History, 
+  Loader2, 
+  Wallet, 
+  SatelliteDish, 
+  Calendar, 
+  Hash, 
+  Search, 
+  AlertCircle, 
+  X, 
+  CreditCard, 
+  Smartphone,
+  CreditCard as PaymentIcon
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +83,7 @@ export default function AlwadiPage() {
   const [renewalOptions, setRenewalOptions] = useState<RenewalOption[]>([]);
   const [isOptionsLoading, setIsOptionsLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
+  const [paymentType, setPaymentType] = useState('نقد');
   const [showDialog, setShowDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
@@ -177,10 +199,8 @@ export default function AlwadiPage() {
                 action: 'renew', 
                 payload: { 
                     num_card: cardInfo.num_card,
-                    expiry_date: cardInfo.expiry_date,
                     categoryId: parseInt(selectedOption.id),
-                    mobile: cardInfo.mobile || userProfile.phoneNumber,
-                    price: numericPrice
+                    payment_type: paymentType
                 } 
             })
         });
@@ -204,6 +224,7 @@ export default function AlwadiPage() {
             packageTitle: selectedOption.title,
             packagePrice: numericPrice,
             cardNumber: cardInfo.num_card,
+            paymentType: paymentType,
             status: 'approved',
             requestTimestamp: new Date().toISOString(),
             transid: txId,
@@ -216,7 +237,7 @@ export default function AlwadiPage() {
             transactionDate: new Date().toISOString(),
             amount: numericPrice,
             transactionType: `تجديد الوادي: ${selectedOption.title}`,
-            notes: `كرت رقم: ${cardInfo.num_card}`,
+            notes: `كرت رقم: ${cardInfo.num_card}. نوع الدفع: ${paymentType}`,
             transid: txId
         });
         
@@ -245,7 +266,7 @@ export default function AlwadiPage() {
               <CardContent className="p-8 space-y-6">
                   <div>
                     <h2 className="text-2xl font-black text-green-600">تم التجديد بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">تم إرسال الطلب للمنظومة بنجاح</p>
+                    <p className="text-sm text-muted-foreground mt-1">تم تنفيذ الطلب بنجاح في المنظومة</p>
                   </div>
                   
                   <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -284,26 +305,27 @@ export default function AlwadiPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="منظومة الوادي (تجديد آلي)" />
+      <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center p-2">
-          <Image src="https://i.postimg.cc/mgMYL0dm/Screenshot-20260109-114041-One-Drive.png" alt="Alwadi" width={600} height={300} className="w-full h-auto object-contain max-h-40" />
-        </div>
-
+        
         <Card className="shadow-lg border-primary/10">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-center text-lg">التحقق من الكرت</CardTitle>
-            <CardDescription className="text-center">أدخل رقم الكرت لجلب بيانات الانتهاء والمشترك</CardDescription>
+          <CardHeader className="pb-4 text-center">
+            <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                <SatelliteDish className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-lg font-black">تجديد كروت الوادي</CardTitle>
+            <CardDescription>أدخل رقم الكرت واختر الباقة المطلوبة</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            
             <div className="space-y-4">
-              <div className="space-y-2 relative">
-                <Label htmlFor="cardNumber" className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" />رقم الكرت</Label>
+              <div className="space-y-2">
+                <Label htmlFor="cardNumber" className="flex items-center gap-2 font-bold"><CreditCard className="h-4 w-4 text-primary" />رقم الكرت</Label>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Input
                             id="cardNumber"
-                            placeholder="ادخل رقم الكرت هنا"
+                            placeholder="ادخل رقم الكرت"
                             value={searchNumber}
                             onChange={(e) => {
                                 setSearchNumber(e.target.value);
@@ -345,7 +367,7 @@ export default function AlwadiPage() {
             )}
 
             <div className="space-y-3">
-              <Label className="flex items-center gap-2"><SatelliteDish className="h-4 w-4 text-primary" />اختر فئة التجديد</Label>
+              <Label className="flex items-center gap-2 font-bold"><SatelliteDish className="h-4 w-4 text-primary" />اختر فئة التجديد</Label>
               {isOptionsLoading ? (
                 <div className="grid grid-cols-2 gap-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
               ) : (
@@ -356,7 +378,7 @@ export default function AlwadiPage() {
                       onClick={() => setSelectedOption(option)}
                       className={cn(
                         "relative p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center gap-1 text-center",
-                        selectedOption?.id === option.id ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/30"
+                        selectedOption?.id === option.id ? "border-primary bg-primary/5 shadow-md scale-[1.02]" : "border-border hover:border-primary/30"
                       )}
                     >
                       {selectedOption?.id === option.id && <CheckCircle className="absolute top-1 right-1 h-4 w-4 text-primary" />}
@@ -368,13 +390,26 @@ export default function AlwadiPage() {
               )}
             </div>
 
+            <div className="space-y-2">
+                <Label className="flex items-center gap-2 font-bold"><PaymentIcon className="h-4 w-4 text-primary" />طريقة الدفع</Label>
+                <Select value={paymentType} onValueChange={setPaymentType}>
+                    <SelectTrigger className="h-12 rounded-xl font-bold">
+                        <SelectValue placeholder="اختر طريقة الدفع" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                        <SelectItem value="نقد" className="font-bold">نقد</SelectItem>
+                        <SelectItem value="محفظة" className="font-bold">محفظة</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <Button 
-                className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg" 
+                className="w-full h-14 text-lg font-black rounded-2xl shadow-lg shadow-primary/20" 
                 onClick={handleConfirmClick} 
                 disabled={!selectedOption || !cardInfo}
               >
-                تجديد آلي الآن
+                تجديد الكرت الآن
               </Button>
               <AlertDialogContent className="rounded-[32px]">
                 <AlertDialogHeader>
@@ -382,6 +417,7 @@ export default function AlwadiPage() {
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم الكرت:</span><span className="font-mono font-bold text-primary">{cardInfo?.num_card}</span></div>
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة المختارة:</span><span className="font-bold">{selectedOption?.title}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">طريقة الدفع:</span><span className="font-bold">{paymentType}</span></div>
                     <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>
                 </AlertDialogHeader>
@@ -397,8 +433,8 @@ export default function AlwadiPage() {
         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
-                <li>عملية التجديد تتم عبر نظام JSON-RPC المباشر وهي غير قابلة للتراجع.</li>
-                <li>يتم استقطاع المبلغ من محفظتك فور نجاح العملية في المنظومة.</li>
+                <li>عملية التجديد تتم بشكل مباشر وهي غير قابلة للتراجع.</li>
+                <li>يتم استقطاع المبلغ من محفظتك فور نجاح العملية.</li>
             </ul>
         </div>
       </div>

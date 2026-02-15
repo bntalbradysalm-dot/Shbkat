@@ -2,51 +2,18 @@
 
 import { NextResponse } from 'next/server';
 
-const BASE_URL = 'https://api.alwaadi.net';
-const DB = 'alwaadi'; 
-const LOGIN = '77784525';
-// استخدام مفتاح الواجهة البرمجية ككلمة مرور للمصادقة
-const PASSWORD = '2e679271d1f9426f10e1f00100afc2016a33cd54';
-
-/**
- * وظيفة للمصادقة والحصول على Session ID باستخدام بيانات الدخول والمفتاح
- */
-async function authenticate() {
-  const response = await fetch(`${BASE_URL}/web/session/authenticate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'call',
-      params: {
-        db: DB,
-        login: LOGIN,
-        password: PASSWORD
-      }
-    }),
-  });
-
-  const data = await response.json();
-  if (data.error) {
-    throw new Error(data.error.data?.message || 'فشل تسجيل الدخول للمنظومة');
-  }
-
-  const setCookie = response.headers.get('set-cookie');
-  const sessionId = setCookie?.split(';')[0]?.split('=')[1] || data.result.session_id;
-
-  return { sessionId, uid: data.result.uid };
-}
+const API_URL = 'https://api.alwaadi.net/jsonrpc';
+const API_KEY = '2e679271d1f9426f10e1f00100afc2016a33cd54';
+const USER_ID = 51; // uid المستخدم المصرح له
 
 export async function POST(request: Request) {
   try {
     const { action, payload } = await request.json();
-    const { sessionId, uid } = await authenticate();
 
-    let endpoint = '/web/dataset/call_kw';
     let methodParams: any = {};
 
     if (action === 'search') {
-      // استخدام onchange لجلب بيانات الكرت الحالية (تاريخ الانتهاء والمشترك)
+      // البحث والاستعلام عن بيانات الكرت (تاريخ الانتهاء والمشترك) باستخدام onchange
       methodParams = {
         model: 'renewal.proces',
         method: 'onchange',
@@ -54,48 +21,41 @@ export async function POST(request: Request) {
         kwargs: {
           context: {
             lang: "ar_001",
-            uid: uid
+            uid: USER_ID
           }
         }
       };
     } else if (action === 'renew') {
-      // إنشاء سجل تجديد جديد باستخدام create
-      const refCode = `RP${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 100)}`;
-      
+      // تنفيذ عملية التجديد (إنشاء سجل جديد)
       methodParams = {
         model: 'renewal.proces',
         method: 'create',
         args: [{
           "num_card": payload.num_card,
-          "expiry_date": payload.expiry_date,
           "renewal_categories": payload.categoryId,
-          "price": payload.price,
-          "sales_centers": 59, // مركز البيع الافتراضي حسب التوثيق
-          "payment_type": "نقد",
-          "ref_code": refCode,
-          "mobile": payload.mobile || ""
+          "payment_type": payload.payment_type || "نقد"
         }],
         kwargs: {
           context: {
             lang: "ar_001",
             tz: "Asia/Riyadh",
-            uid: uid
+            uid: USER_ID
           }
         }
       };
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Cookie': `session_id=${sessionId}`
+        'Authorization': `Bearer ${API_KEY}`
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
         method: 'call',
         params: methodParams,
-        id: Math.floor(Math.random() * 1000)
+        id: Date.now()
       }),
     });
 
@@ -103,7 +63,7 @@ export async function POST(request: Request) {
 
     if (data.error) {
         return new NextResponse(
-            JSON.stringify({ message: data.error.data?.message || 'حدث خطأ في طلب المنظومة' }),
+            JSON.stringify({ message: data.error.message || 'حدث خطأ في طلب المنظومة' }),
             { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
     }

@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     const isBalanceReq = action === 'balance';
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية بطول معقول (10 أرقام) لضمان التوافق
-    const transid = payload.transid || `${Date.now()}`.slice(-10);
+    // توليد رقم عملية بطول معقول (8 أرقام) لضمان التوافق
+    const transid = payload.transid || `${Date.now()}`.slice(-8);
     const token = generateToken(transid, identifier, isBalanceReq);
 
     let apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
@@ -108,13 +108,25 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            console.error('API Parse Error:', responseText);
+            // المحاولة الأخيرة: البحث عن الرصيد في الرد النصي الخام إذا فشل الـ JSON
+            const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
+            if (balanceMatch) {
+                return NextResponse.json({ balance: balanceMatch[1], message: 'تم استخراج الرصيد من الرد النصي.' });
+            }
+            console.error('API Raw Response:', responseText);
             return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
+        }
+
+        // استخراج الرصيد من أي حقل نصي إذا لم يتوفر كحقل مستقل
+        const searchString = JSON.stringify(data);
+        const balanceMatch = searchString.match(/Your balance:?\s*([\d.]+)/i);
+        if (balanceMatch && (data.balance === undefined || data.balance === null)) {
+            data.balance = balanceMatch[1];
         }
         
         // التحقق من الرصيد بشكل خاص
         if (isBalanceReq) {
-            if (data.balance !== undefined) {
+            if (data.balance !== undefined && data.balance !== null) {
                 return NextResponse.json(data);
             }
             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'فشل جلب الرصيد', ...data }), { status: 400 });
@@ -126,6 +138,7 @@ export async function POST(request: Request) {
 
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
+            // إرسال الرصيد حتى في حالة الخطأ إذا تم العثور عليه
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },

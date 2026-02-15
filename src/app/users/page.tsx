@@ -105,14 +105,22 @@ export default function UsersPage() {
       });
       const data = await response.json();
       
-      if (response.ok && data && data.balance !== undefined) {
+      if (data && data.balance !== undefined && data.balance !== null) {
         setAgentBalance(parseFloat(data.balance));
       } else {
-        console.error("Agent balance fetch failed:", data);
+        // إذا لم يتوفر الرصيد بشكل مباشر، نحاول عرضه من رسالة الخطأ إن وجدت
+        if (data.message && data.message.includes('balance')) {
+             const match = data.message.match(/Your balance:?\s*([\d.]+)/i);
+             if (match) {
+                 setAgentBalance(parseFloat(match[1]));
+                 return;
+             }
+        }
+        console.warn("Could not find balance in response:", data);
         toast({
             variant: "destructive",
-            title: "خطأ في جلب الرصيد",
-            description: data?.message || "فشل الاتصال بمزود الخدمة أو خطأ في البيانات."
+            title: "تنبيه",
+            description: data?.message || "لم نتمكن من الحصول على الرصيد بشكل مؤكد."
         });
       }
     } catch (err) {

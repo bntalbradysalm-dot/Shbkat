@@ -46,6 +46,7 @@ import {
   Wallet,
   Banknote,
   FileText,
+  RefreshCw,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -82,6 +83,11 @@ export default function UsersPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
+  
+  // Agent Balance State
+  const [agentBalance, setAgentBalance] = useState<number | null>(null);
+  const [isFetchingAgentBalance, setIsFetchingAgentBalance] = useState(false);
+
   const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
@@ -91,7 +97,33 @@ export default function UsersPage() {
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
 
-  const totalBalance = useMemo(() => {
+  // Fetch Agent Balance from اشحن لي API
+  const fetchAgentBalance = async () => {
+    setIsFetchingAgentBalance(true);
+    try {
+      const response = await fetch('/api/telecom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'balance' })
+      });
+      const data = await response.json();
+      if (response.ok && data.balance !== undefined) {
+        setAgentBalance(parseFloat(data.balance));
+      } else {
+        console.error("Failed to fetch agent balance:", data);
+      }
+    } catch (err) {
+      console.error("Error fetching agent balance:", err);
+    } finally {
+      setIsFetchingAgentBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAgentBalance();
+  }, []);
+
+  const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
     return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
   }, [users]);
@@ -566,22 +598,28 @@ export default function UsersPage() {
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Card>
+            <Card className="relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">رصيدي في اشحن لي</CardTitle>
+                <button 
+                  onClick={fetchAgentBalance} 
+                  disabled={isFetchingAgentBalance}
+                  className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isFetchingAgentBalance ? 'animate-spin' : ''}`} />
+                </button>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {isFetchingAgentBalance ? (
                   <Skeleton className="h-8 w-32" />
                 ) : (
                   <div className="text-2xl font-bold text-primary">
-                    {totalBalance.toLocaleString('en-US')}
+                    {agentBalance?.toLocaleString('en-US') ?? '...'}
                     <span className="text-base ml-1"> ريال</span>
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  مجموع أرصدة المستخدمين.
+                  رصيدي الحالي كوكيل في اشحن لي.
                 </p>
               </CardContent>
             </Card>

@@ -23,8 +23,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, service, ...payload } = body;
     
-    // في حالة الألعاب قد لا يكون الموبايل هو الحقل الأساسي، نستخدم رقم اللاعب أو الموبايل
-    const identifier = payload.mobile || payload.playerid || '000';
+    // في حالة الاستعلام عن الرصيد أو الحالات العامة، نستخدم اسم المستخدم كمعرف للتوكن إذا لم يتوفر موبايل
+    const identifier = payload.mobile || payload.playerid || (action === 'balance' ? USERNAME : '000');
 
     // توليد رقم عملية فريد إذا لم يتوفر
     const transid = payload.transid || `${Date.now()}`.slice(-10) + Math.floor(1000 + Math.random() * 9000);
@@ -115,6 +115,11 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'فشل تحليل استجابة المزود.' }), { status: 502 });
         }
         
+        // في حالة طلب الرصيد، نتحقق من وجود حقل الرصيد مباشرة
+        if (action === 'balance' && data.balance !== undefined) {
+            return NextResponse.json(data);
+        }
+
         // تحويل النتيجة لنص ومسح الفراغات لضمان دقة التحقق
         const code = data.resultCode?.toString().trim();
         const isSuccess = code === "0";

@@ -111,6 +111,11 @@ export default function UsersPage() {
         setAgentBalance(parseFloat(data.balance));
       } else {
         console.error("Failed to fetch agent balance:", data);
+        toast({
+            variant: "destructive",
+            title: "خطأ في جلب الرصيد",
+            description: data.message || "فشل الاتصال بمزود الخدمة."
+        });
       }
     } catch (err) {
       console.error("Error fetching agent balance:", err);
@@ -614,7 +619,7 @@ export default function UsersPage() {
                   <Skeleton className="h-8 w-32" />
                 ) : (
                   <div className="text-2xl font-bold text-primary">
-                    {agentBalance?.toLocaleString('en-US') ?? '...'}
+                    {agentBalance !== null ? agentBalance.toLocaleString('en-US') : '...'}
                     <span className="text-base ml-1"> ريال</span>
                   </div>
                 )}

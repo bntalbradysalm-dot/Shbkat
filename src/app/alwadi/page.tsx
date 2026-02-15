@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X, CreditCard, Phone } from 'lucide-react';
+import { User, CheckCircle, History, Loader2, Wallet, SatelliteDish, Calendar, Hash, Search, AlertCircle, X, CreditCard, Smartphone } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,7 +76,7 @@ export default function AlwadiPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  // جلب الفئات من الـ API الجديد
+  // جلب الفئات من الـ API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -127,7 +127,7 @@ export default function AlwadiPage() {
       if (result && result.records && Array.isArray(result.records)) {
           setSearchResults(result.records);
           if (result.records.length === 0) {
-              toast({ title: "لا توجد نتائج", description: "لم يتم العثور على مشترك بهذا الرقم." });
+              toast({ title: "لا توجد نتائج", description: "لم يتم العثور على مشترك برقم الكرت هذا." });
           }
       } else {
           setSearchResults([]);
@@ -293,17 +293,17 @@ export default function AlwadiPage() {
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg">بحث المشترك</CardTitle>
-            <CardDescription className="text-center">أدخل رقم الجوال المسجل في المنظومة للتحقق من الهوية</CardDescription>
+            <CardDescription className="text-center">أدخل رقم الكرت للتحقق من هوية المشترك</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" />رقم الجوال</Label>
+                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" />رقم الكرت</Label>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Input
                             id="subscriberNumber"
-                            placeholder="مثال: 77xxxxxxx"
+                            placeholder="ادخل رقم الكرت هنا"
                             value={searchNumber}
                             onChange={(e) => {
                                 setSearchNumber(e.target.value);
@@ -337,7 +337,7 @@ export default function AlwadiPage() {
                             >
                                 <div className='flex flex-col'>
                                     <span className="text-sm font-bold text-foreground">{sub.name_subscriber}</span>
-                                    <span className="text-[10px] text-muted-foreground">رقم الكرت: {sub.num_card || 'غير متوفر'}</span>
+                                    <span className="text-[10px] text-muted-foreground">رقم الجوال: {sub.mobile || 'غير متوفر'}</span>
                                 </div>
                                 <CheckCircle className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100" />
                             </div>
@@ -359,7 +359,7 @@ export default function AlwadiPage() {
                         </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-primary/10">
-                        <div className="flex items-center gap-2"><CreditCard className="w-3 h-3 text-muted-foreground"/> <span>كرت: {selectedSubscriber.num_card}</span></div>
+                        <div className="flex items-center gap-2"><Smartphone className="w-3 h-3 text-muted-foreground"/> <span>جوال: {selectedSubscriber.mobile}</span></div>
                         <div className="flex items-center gap-2"><Calendar className="w-3 h-3 text-muted-foreground"/> <span>انتهاء: {selectedSubscriber.expiry_date}</span></div>
                     </div>
                 </div>
@@ -409,7 +409,7 @@ export default function AlwadiPage() {
                   <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">اسم المشترك:</span><span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name_subscriber}</span></div>
-                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم الجوال:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.mobile}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم الكرت:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.num_card}</span></div>
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة المختارة:</span><span className="font-bold">{selectedOption?.title}</span></div>
                     <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>

@@ -42,12 +42,11 @@ type UserProfile = {
   displayName?: string;
 };
 
-type RemoteSubscriber = {
-    id: number;
-    name_subscriber: string;
-    mobile: string;
-    num_card?: string;
-    expiry_date?: string;
+type CardDetails = {
+    num_card: string;
+    expiry_date: string;
+    subscriber_name?: string;
+    mobile?: string;
 };
 
 export default function AlwadiPage() {
@@ -57,9 +56,8 @@ export default function AlwadiPage() {
   const { user } = useUser();
 
   const [searchNumber, setSearchNumber] = useState('');
-  const [searchResults, setSearchResults] = useState<RemoteSubscriber[]>([]);
+  const [cardInfo, setCardInfo] = useState<CardDetails | null>(null);
   const [isSearchingSub, setIsSearchingSub] = useState(false);
-  const [selectedSubscriber, setSelectedSubscriber] = useState<RemoteSubscriber | null>(null);
   
   const [renewalOptions, setRenewalOptions] = useState<RenewalOption[]>([]);
   const [isOptionsLoading, setIsOptionsLoading] = useState(true);
@@ -76,7 +74,7 @@ export default function AlwadiPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  // جلب الفئات الرسمية المحدثة من الـ API
+  // جلب الفئات الرسمية المحدثة
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -107,8 +105,7 @@ export default function AlwadiPage() {
     if (!searchNumber) return;
 
     setIsSearchingSub(true);
-    setSelectedSubscriber(null);
-    setSearchResults([]);
+    setCardInfo(null);
     
     try {
       const response = await fetch('/api/alwadi', {
@@ -117,25 +114,27 @@ export default function AlwadiPage() {
         body: JSON.stringify({ action: 'search', payload: { number: searchNumber } })
       });
       
+      const result = await response.json();
+
       if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || 'فشل البحث');
+          throw new Error(result.message || 'فشل البحث');
       }
 
-      const result = await response.json();
-      
-      if (result && result.records && Array.isArray(result.records)) {
-          setSearchResults(result.records);
-          if (result.records.length === 0) {
-              toast({ title: "لا توجد نتائج", description: "لم يتم العثور على مشترك برقم الكرت هذا." });
-          }
+      // معالجة رد onchange
+      if (result && result.value) {
+          const val = result.value;
+          setCardInfo({
+              num_card: searchNumber,
+              expiry_date: val.expiry_date || 'غير متوفر',
+              subscriber_name: val.subscriber_name || 'مشترك غير معروف',
+              mobile: val.mobile || ''
+          });
       } else {
-          setSearchResults([]);
+          toast({ title: "لا توجد بيانات", description: "لم يتم العثور على معلومات لهذا الكرت." });
       }
     } catch (e: any) {
       console.error("Search error:", e);
       toast({ variant: "destructive", title: "خطأ في البحث", description: e.message });
-      setSearchResults([]);
     } finally {
       setIsSearchingSub(false);
     }
@@ -149,8 +148,8 @@ export default function AlwadiPage() {
 
   const handleConfirmClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (!selectedSubscriber) {
-      toast({ variant: "destructive", title: "خطأ", description: "الرجاء البحث واختيار المشترك" });
+    if (!cardInfo) {
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء البحث عن الكرت أولاً" });
       return;
     }
     if (!selectedOption) {
@@ -165,12 +164,10 @@ export default function AlwadiPage() {
   };
 
   const handleFinalConfirmation = async () => {
-    if (!user || !firestore || !selectedOption || !userProfile || !userDocRef || !selectedSubscriber) return;
+    if (!user || !firestore || !selectedOption || !userProfile || !userDocRef || !cardInfo) return;
 
     setIsProcessing(true);
     const numericPrice = selectedOption.price;
-    const txId = Math.random().toString(36).substring(2, 10).toUpperCase();
-    setLastTxId(txId);
 
     try {
         const response = await fetch('/api/alwadi', {
@@ -179,9 +176,10 @@ export default function AlwadiPage() {
             body: JSON.stringify({ 
                 action: 'renew', 
                 payload: { 
-                    subscriberId: selectedSubscriber.id,
+                    num_card: cardInfo.num_card,
+                    expiry_date: cardInfo.expiry_date,
                     categoryId: parseInt(selectedOption.id),
-                    mobile: selectedSubscriber.mobile,
+                    mobile: cardInfo.mobile || userProfile.phoneNumber,
                     price: numericPrice
                 } 
             })
@@ -193,17 +191,19 @@ export default function AlwadiPage() {
             throw new Error(apiResult.message || 'فشل التجديد من المنظومة الأساسية');
         }
 
+        // تسجيل العملية في Firebase
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-numericPrice) });
+
+        const txId = `RP${Date.now().toString().slice(-6)}`;
+        setLastTxId(txId);
 
         const renewalRequestData = {
             userId: user.uid,
             userName: userProfile.displayName,
-            userPhoneNumber: userProfile.phoneNumber,
             packageTitle: selectedOption.title,
             packagePrice: numericPrice,
-            subscriberName: selectedSubscriber.name_subscriber,
-            subscriberId: selectedSubscriber.id,
+            cardNumber: cardInfo.num_card,
             status: 'approved',
             requestTimestamp: new Date().toISOString(),
             transid: txId,
@@ -215,8 +215,8 @@ export default function AlwadiPage() {
             userId: user.uid,
             transactionDate: new Date().toISOString(),
             amount: numericPrice,
-            transactionType: `تجديد آلي: ${selectedOption.title}`,
-            notes: `للمشترك: ${selectedSubscriber.name_subscriber}`,
+            transactionType: `تجديد الوادي: ${selectedOption.title}`,
+            notes: `كرت رقم: ${cardInfo.num_card}`,
             transid: txId
         });
         
@@ -231,7 +231,7 @@ export default function AlwadiPage() {
     }
   };
 
-  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد في المنظومة..." />;
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد..." />;
 
   if (showSuccessOverlay) {
     return (
@@ -245,7 +245,7 @@ export default function AlwadiPage() {
               <CardContent className="p-8 space-y-6">
                   <div>
                     <h2 className="text-2xl font-black text-green-600">تم التجديد بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">تم تفعيل الاشتراك في نظام الوادي</p>
+                    <p className="text-sm text-muted-foreground mt-1">تم إرسال الطلب للمنظومة بنجاح</p>
                   </div>
                   
                   <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -254,11 +254,11 @@ export default function AlwadiPage() {
                           <span className="font-mono font-black text-primary">{lastTxId}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
-                          <span className="text-muted-foreground flex items-center gap-2"><User className="w-3.5 h-3.5" /> المشترك:</span>
-                          <span className="font-bold truncate max-w-[150px]">{selectedSubscriber?.name_subscriber}</span>
+                          <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
+                          <span className="font-bold">{cardInfo?.num_card}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
-                          <span className="text-muted-foreground flex items-center gap-2"><SatelliteDish className="w-3.5 h-3.5" /> باقة التجديد:</span>
+                          <span className="text-muted-foreground flex items-center gap-2"><SatelliteDish className="w-3.5 h-3.5" /> الباقة:</span>
                           <span className="font-bold">{selectedOption?.title}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -286,31 +286,28 @@ export default function AlwadiPage() {
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="منظومة الوادي (تجديد آلي)" />
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center">
+        <div className="overflow-hidden rounded-2xl shadow-md bg-white flex items-center justify-center p-2">
           <Image src="https://i.postimg.cc/mgMYL0dm/Screenshot-20260109-114041-One-Drive.png" alt="Alwadi" width={600} height={300} className="w-full h-auto object-contain max-h-40" />
         </div>
 
         <Card className="shadow-lg border-primary/10">
           <CardHeader className="pb-4">
-            <CardTitle className="text-center text-lg">بحث المشترك</CardTitle>
-            <CardDescription className="text-center">أدخل رقم الكرت للتحقق من هوية المشترك</CardDescription>
+            <CardTitle className="text-center text-lg">التحقق من الكرت</CardTitle>
+            <CardDescription className="text-center">أدخل رقم الكرت لجلب بيانات الانتهاء والمشترك</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2 relative">
-                <Label htmlFor="subscriberNumber" className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" />رقم الكرت</Label>
+                <Label htmlFor="cardNumber" className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" />رقم الكرت</Label>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Input
-                            id="subscriberNumber"
+                            id="cardNumber"
                             placeholder="ادخل رقم الكرت هنا"
                             value={searchNumber}
                             onChange={(e) => {
                                 setSearchNumber(e.target.value);
-                                if (selectedSubscriber) {
-                                    setSelectedSubscriber(null);
-                                    setSearchResults([]);
-                                }
+                                if (cardInfo) setCardInfo(null);
                             }}
                             className="rounded-xl pr-10 font-bold h-12"
                         />
@@ -326,41 +323,23 @@ export default function AlwadiPage() {
                         {isSearchingSub ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
                     </Button>
                 </div>
-
-                {searchResults.length > 0 && !selectedSubscriber && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in-0 slide-in-from-top-2">
-                        {searchResults.map((sub) => (
-                            <div 
-                                key={sub.id} 
-                                onClick={() => setSelectedSubscriber(sub)} 
-                                className="p-3 border-b last:border-none hover:bg-primary/5 cursor-pointer flex justify-between items-center transition-colors"
-                            >
-                                <div className='flex flex-col'>
-                                    <span className="text-sm font-bold text-foreground">{sub.name_subscriber}</span>
-                                    <span className="text-[10px] text-muted-foreground">رقم الجوال: {sub.mobile || 'غير متوفر'}</span>
-                                </div>
-                                <CheckCircle className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100" />
-                            </div>
-                        ))}
-                    </div>
-                )}
               </div>
             </div>
 
-            {selectedSubscriber && (
+            {cardInfo && (
                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-in zoom-in-95 space-y-3">
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                            <p className="text-[10px] font-black text-primary uppercase">المشترك المختار:</p>
-                            <p className="text-sm font-black text-foreground">{selectedSubscriber.name_subscriber}</p>
+                            <p className="text-[10px] font-black text-primary uppercase">بيانات المشترك:</p>
+                            <p className="text-sm font-black text-foreground">{cardInfo.subscriber_name}</p>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setSelectedSubscriber(null)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setCardInfo(null)}>
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-primary/10">
-                        <div className="flex items-center gap-2"><Smartphone className="w-3 h-3 text-muted-foreground"/> <span>جوال: {selectedSubscriber.mobile}</span></div>
-                        <div className="flex items-center gap-2"><Calendar className="w-3 h-3 text-muted-foreground"/> <span>انتهاء: {selectedSubscriber.expiry_date}</span></div>
+                        <div className="flex items-center gap-2"><Hash className="w-3 h-3 text-muted-foreground"/> <span>الكرت: {cardInfo.num_card}</span></div>
+                        <div className="flex items-center gap-2"><Calendar className="w-3 h-3 text-muted-foreground"/> <span>انتهاء: {cardInfo.expiry_date}</span></div>
                     </div>
                 </div>
             )}
@@ -389,18 +368,11 @@ export default function AlwadiPage() {
               )}
             </div>
 
-            {selectedOption && (
-              <div className="p-3 bg-muted rounded-xl flex items-center justify-between animate-in fade-in-0 slide-in-from-top-2">
-                <div className="flex items-center gap-2"><Wallet className="h-5 w-5 text-primary" /><span className="text-sm font-semibold text-muted-foreground">الإجمالي:</span></div>
-                <span className="text-lg font-bold text-primary">{selectedOption.price.toLocaleString('en-US')} ريال</span>
-              </div>
-            )}
-
             <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
               <Button 
                 className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg" 
                 onClick={handleConfirmClick} 
-                disabled={!selectedOption || !selectedSubscriber}
+                disabled={!selectedOption || !cardInfo}
               >
                 تجديد آلي الآن
               </Button>
@@ -408,8 +380,7 @@ export default function AlwadiPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                   <div className="space-y-4 pt-4 text-base text-foreground text-right">
-                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">اسم المشترك:</span><span className="font-bold truncate max-w-[180px]">{selectedSubscriber?.name_subscriber}</span></div>
-                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم الكرت:</span><span className="font-mono font-bold text-primary">{selectedSubscriber?.num_card}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">رقم الكرت:</span><span className="font-mono font-bold text-primary">{cardInfo?.num_card}</span></div>
                     <div className="flex justify-between items-center py-2 border-b"><span className="text-muted-foreground">الفئة المختارة:</span><span className="font-bold">{selectedOption?.title}</span></div>
                     <div className="flex justify-between items-center py-2"><span className="text-muted-foreground">المبلغ المخصوم:</span><span className="font-bold text-lg text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span></div>
                   </div>
@@ -426,8 +397,8 @@ export default function AlwadiPage() {
         <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2 pb-10">
             <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3"/> تنبيهات هامة</h4>
             <ul className="text-[10px] text-muted-foreground space-y-1 pr-4 list-disc">
-                <li>عملية التجديد آلية وغير قابلة للتراجع بعد الخصم من رصيدك.</li>
-                <li>يرجى التحقق من بيانات المشترك الظاهرة قبل الضغط على تنفيذ.</li>
+                <li>عملية التجديد تتم عبر نظام JSON-RPC المباشر وهي غير قابلة للتراجع.</li>
+                <li>يتم استقطاع المبلغ من محفظتك فور نجاح العملية في المنظومة.</li>
             </ul>
         </div>
       </div>

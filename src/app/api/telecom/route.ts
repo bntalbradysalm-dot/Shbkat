@@ -4,9 +4,11 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
+// المعلمات المعتمدة من المزود "اشحن لي"
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
+const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
@@ -14,6 +16,7 @@ const PASSWORD = '770326828moh';
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
+  // ملاحظة: الترتيب حساس جداً للمزود
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -24,17 +27,14 @@ export async function POST(request: Request) {
     const { action, service, ...payload } = body;
     
     // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
-    // وفي حال طلب الرصيد نستخدم اسم المستخدم (USERNAME) كمعرف للهاش لضمان صحة التشفير
+    // وفي حال جلب الرصيد نستخدم اسم المستخدم كمعرف للهاش
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد بطول 10 أرقام كما هو مطلوب
-    const transid = payload.transid || `${Date.now()}`.slice(-10);
+    // توليد رقم عملية فريد (بطول 8-10 أرقام لضمان القبول)
+    const transid = payload.transid || `${Date.now()}`.slice(-9);
     const token = generateToken(transid, identifier);
 
-    // الرابط المعتمد لواجهة برمجة التطبيقات (API URL)
-    const apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
     let endpoint = '';
-    
     let apiRequestParams: any = {
       userid: USERID,
       transid: transid,
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد الـ Endpoint بناءً على نوع الخدمة
+    // تحديد الـ Endpoint بناءً على نوع الخدمة والمزود
     if (service === 'post') {
         endpoint = 'post';
         apiRequestParams.action = action;
@@ -89,10 +89,11 @@ export async function POST(request: Request) {
     delete apiRequestParams.service;
 
     const params = new URLSearchParams(apiRequestParams);
-    const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
+    const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
+    // إعداد مهلة انتظار طويلة (60 ثانية) نظراً لبطء ردود السيرفرات اليمنية أحياناً
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
         const response = await fetch(fullUrl, {
@@ -109,6 +110,10 @@ export async function POST(request: Request) {
         const responseRaw = await response.text();
         const responseText = responseRaw.trim();
         
+        if (!responseText) {
+            throw new Error('السيرفر استجاب برد فارغ.');
+        }
+
         let data;
         try {
             data = JSON.parse(responseText);
@@ -124,19 +129,15 @@ export async function POST(request: Request) {
                 });
             }
             
-            // في حال وجود رد نصي غير متوقع، نرجعه بدلاً من رسالة خطأ مبهمة
-            if (responseText && responseText.length < 500) {
-                return new NextResponse(JSON.stringify({ 
-                    message: 'رد المزود: ' + responseText,
-                    raw: responseText,
-                    resultCode: "-1" 
-                }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            }
-            
-            return new NextResponse(JSON.stringify({ message: 'فشل في تحليل بيانات المزود.' }), { status: 502 });
+            // إرجاع الرد النصي كما هو إذا لم يكن JSON
+            return new NextResponse(JSON.stringify({ 
+                message: 'رد السيرفر: ' + responseText,
+                raw: responseText,
+                resultCode: "-1" 
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // البحث عن الرصيد في أي حقل نصي لتحديث واجهة الوكيل
+        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه
         const searchString = JSON.stringify(data);
         const balanceRegex = /Your balance:?\s*([\d.]+)/i;
         const balMatch = searchString.match(balanceRegex);
@@ -151,31 +152,19 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: data.resultDesc || 'فشل جلب الرصيد', ...data }), { status: 400 });
         }
 
-        const code = data.resultCode?.toString().trim();
-        const isSuccess = code === "0";
-        const isPending = code === "-2";
-
-        if (!response.ok || (!isSuccess && !isPending)) {
-            let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
-            return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            });
-        }
-        
         return NextResponse.json(data);
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
-            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود (45 ثانية). يرجى المحاولة مرة أخرى.' }), { status: 504 });
+            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود (60 ثانية). السيرفر لا يستجيب حالياً.' }), { status: 504 });
         }
-        return new NextResponse(JSON.stringify({ message: 'تعذر الاتصال بسيرفر المزود حالياً.' }), { status: 504 });
+        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول إلى سيرفر المزود: ' + fetchError.message }), { status: 504 });
     }
 
   } catch (error: any) {
     return new NextResponse(
-      JSON.stringify({ message: `خطأ داخلي: ${error.message}` }),
+      JSON.stringify({ message: `خطأ داخلي في الطلب: ${error.message}` }),
       { status: 500 }
     );
   }

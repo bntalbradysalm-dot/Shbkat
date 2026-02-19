@@ -1,3 +1,4 @@
+
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       ...payload
     };
     
+    // تحديد الـ Endpoint بناءً على نوع الخدمة
     if (service === 'post') {
         endpoint = 'post';
         apiRequestParams.action = action;
@@ -96,7 +98,10 @@ export async function POST(request: Request) {
         const response = await fetch(fullUrl, {
             method: 'GET',
             signal: controller.signal,
-            headers: { 'Accept': 'application/json' },
+            headers: { 
+                'Accept': 'application/json, text/plain, */*',
+                'Cache-Control': 'no-cache'
+            },
             cache: 'no-store'
         });
         
@@ -108,29 +113,35 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // استخراج الرصيد ذكياً من الرد النصي في حال فشل الـ JSON
+            // محاولة استخراج الرصيد إذا كان الرد نصياً وليس JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
-                return NextResponse.json({ balance: balanceMatch[1], message: 'تم استخراج الرصيد من الرد النصي.' });
+                return NextResponse.json({ 
+                    balance: balanceMatch[1], 
+                    resultCode: "0",
+                    resultDesc: responseText,
+                    message: 'تم استخراج البيانات من الرد النصي.' 
+                });
             }
             
             // في حال وجود رد نصي غير متوقع، نرجعه بدلاً من رسالة خطأ مبهمة
             if (responseText && responseText.length < 500) {
                 return new NextResponse(JSON.stringify({ 
-                    message: 'استجابة غير متوقعة من المزود: ' + responseText,
-                    raw: responseText 
-                }), { status: 502 });
+                    message: 'رد المزود: ' + responseText,
+                    raw: responseText,
+                    resultCode: "-1" 
+                }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
             
-            return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
+            return new NextResponse(JSON.stringify({ message: 'فشل في تحليل بيانات المزود.' }), { status: 502 });
         }
 
-        // البحث عن الرصيد في أي حقل نصي ضمن الرد (حتى في رسائل الخطأ)
+        // البحث عن الرصيد في أي حقل نصي ضمن الرد (حتى في رسائل الخطأ) لتحديث رصيد الوكيل
         const searchString = JSON.stringify(data);
         const balanceRegex = /Your balance:?\s*([\d.]+)/i;
-        const balanceMatch = searchString.match(balanceRegex);
-        if (balanceMatch && (data.balance === undefined || data.balance === null)) {
-            data.balance = balanceMatch[1];
+        const balMatch = searchString.match(balanceRegex);
+        if (balMatch && (data.balance === undefined || data.balance === null)) {
+            data.balance = balMatch[1];
         }
         
         if (action === 'balance') {
@@ -147,7 +158,7 @@ export async function POST(request: Request) {
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-                status: 400,
+                status: 200, // نستخدم 200 لضمان وصول الرسالة للواجهة الأمامية ومعالجتها كـ Error
                 headers: { 'Content-Type': 'application/json' },
             });
         }
@@ -157,9 +168,9 @@ export async function POST(request: Request) {
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
-            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود. يرجى المحاولة مرة أخرى.' }), { status: 504 });
+            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود (45 ثانية). يرجى المحاولة مرة أخرى.' }), { status: 504 });
         }
-        return new NextResponse(JSON.stringify({ message: 'تعذر الاتصال بالمزود حالياً.' }), { status: 504 });
+        return new NextResponse(JSON.stringify({ message: 'تعذر الاتصال بسيرفر المزود حالياً.' }), { status: 504 });
     }
 
   } catch (error: any) {

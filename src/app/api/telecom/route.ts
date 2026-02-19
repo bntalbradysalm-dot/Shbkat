@@ -1,4 +1,3 @@
-
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -8,13 +7,12 @@ import CryptoJS from 'crypto-js';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// استخدام السيرفر والنطاق المعتمد حصراً
-const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
+// استخدام السيرفر والنطاق المعتمد حصراً كما هو مطلوب
+const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
  * المعادلة المعتمدة: md5(md5(Password) + transid + Username + mobile)
- * ملاحظة: هذا المسار مخصص لـ "اشحن لي" فقط ولا علاقة له بمنظومة الوادي.
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
@@ -29,7 +27,6 @@ export async function POST(request: Request) {
     const { action, service, ...payload } = body;
     
     // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
-    // وفي حال جلب الرصيد نستخدم اسم المستخدم كمعرف للهاش لضمان المصادقة
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
     // توليد رقم عملية فريد بطول 10 أرقام لضمان القبول
@@ -138,7 +135,7 @@ export async function POST(request: Request) {
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه (حتى في رسائل الخطأ)
+        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه
         const searchString = JSON.stringify(data);
         const balanceRegex = /Your balance:?\s*([\d.]+)/i;
         const balMatch = searchString.match(balanceRegex);
@@ -146,13 +143,6 @@ export async function POST(request: Request) {
             data.balance = balMatch[1];
         }
         
-        if (action === 'balance') {
-            if (data.balance !== undefined && data.balance !== null) {
-                return NextResponse.json(data);
-            }
-            return new NextResponse(JSON.stringify({ message: data.resultDesc || 'فشل جلب الرصيد', ...data }), { status: 400 });
-        }
-
         return NextResponse.json(data);
 
     } catch (fetchError: any) {

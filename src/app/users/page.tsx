@@ -71,7 +71,7 @@ type User = {
 export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'network-owner' | 'with-balance'>('all');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'with-balance' | 'network-owner'>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -278,9 +278,9 @@ export default function UsersPage() {
     if (!searchMatch) return false;
 
     if (accountTypeFilter === 'all') return true;
-    if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
     if (accountTypeFilter === 'user') return user.accountType === 'user' || !user.accountType;
     if (accountTypeFilter === 'with-balance') return (user.balance ?? 0) > 0;
+    if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
     
     return true;
   });
@@ -336,8 +336,8 @@ export default function UsersPage() {
             <SelectContent>
               <SelectItem value="all">الكل</SelectItem>
               <SelectItem value="user">مستخدمون فقط</SelectItem>
-              <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
               <SelectItem value="with-balance">عملاء لديهم رصيد</SelectItem>
+              <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
             </SelectContent>
           </Select>
 

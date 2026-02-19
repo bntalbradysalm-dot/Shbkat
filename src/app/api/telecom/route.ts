@@ -9,14 +9,11 @@ const PASSWORD = '770326828moh';
 
 /**
  * وظيفة إنشاء الرمز المميز (Token)
- * لعمليات الرصيد: الهاش يعتمد على كلمة المرور، رقم العملية، واسم المستخدم فقط.
- * للعمليات الأخرى: يضاف رقم الهاتف للسلسلة.
+ * الترتيب المطلوب: md5(md5(Password) + transid + Username + mobile)
  */
-const generateToken = (transid: string, identifier: string, isBalance: boolean) => {
+const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  const tokenString = isBalance 
-    ? hashPassword + transid + USERNAME
-    : hashPassword + transid + USERNAME + identifier;
+  const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
 
@@ -25,14 +22,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, service, ...payload } = body;
     
-    const isBalanceReq = action === 'balance';
+    // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
+    // وفي حال طلب الرصيد نستخدم اسم المستخدم (USERNAME) كمعرف للهاش
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية بطول معقول (8 أرقام) لضمان التوافق
-    const transid = payload.transid || `${Date.now()}`.slice(-8);
-    const token = generateToken(transid, identifier, isBalanceReq);
+    // توليد رقم عملية فريد بطول 10 أرقام
+    const transid = payload.transid || `${Date.now()}`.slice(-10);
+    const token = generateToken(transid, identifier);
 
-    // الرابط الأساسي للمزود (تحديث النطاق إلى echehanlyw)
+    // النطاق المعتمد (echehanlyw)
     const apiBaseUrl = 'https://echehanlyw.yrbso.net/api/yr/'; 
     let endpoint = '';
     
@@ -92,7 +90,6 @@ export async function POST(request: Request) {
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    // مهلة انتظار كافية للأنظمة الخارجية
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
@@ -110,7 +107,7 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // استخراج الرصيد من الرد النصي في حال فشل الـ JSON
+            // استخراج الرصيد ذكياً من الرد النصي في حال فشل الـ JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ balance: balanceMatch[1], message: 'تم استخراج الرصيد من الرد النصي.' });
@@ -120,12 +117,13 @@ export async function POST(request: Request) {
 
         // البحث عن الرصيد في أي حقل نصي ضمن الرد (حتى في رسائل الخطأ)
         const searchString = JSON.stringify(data);
-        const balanceMatch = searchString.match(/Your balance:?\s*([\d.]+)/i);
+        const balanceRegex = /Your balance:?\s*([\d.]+)/i;
+        const balanceMatch = searchString.match(balanceRegex);
         if (balanceMatch && (data.balance === undefined || data.balance === null)) {
             data.balance = balanceMatch[1];
         }
         
-        if (isBalanceReq) {
+        if (action === 'balance') {
             if (data.balance !== undefined && data.balance !== null) {
                 return NextResponse.json(data);
             }

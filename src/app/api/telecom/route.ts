@@ -7,8 +7,8 @@ import CryptoJS from 'crypto-js';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// الرابط الأساسي المعتمد للسيرفر
-const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
+// الرابط الأساسي المعتمد للسيرفر بعد تحديث النطاق
+const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود

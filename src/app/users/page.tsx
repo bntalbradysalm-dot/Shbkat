@@ -83,9 +83,6 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  const [agentBalance, setAgentBalance] = useState<number | null>(null);
-  const [isFetchingAgentBalance, setIsFetchingAgentBalance] = useState(false);
-
   const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
@@ -94,50 +91,6 @@ export default function UsersPage() {
   );
 
   const { data: users, isLoading, error } = useCollection<User>(usersCollection);
-
-  const fetchAgentBalance = async () => {
-    setIsFetchingAgentBalance(true);
-    try {
-      const response = await fetch('/api/telecom', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'balance' })
-      });
-      const data = await response.json();
-      
-      if (data && data.balance !== undefined && data.balance !== null) {
-        setAgentBalance(parseFloat(data.balance));
-      } else {
-        // إذا لم يتوفر الرصيد بشكل مباشر، نحاول عرضه من رسالة الخطأ إن وجدت
-        if (data.message && data.message.includes('balance')) {
-             const match = data.message.match(/Your balance:?\s*([\d.]+)/i);
-             if (match) {
-                 setAgentBalance(parseFloat(match[1]));
-                 return;
-             }
-        }
-        console.warn("Could not find balance in response:", data);
-        toast({
-            variant: "destructive",
-            title: "تنبيه",
-            description: data?.message || "لم نتمكن من الحصول على الرصيد بشكل مؤكد."
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching agent balance:", err);
-      toast({
-        variant: "destructive",
-        title: "خطأ في الاتصال",
-        description: "تعذر الوصول إلى خادم الرصيد حالياً."
-      });
-    } finally {
-      setIsFetchingAgentBalance(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAgentBalance();
-  }, []);
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
@@ -334,25 +287,19 @@ export default function UsersPage() {
           <div className="grid grid-cols-2 gap-4">
             <Card className="relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">رصيدي في اشحن لي</CardTitle>
-                <button 
-                  onClick={fetchAgentBalance} 
-                  disabled={isFetchingAgentBalance}
-                  className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isFetchingAgentBalance ? 'animate-spin' : ''}`} />
-                </button>
+                <CardTitle className="text-sm font-medium">إجمالي أرصدة العملاء</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isFetchingAgentBalance ? (
+                {isLoading ? (
                   <Skeleton className="h-8 w-32" />
                 ) : (
                   <div className="text-2xl font-bold text-primary">
-                    {agentBalance !== null ? agentBalance.toLocaleString('en-US') : '...'}
+                    {totalUsersBalance.toLocaleString('en-US')}
                     <span className="text-base ml-1"> ريال</span>
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">رصيد الوكيل المتاح للعمليات.</p>
+                <p className="text-xs text-muted-foreground">مجموع أرصدة جميع المستخدمين في النظام.</p>
               </CardContent>
             </Card>
             <Card>
@@ -431,7 +378,7 @@ export default function UsersPage() {
       </div>
       <Toaster />
 
-      {/* Dialogs ... */}
+      {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
             <DialogHeader><DialogTitle>تعديل مستخدم</DialogTitle></DialogHeader>

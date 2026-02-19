@@ -3,11 +3,11 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة والحصرية للمزود "اشحن لي"
+// المعلمات المعتمدة والحصرية لمزود الخدمة
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// التحديث للحصول على الاتصال الصحيح من السيرفر المعتمد echehanly
+// الرابط الأساسي المعتمد للسيرفر
 const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
 /**
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد بطول 10 أرقام لضمان القبول
+    // توليد رقم عملية فريد
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
 
@@ -41,13 +41,15 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد الـ Endpoint بناءً على نوع الخدمة لشركة اشحن لي
+    // تحديد الـ Endpoint بناءً على نوع الخدمة
     if (service === 'post') {
         endpoint = 'post';
         apiRequestParams.action = action;
     } else if (service === 'yem4g') {
+        // تم تحديث ربط يمن فورجي وفق المتطلبات الجديدة
         endpoint = 'yem4g';
         apiRequestParams.action = action;
+        // يتم إرسال amount و type تلقائياً من الـ payload في حال كان الإجراء bill
     } else if (service === 'adenet') {
         endpoint = 'adenet';
         apiRequestParams.action = action;

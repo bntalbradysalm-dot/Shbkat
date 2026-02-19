@@ -27,7 +27,7 @@ const Header = () => {
 
   useEffect(() => {
     const now = new Date();
-    const month = now.getMonth() + 1; // 1-12
+    const month = now.getMonth() + 1; // 1-12 (يناير هو 1)
     const day = now.getDate();
     const hour = now.getHours();
 

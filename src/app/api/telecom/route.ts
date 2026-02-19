@@ -8,7 +8,8 @@ import CryptoJS from 'crypto-js';
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
+// تم التحديث بناءً على طلب المستخدم: الربط الأساسي
+const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
@@ -16,7 +17,7 @@ const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/';
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  // ملاحظة: الترتيب حساس جداً للمزود
+  // ملاحظة: الترتيب حساس جداً للمزود: md5(hashPassword + transid + Username + identifier)
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -27,10 +28,10 @@ export async function POST(request: Request) {
     const { action, service, ...payload } = body;
     
     // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
-    // وفي حال جلب الرصيد نستخدم اسم المستخدم كمعرف للهاش
+    // وفي حال جلب الرصيد نستخدم اسم المستخدم كمعرف للهاش لضمان المصادقة
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد (بطول 8-10 أرقام لضمان القبول)
+    // توليد رقم عملية فريد (بطول 8-10 أرقام)
     const transid = payload.transid || `${Date.now()}`.slice(-9);
     const token = generateToken(transid, identifier);
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
-    // إعداد مهلة انتظار طويلة (60 ثانية) نظراً لبطء ردود السيرفرات اليمنية أحياناً
+    // إعداد مهلة انتظار طويلة (60 ثانية)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -129,7 +130,6 @@ export async function POST(request: Request) {
                 });
             }
             
-            // إرجاع الرد النصي كما هو إذا لم يكن JSON
             return new NextResponse(JSON.stringify({ 
                 message: 'رد السيرفر: ' + responseText,
                 raw: responseText,
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه
+        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه (حتى في رسائل الخطأ)
         const searchString = JSON.stringify(data);
         const balanceRegex = /Your balance:?\s*([\d.]+)/i;
         const balMatch = searchString.match(balanceRegex);

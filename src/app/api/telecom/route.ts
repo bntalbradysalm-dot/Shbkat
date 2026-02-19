@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
 
-    // النطاق المعتمد (echehanlyw)
-    const apiBaseUrl = 'https://echehanlyw.yrbso.net/api/yr/'; 
+    // الرابط المعتمد لواجهة برمجة التطبيقات (API URL)
+    const apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
     let endpoint = '';
     
     let apiRequestParams: any = {
@@ -101,7 +101,8 @@ export async function POST(request: Request) {
         });
         
         clearTimeout(timeoutId);
-        const responseText = await response.text();
+        const responseRaw = await response.text();
+        const responseText = responseRaw.trim();
         
         let data;
         try {
@@ -112,6 +113,15 @@ export async function POST(request: Request) {
             if (balanceMatch) {
                 return NextResponse.json({ balance: balanceMatch[1], message: 'تم استخراج الرصيد من الرد النصي.' });
             }
+            
+            // في حال وجود رد نصي غير متوقع، نرجعه بدلاً من رسالة خطأ مبهمة
+            if (responseText && responseText.length < 500) {
+                return new NextResponse(JSON.stringify({ 
+                    message: 'استجابة غير متوقعة من المزود: ' + responseText,
+                    raw: responseText 
+                }), { status: 502 });
+            }
+            
             return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
         }
 

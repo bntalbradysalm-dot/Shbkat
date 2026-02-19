@@ -32,8 +32,8 @@ export async function POST(request: Request) {
     const transid = payload.transid || `${Date.now()}`.slice(-8);
     const token = generateToken(transid, identifier, isBalanceReq);
 
-    // الرابط الأساسي للمزود (تأكيد الاتصال بالرابط الجديد)
-    const apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
+    // الرابط الأساسي للمزود (تحديث النطاق إلى echehanlyw)
+    const apiBaseUrl = 'https://echehanlyw.yrbso.net/api/yr/'; 
     let endpoint = '';
     
     let apiRequestParams: any = {
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
         }
 
-        // البحث عن الرصيد في أي حقل نصي ضمن الرد
+        // البحث عن الرصيد في أي حقل نصي ضمن الرد (حتى في رسائل الخطأ)
         const searchString = JSON.stringify(data);
         const balanceMatch = searchString.match(/Your balance:?\s*([\d.]+)/i);
         if (balanceMatch && (data.balance === undefined || data.balance === null)) {

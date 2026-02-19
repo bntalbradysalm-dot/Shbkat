@@ -91,7 +91,8 @@ export async function POST(request: Request) {
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    // زيادة المهلة إلى 45 ثانية للتعامل مع بطء السيرفرات الخارجية
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
         const response = await fetch(fullUrl, {
@@ -117,7 +118,7 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
         }
 
-        // استخراج الرصيد من أي حقل نصي إذا لم يتوفر كحقل مستقل
+        // استخراج الرصيد من أي حقل نصي إذا لم يتوفر كحقل مستقل (ذكاء اصطناعي للرصيد)
         const searchString = JSON.stringify(data);
         const balanceMatch = searchString.match(/Your balance:?\s*([\d.]+)/i);
         if (balanceMatch && (data.balance === undefined || data.balance === null)) {
@@ -138,7 +139,7 @@ export async function POST(request: Request) {
 
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
-            // إرسال الرصيد حتى في حالة الخطأ إذا تم العثور عليه
+            // إرسال البيانات المستخرجة حتى في حالة الخطأ لضمان تحديث الرصيد إذا وجد
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
@@ -149,7 +150,10 @@ export async function POST(request: Request) {
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود.' }), { status: 504 });
+        if (fetchError.name === 'AbortError') {
+            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود. يرجى المحاولة مرة أخرى.' }), { status: 504 });
+        }
+        return new NextResponse(JSON.stringify({ message: 'تعذر الاتصال بالمزود حالياً.' }), { status: 504 });
     }
 
   } catch (error: any) {

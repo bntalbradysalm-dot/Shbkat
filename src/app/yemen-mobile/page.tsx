@@ -103,7 +103,7 @@ const PREPAID_CATEGORIES = [
     offers: [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: '30 يوم', offertype: 'A5533822' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: '24 ساعة', offertype: 'A4826' },
-      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', icon: Zap, sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
       { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: '7 أيام', offertype: 'A88336' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: '30 يوم', offertype: 'A3823' },
       { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: '30 يوم', offertype: 'A88335' },
@@ -354,25 +354,27 @@ export default function YemenMobilePage() {
     try {
       const transid = Date.now().toString().slice(-8);
       
-      const queryResponse = await fetch('/api/telecom', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'query', transid }),
-      });
+      // تنفيذ الاستعلامات الثلاثة بالتوازي لتسريع العملية وتجنب Timeout
+      const [queryResponse, solfaResponse, offerResponse] = await Promise.all([
+          fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phoneNumber, action: 'query', transid }),
+          }),
+          fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phoneNumber, action: 'solfa', transid }),
+          }),
+          fetch('/api/telecom', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mobile: phoneNumber, action: 'queryoffer', transid }),
+          })
+      ]);
+
       const queryResult = await queryResponse.json();
-
-      const solfaResponse = await fetch('/api/telecom', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'solfa', transid }),
-      });
       const solfaResult = await solfaResponse.json();
-
-      const offerResponse = await fetch('/api/telecom', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: phoneNumber, action: 'queryoffer', transid }),
-      });
       const offerResult = await offerResponse.json();
 
       if (queryResponse.ok) {

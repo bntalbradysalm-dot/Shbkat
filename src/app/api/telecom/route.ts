@@ -4,20 +4,21 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة من المزود "اشحن لي"
+// المعلمات المعتمدة والحصرية للمزود "اشحن لي"
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// تم التحديث بناءً على طلب المستخدم: استخدام النطاق echehanlyw
+// استخدام السيرفر والنطاق المعتمد حصراً
 const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
- * المعادلة: md5(md5(Password) + transid + Username + mobile)
+ * المعادلة المعتمدة: md5(md5(Password) + transid + Username + mobile)
+ * ملاحظة: هذا المسار مخصص لـ "اشحن لي" فقط ولا علاقة له بمنظومة الوادي.
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  // ملاحظة: الترتيب حساس جداً للمزود: md5(hashPassword + transid + Username + identifier)
+  // الترتيب حساس جداً: md5(hashPassword + transid + Username + identifier)
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -31,8 +32,8 @@ export async function POST(request: Request) {
     // وفي حال جلب الرصيد نستخدم اسم المستخدم كمعرف للهاش لضمان المصادقة
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد (بطول 8-10 أرقام)
-    const transid = payload.transid || `${Date.now()}`.slice(-9);
+    // توليد رقم عملية فريد بطول 10 أرقام لضمان القبول
+    const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
 
     let endpoint = '';
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد الـ Endpoint بناءً على نوع الخدمة والمزود
+    // تحديد الـ Endpoint بناءً على نوع الخدمة لشركة اشحن لي
     if (service === 'post') {
         endpoint = 'post';
         apiRequestParams.action = action;
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
-    // إعداد مهلة انتظار طويلة (60 ثانية)
+    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 

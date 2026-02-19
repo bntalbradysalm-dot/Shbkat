@@ -9,8 +9,8 @@ const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
 
 /**
- * وظيفة إنشاء الرمز المميز (Token)
- * الترتيب المطلوب: md5(md5(Password) + transid + Username + mobile)
+ * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
+ * المعادلة: md5(md5(Password) + transid + Username + mobile)
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
@@ -24,10 +24,10 @@ export async function POST(request: Request) {
     const { action, service, ...payload } = body;
     
     // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
-    // وفي حال طلب الرصيد نستخدم اسم المستخدم (USERNAME) كمعرف للهاش
+    // وفي حال طلب الرصيد نستخدم اسم المستخدم (USERNAME) كمعرف للهاش لضمان صحة التشفير
     const identifier = payload.mobile || payload.playerid || USERNAME;
 
-    // توليد رقم عملية فريد بطول 10 أرقام
+    // توليد رقم عملية فريد بطول 10 أرقام كما هو مطلوب
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
 
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // محاولة استخراج الرصيد إذا كان الرد نصياً وليس JSON
+            // محاولة استخراج الرصيد إذا كان الرد نصياً يحتوي على "Your balance"
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ message: 'فشل في تحليل بيانات المزود.' }), { status: 502 });
         }
 
-        // البحث عن الرصيد في أي حقل نصي ضمن الرد (حتى في رسائل الخطأ) لتحديث رصيد الوكيل
+        // البحث عن الرصيد في أي حقل نصي لتحديث واجهة الوكيل
         const searchString = JSON.stringify(data);
         const balanceRegex = /Your balance:?\s*([\d.]+)/i;
         const balMatch = searchString.match(balanceRegex);
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
-                status: 200, // نستخدم 200 لضمان وصول الرسالة للواجهة الأمامية ومعالجتها كـ Error
+                status: 200,
                 headers: { 'Content-Type': 'application/json' },
             });
         }

@@ -1,10 +1,11 @@
+
 'use server';
 
 import { NextResponse } from 'next/server';
 
 const API_URL = 'https://api.alwaadi.net/jsonrpc';
 const API_KEY = '2e679271d1f9426f10e1f00100afc2016a33cd54';
-const USER_ID = 51; // uid المستخدم المصرح له
+const USER_ID = 51; // uid المستخدم المصرح له من التوثيق
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     let methodParams: any = {};
 
     if (action === 'search') {
-      // البحث والاستعلام عن بيانات الكرت (تاريخ الانتهاء والمشترك) باستخدام onchange
+      // استخدام onchange لجلب بيانات الكرت (تاريخ الانتهاء والمشترك) كما في التوثيق
       methodParams = {
         model: 'renewal.proces',
         method: 'onchange',
@@ -26,13 +27,13 @@ export async function POST(request: Request) {
         }
       };
     } else if (action === 'renew') {
-      // تنفيذ عملية التجديد (إنشاء سجل جديد)
+      // تنفيذ عملية التجديد (إنشاء سجل جديد) وفقاً للمثال البرمجي
       methodParams = {
         model: 'renewal.proces',
         method: 'create',
         args: [{
           "num_card": payload.num_card,
-          "renewal_categories": payload.categoryId,
+          "renewal_categories": parseInt(payload.categoryId),
           "payment_type": payload.payment_type || "نقد"
         }],
         kwargs: {
@@ -43,6 +44,13 @@ export async function POST(request: Request) {
           }
         }
       };
+    } else if (action === 'get_categories') {
+        methodParams = {
+            model: 'renewal.proces',
+            method: 'get_categories',
+            args: [],
+            kwargs: { context: { lang: "ar_001" } }
+        };
     }
 
     const response = await fetch(API_URL, {

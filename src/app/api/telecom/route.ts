@@ -32,7 +32,8 @@ export async function POST(request: Request) {
     const transid = payload.transid || `${Date.now()}`.slice(-8);
     const token = generateToken(transid, identifier, isBalanceReq);
 
-    let apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
+    // الرابط الأساسي للمزود (تأكيد الاتصال بالرابط الجديد)
+    const apiBaseUrl = 'https://echehanly.yrbso.net/api/yr/'; 
     let endpoint = '';
     
     let apiRequestParams: any = {
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     const fullUrl = `${apiBaseUrl}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    // زيادة المهلة إلى 45 ثانية للتعامل مع بطء السيرفرات الخارجية
+    // مهلة انتظار كافية للأنظمة الخارجية
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
@@ -109,23 +110,21 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // المحاولة الأخيرة: البحث عن الرصيد في الرد النصي الخام إذا فشل الـ JSON
+            // استخراج الرصيد من الرد النصي في حال فشل الـ JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ balance: balanceMatch[1], message: 'تم استخراج الرصيد من الرد النصي.' });
             }
-            console.error('API Raw Response:', responseText);
             return new NextResponse(JSON.stringify({ message: 'رد غير صالح من المزود.' }), { status: 502 });
         }
 
-        // استخراج الرصيد من أي حقل نصي إذا لم يتوفر كحقل مستقل (ذكاء اصطناعي للرصيد)
+        // البحث عن الرصيد في أي حقل نصي ضمن الرد
         const searchString = JSON.stringify(data);
         const balanceMatch = searchString.match(/Your balance:?\s*([\d.]+)/i);
         if (balanceMatch && (data.balance === undefined || data.balance === null)) {
             data.balance = balanceMatch[1];
         }
         
-        // التحقق من الرصيد بشكل خاص
         if (isBalanceReq) {
             if (data.balance !== undefined && data.balance !== null) {
                 return NextResponse.json(data);
@@ -139,7 +138,6 @@ export async function POST(request: Request) {
 
         if (!response.ok || (!isSuccess && !isPending)) {
             let errorMessage = data.resultDesc || data.message || 'حدث خطأ في النظام الخارجي.';
-            // إرسال البيانات المستخرجة حتى في حالة الخطأ لضمان تحديث الرصيد إذا وجد
             return new NextResponse(JSON.stringify({ message: errorMessage, ...data }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },

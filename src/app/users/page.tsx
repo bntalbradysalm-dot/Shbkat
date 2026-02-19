@@ -71,7 +71,7 @@ type User = {
 export default function UsersPage() {
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'network-owner'>('all');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'network-owner' | 'with-balance'>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -274,9 +274,15 @@ export default function UsersPage() {
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.phoneNumber?.includes(searchTerm));
-    if (accountTypeFilter === 'all') return searchMatch;
-    if (accountTypeFilter === 'network-owner') return searchMatch && user.accountType === 'network-owner';
-    return searchMatch && user.accountType !== 'network-owner';
+    
+    if (!searchMatch) return false;
+
+    if (accountTypeFilter === 'all') return true;
+    if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
+    if (accountTypeFilter === 'user') return user.accountType === 'user' || !user.accountType;
+    if (accountTypeFilter === 'with-balance') return (user.balance ?? 0) > 0;
+    
+    return true;
   });
 
   return (
@@ -331,6 +337,7 @@ export default function UsersPage() {
               <SelectItem value="all">الكل</SelectItem>
               <SelectItem value="user">مستخدمون فقط</SelectItem>
               <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
+              <SelectItem value="with-balance">عملاء لديهم رصيد</SelectItem>
             </SelectContent>
           </Select>
 

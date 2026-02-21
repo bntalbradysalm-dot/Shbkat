@@ -29,7 +29,8 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isAdmin(); 
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // السماح بالتحديث لجميع المسجلين لتمكين عمليات خصم وإضافة الرصيد في الشراء والتحويل
+      allow update: if isSignedIn(); 
       allow delete: if isAdmin();
 
       match /transactions/{transactionId} {

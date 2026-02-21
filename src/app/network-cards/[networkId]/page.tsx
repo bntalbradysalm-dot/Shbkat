@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
@@ -6,7 +7,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit, getDoc } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2 } from 'lucide-react';
 import {
@@ -90,7 +91,7 @@ function NetworkPurchasePageComponent() {
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const userDocRef = useMemo(
+  const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
@@ -113,6 +114,7 @@ function NetworkPurchasePageComponent() {
       return;
     }
   
+    // السماح بالشراء إذا لم يكن المستخدم هو صاحب الشبكة
     if (user.uid === networkData.ownerId) {
       toast({
         variant: "destructive",

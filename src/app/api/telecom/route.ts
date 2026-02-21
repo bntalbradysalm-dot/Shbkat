@@ -3,12 +3,12 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة والحصرية لمزود الخدمة
+// المعلمات المعتمدة والحصرية لمزود الخدمة "اشحن لي"
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// الرابط الأساسي المعتمد للسيرفر - تم التحديث بناءً على طلب المستخدم الأخير
-const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
+// الرابط الأساسي المعتمد - تم التحديث للنطاق الذي "كان شغال" لضمان الوصول
+const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
@@ -41,15 +41,13 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد الـ Endpoint بناءً على نوع الخدمة
-    if (service === 'post') {
-        endpoint = 'post';
-        apiRequestParams.action = action;
-    } else if (service === 'yem4g') {
-        // تم تحديث ربط يمن فورجي وفق المتطلبات الجديدة
+    // تحديد الـ Endpoint بناءً على نوع الخدمة - يمن فورجي لها مسار خاص
+    if (service === 'yem4g') {
         endpoint = 'yem4g';
         apiRequestParams.action = action;
-        // يتم إرسال amount و type تلقائياً من الـ payload في حال كان الإجراء bill
+    } else if (service === 'post') {
+        endpoint = 'post';
+        apiRequestParams.action = action;
     } else if (service === 'adenet') {
         endpoint = 'adenet';
         apiRequestParams.action = action;
@@ -92,7 +90,7 @@ export async function POST(request: Request) {
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
-    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد
+    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد من السيرفر الجديد
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 

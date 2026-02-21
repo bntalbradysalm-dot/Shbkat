@@ -277,10 +277,10 @@ export default function UsersPage() {
     
     if (!searchMatch) return false;
 
-    // منطق الفلترة بناءً على نوع الحساب أو الرصيد
+    // منطق الفلترة بناءً على نوع الحساب أو الرصيد (الخيار الثالث المضاف)
     if (accountTypeFilter === 'all') return true;
     if (accountTypeFilter === 'user') return user.accountType === 'user' || !user.accountType;
-    if (accountTypeFilter === 'with-balance') return (user.balance ?? 0) > 0; // الخيار الثالث للعملاء الذين معهم رصيد
+    if (accountTypeFilter === 'with-balance') return (user.balance ?? 0) > 0;
     if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
     
     return true;

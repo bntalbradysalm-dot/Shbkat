@@ -3,16 +3,16 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة والحصرية لمزود الخدمة "اشحن لي"
+// المعلمات المعتمدة والحصرية لمزود الخدمة "اشحن لي" (Echehanly)
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// الرابط الأساسي المعتمد - تم التحديث للنطاق الذي "كان شغال" لضمان الوصول
-const API_BASE_URL = 'https://echehanlyw.yrbso.net/api/yr/'; 
+// الرابط الأساسي المعتمد وفقاً للتحديث الأخير
+const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
- * المعادلة المعتمدة: md5(md5(Password) + transid + Username + mobile)
+ * المعادلة المعتمدة: md5(md5(Password) + transid + Username + identifier)
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
-    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد من السيرفر الجديد
+    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 

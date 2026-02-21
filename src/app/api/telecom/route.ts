@@ -3,20 +3,18 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة والحصرية لمزود الخدمة "اشحن لي" (Echehanly)
+// المعلمات المعتمدة لـ "اشحن لي" (Echehanly)
 const USERID = '23207';
 const USERNAME = '770326828';
 const PASSWORD = '770326828moh';
-// الرابط الأساسي المعتمد وفقاً للتحديث الأخير
 const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
 /**
  * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
- * المعادلة المعتمدة: md5(md5(Password) + transid + Username + identifier)
+ * المعادلة: md5(md5(Password) + transid + Username + identifier)
  */
 const generateToken = (transid: string, identifier: string) => {
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
-  // الترتيب حساس جداً: md5(hashPassword + transid + Username + identifier)
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -26,10 +24,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, service, ...payload } = body;
     
-    // المعرف (identifier) هو رقم الهاتف (mobile) أو رقم اللاعب (playerid)
+    // المعرف هو رقم الهاتف أو رقم الحساب
     const identifier = payload.mobile || payload.playerid || USERNAME;
-
-    // توليد رقم عملية فريد
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
 
@@ -41,7 +37,7 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // تحديد الـ Endpoint بناءً على نوع الخدمة - يمن فورجي لها مسار خاص
+    // توجيه الطلب بناءً على نوع الخدمة
     if (service === 'yem4g') {
         endpoint = 'yem4g';
         apiRequestParams.action = action;
@@ -69,10 +65,6 @@ export async function POST(request: Request) {
             case 'billover': 
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                if (apiRequestParams.offertype) {
-                    apiRequestParams.offerkey = apiRequestParams.offertype;
-                    delete apiRequestParams.offertype;
-                }
                 break;
             case 'status':
             case 'balance':
@@ -86,11 +78,9 @@ export async function POST(request: Request) {
     }
 
     delete apiRequestParams.service;
-
     const params = new URLSearchParams(apiRequestParams);
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
-    // إعداد مهلة انتظار طويلة (60 ثانية) لضمان استلام الرد
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -98,65 +88,37 @@ export async function POST(request: Request) {
         const response = await fetch(fullUrl, {
             method: 'GET',
             signal: controller.signal,
-            headers: { 
-                'Accept': 'application/json, text/plain, */*',
-                'Cache-Control': 'no-cache'
-            },
+            headers: { 'Accept': 'application/json, text/plain, */*' },
             cache: 'no-store'
         });
         
         clearTimeout(timeoutId);
-        const responseRaw = await response.text();
-        const responseText = responseRaw.trim();
+        const responseText = (await response.text()).trim();
         
-        if (!responseText) {
-            throw new Error('السيرفر استجاب برد فارغ.');
-        }
+        if (!responseText) throw new Error('رد فارغ من السيرفر.');
 
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // محاولة استخراج الرصيد إذا كان الرد نصياً يحتوي على "Your balance"
+            // محاولة استخراج الرصيد من الرد النصي إذا لم يكن JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ 
                     balance: balanceMatch[1], 
                     resultCode: "0",
-                    resultDesc: responseText,
-                    message: 'تم استخراج البيانات من الرد النصي.' 
+                    resultDesc: responseText
                 });
             }
-            
-            return new NextResponse(JSON.stringify({ 
-                message: 'رد السيرفر: ' + responseText,
-                raw: responseText,
-                resultCode: "-1" 
-            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            return new NextResponse(JSON.stringify({ message: responseText, resultCode: "-1" }), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
-
-        // تحديث الرصيد تلقائياً من أي نص رد يحتوي عليه
-        const searchString = JSON.stringify(data);
-        const balanceRegex = /Your balance:?\s*([\d.]+)/i;
-        const balMatch = searchString.match(balanceRegex);
-        if (balMatch && (data.balance === undefined || data.balance === null)) {
-            data.balance = balMatch[1];
-        }
-        
         return NextResponse.json(data);
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-            return new NextResponse(JSON.stringify({ message: 'انتهت مهلة الاتصال بالمزود (60 ثانية). السيرفر لا يستجيب حالياً.' }), { status: 504 });
-        }
-        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول إلى سيرفر المزود: ' + fetchError.message }), { status: 504 });
+        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول للسيرفر: ' + fetchError.message }), { status: 504 });
     }
-
   } catch (error: any) {
-    return new NextResponse(
-      JSON.stringify({ message: `خطأ داخلي في الطلب: ${error.message}` }),
-      { status: 500 }
-    );
+    return new NextResponse(JSON.stringify({ message: `خطأ: ${error.message}` }), { status: 500 });
   }
 }

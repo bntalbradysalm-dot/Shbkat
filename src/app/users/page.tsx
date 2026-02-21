@@ -101,72 +101,36 @@ export default function UsersPage() {
     if (!firestore) return;
     const userDocRef = doc(firestore, 'users', userId);
     deleteDocumentNonBlocking(userDocRef);
-    toast({
-      title: "نجاح",
-      description: "تم حذف المستخدم بنجاح.",
-    });
+    toast({ title: "نجاح", description: "تم حذف المستخدم بنجاح." });
   };
 
   const handleTopUp = async () => {
-    if (!selectedUser || !topUpAmount || !firestore) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال مبلغ صالح.",
-      });
-      return;
-    }
+    if (!selectedUser || !topUpAmount || !firestore) return;
     const amount = parseFloat(topUpAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال مبلغ صالح.",
-      });
-      return;
-    }
+    if (isNaN(amount) || amount <= 0) return;
   
     const userDocRef = doc(firestore, 'users', selectedUser.id);
     const userNotificationsRef = collection(firestore, 'users', selectedUser.id, 'notifications');
   
     try {
-      await updateDoc(userDocRef, {
-        balance: increment(amount)
-      });
-      
+      await updateDoc(userDocRef, { balance: increment(amount) });
       await addDoc(userNotificationsRef, {
         title: 'تمت تغذية حسابك',
-        body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك من قبل الإدارة.`,
+        body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك.`,
         timestamp: new Date().toISOString()
       });
-
-      toast({
-        title: "نجاح",
-        description: `تمت إضافة ${amount.toLocaleString('en-US')} ريال إلى رصيد ${selectedUser.displayName}.`,
-      });
+      toast({ title: "نجاح", description: `تمت إضافة الرصيد بنجاح.` });
       setIsTopUpDialogOpen(false);
       setTopUpAmount('');
-      setSelectedUser(null);
     } catch (e) {
-      console.error("Error updating balance: ", e);
-      toast({
-        variant: "destructive",
-        title: "خطأ في التغذية",
-        description: "لم يتم تحديث الرصيد. الرجاء المحاولة مرة أخرى.",
-      });
+      toast({ variant: "destructive", title: "خطأ في التغذية" });
     }
   };
   
   const handleManualDeposit = async () => {
-    if (!selectedUser || !topUpAmount || !firestore) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صالح.' });
-        return;
-    }
+    if (!selectedUser || !topUpAmount || !firestore) return;
     const amount = parseFloat(topUpAmount);
-    if (isNaN(amount) || amount <= 0) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إدخال مبلغ صالح.' });
-        return;
-    }
+    if (isNaN(amount) || amount <= 0) return;
 
     const userDocRef = doc(firestore, 'users', selectedUser.id);
     const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
@@ -174,8 +138,7 @@ export default function UsersPage() {
     try {
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(amount) });
-        const transactionDoc = doc(userTransactionsRef);
-        batch.set(transactionDoc, {
+        batch.set(doc(userTransactionsRef), {
             userId: selectedUser.id,
             transactionDate: new Date().toISOString(),
             amount: amount,
@@ -186,28 +149,14 @@ export default function UsersPage() {
 
         const newBalance = (selectedUser.balance ?? 0) + amount;
         const depositDate = format(new Date(), 'd/M/yyyy h:mm a', { locale: ar });
+        const message = `📩 *عملية إيداع*\nتم إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال في حسابك بتاريخ (${depositDate})\n*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال*`;
+        window.open(`https://api.whatsapp.com/send?phone=967${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`, '_blank');
 
-        const message = `📩 *عملية إيداع من تطبيق شبكات*
-        
-تم بنجاح إيداع مبلغ (${amount.toLocaleString('en-US')}) ريال يمني في حسابك (${selectedUser.phoneNumber}) بتاريخ (${depositDate})
-يُرجى التحقق من الرصيد عبر تطبيق شبكات للتأكد من تفاصيل العملية 🔒
-
-*رصيدك: (${newBalance.toLocaleString('en-US')}) ريال يمني*`;
-
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=967${selectedUser.phoneNumber}&text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-
-        toast({
-            title: 'نجاح',
-            description: `تم إيداع مبلغ ${amount.toLocaleString('en-US')} ريال بنجاح.`,
-        });
-
+        toast({ title: 'نجاح', description: `تم الإيداع بنجاح.` });
         setIsManualDepositOpen(false);
         setTopUpAmount('');
-        setSelectedUser(null);
     } catch (e) {
-        console.error('Error during manual deposit:', e);
-        toast({ variant: 'destructive', title: 'خطأ', description: 'فشل تنفيذ عملية الإيداع.' });
+        toast({ variant: 'destructive', title: 'خطأ' });
     }
   };
 
@@ -220,68 +169,46 @@ export default function UsersPage() {
   
   const handleSaveChanges = async () => {
     if (!editingUser || !firestore) return;
-    const userDocRef = doc(firestore, 'users', editingUser.id);
     try {
-      await updateDoc(userDocRef, {
-        displayName: editingName,
-        phoneNumber: editingPhoneNumber,
-      });
-      toast({ title: "نجاح", description: "تم تحديث معلومات المستخدم بنجاح." });
+      await updateDoc(doc(firestore, 'users', editingUser.id), { displayName: editingName, phoneNumber: editingPhoneNumber });
+      toast({ title: "نجاح", description: "تم تحديث المعلومات." });
       setIsEditDialogOpen(false);
-      setEditingUser(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "خطأ", description: "لم يتم التحديث." });
+      toast({ variant: "destructive", title: "خطأ" });
     }
   };
 
   const handleWithdraw = async () => {
     if (!selectedUser || !withdrawAmount || !firestore) return;
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return;
-    if ((selectedUser.balance ?? 0) < amount) {
-        toast({ variant: "destructive", title: "رصيد غير كافٍ" });
-        return;
-    }
-  
-    const userDocRef = doc(firestore, 'users', selectedUser.id);
-    const userTransactionsRef = collection(firestore, 'users', selectedUser.id, 'transactions');
+    if (isNaN(amount) || amount <= 0 || (selectedUser.balance ?? 0) < amount) return;
   
     try {
       const batch = writeBatch(firestore);
-      batch.update(userDocRef, { balance: increment(-amount) });
-      batch.set(doc(userTransactionsRef), {
+      batch.update(doc(firestore, 'users', selectedUser.id), { balance: increment(-amount) });
+      batch.set(doc(collection(firestore, 'users', selectedUser.id, 'transactions')), {
         userId: selectedUser.id,
         transactionDate: new Date().toISOString(),
         amount: amount,
         transactionType: 'سحب نقدي',
-        notes: 'سحب نقدي من قبل الإدارة',
+        notes: 'سحب نقدي من الإدارة',
       });
       await batch.commit();
-      toast({ title: "نجاح", description: `تم سحب ${amount.toLocaleString('en-US')} ريال.` });
+      toast({ title: "نجاح", description: `تم السحب بنجاح.` });
       setIsWithdrawDialogOpen(false);
       setWithdrawAmount('');
-      setSelectedUser(null);
     } catch (e) {
       toast({ variant: "destructive", title: "خطأ" });
     }
   };
 
-  const openWhatsAppWithMessage = (phoneNumber: string) => {
-    const message = encodeURIComponent('السلام عليكم');
-    window.open(`https://api.whatsapp.com/send?phone=967${phoneNumber}&text=${message}`, '_blank');
-  };
-
   const filteredUsers = users?.filter(user => {
-    const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phoneNumber?.includes(searchTerm));
-    
+    const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
-
     if (accountTypeFilter === 'all') return true;
     if (accountTypeFilter === 'user') return user.accountType === 'user' || !user.accountType;
     if (accountTypeFilter === 'with-balance') return (user.balance ?? 0) > 0;
     if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
-    
     return true;
   });
 
@@ -293,72 +220,52 @@ export default function UsersPage() {
           <div className="grid grid-cols-2 gap-4">
             <Card className="relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">إجمالي أرصدة العملاء</CardTitle>
+                <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-32" />
-                ) : (
-                  <div className="text-2xl font-bold text-primary">
-                    {totalUsersBalance.toLocaleString('en-US')}
-                    <span className="text-base ml-1"> ريال</span>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">مجموع أرصدة جميع المستخدمين في النظام.</p>
+                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+                <CardTitle className="text-sm font-medium">المستخدمين</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
-                <p className="text-xs text-muted-foreground">إجمالي الحسابات.</p>
               </CardContent>
             </Card>
           </div>
           
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                  type="text"
-                  placeholder="البحث بالاسم أو رقم الهاتف..."
-                  className="w-full pr-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <Input type="text" placeholder="البحث..." className="w-full pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           
           <Select value={accountTypeFilter} onValueChange={(value) => setAccountTypeFilter(value as any)}>
-            <SelectTrigger><SelectValue placeholder="فلترة حسب نوع الحساب" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="الفلترة" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">الكل</SelectItem>
-              <SelectItem value="user">مستخدمون فقط</SelectItem>
+              <SelectItem value="user">مستخدمون</SelectItem>
               <SelectItem value="with-balance">عملاء لديهم رصيد</SelectItem>
-              <SelectItem value="network-owner">ملاك الشبكات فقط</SelectItem>
+              <SelectItem value="network-owner">ملاك الشبكات</SelectItem>
             </SelectContent>
           </Select>
 
-          <div className="space-y-3">
+          <div className="space-y-3 pb-20">
             {isLoading ? <Skeleton className="h-24 w-full" /> : filteredUsers?.map((user) => (
-              <Card key={user.id} className="overflow-hidden">
+              <Card key={user.id}>
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
-                          <div className="p-1.5 rounded-full bg-primary/10">
-                              <UserIcon className="h-5 w-5 text-primary" />
-                          </div>
+                          <div className="p-1.5 rounded-full bg-primary/10"><UserIcon className="h-5 w-5 text-primary" /></div>
                           <div className="text-right">
                               <div className='flex items-center gap-2'>
                                 <p className="font-bold text-sm">{user.displayName}</p>
                                 {user.accountType === 'network-owner' && <Badge variant="secondary" className="h-5 text-[9px]"><Crown className="h-3 w-3 ml-1" />مالك</Badge>}
                               </div>
-                              <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs mt-1">
-                                  <span>{user.phoneNumber}</span>
-                                  <button onClick={() => openWhatsAppWithMessage(user.phoneNumber!)} className="text-green-600 font-bold hover:underline">واتساب</button>
-                              </div>
+                              <p className="text-muted-foreground text-xs">{user.phoneNumber}</p>
                           </div>
                       </div>
                       <div className="text-primary font-bold text-sm">{(user.balance ?? 0).toLocaleString('en-US')} ريال</div>
@@ -387,35 +294,28 @@ export default function UsersPage() {
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>تعديل مستخدم</DialogTitle></DialogHeader>
-            <div className="space-y-4 py-4">
-                <Input value={editingName} onChange={e => setEditingName(e.target.value)} placeholder="الاسم الكامل" />
-                <Input value={editingPhoneNumber} onChange={e => setEditingPhoneNumber(e.target.value)} placeholder="رقم الهاتف" />
-            </div>
+        <DialogContent><DialogHeader><DialogTitle>تعديل</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-4"><Input value={editingName} onChange={e => setEditingName(e.target.value)} placeholder="الاسم" /><Input value={editingPhoneNumber} onChange={e => setEditingPhoneNumber(e.target.value)} placeholder="الهاتف" /></div>
             <DialogFooter><Button onClick={handleSaveChanges}>حفظ</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isTopUpDialogOpen} onOpenChange={setIsTopUpDialogOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>تغذية حساب</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>تغذية رصيد</DialogTitle></DialogHeader>
             <div className="py-4"><Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="المبلغ" /></div>
             <DialogFooter><Button onClick={handleTopUp}>تأكيد</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isManualDepositOpen} onOpenChange={setIsManualDepositOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>إيداع وتبليغ</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>إيداع وتبليغ</DialogTitle></DialogHeader>
             <div className="py-4"><Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="المبلغ" /></div>
-            <DialogFooter><Button onClick={handleManualDeposit}>إيداع وإرسال واتساب</Button></DialogFooter>
+            <DialogFooter><Button onClick={handleManualDeposit}>تأكيد وإرسال واتساب</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>سحب نقدي</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>سحب نقدي</DialogTitle></DialogHeader>
             <div className="py-4"><Input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="المبلغ" /></div>
             <DialogFooter><Button onClick={handleWithdraw}>تأكيد السحب</Button></DialogFooter>
         </DialogContent>

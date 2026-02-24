@@ -178,7 +178,7 @@ export default function AlwadiPage() {
             </div>
             <CardContent className="p-8 space-y-6">
                 <div>
-                    <h2 className="text-2xl font-black text-green-600">تم إرسال طلبك بنجاح</h2>
+                    <h2 className="text-2xl font-black text-green-600">تم تجديد كرتك بنجاح</h2>
                     <p className="text-sm text-muted-foreground mt-1">سيتم تفعيل كرتك في أقرب وقت</p>
                 </div>
 

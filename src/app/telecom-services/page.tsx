@@ -23,6 +23,12 @@ const telecomServices = [
     description: 'سداد فواتير وباقات شركة YOU',
   },
   {
+    name: 'واي (Y)',
+    logo: 'https://i.postimg.cc/SN1vL3BC/images-(1).jpg',
+    href: '/why-services',
+    description: 'سداد فواتير وباقات شركة واي',
+  },
+  {
     name: 'عدن نت',
     logo: 'https://i.postimg.cc/FFV6dDqd/FB-IMG-1770843160346.jpg',
     href: '/aden-net',
@@ -57,7 +63,7 @@ export default function TelecomServicesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="relative h-14 w-14 overflow-hidden rounded-xl">
+                      <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-muted">
                         <Image
                           src={service.logo}
                           alt={`${service.name} logo`}

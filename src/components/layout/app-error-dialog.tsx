@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { errorEmitter } from '@/firebase/error-emitter';
 
 /**
- * A global error dialog that follows the specific UI requested by the user.
- * It listens for 'custom-error' events from the global errorEmitter.
+ * منبثق الأخطاء العالمي - تم تصغيره وتحديثه ليتوافق مع طلب المستخدم.
+ * يستمع للأحداث 'custom-error' من باعث الأخطاء العالمي.
  */
 export function AppErrorDialog() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -27,21 +27,21 @@ export function AppErrorDialog() {
 
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-8 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden">
-        {/* The requested orange 'i' icon */}
-        <div className="w-20 h-20 rounded-full border-[6px] border-[#FEA500] flex items-center justify-center mb-6 shadow-sm">
-          <span className="text-5xl font-black text-[#FEA500] leading-none select-none">i</span>
+      <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden">
+        {/* أيقونة المعلومات البرتقالية المطلوبة */}
+        <div className="w-16 h-16 rounded-full border-[5px] border-[#FEA500] flex items-center justify-center mb-5 shadow-sm">
+          <span className="text-4xl font-black text-[#FEA500] leading-none select-none">i</span>
         </div>
         
-        {/* Error Message */}
-        <p className="text-base font-bold text-foreground mb-8 leading-relaxed">
+        {/* نص رسالة الخطأ */}
+        <p className="text-sm font-bold text-foreground mb-6 leading-relaxed">
           {errorMessage}
         </p>
         
-        {/* OK Button with App Mesh Gradient */}
+        {/* زر موافق بتدرج التطبيق الأزرق */}
         <Button 
           onClick={handleClose}
-          className="w-full h-14 rounded-full bg-mesh-gradient text-white font-black text-lg shadow-lg active:scale-95 transition-all border-none"
+          className="w-full h-12 rounded-full bg-mesh-gradient text-white font-black text-base shadow-lg active:scale-95 transition-all border-none"
         >
           موافق
         </Button>

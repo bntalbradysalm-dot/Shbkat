@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
 
 type Favorite = {
   id: string;
@@ -281,7 +282,7 @@ export default function FavoritesPage() {
 
   const handleSendSms = () => {
     if (!purchasedCard || !selectedNetwork || !smsRecipient) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم الزبون.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
     const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
@@ -361,19 +362,20 @@ export default function FavoritesPage() {
 
       {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white relative">
-                <button 
-                  onClick={() => setSelectedNetwork(null)}
-                  className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10 text-white" /></div>
-                  <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                  <div className="relative w-20 h-20 overflow-hidden rounded-[24px] shadow-lg border-2 border-white/20 bg-white p-1">
+                    <Image 
+                        src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                        alt="Logo" 
+                        fill 
+                        className="object-cover"
+                    />
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-2">{selectedNetwork.name}</h2>
                   <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
                 </div>
               </div>
@@ -412,6 +414,9 @@ export default function FavoritesPage() {
                     ))}
                   </div>
                 )}
+              </div>
+              <div className="p-4 bg-background border-t">
+                <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
               </div>
             </div>
           )}

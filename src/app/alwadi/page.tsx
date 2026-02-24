@@ -212,7 +212,7 @@ export default function AlwadiPage() {
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="منظومة الوادي" />
-      <div className="flex-1 overflow-y-auto pb-40">
+      <div className="flex-1 overflow-y-auto">
         
         {/* Modern Header Logo Section */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
@@ -238,8 +238,8 @@ export default function AlwadiPage() {
             </div>
         </div>
 
-        <div className="px-4 mt-6 space-y-10">
-            {/* 1. Input Form Card (NOW AT TOP) */}
+        <div className="px-4 mt-6 space-y-8 pb-10">
+            {/* 1. Input Form Card */}
             <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
                 <CardHeader className="pb-0 pt-6">
                     <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
@@ -277,7 +277,7 @@ export default function AlwadiPage() {
                 </CardContent>
             </Card>
 
-            {/* 2. Packages Section (NOW BELOW INPUT FORM) */}
+            {/* 2. Packages Section */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function AlwadiPage() {
                         {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 w-full rounded-[28px]" />)}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 gap-3 pb-4">
+                    <div className="grid grid-cols-2 gap-3">
                         {options?.map((option, index) => (
                             <button
                                 key={option.id}
@@ -337,18 +337,18 @@ export default function AlwadiPage() {
                     </div>
                 )}
             </div>
-        </div>
-      </div>
 
-      {/* Action Button (Fixed Position) */}
-      <div className="fixed bottom-8 left-0 right-0 px-6 z-50 pointer-events-none">
-          <Button 
-              className="w-full h-14 rounded-3xl font-black text-lg shadow-2xl shadow-primary/40 pointer-events-auto active:scale-95 transition-transform"
-              onClick={handleRenewClick}
-              disabled={!selectedOption || !subscriberName || !cardNumber}
-          >
-              تجديد الآن
-          </Button>
+            {/* 3. Action Button (Inside content flow) */}
+            <div className="pt-2">
+                <Button 
+                    className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
+                    onClick={handleRenewClick}
+                    disabled={!selectedOption || !subscriberName || !cardNumber}
+                >
+                    تجديد الآن
+                </Button>
+            </div>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}

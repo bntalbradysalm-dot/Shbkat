@@ -35,7 +35,9 @@ service cloud.firestore {
 
       match /transactions/{transactionId} {
         allow read: if isOwner(userId) || isAdmin();
-        allow write: if isOwner(userId) || isAdmin();
+        // السماح بإنشاء سجلات العمليات عند التحويل أو الشراء لتوثيقها في حساب الطرف الآخر
+        allow create: if isSignedIn();
+        allow update, delete: if isAdmin();
       }
       
       match /favorites/{favoriteId} {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -66,7 +67,8 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  const ALWADI_LOGO = "https://i.postimg.cc/ydgQ4RP0/mnzwmt-alwady.jpg";
+  // تحديث الشعار بناءً على طلب المستخدم (هنا فقط)
+  const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
   const userDocRef = useMemoFirebase(
@@ -217,7 +219,7 @@ export default function AlwadiPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
                 <div className="bg-white p-1 rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden">
-                    <div className="relative h-20 w-20 rounded-[28px] overflow-hidden">
+                    <div className="relative h-24 w-24 rounded-[28px] overflow-hidden">
                         <Image 
                             src={ALWADI_LOGO}
                             alt="Alwadi Logo" 
@@ -307,7 +309,7 @@ export default function AlwadiPage() {
                                     "p-1 rounded-xl mb-1 transition-colors overflow-hidden",
                                     selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
                                 )}>
-                                    <div className="relative h-10 w-10 rounded-lg overflow-hidden">
+                                    <div className="relative h-12 w-12 rounded-lg overflow-hidden">
                                         <Image 
                                             src={ALWADI_LOGO}
                                             alt="Category Logo" 

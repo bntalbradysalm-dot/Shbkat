@@ -7,37 +7,33 @@ import Image from 'next/image';
 
 /**
  * مكون المنبثق الترحيبي/الترويجي.
- * يظهر لمدة يومين فقط من تاريخ اليوم.
+ * يظهر فور فتح التطبيق لمدة يومين فقط.
  */
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // تحديد تاريخ الانتهاء: 27 فبراير 2025 (لضمان تغطية اليومين بالكامل)
+    // تحديد تاريخ الانتهاء: 27 فبراير 2025
     const expiryDate = new Date('2025-02-27T23:59:59').getTime();
     const now = new Date().getTime();
     
     // إذا انتهت المدة، لا تظهر المنبثق
     if (now > expiryDate) {
-        console.log("WelcomeModal: Expired");
         return;
     }
 
     // التحقق مما إذا كان المستخدم قد أغلق المنبثق مسبقاً
-    const isDismissed = localStorage.getItem('welcome_promo_dismissed_v2');
+    const isDismissed = localStorage.getItem('welcome_promo_immediate_v3');
     if (!isDismissed) {
-      // إظهار المنبثق بعد تأخير بسيط لضمان سلاسة الواجهة
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
-      return () => clearTimeout(timer);
+      // إظهار المنبثق فوراً بدون تأخير
+      setIsOpen(true);
     }
   }, []);
 
   const handleClose = () => {
     setIsOpen(false);
-    // حفظ حالة الإغلاق لعدم الظهور مرة أخرى في نفس المتصفح
-    localStorage.setItem('welcome_promo_dismissed_v2', 'true');
+    // حفظ حالة الإغلاق لعدم الظهور مرة أخرى
+    localStorage.setItem('welcome_promo_immediate_v3', 'true');
   };
 
   return (
@@ -52,7 +48,7 @@ export function WelcomeModal() {
               fill 
               className="object-cover"
               priority
-              unoptimized // ضروري لضمان عمل الرابط الخارجي بشكل صحيح
+              unoptimized
             />
           </div>
           

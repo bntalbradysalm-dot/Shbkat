@@ -12,7 +12,6 @@ import { Wifi, Banknote } from 'lucide-react';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,7 +88,6 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background pb-20">
       <Header />
-      <WelcomeModal />
       <div className="flex-1 space-y-4">
         <BalanceCard />
         {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}

@@ -11,9 +11,15 @@ import {
   ArrowLeftRight,
   Heart,
   Gamepad2,
+  Sparkles,
+  ChevronLeft,
 } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 type Service = {
   name: string;
@@ -26,11 +32,11 @@ const services: Service[] = [
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-  { name: 'شدات ببجي', icon: Gamepad2, href: '/games' }, // أصبح الآن في الموقع الخامس
+  { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { name: 'المشتريات', icon: ShoppingBag, href: '/store' }, // أصبح الآن في الموقع التاسع
+  { name: 'المشتريات', icon: ShoppingBag, href: '/store' },
 ];
 
 const ServiceItem = ({
@@ -60,6 +66,8 @@ const ServiceItem = ({
 };
 
 export function ServiceGrid() {
+  const [isOffersOpen, setIsOffersOpen] = useState(false);
+
   return (
     <div className="relative bg-background rounded-t-[40px] mt-6 pt-8 pb-4">
       {/* SVG Gradient Definition */}
@@ -81,6 +89,56 @@ export function ServiceGrid() {
           />
         ))}
       </div>
+
+      {/* Exclusive Offers Bar */}
+      <div className="px-6 mt-8 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000">
+        <Card 
+          className="overflow-hidden border-none bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer rounded-2xl border border-primary/10 shadow-sm active:scale-95"
+          onClick={() => setIsOffersOpen(true)}
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <div className="text-right">
+                <h3 className="text-sm font-black text-primary">عروض حصرية</h3>
+                <p className="text-[10px] text-muted-foreground font-bold">اطلع على أحدث العروض والخدمات المضافة</p>
+              </div>
+            </div>
+            <ChevronLeft className="h-5 w-5 text-primary/50" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Offers Modal */}
+      <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
+        <DialogContent className="max-w-[90vw] sm:max-w-[400px] p-0 overflow-hidden border-none bg-transparent shadow-none gap-0 outline-none [&>button]:hidden flex flex-col items-center z-[9999]">
+          <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
+            {/* حاوية الصورة الطولية */}
+            <div className="relative w-full aspect-[9/16] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white/20 bg-card">
+              <Image 
+                src="https://i.postimg.cc/SNtjK4ZZ/IMG-20260224-WA0012.jpg" 
+                alt="Exclusive Offer" 
+                fill 
+                className="object-cover"
+                priority
+                unoptimized
+              />
+            </div>
+            
+            {/* زر الإغلاق السفلي */}
+            <div className="w-full px-2">
+              <Button 
+                  onClick={() => setIsOffersOpen(false)}
+                  className="mt-6 w-full h-14 rounded-3xl bg-white text-primary hover:bg-white/90 font-black text-xl shadow-2xl border-b-4 border-primary/20 active:translate-y-1 transition-all"
+              >
+                  إغلاق العرض
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

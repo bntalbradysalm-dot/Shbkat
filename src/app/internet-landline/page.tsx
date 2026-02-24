@@ -80,10 +80,16 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
+        // Clear query result if phone number changes or is not complete
         if (phone.length !== 8) {
             setQueryResult(null);
         }
     }, [phone]);
+
+    // Clear query result when switching tabs
+    useEffect(() => {
+        setQueryResult(null);
+    }, [activeTab]);
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) return;
@@ -107,22 +113,22 @@ export default function LandlineRedesignPage() {
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
             const raw = result.balance || result.resultDesc || '';
-            let balance = activeTab === 'internet' ? '0.00 GB' : '0 ريال';
+            let balanceResult = activeTab === 'internet' ? '0.00 GB' : '0 ريال';
             let price = '0';
             let expiry = '...';
 
             if (activeTab === 'internet') {
                 const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
-                if (balMatch) balance = `${balMatch[2]} GB`;
-                else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+                if (balMatch) balanceResult = `${balMatch[2]} GB`;
+                else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balanceResult = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
             } else {
                 const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه|المبلغ):\s*([\d.]+)/i);
                 if (billMatch) {
-                    balance = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
+                    balanceResult = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
                 } else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) {
-                    balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+                    balanceResult = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
                 } else {
-                    balance = 'لا توجد متأخرات';
+                    balanceResult = 'لا توجد متأخرات';
                 }
             }
 
@@ -136,7 +142,7 @@ export default function LandlineRedesignPage() {
                 expiry = raw.match(/\d{4}\/\d{2}\/\d{2}/)![0];
             }
             
-            setQueryResult({ balance, packagePrice: price, expireDate: expiry, message: result.resultDesc });
+            setQueryResult({ balance: balanceResult, packagePrice: price, expireDate: expiry, message: result.resultDesc });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
@@ -341,38 +347,36 @@ export default function LandlineRedesignPage() {
                     )}
                 </div>
 
-                {phone.length === 8 && (
+                {queryResult && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className={cn(
-                                    "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white",
-                                    activeTab === 'internet' ? "grid grid-cols-3" : "flex flex-col items-center justify-center p-4"
-                                )}>
-                                    {activeTab === 'internet' ? (
-                                        <>
-                                            <div className="p-3 border-l border-white/10">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.balance}</p>
-                                            </div>
-                                            <div className="p-3 border-l border-white/10">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                            </div>
-                                            <div className="p-3">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="py-2">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
-                                            <p className="text-2xl font-black">{queryResult.balance}</p>
+                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className={cn(
+                                "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
+                                activeTab === 'internet' ? "grid grid-cols-3" : "w-full py-4"
+                            )}>
+                                {activeTab === 'internet' ? (
+                                    <>
+                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                            <p className="text-sm font-black">{queryResult.balance}</p>
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                            <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                        </div>
+                                        <div className="p-3 flex flex-col justify-center">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                            <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
+                                        <p className="text-xl font-black">{queryResult.balance}</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
 
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

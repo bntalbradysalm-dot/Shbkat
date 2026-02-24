@@ -66,7 +66,7 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // الشعار الرسمي للمنظومة
+  // الشعار الرسمي للمنظومة - تم تحديثه ليكون عريضاً
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
@@ -213,12 +213,12 @@ export default function AlwadiPage() {
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto pb-24">
         
-        {/* Modern Header Logo Section */}
+        {/* Modern Header Logo Section - تم توسيعه ليكون عريضاً */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
                 <div className="bg-white p-1 rounded-[24px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden">
-                    <div className="relative h-24 w-48 rounded-[20px] overflow-hidden">
+                    <div className="relative h-24 w-56 rounded-[20px] overflow-hidden">
                         <Image 
                             src={ALWADI_LOGO}
                             alt="Alwadi Logo" 
@@ -308,7 +308,8 @@ export default function AlwadiPage() {
                                     "p-1 rounded-xl mb-1 transition-colors overflow-hidden",
                                     selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
                                 )}>
-                                    <div className="relative h-12 w-24 rounded-lg overflow-hidden">
+                                    {/* تم توسيعه هنا أيضاً ليكون عريضاً */}
+                                    <div className="relative h-12 w-28 rounded-lg overflow-hidden">
                                         <Image 
                                             src={ALWADI_LOGO}
                                             alt="Category Logo" 

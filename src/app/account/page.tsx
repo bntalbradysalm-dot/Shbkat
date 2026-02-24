@@ -260,7 +260,7 @@ export default function AccountPage() {
               </div>
             </div>
             <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl overflow-hidden">
-                <AvatarImage src={userProfile?.photoURL} />
+                <AvatarImage src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" alt="Logo" />
                 <AvatarFallback className="bg-white">
                     <div className="relative w-full h-full">
                         <Image 
@@ -287,7 +287,7 @@ export default function AccountPage() {
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
-                <Sun className="h-5 w-5" />
+                <span className="h-5 w-5"><Sun className="h-5 w-5" /></span>
                 <span className="text-xs font-bold">فاتح</span>
               </button>
               <button
@@ -299,7 +299,7 @@ export default function AccountPage() {
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
-                <Moon className="h-5 w-5" />
+                <span className="h-5 w-5"><Moon className="h-5 w-5" /></span>
                 <span className="text-xs font-bold">داكن</span>
               </button>
             </div>

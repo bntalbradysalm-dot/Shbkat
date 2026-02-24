@@ -27,7 +27,7 @@ export function AppErrorDialog() {
 
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden">
+      <DialogContent className="max-w-[80vw] sm:max-w-[280px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden">
         {/* أيقونة المعلومات البرتقالية المطلوبة */}
         <div className="w-16 h-16 rounded-full border-[5px] border-[#FEA500] flex items-center justify-center mb-5 shadow-sm">
           <span className="text-4xl font-black text-[#FEA500] leading-none select-none">i</span>
@@ -38,12 +38,12 @@ export function AppErrorDialog() {
           {errorMessage}
         </p>
         
-        {/* زر موافق بتدرج التطبيق الأزرق */}
+        {/* زر إغلاق بتدرج التطبيق الأزرق */}
         <Button 
           onClick={handleClose}
           className="w-full h-12 rounded-full bg-mesh-gradient text-white font-black text-base shadow-lg active:scale-95 transition-all border-none"
         >
-          موافق
+          إغلاق
         </Button>
       </DialogContent>
     </Dialog>

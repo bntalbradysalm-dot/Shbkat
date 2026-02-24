@@ -13,9 +13,6 @@ import {
   Hash,
   Calendar,
   History,
-  Phone,
-  Loader2,
-  Users,
   Globe,
   ChevronLeft,
   Zap,
@@ -522,8 +519,8 @@ export default function LandlineRedesignPage() {
                                                             <Cpu className="w-5 h-5 text-white" />
                                                         </div>
                                                         <div className="flex flex-col items-start">
-                                                            <span className="text-sm font-black text-foreground">{category.title}</span>
-                                                            <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest">Premium Speed</span>
+                                                            <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest leading-tight">فئات</span>
+                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title.replace('فئات ', '')}</span>
                                                         </div>
                                                     </div>
                                                 </AccordionTrigger>

@@ -95,10 +95,10 @@ const getTransactionIcon = (type: string) => {
     if (type.includes('شراء كرت')) {
         return <Wifi className="h-6 w-6 text-primary" />;
     }
-    if (type.includes('سداد')) {
+    if (type.includes('سداد') || type.includes('باقة')) {
         return <Smartphone className="h-6 w-6 text-primary" />;
     }
-    if (type.includes('تجديد') || type.includes('باقة')) {
+    if (type.includes('تجديد')) {
         return <SatelliteDish className="h-6 w-6 text-primary" />;
     }
     if (type.includes('متجر') || type.includes('منتج')) {

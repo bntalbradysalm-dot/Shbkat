@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
 
 type Favorite = {
   id: string;
@@ -41,6 +42,7 @@ type CardCategory = {
     dataLimit?: string;
     validity?: string;
     expirationDate?: string;
+    capacity?: string; // Local network field
 };
 
 type CombinedNetwork = {
@@ -151,7 +153,14 @@ export default function FavoritesPage() {
       if (isLocal) {
         const catsRef = collection(firestore, `networks/${fav.targetId}/cardCategories`);
         const snapshot = await getDocs(catsRef);
-        const catsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory));
+        const catsData = snapshot.docs.map(d => {
+            const data = d.data();
+            return { 
+                id: d.id, 
+                ...data,
+                dataLimit: data.capacity // Map capacity to dataLimit
+            } as CardCategory;
+        });
         setCategories(catsData);
       } else {
         const response = await fetch(`/services/networks-api/${fav.targetId}/classes`);
@@ -207,10 +216,14 @@ export default function FavoritesPage() {
             const commission = categoryPrice * 0.10;
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            // 3. إضافة الرصيد للمالك
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
+            // 4. سجل عمليات
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
@@ -232,6 +245,7 @@ export default function FavoritesPage() {
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -257,6 +271,7 @@ export default function FavoritesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         }
         
         audioRef.current?.play().catch(() => {});
@@ -277,7 +292,7 @@ export default function FavoritesPage() {
 
   const handleSendSms = () => {
     if (!purchasedCard || !selectedNetwork || !smsRecipient) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم الزبون.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
     const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
@@ -301,9 +316,7 @@ export default function FavoritesPage() {
         <div className="flex flex-col items-center justify-center text-center h-64">
           <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
           <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            أضف شبكتك المفضلة هنا للوصول إليها بسرعة
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
         </div>
       );
     }
@@ -359,19 +372,15 @@ export default function FavoritesPage() {
 
       {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white relative">
-                <button 
-                  onClick={() => setSelectedNetwork(null)}
-                  className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10 text-white" /></div>
-                  <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                  <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
+                    <Wifi className="h-10 w-10 text-white" />
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-2">{selectedNetwork.name}</h2>
                   <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
                 </div>
               </div>
@@ -410,6 +419,9 @@ export default function FavoritesPage() {
                     ))}
                   </div>
                 )}
+              </div>
+              <div className="p-4 bg-background border-t">
+                <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
               </div>
             </div>
           )}

@@ -259,12 +259,9 @@ export default function AccountPage() {
                 </div>
               </div>
             </div>
-            <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl">
-                <AvatarImage src={userProfile?.photoURL} />
-                <AvatarFallback>
-                    <User className="h-8 w-8 text-white" />
-                </AvatarFallback>
-            </Avatar>
+            <div className="h-16 w-16 rounded-full border-2 border-white/30 bg-white flex items-center justify-center shrink-0 shadow-xl overflow-hidden">
+                <UserRound className="h-10 w-10 text-primary" />
+            </div>
           </CardContent>
         </Card>
         
@@ -280,7 +277,7 @@ export default function AccountPage() {
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
-                <Sun className="h-5 w-5" />
+                <span className="h-5 w-5"><Sun className="h-5 w-5" /></span>
                 <span className="text-xs font-bold">فاتح</span>
               </button>
               <button
@@ -292,7 +289,7 @@ export default function AccountPage() {
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
-                <Moon className="h-5 w-5" />
+                <span className="h-5 w-5"><Moon className="h-5 w-5" /></span>
                 <span className="text-xs font-bold">داكن</span>
               </button>
             </div>

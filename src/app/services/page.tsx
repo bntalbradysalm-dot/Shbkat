@@ -55,6 +55,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +90,7 @@ type CardCategory = {
     dataLimit?: string;
     validity?: string;
     expirationDate?: string;
+    capacity?: string; // Used by local networks
 };
 
 type Favorite = {
@@ -242,13 +244,19 @@ export default function ServicesPage() {
       if (network.isLocal) {
         const catsRef = collection(firestore, `networks/${network.id}/cardCategories`);
         const snapshot = await getDocs(catsRef);
-        const catsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory));
+        const catsData = snapshot.docs.map(d => {
+            const data = d.data();
+            return { 
+                id: d.id, 
+                ...data,
+                dataLimit: data.capacity // Map capacity to dataLimit for display
+            } as CardCategory;
+        });
         setCategories(catsData);
       } else {
         const response = await fetch(`/services/networks-api/${network.id}/classes`);
         if (!response.ok) throw new Error('فشل تحميل الفئات الخارجية');
         const data = await response.json();
-        // External API mapping
         setCategories(data.map((c: any) => ({
             id: c.id,
             name: c.name,
@@ -334,20 +342,29 @@ export default function ServicesPage() {
             const commission = categoryPrice * 0.10;
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            
+            // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
-            // Logs
+            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
+            
+            // 5. سجل عملية للمالك
             batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
                 userId: ownerId, transactionDate: now, amount: payoutAmount,
                 transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
             });
+            
+            // 6. سجل الكروت المباعة
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, categoryName: selectedCategory.name,
@@ -360,6 +377,7 @@ export default function ServicesPage() {
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         } else {
             // External Purchase Logic
             const response = await fetch(`/services/networks-api/order`, {
@@ -386,6 +404,7 @@ export default function ServicesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         }
         
         audioRef.current?.play().catch(() => {});
@@ -465,19 +484,15 @@ export default function ServicesPage() {
 
       {/* Network Details Dialog */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white relative">
-                <button 
-                  onClick={() => setSelectedNetwork(null)}
-                  className="absolute left-4 top-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="p-4 bg-white/20 rounded-2xl"><Wifi className="h-10 w-10 text-white" /></div>
-                  <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                  <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
+                    <Wifi className="h-10 w-10 text-white" />
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-2">{selectedNetwork.name}</h2>
                   <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
                 </div>
               </div>
@@ -517,6 +532,9 @@ export default function ServicesPage() {
                     ))}
                   </div>
                 )}
+              </div>
+              <div className="p-4 bg-background border-t">
+                <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
               </div>
             </div>
           )}

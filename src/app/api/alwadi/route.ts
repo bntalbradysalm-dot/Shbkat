@@ -1,0 +1,88 @@
+
+'use server';
+
+import { NextResponse } from 'next/server';
+
+const API_URL = 'https://api.alwaadi.net/jsonrpc';
+const API_KEY = '2e679271d1f9426f10e1f00100afc2016a33cd54';
+const USER_ID = 51; // uid المستخدم المصرح له من التوثيق
+
+export async function POST(request: Request) {
+  try {
+    const { action, payload } = await request.json();
+
+    let methodParams: any = {};
+
+    if (action === 'search') {
+      // استخدام onchange لجلب بيانات الكرت (تاريخ الانتهاء والمشترك) كما في التوثيق
+      methodParams = {
+        model: 'renewal.proces',
+        method: 'onchange',
+        args: [[], { "num_card": payload.number }, []],
+        kwargs: {
+          context: {
+            lang: "ar_001",
+            uid: USER_ID
+          }
+        }
+      };
+    } else if (action === 'renew') {
+      // تنفيذ عملية التجديد (إنشاء سجل جديد) وفقاً للمثال البرمجي
+      methodParams = {
+        model: 'renewal.proces',
+        method: 'create',
+        args: [{
+          "num_card": payload.num_card,
+          "renewal_categories": parseInt(payload.categoryId),
+          "payment_type": payload.payment_type || "نقد"
+        }],
+        kwargs: {
+          context: {
+            lang: "ar_001",
+            tz: "Asia/Riyadh",
+            uid: USER_ID
+          }
+        }
+      };
+    } else if (action === 'get_categories') {
+        methodParams = {
+            model: 'renewal.proces',
+            method: 'get_categories',
+            args: [],
+            kwargs: { context: { lang: "ar_001" } }
+        };
+    }
+
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'call',
+        params: methodParams,
+        id: Date.now()
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+        return new NextResponse(
+            JSON.stringify({ message: data.error.message || 'حدث خطأ في طلب المنظومة' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
+    return NextResponse.json(data.result);
+
+  } catch (error: any) {
+    console.error('Alwadi API Error:', error);
+    return new NextResponse(
+      JSON.stringify({ message: error.message || 'Internal Server Error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}

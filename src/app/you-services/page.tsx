@@ -47,6 +47,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,23 +94,23 @@ const YOU_CATEGORIES = [
     id: 'unified',
     title: 'باقات السعر الموحد',
     badge: 'YOU',
-    icon: ShieldCheck,
+    icon: Smartphone,
     offers: [
-      { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE', id: '1020843' },
       { offerId: 'unified_300', offerName: 'باقة السعر الموحد 300', price: 2904, data: '500MB', minutes: '300', sms: '300', validity: 'شهر', offertype: 'Sawa_300_PRE' },
-      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'Mix_5000_PRE' },
-      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_12Giga_4G_PRE' },
-      { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 15000, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
+      { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE' },
+      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_500O_PRE' },
+      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_126iga_4C_PRE' },
+      { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 12705, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
     ]
   }
 ];
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
-      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
+      <h4 className="text-sm font-black text-primary mb-2 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
@@ -247,6 +248,7 @@ export default function YouServicesPage() {
                 if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
                 
                 setPhone(selectedNumber.slice(0, 9));
+                handleSearch();
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -338,27 +340,42 @@ export default function YouServicesPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    action: 'bill', 
+                    action: 'billoffer', 
                     service: 'you', 
-                    num: selectedOffer.id || selectedOffer.price,
-                    offertype: selectedOffer.offertype, 
+                    num: selectedOffer.offertype, 
+                    amount: selectedOffer.price, 
                     type: lineType,
                     transid 
                 })
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
+            
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (!response.ok || (!isSuccess && !isPending)) {
+                throw new Error(result.message || 'فشل تفعيل الباقة من المصدر.');
+            }
 
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
             batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
-                userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-                transactionType: `تفعيل باقة YOU: ${selectedOffer.offerName}`, notes: `للرقم: ${phone}`, recipientPhoneNumber: phone,
+                userId: user.uid, 
+                transactionDate: new Date().toISOString(), 
+                amount: totalToDeduct,
+                transactionType: `تفعيل باقة YOU: ${selectedOffer.offerName}`, 
+                notes: `للرقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`, 
+                recipientPhoneNumber: phone,
                 transid: transid
             });
             await batch.commit();
             
-            setLastTxDetails({ type: `تفعيل ${selectedOffer.offerName}`, phone: phone, amount: totalToDeduct, transid: transid });
+            setLastTxDetails({
+                type: `تفعيل ${selectedOffer.offerName}`,
+                phone: phone,
+                amount: totalToDeduct,
+                transid: transid
+            });
             setShowSuccess(true);
             setSelectedOffer(null);
         } catch (e: any) {
@@ -367,6 +384,32 @@ export default function YouServicesPage() {
             setIsActivatingOffer(false);
         }
     };
+
+    if (isProcessing || isActivatingOffer || isSearching) {
+        return <ProcessingOverlay message={isSearching ? "جاري الاستعلام..." : "جاري تنفيذ طلبك..."} />;
+    }
+
+    if (showSuccess && lastTxDetails) {
+        return (
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
+                <audio autoPlay ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+                <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+                    <div className="bg-green-500 p-8 flex justify-center"><div className="bg-white/20 p-4 rounded-full animate-bounce"><CheckCircle className="h-16 w-16 text-white" /></div></div>
+                    <CardContent className="p-8 space-y-6">
+                        <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p></div>
+                        <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                            <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-primary">{lastTxDetails.transid}</span></div>
+                            <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
+                            <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
+                            <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span><span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button><Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button></div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -499,26 +542,6 @@ export default function YouServicesPage() {
 
             <Toaster />
 
-            {showSuccess && lastTxDetails && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
-                    <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                        <div className="bg-green-500 p-8 flex justify-center"><div className="bg-white/20 p-4 rounded-full animate-bounce"><CheckCircle className="h-16 w-16 text-white" /></div></div>
-                        <CardContent className="p-8 space-y-6">
-                            <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ الطلب بنجاح</p></div>
-                            <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-primary">{lastTxDetails.transid}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span></div>
-                                <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button><Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button></div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
-
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader><AlertDialogTitle className="text-center font-black">تأكيد سداد رصيد</AlertDialogTitle>
@@ -541,7 +564,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedFastOffer?.title}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedFastOffer?.price || 0).toLocaleString('en-US')}</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedFastOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel><AlertDialogAction onClick={() => selectedFastOffer && handleProcessPayment(selectedFastOffer.price, selectedFastOffer.title, selectedFastOffer.num)} className="w-full rounded-2xl h-12 font-bold">تفعيل الآن</AlertDialogAction></AlertDialogFooter>
@@ -555,7 +578,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedOffer?.price || 0).toLocaleString('en-US')}</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel><AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>تفعيل الآن</AlertDialogAction></AlertDialogFooter>

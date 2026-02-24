@@ -122,7 +122,7 @@ export default function LandlineRedesignPage() {
                 if (balMatch) balanceResult = `${balMatch[2]} GB`;
                 else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balanceResult = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
             } else {
-                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه|المبلغ):\s*([\d.]+)/i);
+                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه|المبلغ|مبلغ الفاتورة الحالية|الفاتورة الحالية):\s*([\d.]+)/i);
                 if (billMatch) {
                     balanceResult = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
                 } else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) {
@@ -347,36 +347,38 @@ export default function LandlineRedesignPage() {
                     )}
                 </div>
 
-                {queryResult && (
+                {phone.length === 8 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                            <div className={cn(
-                                "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
-                                activeTab === 'internet' ? "grid grid-cols-3" : "w-full py-4"
-                            )}>
-                                {activeTab === 'internet' ? (
-                                    <>
-                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                            <p className="text-sm font-black">{queryResult.balance}</p>
+                        {queryResult && (
+                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                                <div className={cn(
+                                    "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
+                                    activeTab === 'internet' ? "grid grid-cols-3" : "w-full py-4"
+                                )}>
+                                    {activeTab === 'internet' ? (
+                                        <>
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
+                                            </div>
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                            </div>
+                                            <div className="p-3 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
+                                            <p className="text-xl font-black">{queryResult.balance}</p>
                                         </div>
-                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                            <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                        </div>
-                                        <div className="p-3 flex flex-col justify-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                            <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
-                                        <p className="text-xl font-black">{queryResult.balance}</p>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

@@ -90,6 +90,7 @@ type CardCategory = {
     dataLimit?: string;
     validity?: string;
     expirationDate?: string;
+    capacity?: string; // Used by local networks
 };
 
 type Favorite = {
@@ -243,7 +244,14 @@ export default function ServicesPage() {
       if (network.isLocal) {
         const catsRef = collection(firestore, `networks/${network.id}/cardCategories`);
         const snapshot = await getDocs(catsRef);
-        const catsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory));
+        const catsData = snapshot.docs.map(d => {
+            const data = d.data();
+            return { 
+                id: d.id, 
+                ...data,
+                dataLimit: data.capacity // Map capacity to dataLimit for display
+            } as CardCategory;
+        });
         setCategories(catsData);
       } else {
         const response = await fetch(`/services/networks-api/${network.id}/classes`);
@@ -479,13 +487,8 @@ export default function ServicesPage() {
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="relative w-20 h-20 overflow-hidden rounded-[24px] shadow-lg border-2 border-white/20 bg-white p-1">
-                    <Image 
-                        src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
-                        alt="Logo" 
-                        fill 
-                        className="object-cover"
-                    />
+                  <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
+                    <Wifi className="h-10 w-10 text-white" />
                   </div>
                   <h2 className="text-xl font-black text-white mt-2">{selectedNetwork.name}</h2>
                   <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>

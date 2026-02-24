@@ -86,7 +86,7 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
     }
   }, [showSuccess]);
 
@@ -341,9 +341,9 @@ export default function AlwadiPage() {
       </div>
 
       {/* Action Button (Fixed Position) */}
-      <div className="fixed bottom-24 left-0 right-0 px-6 animate-in slide-in-from-bottom-10 z-20">
+      <div className="fixed bottom-8 left-0 right-0 px-6 z-50 pointer-events-none">
           <Button 
-              className="w-full h-14 rounded-3xl font-black text-lg shadow-xl shadow-primary/20"
+              className="w-full h-14 rounded-3xl font-black text-lg shadow-2xl shadow-primary/40 pointer-events-auto active:scale-95 transition-transform"
               onClick={handleRenewClick}
               disabled={!selectedOption || !subscriberName || !cardNumber}
           >

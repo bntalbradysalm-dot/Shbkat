@@ -168,7 +168,7 @@ export default function AlwadiPage() {
 
   if (showSuccess) {
     return (
-      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4 animate-in fade-in-0">
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0">
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">

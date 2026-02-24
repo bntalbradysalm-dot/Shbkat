@@ -17,7 +17,8 @@ import {
   Mail,
   Phone as PhoneIcon,
   Clock,
-  Users
+  Users,
+  AlertCircle
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -92,7 +93,7 @@ const WHY_FAST_OFFERS: FastOffer[] = [
 const WHY_CATEGORIES = [
   {
     id: 'unified',
-    title: 'باقات شركة واي الموحدة',
+    title: 'باقات واي الموحدة',
     badge: '',
     icon: Smartphone,
     offers: [
@@ -341,7 +342,7 @@ export default function WhyServicesPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#FDFDFD] dark:bg-slate-950">
-            <SimpleHeader title="شركة واي" />
+            <SimpleHeader title="واي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
                 <Card className="overflow-hidden rounded-[28px] shadow-lg border-none mb-4" style={WHY_GRADIENT}>
@@ -406,7 +407,7 @@ export default function WhyServicesPage() {
                                         <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                             <AccordionTrigger className="px-4 py-4 rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none" style={WHY_GRADIENT}>
                                                 <div className="flex items-center gap-3 flex-1">
-                                                    <span className="text-sm font-black flex-1 text-center">باقات شركة واي</span>
+                                                    <span className="text-sm font-black flex-1 text-center">باقات واي</span>
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-[#713CA4]/10 rounded-b-2xl shadow-sm">

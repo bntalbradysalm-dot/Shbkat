@@ -23,10 +23,10 @@ const telecomServices = [
     description: 'سداد فواتير وباقات شركة YOU',
   },
   {
-    name: 'شركة واي',
+    name: 'واي',
     logo: 'https://i.postimg.cc/SN1vL3BC/images-(1).jpg',
     href: '/why-services',
-    description: 'سداد فواتير وباقات شركة واي',
+    description: 'سداد فواتير وباقات واي',
   },
   {
     name: 'عدن نت',

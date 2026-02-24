@@ -18,7 +18,6 @@ import {
   Zap,
   ArrowUpRight,
   ShieldCheck,
-  Cpu,
   Users,
   Phone as PhoneIcon
 } from 'lucide-react';
@@ -48,6 +47,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +81,7 @@ const LANDLINE_THEME = {
 
 const INTERNET_PACKAGES = [
     {
-        title: "فئات 1M",
+        title: "1 ميجا",
         items: [
             { name: "10GB", price: 1575 },
             { name: "24GB", price: 3150 },
@@ -89,7 +89,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات 2M",
+        title: "2 ميجا",
         items: [
             { name: "24GB", price: 2520 },
             { name: "50GB", price: 4725 },
@@ -97,7 +97,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات 4M",
+        title: "4 ميجا",
         items: [
             { name: "66GB", price: 6930 },
             { name: "280GB", price: 26250 },
@@ -105,7 +105,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات 8M",
+        title: "8 ميجا",
         items: [
             { name: "120GB", price: 12600 },
             { name: "420GB", price: 39375 },
@@ -113,7 +113,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 2 ميجا",
+        title: "سوبر شامل 2 ميجا",
         items: [
             { name: "28GB", price: 2900 },
             { name: "54GB", price: 5100 },
@@ -121,7 +121,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 4 ميجا",
+        title: "سوبر شامل 4 ميجا",
         items: [
             { name: "70GB", price: 7300 },
             { name: "284GB", price: 26600 },
@@ -129,7 +129,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 8 ميجا",
+        title: "سوبر شامل 8 ميجا",
         items: [
             { name: "124GB", price: 13000 },
             { name: "425GB", price: 39800 },
@@ -517,12 +517,17 @@ export default function LandlineRedesignPage() {
                                             <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
                                                 <AccordionTrigger className="px-5 py-5 bg-white dark:bg-slate-900 rounded-[24px] hover:no-underline shadow-md border border-[#302C81]/5 data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group">
                                                     <div className="flex items-center gap-4 flex-1">
-                                                        <div className="h-10 w-10 bg-gradient-to-br from-[#302C81] to-[#403AAB] rounded-2xl flex items-center justify-center shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform">
-                                                            <Cpu className="w-5 h-5 text-white" />
+                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform border border-white/20">
+                                                            <Image 
+                                                                src="https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg" 
+                                                                alt="Landline Logo" 
+                                                                fill 
+                                                                className="object-cover"
+                                                            />
                                                         </div>
                                                         <div className="flex flex-col items-start">
                                                             <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest leading-tight">فئات</span>
-                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title.replace('فئات ', '')}</span>
+                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title}</span>
                                                         </div>
                                                     </div>
                                                 </AccordionTrigger>

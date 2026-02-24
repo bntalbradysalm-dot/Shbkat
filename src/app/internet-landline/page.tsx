@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,8 +116,7 @@ export default function LandlineRedesignPage() {
                 if (balMatch) balance = `${balMatch[2]} GB`;
                 else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
             } else {
-                // محاولة جلب مبلغ الفاتورة للهاتف الثابت
-                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه):\s*([\d.]+)/i);
+                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه|المبلغ):\s*([\d.]+)/i);
                 if (billMatch) {
                     balance = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
                 } else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) {
@@ -345,25 +345,31 @@ export default function LandlineRedesignPage() {
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">
-                                            {activeTab === 'internet' ? 'الرصيد المتبقي' : 'المبلغ المستحق'}
-                                        </p>
-                                        <p className="text-sm font-black">{queryResult.balance}</p>
-                                    </div>
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">
-                                            {activeTab === 'internet' ? 'قيمة الباقة' : 'تأمين الهاتف'}
-                                        </p>
-                                        <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">
-                                            {activeTab === 'internet' ? 'تاريخ الانتهاء' : 'تاريخ الفاتورة'}
-                                        </p>
-                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                    </div>
+                                <div className={cn(
+                                    "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white",
+                                    activeTab === 'internet' ? "grid grid-cols-3" : "flex flex-col items-center justify-center p-4"
+                                )}>
+                                    {activeTab === 'internet' ? (
+                                        <>
+                                            <div className="p-3 border-l border-white/10">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
+                                            </div>
+                                            <div className="p-3 border-l border-white/10">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
+                                            </div>
+                                            <div className="p-3">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="py-2">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
+                                            <p className="text-2xl font-black">{queryResult.balance}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}

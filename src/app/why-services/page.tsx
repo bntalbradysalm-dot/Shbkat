@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,12 @@ import {
   Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -571,7 +577,7 @@ export default function WhyServicesPage() {
                             <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p></div>
                             <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-[#E30613]/10">
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-[#E30613]">{lastTxDetails.transid}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span><span className="font-black text-[#E30613]">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
                                 <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>

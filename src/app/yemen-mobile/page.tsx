@@ -355,6 +355,16 @@ export default function YemenMobilePage() {
     return `${format(d, 'd', { locale: ar })}/${format(d, 'MMMM', { locale: ar })}/${format(d, 'yyyy', { locale: ar })}`;
   };
 
+  /**
+   * دالة مخصصة لتحسين رسائل الخطأ القادمة من المزود
+   */
+  const getFriendlyErrorMessage = (msg: string) => {
+    if (msg.includes('1009') || msg.includes('منطقة التحصيل')) {
+        return "الرقم ليس من بوابة التحصيل المسموح بها ! يرجى التأكد من تواجدك في نطاق تغطية جنوبية ثم إجراء واستقبال 3 مكالمات بمدة 3 دقائق للمكالمة";
+    }
+    return msg;
+  };
+
   const handleSearch = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber || phoneNumber.length !== 9) return;
     
@@ -387,7 +397,6 @@ export default function YemenMobilePage() {
       const solfaResult = await solfaResponse.json();
       const offerResult = await offerResponse.json();
 
-      // Check if query was successful from provider perspective
       if (queryResponse.ok && (queryResult.resultCode === "0" || queryResult.resultCode === 0)) {
           let mappedOffers: ActiveOffer[] = [];
           if (offerResponse.ok && offerResult.offers) {
@@ -422,13 +431,12 @@ export default function YemenMobilePage() {
           
           setActiveOffers(mappedOffers);
       } else {
-          // Surfacing the exact provider message
           const providerError = queryResult.resultDesc || queryResult.message || 'رقم غير صحيح أو فشل في الاستعلام من المزود.';
-          throw new Error(providerError);
+          throw new Error(getFriendlyErrorMessage(providerError));
       }
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'تنبيه من المزود', description: e.message });
-        setBillingInfo(null); // Ensure UI stays hidden on failure
+        setBillingInfo(null);
     } finally {
         setIsSearching(false);
     }
@@ -524,9 +532,9 @@ export default function YemenMobilePage() {
         });
         const result = await response.json();
         
-        // Show specific provider message if payment failed
         if (!response.ok || (result.resultCode !== "0" && result.resultCode !== 0)) {
-            throw new Error(result.resultDesc || result.message || 'فشلت عملية السداد من المزود.');
+            const providerError = result.resultDesc || result.message || 'فشلت عملية السداد من المزود.';
+            throw new Error(getFriendlyErrorMessage(providerError));
         }
 
         const batch = writeBatch(firestore);
@@ -588,7 +596,8 @@ export default function YemenMobilePage() {
         const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
         if (!response.ok || (!isSuccess && !isPending)) {
-            throw new Error(result.resultDesc || result.message || 'فشل تفعيل الباقة من المزود.');
+            const providerError = result.resultDesc || result.message || 'فشل تفعيل الباقة من المزود.';
+            throw new Error(getFriendlyErrorMessage(providerError));
         }
 
         const batch = writeBatch(firestore);

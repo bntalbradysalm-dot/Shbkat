@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseProvider } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
+import { AppErrorDialog } from '@/components/layout/app-error-dialog';
 
 export default function RootLayout({
   children,
@@ -48,6 +49,7 @@ export default function RootLayout({
             <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
               <div className="flex-1 flex flex-col relative">
                 <WelcomeModal />
+                <AppErrorDialog />
                 <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-24' : ''}`}>
                   {children}
                 </main>

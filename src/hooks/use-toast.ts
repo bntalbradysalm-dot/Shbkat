@@ -2,6 +2,7 @@
 
 // Inspired by react-hot-toast library
 import * as React from "react"
+import { errorEmitter } from "@/firebase/error-emitter"
 
 import type {
   ToastActionElement,
@@ -142,7 +143,23 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+/**
+ * Overridden toast function to intercept destructive (error) toasts
+ * and show them in the custom modal dialog instead.
+ */
 function toast({ ...props }: Toast) {
+  // If this is a destructive toast (an error), trigger the global custom error modal
+  if (props.variant === 'destructive') {
+    const msg = (props.description || props.title || "حدث خطأ غير متوقع") as string;
+    errorEmitter.emit('custom-error', msg);
+    // Return a dummy object to satisfy the expected return type
+    return {
+      id: "0",
+      dismiss: () => {},
+      update: () => {},
+    }
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>

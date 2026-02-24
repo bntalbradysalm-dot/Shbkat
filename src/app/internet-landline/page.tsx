@@ -15,9 +15,18 @@ import {
   History,
   Phone,
   Loader2,
-  Users
+  Users,
+  Globe,
+  ChevronLeft,
+  Zap
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +75,65 @@ const LANDLINE_THEME = {
         backgroundImage: `radial-gradient(at 0% 0%, #FF9E3D 0px, transparent 50%), radial-gradient(at 100% 100%, #C76A00 0px, transparent 50%)`
     }
 };
+
+const INTERNET_PACKAGES = [
+    {
+        title: "فئات 1M",
+        items: [
+            { name: "10GB", price: 1575 },
+            { name: "24GB", price: 3150 },
+            { name: "100GB", price: 10500 },
+        ]
+    },
+    {
+        title: "فئات 2M",
+        items: [
+            { name: "24GB", price: 2520 },
+            { name: "50GB", price: 4725 },
+            { name: "188GB", price: 15750 },
+        ]
+    },
+    {
+        title: "فئات 4M",
+        items: [
+            { name: "66GB", price: 6930 },
+            { name: "280GB", price: 26250 },
+            { name: "480GB", price: 39900 },
+        ]
+    },
+    {
+        title: "فئات 8M",
+        items: [
+            { name: "120GB", price: 12600 },
+            { name: "420GB", price: 39375 },
+            { name: "720GB", price: 59850 },
+        ]
+    },
+    {
+        title: "فئات سوبر شامل 2M",
+        items: [
+            { name: "28GB", price: 2900 },
+            { name: "54GB", price: 5100 },
+            { name: "192GB", price: 16100 },
+        ]
+    },
+    {
+        title: "فئات سوبر شامل 4M",
+        items: [
+            { name: "70GB", price: 7300 },
+            { name: "284GB", price: 26600 },
+            { name: "485GB", price: 40300 },
+        ]
+    },
+    {
+        title: "فئات سوبر شامل 8M",
+        items: [
+            { name: "124GB", price: 13000 },
+            { name: "425GB", price: 39800 },
+            { name: "725GB", price: 60200 },
+        ]
+    }
+];
 
 export default function LandlineRedesignPage() {
     const router = useRouter();
@@ -427,6 +495,52 @@ export default function LandlineRedesignPage() {
                                     >
                                         تسديد الآن
                                     </Button>
+                                </div>
+
+                                {/* Internet Packages Section */}
+                                <div className="mt-6 space-y-4 pb-10">
+                                    <div className="flex items-center gap-2 px-1">
+                                        <Zap className="w-4 h-4 text-[#302C81]" />
+                                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">باقات الإنترنت المتوفرة</h3>
+                                    </div>
+                                    
+                                    <Accordion type="single" collapsible className="w-full space-y-3">
+                                        {INTERNET_PACKAGES.map((category, idx) => (
+                                            <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
+                                                <AccordionTrigger className="px-5 py-4 bg-white dark:bg-slate-900 rounded-2xl hover:no-underline shadow-sm border border-[#302C81]/5 data-[state=open]:rounded-b-none text-right">
+                                                    <div className="flex items-center gap-3 flex-1">
+                                                        <div className="bg-[#302C81]/10 p-1.5 rounded-lg">
+                                                            <Globe className="w-4 h-4 text-[#302C81]" />
+                                                        </div>
+                                                        <span className="text-sm font-black text-foreground">{category.title}</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="bg-white dark:bg-slate-900 border-x border-b border-[#302C81]/5 rounded-b-2xl px-3 py-3 space-y-2">
+                                                    {category.items.map((pkg, pIdx) => (
+                                                        <div 
+                                                            key={pIdx}
+                                                            onClick={() => {
+                                                                setAmount(String(pkg.price));
+                                                                setIsConfirmingPayment(true);
+                                                            }}
+                                                            className="flex items-center justify-between p-3 rounded-xl hover:bg-[#302C81]/5 transition-colors cursor-pointer group border border-transparent hover:border-[#302C81]/10"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                                                                    <Zap className="w-4 h-4 text-muted-foreground group-hover:text-[#302C81]" />
+                                                                </div>
+                                                                <span className="text-sm font-bold text-foreground">{pkg.name}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-black text-[#302C81]">{pkg.price.toLocaleString('en-US')} ر.ي</span>
+                                                                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
                                 </div>
                             </TabsContent>
 

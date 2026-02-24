@@ -19,7 +19,8 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Users,
-  Phone as PhoneIcon
+  Phone as PhoneIcon,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -500,10 +501,9 @@ export default function LandlineRedesignPage() {
                                     </Button>
                                 </div>
 
-                                {/* Internet Packages Section - Simple & Centered */}
                                 <div className="mt-8 space-y-6 pb-10">
                                     <div className="flex items-center justify-center px-2">
-                                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">فئات الانترنت</h3>
+                                        <h3 className="text-sm font-black text-foreground tracking-tight">فئات الانترنت</h3>
                                     </div>
                                     
                                     <Accordion type="single" collapsible className="w-full space-y-4">
@@ -521,7 +521,7 @@ export default function LandlineRedesignPage() {
                                                         </div>
                                                         <div className="flex flex-col items-start">
                                                             <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest leading-tight">فئات</span>
-                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title}</span>
+                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title.replace('M', ' ميجا')}</span>
                                                         </div>
                                                     </div>
                                                 </AccordionTrigger>
@@ -541,13 +541,12 @@ export default function LandlineRedesignPage() {
                                                                 </div>
                                                                 <div className="flex flex-col items-start">
                                                                     <span className="text-sm font-black text-foreground group-hover/item:text-[#302C81] transition-colors">{pkg.name}</span>
-                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">High Performance</span>
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">جودة عالية</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-3 relative z-10">
                                                                 <div className="text-left">
-                                                                    <p className="text-xs font-bold text-muted-foreground line-through opacity-40 mb-[-4px]">{(pkg.price * 1.1).toFixed(0)}</p>
-                                                                    <p className="text-lg font-black text-[#302C81] tracking-tighter">{pkg.price.toLocaleString('en-US')}<span className="text-[9px] font-bold mr-1">ر.ي</span></p>
+                                                                    <p className="text-lg font-black text-[#302C81] tracking-tighter">{pkg.price.toLocaleString('en-US')}</p>
                                                                 </div>
                                                                 <div className="h-8 w-8 rounded-full bg-[#302C81] flex items-center justify-center text-white shadow-lg shadow-[#302C81]/30 translate-x-4 opacity-0 group-hover/item:translate-x-0 group-hover/item:opacity-100 transition-all duration-300">
                                                                     <ArrowUpRight className="w-4 h-4" />

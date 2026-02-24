@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -218,13 +217,13 @@ export default function AlwadiPage() {
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="bg-white p-1 rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden">
-                    <div className="relative h-24 w-24 rounded-[28px] overflow-hidden">
+                <div className="bg-white p-1 rounded-[24px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden">
+                    <div className="relative h-24 w-48 rounded-[20px] overflow-hidden">
                         <Image 
                             src={ALWADI_LOGO}
                             alt="Alwadi Logo" 
                             fill 
-                            className="object-cover"
+                            className="object-contain"
                         />
                     </div>
                 </div>

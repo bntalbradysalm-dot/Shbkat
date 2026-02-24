@@ -92,8 +92,8 @@ const WHY_FAST_OFFERS: FastOffer[] = [
 const WHY_CATEGORIES = [
   {
     id: 'unified',
-    title: 'باقات واي الموحدة',
-    badge: 'Y',
+    title: 'باقات شركة واي الموحدة',
+    badge: '',
     icon: Smartphone,
     offers: [
       { offerId: 'y_basic', offerName: 'باقة واي الأساسية', price: 1500, data: '1GB', minutes: '200', sms: '200', validity: 'شهر', offertype: 'Y_BASIC' },
@@ -341,7 +341,7 @@ export default function WhyServicesPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#FDFDFD] dark:bg-slate-950">
-            <SimpleHeader title="خدمات واي (Y)" />
+            <SimpleHeader title="شركة واي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
                 <Card className="overflow-hidden rounded-[28px] shadow-lg border-none mb-4" style={WHY_GRADIENT}>
@@ -349,7 +349,7 @@ export default function WhyServicesPage() {
                         <div className="text-right text-white">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
                             <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black">
+                                <h2 className="text-2xl font-black text-white">
                                     {userProfile?.balance?.toLocaleString('en-US') || '0'}
                                 </h2>
                                 <span className="text-[10px] font-bold opacity-70 mr-1">ريال يمني</span>
@@ -406,8 +406,7 @@ export default function WhyServicesPage() {
                                         <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                             <AccordionTrigger className="px-4 py-4 rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none" style={WHY_GRADIENT}>
                                                 <div className="flex items-center gap-3 flex-1">
-                                                    <div className="bg-white text-[#713CA4] font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">{cat.badge}</div>
-                                                    <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
+                                                    <span className="text-sm font-black flex-1 text-center">باقات شركة واي</span>
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-[#713CA4]/10 rounded-b-2xl shadow-sm">

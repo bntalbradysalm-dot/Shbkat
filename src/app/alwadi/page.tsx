@@ -7,25 +7,20 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
-  SatelliteDish, 
   User, 
   CreditCard, 
   CheckCircle, 
   History, 
-  Loader2, 
-  AlertCircle,
-  Info,
   Wallet,
-  Calendar,
   Hash,
-  Sparkles
+  Sparkles,
+  Info
 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -40,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +65,8 @@ export default function AlwadiPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
+
+  const ALWADI_LOGO = "https://i.postimg.cc/ydgQ4RP0/mnzwmt-alwady.jpg";
 
   // User Profile
   const userDocRef = useMemoFirebase(
@@ -218,8 +216,15 @@ export default function AlwadiPage() {
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="bg-white/20 p-5 rounded-[32px] backdrop-blur-md border border-white/30 shadow-2xl animate-in zoom-in-95 duration-700">
-                    <SatelliteDish className="h-12 w-12 text-white" />
+                <div className="bg-white p-1 rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden">
+                    <div className="relative h-20 w-20 rounded-[28px] overflow-hidden">
+                        <Image 
+                            src={ALWADI_LOGO}
+                            alt="Alwadi Logo" 
+                            fill 
+                            className="object-cover"
+                        />
+                    </div>
                 </div>
                 <div className="space-y-1">
                     <h2 className="text-2xl font-black text-white tracking-tight">تجديد اشتراك الوادي</h2>
@@ -299,12 +304,19 @@ export default function AlwadiPage() {
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
                                 <div className={cn(
-                                    "p-2.5 rounded-2xl mb-1 transition-colors",
-                                    selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/10"
+                                    "p-1 rounded-xl mb-1 transition-colors overflow-hidden",
+                                    selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
                                 )}>
-                                    <Sparkles className={cn("w-5 h-5", selectedOption?.id === option.id ? "text-white" : "text-primary")} />
+                                    <div className="relative h-10 w-10 rounded-lg overflow-hidden">
+                                        <Image 
+                                            src={ALWADI_LOGO}
+                                            alt="Category Logo" 
+                                            fill 
+                                            className="object-cover"
+                                        />
+                                    </div>
                                 </div>
-                                <span className={cn("text-xs font-black", selectedOption?.id === option.id ? "text-white" : "text-foreground")}>
+                                <span className={cn("text-[11px] font-black", selectedOption?.id === option.id ? "text-white" : "text-foreground")}>
                                     {option.title}
                                 </span>
                                 <div className={cn(

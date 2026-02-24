@@ -98,8 +98,8 @@ const YOU_CATEGORIES = [
     offers: [
       { offerId: 'unified_300', offerName: 'باقة السعر الموحد 300', price: 2904, data: '500MB', minutes: '300', sms: '300', validity: 'شهر', offertype: 'Sawa_300_PRE' },
       { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE' },
-      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_5000_PRE' },
-      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_12Giga_4G_PRE' },
+      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_500O_PRE' },
+      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_126iga_4C_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 15000, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
     ]
   }
@@ -396,7 +396,7 @@ export default function YouServicesPage() {
                 <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                     <div className="bg-green-500 p-8 flex justify-center"><div className="bg-white/20 p-4 rounded-full animate-bounce"><CheckCircle className="h-16 w-16 text-white" /></div></div>
                     <CardContent className="p-8 space-y-6">
-                        <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ الطلب بنجاح</p></div>
+                        <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p></div>
                         <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                             <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-primary">{lastTxDetails.transid}</span></div>
                             <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>

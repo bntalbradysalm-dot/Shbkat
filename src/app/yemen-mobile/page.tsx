@@ -920,7 +920,7 @@ export default function YemenMobilePage() {
                             <span className="font-bold">{lastTxDetails.type}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
-                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم من محفظتك:</span>
+                            <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span>
                             <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">

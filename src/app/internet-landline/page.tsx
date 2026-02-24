@@ -50,6 +50,23 @@ type QueryResult = {
     message?: string;
 };
 
+// --- THEME CONSTANTS ---
+const INTERNET_THEME = {
+    primary: '#302C81',
+    gradient: {
+        backgroundColor: '#302C81',
+        backgroundImage: `radial-gradient(at 0% 0%, #403AAB 0px, transparent 50%), radial-gradient(at 100% 100%, #221E5C 0px, transparent 50%)`
+    }
+};
+
+const LANDLINE_THEME = {
+    primary: '#F18312',
+    gradient: {
+        backgroundColor: '#F18312',
+        backgroundImage: `radial-gradient(at 0% 0%, #FF9E3D 0px, transparent 50%), radial-gradient(at 100% 100%, #C76A00 0px, transparent 50%)`
+    }
+};
+
 export default function LandlineRedesignPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -67,6 +84,8 @@ export default function LandlineRedesignPage() {
     const [lastTxDetails, setLastTxDetails] = useState<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
+    const currentTheme = activeTab === 'internet' ? INTERNET_THEME : LANDLINE_THEME;
+
     const userDocRef = useMemoFirebase(
         () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
         [firestore, user]
@@ -80,13 +99,11 @@ export default function LandlineRedesignPage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        // Clear query result if phone number changes or is not complete
         if (phone.length !== 8) {
             setQueryResult(null);
         }
     }, [phone]);
 
-    // Clear query result when switching tabs
     useEffect(() => {
         setQueryResult(null);
     }, [activeTab]);
@@ -262,7 +279,7 @@ export default function LandlineRedesignPage() {
                             <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                                    <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                                    <span className="font-mono font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
@@ -274,7 +291,7 @@ export default function LandlineRedesignPage() {
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                                    <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                                    <span className="font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
                                     <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
@@ -284,7 +301,7 @@ export default function LandlineRedesignPage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="w-full h-14 rounded-2xl font-bold text-lg" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
+                                <Button className="w-full h-14 rounded-2xl font-bold text-lg text-white" style={{ backgroundColor: currentTheme.primary }} onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -298,7 +315,7 @@ export default function LandlineRedesignPage() {
             <SimpleHeader title="الثابت والإنترنت الأرضي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
-                <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
+                <Card className="overflow-hidden rounded-[28px] shadow-lg text-white border-none mb-4 transition-all duration-500" style={currentTheme.gradient}>
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
@@ -323,11 +340,13 @@ export default function LandlineRedesignPage() {
                             placeholder="0xxxxxxx"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                            className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
+                            className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
+                            style={{ outlineColor: currentTheme.primary }}
                         />
                         <button 
                             onClick={handleContactPick}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors"
+                            style={{ color: currentTheme.primary }}
                             title="جهات الاتصال"
                         >
                             <Users className="h-5 w-5" />
@@ -336,9 +355,10 @@ export default function LandlineRedesignPage() {
                     {phone.length === 8 && phone.startsWith('0') && (
                         <div className="animate-in fade-in zoom-in duration-300">
                             <Button 
-                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm" 
+                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" 
                                 onClick={handleSearch}
                                 disabled={isSearching}
+                                style={{ backgroundColor: currentTheme.primary }}
                             >
                                 {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
@@ -350,7 +370,7 @@ export default function LandlineRedesignPage() {
                 {phone.length === 8 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
-                            <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
+                            <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={currentTheme.gradient}>
                                 <div className={cn(
                                     "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
                                     activeTab === 'internet' ? "grid grid-cols-3" : "w-full py-4"
@@ -382,12 +402,12 @@ export default function LandlineRedesignPage() {
 
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                                <TabsTrigger value="internet" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الإنترنت الأرضي</TabsTrigger>
-                                <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الهاتف الثابت</TabsTrigger>
+                                <TabsTrigger value="internet" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#302C81] data-[state=active]:text-white transition-all">الإنترنت الأرضي</TabsTrigger>
+                                <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#F18312] data-[state=active]:text-white transition-all">الهاتف الثابت</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#302C81]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
                                         <Input 
@@ -395,14 +415,15 @@ export default function LandlineRedesignPage() {
                                             placeholder="0.00" 
                                             value={amount} 
                                             onChange={(e) => setAmount(e.target.value)} 
-                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none placeholder:text-[#302C81]/10 text-[#302C81]" 
                                         />
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#302C81]/30 font-black text-sm">ر.ي</div>
                                     </div>
                                     <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#302C81]/20 text-white" 
                                         onClick={() => setIsConfirmingPayment(true)} 
                                         disabled={!amount}
+                                        style={{ backgroundColor: '#302C81' }}
                                     >
                                         تسديد الآن
                                     </Button>
@@ -410,7 +431,7 @@ export default function LandlineRedesignPage() {
                             </TabsContent>
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300">
-                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#F18312]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
                                         <Input 
@@ -418,14 +439,15 @@ export default function LandlineRedesignPage() {
                                             placeholder="0.00" 
                                             value={amount} 
                                             onChange={(e) => setAmount(e.target.value)} 
-                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none placeholder:text-[#F18312]/10 text-[#F18312]" 
                                         />
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F18312]/30 font-black text-sm">ر.ي</div>
                                     </div>
                                     <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#F18312]/20 text-white" 
                                         onClick={() => setIsConfirmingPayment(true)} 
                                         disabled={!amount}
+                                        style={{ backgroundColor: '#F18312' }}
                                     >
                                         تسديد الآن
                                     </Button>
@@ -457,13 +479,13 @@ export default function LandlineRedesignPage() {
                             </div>
                             <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                                 <span className="font-black">إجمالي الخصم:</span>
-                                <span className="font-black text-primary text-lg">{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
+                                <span className="font-black text-lg" style={{ color: currentTheme.primary }}>{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
                             </div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                         <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
-                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={() => handlePayment(parseFloat(amount), activeTab === 'internet' ? 'إنترنت (ADSL)' : 'هاتف ثابت')}>تأكيد</AlertDialogAction>
+                        <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: currentTheme.primary }} onClick={() => handlePayment(parseFloat(amount), activeTab === 'internet' ? 'إنترنت (ADSL)' : 'هاتف ثابت')}>تأكيد</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

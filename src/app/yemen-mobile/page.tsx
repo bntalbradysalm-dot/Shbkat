@@ -81,6 +81,16 @@ type Offer = {
     offertype: string; 
 };
 
+// --- STYLES ---
+const YEMEN_MOBILE_PRIMARY = '#B32C4C';
+const YEMEN_MOBILE_GRADIENT = {
+    backgroundColor: '#B32C4C',
+    backgroundImage: `
+        radial-gradient(at 0% 0%, #D14566 0px, transparent 50%),
+        radial-gradient(at 100% 100%, #8A1F38 0px, transparent 50%)
+    `
+};
+
 // --- DATA DEFINITIONS ---
 
 const PREPAID_CATEGORIES = [
@@ -253,7 +263,7 @@ const POSTPAID_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
+      className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
       <div className="flex justify-center mb-3">
@@ -266,28 +276,28 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
               />
           </div>
       </div>
-      <h4 className="text-sm font-black text-primary mb-1 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
+      <h4 className="text-sm font-black text-[#B32C4C] mb-1 group-hover:text-[#B32C4C]/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-2xl font-black text-primary">
+        <span className="text-2xl font-black text-[#B32C4C]">
             {offer.price.toLocaleString('en-US')}
         </span>
       </div>
       
-      <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-primary/10 text-center">
+      <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-[#B32C4C]/10 text-center">
         <div className="space-y-1.5">
-            <Globe className="w-5 h-5 mx-auto text-primary" />
+            <Globe className="w-5 h-5 mx-auto text-[#B32C4C]" />
             <p className="text-[11px] font-black text-foreground truncate">{offer.data || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <Mail className="w-5 h-5 mx-auto text-primary" />
+            <Mail className="w-5 h-5 mx-auto text-[#B32C4C]" />
             <p className="text-[11px] font-black text-foreground truncate">{offer.sms || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <PhoneIcon className="w-5 h-5 mx-auto text-primary" />
+            <PhoneIcon className="w-5 h-5 mx-auto text-[#B32C4C]" />
             <p className="text-[11px] font-black text-foreground truncate">{offer.minutes || '-'}</p>
         </div>
         <div className="space-y-1.5">
-            <Clock className="w-5 h-5 mx-auto text-primary" />
+            <Clock className="w-5 h-5 mx-auto text-[#B32C4C]" />
             <p className="text-[11px] font-black text-foreground truncate">{offer.validity || '-'}</p>
         </div>
       </div>
@@ -492,7 +502,6 @@ export default function YemenMobilePage() {
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
 
-    // بناءً على الطلب: لا يتم إضافة السلفة عند سداد الرصيد
     const totalToDeduct = val;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -542,7 +551,6 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // بناءً على الطلب: يتم إضافة مبلغ السلفة عند تفعيل الباقة لضمان التفعيل
     const loanAmt = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
     const totalToDeduct = selectedOffer.price + loanAmt;
 
@@ -554,7 +562,6 @@ export default function YemenMobilePage() {
     setIsActivatingOffer(true);
     try {
         const transid = Date.now().toString().slice(-8);
-        // إرسال مبلغ الباقة مع قيمة السلفة كـ amount في طلب billover (اختياري حسب دعم المزود للمعلومات الإضافية)
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -562,7 +569,7 @@ export default function YemenMobilePage() {
                 mobile: phone, 
                 action: 'billover', 
                 offertype: selectedOffer.offertype, 
-                amount: totalToDeduct, // إرسال المبلغ الإجمالي للمساعدة في التفعيل
+                amount: totalToDeduct,
                 transid 
             })
         });
@@ -603,7 +610,7 @@ export default function YemenMobilePage() {
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
-        <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none mb-4">
+        <Card className="overflow-hidden rounded-[28px] shadow-lg text-white border-none mb-4" style={YEMEN_MOBILE_GRADIENT}>
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="text-right">
                     <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
@@ -620,10 +627,10 @@ export default function YemenMobilePage() {
             </CardContent>
         </Card>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#B32C4C]/5">
             <div className="flex justify-between items-center mb-2 px-1">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
-                {isSearching && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                {isSearching && <Loader2 className="h-4 w-4 animate-spin text-[#B32C4C]" />}
             </div>
             <div className="relative">
                 <Input
@@ -631,11 +638,11 @@ export default function YemenMobilePage() {
                     placeholder="77xxxxxxx"
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-primary transition-all pr-12 pl-12"
+                    className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#B32C4C] transition-all pr-12 pl-12"
                 />
                 <button 
                     onClick={handleContactPick}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-[#B32C4C] hover:bg-[#B32C4C]/10 rounded-xl transition-colors"
                     title="جهات الاتصال"
                 >
                     <Users className="h-5 w-5" />
@@ -646,30 +653,30 @@ export default function YemenMobilePage() {
         {phone.length === 9 && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
-                    <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                        <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الرصيد</TabsTrigger>
-                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-primary data-[state=active]:text-white">الباقات</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-[#B32C4C]/5">
+                        <TabsTrigger value="balance" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#B32C4C] data-[state=active]:text-white">الرصيد</TabsTrigger>
+                        <TabsTrigger value="packages" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#B32C4C] data-[state=active]:text-white">الباقات</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="packages" className="space-y-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5 mt-2">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-[#B32C4C]/5 mt-2">
                             <div className="grid grid-cols-3 text-center border-b bg-muted/10">
                                 <div className="p-3 border-l">
-                                    <p className="text-[10px] font-bold text-primary mb-1">رصيد الرقم</p>
+                                    <p className="text-[10px] font-bold text-[#B32C4C] mb-1">رصيد الرقم</p>
                                     {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                        <p className="text-sm font-black text-primary">
+                                        <p className="text-sm font-black text-[#B32C4C]">
                                             {billingInfo?.balance.toLocaleString('en-US') || '0.00'}
                                         </p>
                                     )}
                                 </div>
                                 <div className="p-3 border-l">
-                                    <p className="text-[10px] font-bold text-primary mb-1">نوع الرقم</p>
+                                    <p className="text-[10px] font-bold text-[#B32C4C] mb-1">نوع الرقم</p>
                                     {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
-                                        <p className="text-sm font-black text-primary">{billingInfo?.customer_type || '...'}</p>
+                                        <p className="text-sm font-black text-[#B32C4C]">{billingInfo?.customer_type || '...'}</p>
                                     )}
                                 </div>
                                 <div className="p-3">
-                                    <p className="text-[10px] font-bold text-primary mb-1">فحص السلفة</p>
+                                    <p className="text-[10px] font-bold text-[#B32C4C] mb-1">فحص السلفة</p>
                                     {isSearching ? <Skeleton className="h-4 w-16 mx-auto" /> : (
                                         <div className="flex items-center justify-center gap-1">
                                             {billingInfo?.isLoan ? (
@@ -693,15 +700,15 @@ export default function YemenMobilePage() {
 
                         <div className="flex justify-center mt-2 animate-in fade-in zoom-in duration-200">
                             <Tabs value={lineTypeTab} onValueChange={setLineTypeTab} className="w-full max-w-[200px]">
-                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-primary/5">
-                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">دفع مسبق</TabsTrigger>
-                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">فوترة</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-9 p-1 shadow-sm border border-[#B32C4C]/5">
+                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-[#B32C4C] data-[state=active]:text-white">دفع مسبق</TabsTrigger>
+                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-[#B32C4C] data-[state=active]:text-white">فوترة</TabsTrigger>
                                 </TabsList>
                             </Tabs>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-primary/5">
-                            <div className="bg-primary p-3 text-center">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-[#B32C4C]/5">
+                            <div className="p-3 text-center" style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                                 <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
                             </div>
                             <div className="p-4 space-y-2">
@@ -712,11 +719,12 @@ export default function YemenMobilePage() {
                                     </div>
                                 ) : activeOffers.length > 0 ? (
                                     activeOffers.map((off, idx) => (
-                                        <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-primary/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                        <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-[#B32C4C]/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
                                             <div className="flex flex-col items-center justify-center">
                                                 <button 
                                                     onClick={() => handleRenewOffer(off.offerName)}
-                                                    className="bg-primary p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
+                                                    className="p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
+                                                    style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
                                                 >
                                                     <RefreshCw className="w-4 h-4 text-white" />
                                                     <span className="text-[9px] text-white font-bold">تجديد</span>
@@ -724,7 +732,7 @@ export default function YemenMobilePage() {
                                             </div>
 
                                             <div className="flex-1 space-y-1">
-                                                <h4 className="text-xs font-black text-[#002B5B] dark:text-primary-foreground leading-tight">
+                                                <h4 className="text-xs font-black text-[#B32C4C] leading-tight">
                                                     {off.offerName}
                                                 </h4>
                                                 <div className="flex flex-col gap-0.5">
@@ -733,7 +741,7 @@ export default function YemenMobilePage() {
                                                         <span className="text-[9px] font-bold">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                        <Calendar className="w-3 h-3 text-primary/60" />
+                                                        <Calendar className="w-3 h-3 text-[#B32C4C]/60" />
                                                         <span className="text-[9px] font-bold">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
                                                     </div>
                                                 </div>
@@ -752,15 +760,15 @@ export default function YemenMobilePage() {
                         <Accordion type="single" collapsible className="w-full space-y-3">
                             {currentCategories.map((cat, index) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
-                                    <AccordionTrigger className="px-4 py-4 bg-primary rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none">
+                                    <AccordionTrigger className="px-4 py-4 rounded-2xl text-white hover:no-underline shadow-md group data-[state=open]:rounded-b-none" style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                                         <div className="flex items-center gap-3 flex-1">
-                                            <div className="bg-white text-primary font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
+                                            <div className="bg-white text-[#B32C4C] font-black text-xs px-3 py-1 rounded-xl shadow-inner shrink-0">
                                                 {cat.badge || (index + 1)}
                                             </div>
                                             <span className="text-sm font-black flex-1 mr-4 text-right">{cat.title}</span>
                                         </div>
                                     </AccordionTrigger>
-                                    <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-primary/10 rounded-b-2xl shadow-sm">
+                                    <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-[#B32C4C]/10 rounded-b-2xl shadow-sm">
                                         <div className="grid grid-cols-1 gap-3">
                                             {cat.offers.map((o) => (
                                                 <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
@@ -773,7 +781,7 @@ export default function YemenMobilePage() {
                     </TabsContent>
 
                     <TabsContent value="balance" className="pt-4 space-y-6 animate-in fade-in-0">
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 text-center">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#B32C4C]/5 text-center">
                             <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                             <div className="relative max-w-[240px] mx-auto">
                                 <Input 
@@ -781,24 +789,25 @@ export default function YemenMobilePage() {
                                     placeholder="0.00" 
                                     value={amount} 
                                     onChange={(e) => setAmount(e.target.value)} 
-                                    className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10" 
+                                    className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-[#B32C4C] placeholder:text-[#B32C4C]/10 focus-visible:ring-[#B32C4C]" 
                                 />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B32C4C]/30 font-black text-sm">ر.ي</div>
                             </div>
                             
                             {amount && (
                                 <div className="mt-4 animate-in fade-in-0 slide-in-from-top-2 text-center">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">الرصيد بعد الضريبة</p>
-                                    <p className="text-xl font-black text-primary">
+                                    <p className="text-xl font-black text-[#B32C4C]">
                                         {(parseFloat(amount) * 0.826).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ريال
                                     </p>
                                 </div>
                             )}
 
                             <Button 
-                                className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-primary/20" 
+                                className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#B32C4C]/20" 
                                 onClick={() => setIsConfirming(true)} 
                                 disabled={!amount}
+                                style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
                             >
                                 تنفيذ السداد
                             </Button>
@@ -831,10 +840,9 @@ export default function YemenMobilePage() {
                         <span className="text-muted-foreground">المبلغ:</span>
                         <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
                     </div>
-                    {/* في سداد الرصيد لا نضيف السلفة بناءً على الطلب */}
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2">
                         <span className="font-black">إجمالي الخصم:</span>
-                        <span className="font-black text-primary text-lg">
+                        <span className="font-black text-[#B32C4C] text-lg">
                             {parseFloat(amount || '0').toLocaleString('en-US')} ريال
                         </span>
                     </div>
@@ -845,7 +853,7 @@ export default function YemenMobilePage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                 <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
-                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePayment}>تأكيد السداد</AlertDialogAction>
+                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePayment} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تأكيد السداد</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -855,7 +863,7 @@ export default function YemenMobilePage() {
               <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 space-y-3 text-right text-sm">
-                      <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
+                      <p className="text-center text-lg font-black text-[#B32C4C] mb-2">{selectedOffer?.offerName}</p>
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">نوع الخط:</span>
                           <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
@@ -864,7 +872,6 @@ export default function YemenMobilePage() {
                           <span className="text-muted-foreground">سعر الباقة:</span>
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
-                      {/* في تفعيل الباقة يتم إضافة السلفة بناءً على الطلب */}
                       {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
                             <span className="text-muted-foreground">مبلغ السلفة:</span>
@@ -874,17 +881,17 @@ export default function YemenMobilePage() {
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
                         <span className="font-black">إجمالي الخصم من المحفظة:</span>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-black text-primary">
+                            <p className="text-3xl font-black text-[#B32C4C]">
                                 {((selectedOffer?.price || 0) + loanAmountForPackage).toLocaleString('en-US')}
                             </p>
-                            <span className="text-sm font-black text-primary">ريال</span>
+                            <span className="text-sm font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>
+                  <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                       تفعيل الآن
                   </AlertDialogAction>
               </AlertDialogFooter>
@@ -906,10 +913,10 @@ export default function YemenMobilePage() {
                         <p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p>
                     </div>
 
-                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                    <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-[#B32C4C]/10">
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
-                            <span className="font-mono font-black text-primary">{lastTxDetails.transid}</span>
+                            <span className="font-mono font-black text-[#B32C4C]">{lastTxDetails.transid}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span>
@@ -921,7 +928,7 @@ export default function YemenMobilePage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-muted pb-2">
                             <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span>
-                            <span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
+                            <span className="font-black text-[#B32C4C]">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
                             <span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span>
@@ -931,7 +938,7 @@ export default function YemenMobilePage() {
 
                     <div className="grid grid-cols-2 gap-3">
                         <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تحديث</Button>
                     </div>
                 </CardContent>
             </Card>

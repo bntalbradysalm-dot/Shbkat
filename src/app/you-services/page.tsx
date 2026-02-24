@@ -106,10 +106,10 @@ const YOU_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98]"
+      className="bg-accent/10 dark:bg-slate-900 rounded-2xl p-5 shadow-sm relative border border-primary/5 mb-3 text-center cursor-pointer hover:bg-accent/20 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
-      <h4 className="text-sm font-black text-primary mb-2">{offer.offerName}</h4>
+      <h4 className="text-sm font-black text-primary mb-2 group-hover:text-primary/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
         <span className="text-2xl font-black text-primary">
             {offer.price.toLocaleString('en-US')}
@@ -247,6 +247,7 @@ export default function YouServicesPage() {
                 if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
                 
                 setPhone(selectedNumber.slice(0, 9));
+                handleSearch();
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -342,6 +343,7 @@ export default function YouServicesPage() {
                     service: 'you', 
                     num: selectedOffer.id || selectedOffer.price,
                     offertype: selectedOffer.offertype, 
+                    amount: selectedOffer.price, // إرسال القيمة 2904 المطلوبة
                     type: lineType,
                     transid 
                 })
@@ -510,7 +512,7 @@ export default function YouServicesPage() {
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-primary">{lastTxDetails.transid}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black text-primary">ريال {lastTxDetails.amount.toLocaleString('en-US')}</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span><span className="font-black text-primary">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
                                 <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
                             </div>
                             <div className="grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button><Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button></div>
@@ -541,7 +543,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedFastOffer?.title}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedFastOffer?.price || 0).toLocaleString('en-US')}</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedFastOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel><AlertDialogAction onClick={() => selectedFastOffer && handleProcessPayment(selectedFastOffer.price, selectedFastOffer.title, selectedFastOffer.num)} className="w-full rounded-2xl h-12 font-bold">تفعيل الآن</AlertDialogAction></AlertDialogFooter>
@@ -555,7 +557,7 @@ export default function YouServicesPage() {
                             <p className="text-center text-lg font-black text-primary mb-2">{selectedOffer?.offerName}</p>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">ريال {(selectedOffer?.price || 0).toLocaleString('en-US')}</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم:</span><span className="font-black text-primary text-lg">{(selectedOffer?.price || 0).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0"><AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel><AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer}>تفعيل الآن</AlertDialogAction></AlertDialogFooter>

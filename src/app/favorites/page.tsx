@@ -245,6 +245,7 @@ export default function FavoritesPage() {
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -270,6 +271,7 @@ export default function FavoritesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         }
         
         audioRef.current?.play().catch(() => {});

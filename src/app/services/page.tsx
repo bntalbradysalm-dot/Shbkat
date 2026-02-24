@@ -377,6 +377,7 @@ export default function ServicesPage() {
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         } else {
             // External Purchase Logic
             const response = await fetch(`/services/networks-api/order`, {
@@ -403,6 +404,7 @@ export default function ServicesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
+            setSelectedNetwork(null); // إغلاق منبق الشبكة
         }
         
         audioRef.current?.play().catch(() => {});

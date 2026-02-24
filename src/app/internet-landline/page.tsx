@@ -19,7 +19,8 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Cpu,
-  Users
+  Users,
+  Phone as PhoneIcon
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -112,7 +113,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 2M",
+        title: "فئات سوبر شامل 2 ميجا",
         items: [
             { name: "28GB", price: 2900 },
             { name: "54GB", price: 5100 },
@@ -120,7 +121,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 4M",
+        title: "فئات سوبر شامل 4 ميجا",
         items: [
             { name: "70GB", price: 7300 },
             { name: "284GB", price: 26600 },
@@ -128,7 +129,7 @@ const INTERNET_PACKAGES = [
         ]
     },
     {
-        title: "فئات سوبر شامل 8M",
+        title: "فئات سوبر شامل 8 ميجا",
         items: [
             { name: "124GB", price: 13000 },
             { name: "425GB", price: 39800 },

@@ -343,7 +343,7 @@ export default function YouServicesPage() {
                     mobile: phone, 
                     action: 'billoffer', 
                     service: 'you', 
-                    num: selectedOffer.offertype, // إرسال كود الباقة (مثل Sawa_300_PRE)
+                    num: selectedOffer.offertype, // إرسال كود الباقة (مثل Mix_4GB_4G_PRE)
                     amount: selectedOffer.price, 
                     type: lineType,
                     transid 

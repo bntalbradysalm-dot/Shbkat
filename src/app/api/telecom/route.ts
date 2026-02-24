@@ -51,10 +51,12 @@ export async function POST(request: Request) {
         // توجيه باقات يو إلى mtnoffer بناءً على التوثيق الجديد
         if (action === 'billoffer' || action === 'queryoffer') {
             endpoint = 'mtnoffer';
+            // في mtnoffer، لا نحتاج لمعلمة action في الرابط حسب التوثيق
+            delete apiRequestParams.action;
         } else {
             endpoint = 'mtn';
+            apiRequestParams.action = action;
         }
-        apiRequestParams.action = action;
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 

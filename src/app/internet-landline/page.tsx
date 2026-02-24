@@ -105,21 +105,35 @@ export default function LandlineRedesignPage() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
-            const raw = result.balance || '';
-            let balance = '0.00 GB';
+            const raw = result.balance || result.resultDesc || '';
+            let balance = activeTab === 'internet' ? '0.00 GB' : '0 ريال';
             let price = '0';
             let expiry = '...';
 
-            const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
-            if (balMatch) balance = `${balMatch[2]} GB`;
-            else if (!isNaN(parseFloat(raw))) balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+            if (activeTab === 'internet') {
+                const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
+                if (balMatch) balance = `${balMatch[2]} GB`;
+                else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+            } else {
+                // محاولة جلب مبلغ الفاتورة للهاتف الثابت
+                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه):\s*([\d.]+)/i);
+                if (billMatch) {
+                    balance = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
+                } else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) {
+                    balance = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+                } else {
+                    balance = 'لا توجد متأخرات';
+                }
+            }
 
-            const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
-            if (priceMatch) price = priceMatch[1];
+            const priceMatch = raw.match(/(قيمة الباقة|تأمين الهاتف|المبلغ):\s*([\d.]+)/i);
+            if (priceMatch) price = priceMatch[2] || priceMatch[1];
 
-            const dateMatch = raw.match(/تأريخ الانتهاء:\s*(\d{4})[-]?(\d{2})[-]?(\d{2})/i);
+            const dateMatch = raw.match(/(تأريخ الانتهاء|تاريخ الفاتورة):\s*(\d{4})[-]?(\d{2})[-]?(\d{2})/i);
             if (dateMatch) {
-                expiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+                expiry = `${parseInt(dateMatch[4])}/${parseInt(dateMatch[3])}/${dateMatch[2]}`;
+            } else if (raw.match(/\d{4}\/\d{2}\/\d{2}/)) {
+                expiry = raw.match(/\d{4}\/\d{2}\/\d{2}/)![0];
             }
             
             setQueryResult({ balance, packagePrice: price, expireDate: expiry, message: result.resultDesc });
@@ -150,7 +164,6 @@ export default function LandlineRedesignPage() {
                 selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
                 if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
-                // For landline, we need it to start with 0 and have 8 digits
                 if (!selectedNumber.startsWith('0')) selectedNumber = '0' + selectedNumber;
                 
                 setPhone(selectedNumber.slice(0, 8));
@@ -334,15 +347,21 @@ export default function LandlineRedesignPage() {
                             <div className="bg-mesh-gradient rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95">
                                 <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white">
                                     <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">
+                                            {activeTab === 'internet' ? 'الرصيد المتبقي' : 'المبلغ المستحق'}
+                                        </p>
                                         <p className="text-sm font-black">{queryResult.balance}</p>
                                     </div>
                                     <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">
+                                            {activeTab === 'internet' ? 'قيمة الباقة' : 'تأمين الهاتف'}
+                                        </p>
                                         <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
                                     </div>
                                     <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">
+                                            {activeTab === 'internet' ? 'تاريخ الانتهاء' : 'تاريخ الفاتورة'}
+                                        </p>
                                         <p className="text-sm font-black">{queryResult.expireDate}</p>
                                     </div>
                                 </div>

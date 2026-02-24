@@ -67,7 +67,7 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // الشعار الرسمي للمنظومة
+  // الشعار الرسمي المعتمد
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
@@ -179,7 +179,7 @@ export default function AlwadiPage() {
             <CardContent className="p-8 space-y-6">
                 <div>
                     <h2 className="text-2xl font-black text-green-600">تم تجديد كرتك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">سيتم تفعيل كرتك في أقرب وقت</p>
+                    <p className="text-sm text-muted-foreground mt-1">تم التجديد بنجاح</p>
                 </div>
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -214,7 +214,7 @@ export default function AlwadiPage() {
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto">
         
-        {/* Modern Header Logo Section */}
+        {/* Header Logo Section */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
@@ -239,7 +239,7 @@ export default function AlwadiPage() {
         </div>
 
         <div className="px-4 mt-6 space-y-8 pb-10">
-            {/* 1. Input Form Card */}
+            {/* 1. Subscriber Input Form */}
             <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
                 <CardHeader className="pb-0 pt-6">
                     <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
@@ -277,7 +277,7 @@ export default function AlwadiPage() {
                 </CardContent>
             </Card>
 
-            {/* 2. Packages Section */}
+            {/* 2. Packages Selection */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function AlwadiPage() {
                 )}
             </div>
 
-            {/* 3. Action Button (Inside content flow) */}
+            {/* 3. Submit Button */}
             <div className="pt-2">
                 <Button 
                     className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"

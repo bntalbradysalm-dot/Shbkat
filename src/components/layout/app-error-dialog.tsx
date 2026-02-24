@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -27,18 +28,20 @@ export function AppErrorDialog() {
 
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-[80vw] sm:max-w-[280px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden">
+      <DialogContent className="max-w-[80vw] sm:max-w-[280px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden bg-white">
         {/* أيقونة المعلومات البرتقالية المطلوبة */}
         <div className="w-16 h-16 rounded-full border-[5px] border-[#FEA500] flex items-center justify-center mb-5 shadow-sm">
           <span className="text-4xl font-black text-[#FEA500] leading-none select-none">i</span>
         </div>
         
         {/* نص رسالة الخطأ */}
-        <p className="text-sm font-bold text-foreground mb-6 leading-relaxed">
-          {errorMessage}
-        </p>
+        <div className="mb-6">
+            <p className="text-sm font-bold text-foreground leading-relaxed">
+            {errorMessage}
+            </p>
+        </div>
         
-        {/* زر إغلاق بتدرج التطبيق الأزرق */}
+        {/* زر إغلاق بتدرج التطبيق الأزرق في الأسفل */}
         <Button 
           onClick={handleClose}
           className="w-full h-12 rounded-full bg-mesh-gradient text-white font-black text-base shadow-lg active:scale-95 transition-all border-none"

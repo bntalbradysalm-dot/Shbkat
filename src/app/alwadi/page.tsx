@@ -251,10 +251,10 @@ export default function AlwadiPage() {
                             <div className="relative">
                                 <Input
                                     id="subscriberName"
-                                    placeholder="ادخل اسم صاحب الكرت"
+                                    placeholder="اسم المشترك"
                                     value={subscriberName}
                                     onChange={(e) => setSubscriberName(e.target.value)}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold"
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold text-right"
                                 />
                                 <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
                             </div>
@@ -265,10 +265,10 @@ export default function AlwadiPage() {
                                 <Input
                                     id="cardNumber"
                                     type="tel"
-                                    placeholder="ادخل رقم الكرت المكون من أرقام"
+                                    placeholder="ادخل رقم الكرت"
                                     value={cardNumber}
                                     onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold tracking-widest"
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold text-right"
                                 />
                                 <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
                             </div>

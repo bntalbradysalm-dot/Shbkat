@@ -113,10 +113,10 @@ export function ServiceGrid() {
 
       {/* Offers Modal */}
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-[400px] p-0 overflow-hidden border-none bg-transparent shadow-none gap-0 outline-none [&>button]:hidden flex flex-col items-center z-[9999]">
+        <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
           <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
-            {/* حاوية الصورة الطولية */}
-            <div className="relative w-full aspect-[9/16] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white/20 bg-card">
+            {/* حاوية الصورة - جعلتها أصغر */}
+            <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">
               <Image 
                 src="https://i.postimg.cc/SNtjK4ZZ/IMG-20260224-WA0012.jpg" 
                 alt="Exclusive Offer" 
@@ -128,14 +128,12 @@ export function ServiceGrid() {
             </div>
             
             {/* زر الإغلاق السفلي */}
-            <div className="w-full px-2">
-              <Button 
-                  onClick={() => setIsOffersOpen(false)}
-                  className="mt-6 w-full h-14 rounded-3xl bg-white text-primary hover:bg-white/90 font-black text-xl shadow-2xl border-b-4 border-primary/20 active:translate-y-1 transition-all"
-              >
-                  إغلاق العرض
-              </Button>
-            </div>
+            <Button 
+                onClick={() => setIsOffersOpen(false)}
+                className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg shadow-lg active:scale-95 transition-all"
+            >
+                إغلاق
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

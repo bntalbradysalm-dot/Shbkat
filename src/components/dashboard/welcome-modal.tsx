@@ -13,7 +13,7 @@ export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // تحديد تاريخ الانتهاء: 1 مارس 2025 (لضمان بقائه لمدة يومين على الأقل)
+    // تحديد تاريخ الانتهاء: 1 مارس 2025
     const expiryDate = new Date('2025-03-01T23:59:59').getTime();
     const now = new Date().getTime();
     
@@ -22,7 +22,7 @@ export function WelcomeModal() {
         return;
     }
 
-    // استخدام مفتاح جديد لضمان الظهور الفوري لكل المستخدمين حتى لو أغلقوه سابقاً
+    // استخدام مفتاح تخزين لضمان الظهور للمستخدمين الجدد
     const isDismissed = localStorage.getItem('welcome_promo_final_trigger');
     if (!isDismissed) {
       setIsOpen(true);
@@ -37,10 +37,10 @@ export function WelcomeModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-[90vw] sm:max-w-[400px] p-0 overflow-hidden border-none bg-transparent shadow-none gap-0 outline-none [&>button]:hidden flex flex-col items-center z-[9999]">
+      <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
         <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
-          {/* حاوية الصورة الطولية */}
-          <div className="relative w-full aspect-[9/16] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white/20 bg-card">
+          {/* حاوية الصورة - تم تصغيرها وجعلها أكثر تناسقاً */}
+          <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">
             <Image 
               src="https://i.postimg.cc/SNtjK4ZZ/IMG-20260224-WA0012.jpg" 
               alt="Welcome Promo" 
@@ -52,14 +52,12 @@ export function WelcomeModal() {
           </div>
           
           {/* زر الإغلاق السفلي */}
-          <div className="w-full px-2">
-            <Button 
-                onClick={handleClose}
-                className="mt-6 w-full h-14 rounded-3xl bg-white text-primary hover:bg-white/90 font-black text-xl shadow-2xl border-b-4 border-primary/20 active:translate-y-1 transition-all"
-            >
-                إغلاق الإعلان
-            </Button>
-          </div>
+          <Button 
+              onClick={handleClose}
+              className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg shadow-lg active:scale-95 transition-all"
+          >
+              إغلاق
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

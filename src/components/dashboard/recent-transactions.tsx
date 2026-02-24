@@ -38,8 +38,8 @@ const getTransactionIcon = (type: string) => {
     if (t.includes('تحويل')) return Send;
     if (t.includes('سحب')) return Banknote;
     if (t.includes('شراء كرت')) return Wifi;
-    if (t.includes('سداد') || t.includes('رصيد')) return Smartphone;
-    if (t.includes('تجديد') || t.includes('باقة')) return SatelliteDish;
+    if (t.includes('سداد') || t.includes('رصيد') || t.includes('باقة')) return Smartphone;
+    if (t.includes('تجديد')) return SatelliteDish;
     if (t.includes('متجر') || t.includes('منتج')) return ShoppingBag;
     if (t.includes('أرباح')) return TrendingUp;
     return CreditCard;

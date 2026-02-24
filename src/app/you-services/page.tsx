@@ -94,7 +94,7 @@ const YOU_CATEGORIES = [
     id: 'unified',
     title: 'باقات السعر الموحد',
     badge: 'YOU',
-    icon: ShieldCheck,
+    icon: Smartphone,
     offers: [
       { offerId: 'unified_300', offerName: 'باقة السعر الموحد 300', price: 2904, data: '500MB', minutes: '300', sms: '300', validity: 'شهر', offertype: 'Sawa_300_PRE' },
       { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE' },

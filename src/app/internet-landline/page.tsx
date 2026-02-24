@@ -18,7 +18,10 @@ import {
   Users,
   Globe,
   ChevronLeft,
-  Zap
+  Zap,
+  ArrowUpRight,
+  ShieldCheck,
+  Cpu
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -497,25 +500,33 @@ export default function LandlineRedesignPage() {
                                     </Button>
                                 </div>
 
-                                {/* Internet Packages Section */}
-                                <div className="mt-6 space-y-4 pb-10">
-                                    <div className="flex items-center gap-2 px-1">
-                                        <Zap className="w-4 h-4 text-[#302C81]" />
-                                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">باقات الإنترنت المتوفرة</h3>
+                                {/* Internet Packages Section - Redesigned */}
+                                <div className="mt-8 space-y-6 pb-10">
+                                    <div className="flex items-center justify-between px-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-[#302C81]/10 rounded-lg">
+                                                <Zap className="w-4 h-4 text-[#302C81]" />
+                                            </div>
+                                            <h3 className="text-sm font-black text-foreground tracking-tight">باقات الإنترنت الفاخرة</h3>
+                                        </div>
+                                        <Badge variant="outline" className="text-[9px] font-bold text-[#302C81] border-[#302C81]/20 bg-[#302C81]/5">عرض مباشر</Badge>
                                     </div>
                                     
-                                    <Accordion type="single" collapsible className="w-full space-y-3">
+                                    <Accordion type="single" collapsible className="w-full space-y-4">
                                         {INTERNET_PACKAGES.map((category, idx) => (
                                             <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
-                                                <AccordionTrigger className="px-5 py-4 bg-white dark:bg-slate-900 rounded-2xl hover:no-underline shadow-sm border border-[#302C81]/5 data-[state=open]:rounded-b-none text-right">
-                                                    <div className="flex items-center gap-3 flex-1">
-                                                        <div className="bg-[#302C81]/10 p-1.5 rounded-lg">
-                                                            <Globe className="w-4 h-4 text-[#302C81]" />
+                                                <AccordionTrigger className="px-5 py-5 bg-white dark:bg-slate-900 rounded-[24px] hover:no-underline shadow-md border border-[#302C81]/5 data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group">
+                                                    <div className="flex items-center gap-4 flex-1">
+                                                        <div className="h-10 w-10 bg-gradient-to-br from-[#302C81] to-[#403AAB] rounded-2xl flex items-center justify-center shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform">
+                                                            <Cpu className="w-5 h-5 text-white" />
                                                         </div>
-                                                        <span className="text-sm font-black text-foreground">{category.title}</span>
+                                                        <div className="flex flex-col items-start">
+                                                            <span className="text-sm font-black text-foreground">{category.title}</span>
+                                                            <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest">Premium Speed</span>
+                                                        </div>
                                                     </div>
                                                 </AccordionTrigger>
-                                                <AccordionContent className="bg-white dark:bg-slate-900 border-x border-b border-[#302C81]/5 rounded-b-2xl px-3 py-3 space-y-2">
+                                                <AccordionContent className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-x border-b border-[#302C81]/10 rounded-b-[24px] p-3 space-y-2.5 animate-in slide-in-from-top-2 duration-300">
                                                     {category.items.map((pkg, pIdx) => (
                                                         <div 
                                                             key={pIdx}
@@ -523,18 +534,28 @@ export default function LandlineRedesignPage() {
                                                                 setAmount(String(pkg.price));
                                                                 setIsConfirmingPayment(true);
                                                             }}
-                                                            className="flex items-center justify-between p-3 rounded-xl hover:bg-[#302C81]/5 transition-colors cursor-pointer group border border-transparent hover:border-[#302C81]/10"
+                                                            className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:bg-gradient-to-l hover:from-[#302C81]/5 hover:to-transparent transition-all cursor-pointer group/item border border-[#302C81]/5 hover:border-[#302C81]/20 relative overflow-hidden"
                                                         >
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                                                                    <Zap className="w-4 h-4 text-muted-foreground group-hover:text-[#302C81]" />
+                                                            <div className="flex items-center gap-4 relative z-10">
+                                                                <div className="h-9 w-9 rounded-xl bg-[#302C81]/5 flex items-center justify-center group-hover/item:bg-white group-hover/item:shadow-sm transition-all">
+                                                                    <Globe className="w-4 h-4 text-[#302C81] opacity-60" />
                                                                 </div>
-                                                                <span className="text-sm font-bold text-foreground">{pkg.name}</span>
+                                                                <div className="flex flex-col items-start">
+                                                                    <span className="text-sm font-black text-foreground group-hover/item:text-[#302C81] transition-colors">{pkg.name}</span>
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">High Performance</span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-black text-[#302C81]">{pkg.price.toLocaleString('en-US')} ر.ي</span>
-                                                                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                                                            <div className="flex items-center gap-3 relative z-10">
+                                                                <div className="text-left">
+                                                                    <p className="text-xs font-bold text-muted-foreground line-through opacity-40 mb-[-4px]">{(pkg.price * 1.1).toFixed(0)}</p>
+                                                                    <p className="text-lg font-black text-[#302C81] tracking-tighter">{pkg.price.toLocaleString('en-US')}<span className="text-[9px] font-bold mr-1">ر.ي</span></p>
+                                                                </div>
+                                                                <div className="h-8 w-8 rounded-full bg-[#302C81] flex items-center justify-center text-white shadow-lg shadow-[#302C81]/30 translate-x-4 opacity-0 group-hover/item:translate-x-0 group-hover/item:opacity-100 transition-all duration-300">
+                                                                    <ArrowUpRight className="w-4 h-4" />
+                                                                </div>
                                                             </div>
+                                                            {/* Subtle Glow Effect */}
+                                                            <div className="absolute top-0 right-0 w-24 h-full bg-[#302C81]/5 blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity" />
                                                         </div>
                                                     ))}
                                                 </AccordionContent>

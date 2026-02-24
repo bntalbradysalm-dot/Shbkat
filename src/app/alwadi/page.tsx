@@ -239,7 +239,45 @@ export default function AlwadiPage() {
         </div>
 
         <div className="px-4 mt-6 space-y-10">
-            {/* 1. Packages Section (NOW AT TOP) */}
+            {/* 1. Input Form Card (NOW AT TOP) */}
+            <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
+                <CardHeader className="pb-0 pt-6">
+                    <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="subscriberName" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">اسم المشترك</Label>
+                            <div className="relative">
+                                <Input
+                                    id="subscriberName"
+                                    placeholder="ادخل اسم صاحب الكرت"
+                                    value={subscriberName}
+                                    onChange={(e) => setSubscriberName(e.target.value)}
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold"
+                                />
+                                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت</Label>
+                            <div className="relative">
+                                <Input
+                                    id="cardNumber"
+                                    type="tel"
+                                    placeholder="ادخل رقم الكرت المكون من أرقام"
+                                    value={cardNumber}
+                                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold tracking-widest"
+                                />
+                                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 2. Packages Section (NOW BELOW INPUT FORM) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -299,44 +337,6 @@ export default function AlwadiPage() {
                     </div>
                 )}
             </div>
-
-            {/* 2. Input Form Card (NOW BELOW PACKAGES) */}
-            <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
-                <CardHeader className="pb-0 pt-6">
-                    <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-5">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="subscriberName" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">اسم المشترك</Label>
-                            <div className="relative">
-                                <Input
-                                    id="subscriberName"
-                                    placeholder="ادخل اسم صاحب الكرت"
-                                    value={subscriberName}
-                                    onChange={(e) => setSubscriberName(e.target.value)}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold"
-                                />
-                                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت</Label>
-                            <div className="relative">
-                                <Input
-                                    id="cardNumber"
-                                    type="tel"
-                                    placeholder="ادخل رقم الكرت المكون من أرقام"
-                                    value={cardNumber}
-                                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold tracking-widest"
-                                />
-                                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
       </div>
 

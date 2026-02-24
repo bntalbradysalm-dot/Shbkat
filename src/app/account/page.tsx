@@ -259,10 +259,17 @@ export default function AccountPage() {
                 </div>
               </div>
             </div>
-            <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl">
+            <Avatar className="h-16 w-16 border-2 border-white/30 bg-white/10 shrink-0 shadow-xl overflow-hidden">
                 <AvatarImage src={userProfile?.photoURL} />
-                <AvatarFallback>
-                    <User className="h-8 w-8 text-white" />
+                <AvatarFallback className="bg-white">
+                    <div className="relative w-full h-full">
+                        <Image 
+                            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                            alt="Logo" 
+                            fill 
+                            className="object-cover"
+                        />
+                    </div>
                 </AvatarFallback>
             </Avatar>
           </CardContent>

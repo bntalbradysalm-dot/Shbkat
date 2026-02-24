@@ -98,7 +98,7 @@ const YOU_CATEGORIES = [
     offers: [
       { offerId: 'unified_300', offerName: 'باقة السعر الموحد 300', price: 2904, data: '500MB', minutes: '300', sms: '300', validity: 'شهر', offertype: 'Sawa_300_PRE' },
       { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE' },
-      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'Mix_5000_PRE' },
+      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_5000_PRE' },
       { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_12Giga_4G_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 15000, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
     ]
@@ -335,7 +335,6 @@ export default function YouServicesPage() {
         setIsActivatingOffer(true);
         try {
             const transid = Date.now().toString().slice(-8);
-            // بناءً على التوثيق الجديد: استخدام action: billoffer لإرسال كود الباقة في حقل num
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -343,7 +342,7 @@ export default function YouServicesPage() {
                     mobile: phone, 
                     action: 'billoffer', 
                     service: 'you', 
-                    num: selectedOffer.offertype, // إرسال كود الباقة (مثل Mix_4GB_4G_PRE)
+                    num: selectedOffer.offertype, 
                     amount: selectedOffer.price, 
                     type: lineType,
                     transid 
@@ -365,7 +364,7 @@ export default function YouServicesPage() {
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
                 transactionType: `تفعيل باقة YOU: ${selectedOffer.offerName}`, 
-                notes: `للرقم: ${phone}. الحالة: ${isPending ? 'قيد الانتظار' : 'ناجحة'}`, 
+                notes: `للرقم: ${phone}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`, 
                 recipientPhoneNumber: phone,
                 transid: transid
             });

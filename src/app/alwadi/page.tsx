@@ -14,7 +14,8 @@ import {
   Wallet,
   Hash,
   Sparkles,
-  Info
+  Info,
+  SatelliteDish
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -66,7 +67,7 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // الشعار الرسمي للمنظومة
+  // الشعار الرسمي للمنظومة (للهيدر فقط)
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
@@ -305,17 +306,13 @@ export default function AlwadiPage() {
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
                                 <div className={cn(
-                                    "p-1 rounded-xl mb-1 transition-colors overflow-hidden border-2 border-white",
+                                    "p-3 rounded-2xl mb-1 transition-colors",
                                     selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
                                 )}>
-                                    <div className="relative h-12 w-28 rounded-lg overflow-hidden">
-                                        <Image 
-                                            src={ALWADI_LOGO}
-                                            alt="Category Logo" 
-                                            fill 
-                                            className="object-contain"
-                                        />
-                                    </div>
+                                    <SatelliteDish className={cn(
+                                        "h-7 w-7",
+                                        selectedOption?.id === option.id ? "text-white" : "text-primary"
+                                    )} />
                                 </div>
                                 <span className={cn("text-[11px] font-black", selectedOption?.id === option.id ? "text-white" : "text-foreground")}>
                                     {option.title}

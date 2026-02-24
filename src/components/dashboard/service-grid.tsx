@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -113,7 +114,7 @@ export function ServiceGrid() {
 
       {/* Offers Modal */}
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
-        <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
+        <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
           <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
             {/* حاوية الصورة */}
             <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">
@@ -127,10 +128,10 @@ export function ServiceGrid() {
               />
             </div>
             
-            {/* زر الإغلاق السفلي */}
+            {/* زر الإغلاق السفلي بتدرج التطبيق الأزرق */}
             <Button 
                 onClick={() => setIsOffersOpen(false)}
-                className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg shadow-lg active:scale-95 transition-all"
+                className="w-full h-12 rounded-full bg-mesh-gradient text-white font-black text-base shadow-lg active:scale-95 transition-all border-none"
             >
                 إغلاق
             </Button>

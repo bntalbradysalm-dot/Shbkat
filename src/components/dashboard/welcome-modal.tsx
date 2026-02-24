@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -37,9 +38,9 @@ export function WelcomeModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
+      <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
         <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
-          {/* حاوية الصورة - تم تصغيرها وجعلها أكثر تناسقاً */}
+          {/* حاوية الصورة */}
           <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">
             <Image 
               src="https://i.postimg.cc/SNtjK4ZZ/IMG-20260224-WA0012.jpg" 
@@ -51,10 +52,10 @@ export function WelcomeModal() {
             />
           </div>
           
-          {/* زر الإغلاق السفلي */}
+          {/* زر الإغلاق السفلي بتدرج التطبيق */}
           <Button 
               onClick={handleClose}
-              className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg shadow-lg active:scale-95 transition-all"
+              className="w-full h-12 rounded-full bg-mesh-gradient text-white font-black text-base shadow-lg active:scale-95 transition-all border-none"
           >
               إغلاق
           </Button>

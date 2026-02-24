@@ -13,11 +13,22 @@ import {
   Hash,
   Calendar,
   History,
-  Phone,
-  Loader2,
-  Users
+  Globe,
+  ChevronLeft,
+  Zap,
+  ArrowUpRight,
+  ShieldCheck,
+  Users,
+  Phone as PhoneIcon,
+  Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +47,8 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +79,65 @@ const LANDLINE_THEME = {
         backgroundImage: `radial-gradient(at 0% 0%, #FF9E3D 0px, transparent 50%), radial-gradient(at 100% 100%, #C76A00 0px, transparent 50%)`
     }
 };
+
+const INTERNET_PACKAGES = [
+    {
+        title: "1 ميجا",
+        items: [
+            { name: "10GB", price: 1575 },
+            { name: "24GB", price: 3150 },
+            { name: "100GB", price: 10500 },
+        ]
+    },
+    {
+        title: "2 ميجا",
+        items: [
+            { name: "24GB", price: 2520 },
+            { name: "50GB", price: 4725 },
+            { name: "188GB", price: 15750 },
+        ]
+    },
+    {
+        title: "4 ميجا",
+        items: [
+            { name: "66GB", price: 6930 },
+            { name: "280GB", price: 26250 },
+            { name: "480GB", price: 39900 },
+        ]
+    },
+    {
+        title: "8 ميجا",
+        items: [
+            { name: "120GB", price: 12600 },
+            { name: "420GB", price: 39375 },
+            { name: "720GB", price: 59850 },
+        ]
+    },
+    {
+        title: "سوبر شامل 2 ميجا",
+        items: [
+            { name: "28GB", price: 2900 },
+            { name: "54GB", price: 5100 },
+            { name: "192GB", price: 16100 },
+        ]
+    },
+    {
+        title: "سوبر شامل 4 ميجا",
+        items: [
+            { name: "70GB", price: 7300 },
+            { name: "284GB", price: 26600 },
+            { name: "485GB", price: 40300 },
+        ]
+    },
+    {
+        title: "سوبر شامل 8 ميجا",
+        items: [
+            { name: "124GB", price: 13000 },
+            { name: "425GB", price: 39800 },
+            { name: "725GB", price: 60200 },
+        ]
+    }
+];
 
 export default function LandlineRedesignPage() {
     const router = useRouter();
@@ -282,7 +354,7 @@ export default function LandlineRedesignPage() {
                                     <span className="font-mono font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -427,6 +499,67 @@ export default function LandlineRedesignPage() {
                                     >
                                         تسديد الآن
                                     </Button>
+                                </div>
+
+                                <div className="mt-8 space-y-6 pb-10">
+                                    <div className="flex items-center justify-center px-2">
+                                        <h3 className="text-sm font-black text-foreground tracking-tight">فئات الانترنت</h3>
+                                    </div>
+                                    
+                                    <Accordion type="single" collapsible className="w-full space-y-4">
+                                        {INTERNET_PACKAGES.map((category, idx) => (
+                                            <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
+                                                <AccordionTrigger className="px-5 py-5 bg-white dark:bg-slate-900 rounded-[24px] hover:no-underline shadow-md border border-[#302C81]/5 data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group">
+                                                    <div className="flex items-center gap-4 flex-1">
+                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform border border-white/20">
+                                                            <Image 
+                                                                src="https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg" 
+                                                                alt="Landline Logo" 
+                                                                fill 
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col items-start">
+                                                            <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest leading-tight">فئات</span>
+                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title.replace('M', ' ميجا')}</span>
+                                                        </div>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-x border-b border-[#302C81]/10 rounded-b-[24px] p-3 space-y-2.5 animate-in slide-in-from-top-2 duration-300">
+                                                    {category.items.map((pkg, pIdx) => (
+                                                        <div 
+                                                            key={pIdx}
+                                                            onClick={() => {
+                                                                setAmount(String(pkg.price));
+                                                                setIsConfirmingPayment(true);
+                                                            }}
+                                                            className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:bg-gradient-to-l hover:from-[#302C81]/5 hover:to-transparent transition-all cursor-pointer group/item border border-[#302C81]/5 hover:border-[#302C81]/20 relative overflow-hidden"
+                                                        >
+                                                            <div className="flex items-center gap-4 relative z-10">
+                                                                <div className="h-9 w-9 rounded-xl bg-[#302C81]/5 flex items-center justify-center group-hover/item:bg-white group-hover/item:shadow-sm transition-all">
+                                                                    <Globe className="w-4 h-4 text-[#302C81] opacity-60" />
+                                                                </div>
+                                                                <div className="flex flex-col items-start">
+                                                                    <span className="text-sm font-black text-foreground group-hover/item:text-[#302C81] transition-colors">{pkg.name}</span>
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">تسديد مباشر</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 relative z-10">
+                                                                <div className="text-left">
+                                                                    <p className="text-lg font-black text-[#302C81] tracking-tighter">{pkg.price.toLocaleString('en-US')}</p>
+                                                                </div>
+                                                                <div className="h-8 w-8 rounded-full bg-[#302C81] flex items-center justify-center text-white shadow-lg shadow-[#302C81]/30 translate-x-4 opacity-0 group-hover/item:translate-x-0 group-hover/item:opacity-100 transition-all duration-300">
+                                                                    <ArrowUpRight className="w-4 h-4" />
+                                                                </div>
+                                                            </div>
+                                                            {/* Subtle Glow Effect */}
+                                                            <div className="absolute top-0 right-0 w-24 h-full bg-[#302C81]/5 blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                                        </div>
+                                                    ))}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
                                 </div>
                             </TabsContent>
 

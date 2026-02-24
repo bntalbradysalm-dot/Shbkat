@@ -500,16 +500,10 @@ export default function LandlineRedesignPage() {
                                     </Button>
                                 </div>
 
-                                {/* Internet Packages Section - Redesigned */}
+                                {/* Internet Packages Section - Simple & Centered */}
                                 <div className="mt-8 space-y-6 pb-10">
-                                    <div className="flex items-center justify-between px-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-[#302C81]/10 rounded-lg">
-                                                <Zap className="w-4 h-4 text-[#302C81]" />
-                                            </div>
-                                            <h3 className="text-sm font-black text-foreground tracking-tight">باقات الإنترنت الفاخرة</h3>
-                                        </div>
-                                        <Badge variant="outline" className="text-[9px] font-bold text-[#302C81] border-[#302C81]/20 bg-[#302C81]/5">عرض مباشر</Badge>
+                                    <div className="flex items-center justify-center px-2">
+                                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">فئات الانترنت</h3>
                                     </div>
                                     
                                     <Accordion type="single" collapsible className="w-full space-y-4">

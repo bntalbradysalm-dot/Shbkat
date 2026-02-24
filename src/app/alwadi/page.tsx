@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -67,7 +67,7 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // الشعار الرسمي للمنظومة (للهيدر فقط)
+  // الشعار الرسمي للمنظومة
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
@@ -212,7 +212,7 @@ export default function AlwadiPage() {
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="منظومة الوادي" />
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-40">
         
         {/* Modern Header Logo Section */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
@@ -232,49 +232,14 @@ export default function AlwadiPage() {
                     <h2 className="text-2xl font-black text-white tracking-tight">تجديد اشتراك الوادي</h2>
                     <div className="flex items-center justify-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                        <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التجديد اليدوي المعتمد</p>
+                        <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التجديد المباشر</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="px-4 -mt-8 space-y-6">
-            {/* Input Form Card */}
-            <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
-                <CardContent className="p-6 space-y-5">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="subscriberName" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">اسم المشترك</Label>
-                            <div className="relative">
-                                <Input
-                                    id="subscriberName"
-                                    placeholder="ادخل اسم صاحب الكرت"
-                                    value={subscriberName}
-                                    onChange={(e) => setSubscriberName(e.target.value)}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold"
-                                />
-                                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت</Label>
-                            <div className="relative">
-                                <Input
-                                    id="cardNumber"
-                                    type="tel"
-                                    placeholder="ادخل رقم الكرت المكون من أرقام"
-                                    value={cardNumber}
-                                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold tracking-widest"
-                                />
-                                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Packages Section */}
+        <div className="px-4 mt-6 space-y-10">
+            {/* 1. Packages Section (NOW AT TOP) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -335,30 +300,55 @@ export default function AlwadiPage() {
                 )}
             </div>
 
-            {/* Action Button */}
-            <div className="fixed bottom-24 left-0 right-0 px-6 animate-in slide-in-from-bottom-10">
-                <Button 
-                    className="w-full h-14 rounded-3xl font-black text-lg shadow-xl shadow-primary/20"
-                    onClick={handleRenewClick}
-                    disabled={!selectedOption || !subscriberName || !cardNumber}
-                >
-                    تجديد الآن
-                </Button>
-            </div>
-
-            {/* Important Info */}
-            <div className="bg-primary/5 p-5 rounded-[32px] border border-primary/10 space-y-3 mb-32">
-                <h4 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <Info className="w-3.5 h-3.5" />
-                    تنبيهات هامة:
-                </h4>
-                <ul className="text-[10px] text-muted-foreground leading-relaxed list-disc pr-4 space-y-1 font-bold">
-                    <li>يتم خصم المبلغ من رصيدك فور إرسال الطلب.</li>
-                    <li>سيقوم فريق الدعم بتنفيذ الطلب وتجديد كرتك في أقرب وقت.</li>
-                    <li>في حال رفض الطلب، سيتم إعادة المبلغ تلقائياً إلى محفظتك.</li>
-                </ul>
-            </div>
+            {/* 2. Input Form Card (NOW BELOW PACKAGES) */}
+            <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
+                <CardHeader className="pb-0 pt-6">
+                    <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="subscriberName" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">اسم المشترك</Label>
+                            <div className="relative">
+                                <Input
+                                    id="subscriberName"
+                                    placeholder="ادخل اسم صاحب الكرت"
+                                    value={subscriberName}
+                                    onChange={(e) => setSubscriberName(e.target.value)}
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold"
+                                />
+                                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت</Label>
+                            <div className="relative">
+                                <Input
+                                    id="cardNumber"
+                                    type="tel"
+                                    placeholder="ادخل رقم الكرت المكون من أرقام"
+                                    value={cardNumber}
+                                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
+                                    className="h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-bold tracking-widest"
+                                />
+                                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-60" />
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
+      </div>
+
+      {/* Action Button (Fixed Position) */}
+      <div className="fixed bottom-24 left-0 right-0 px-6 animate-in slide-in-from-bottom-10 z-20">
+          <Button 
+              className="w-full h-14 rounded-3xl font-black text-lg shadow-xl shadow-primary/20"
+              onClick={handleRenewClick}
+              disabled={!selectedOption || !subscriberName || !cardNumber}
+          >
+              تجديد الآن
+          </Button>
       </div>
 
       {/* Confirmation Dialog */}

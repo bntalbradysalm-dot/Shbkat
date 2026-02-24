@@ -11,7 +11,7 @@ import {
   ArrowLeftRight,
   Heart,
   Gamepad2,
-  Sparkles,
+  Percent,
   ChevronLeft,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -99,7 +99,7 @@ export function ServiceGrid() {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
-                <Sparkles className="h-4 w-4 text-white" />
+                <Percent className="h-4 w-4 text-white" />
               </div>
               <div className="text-right">
                 <h3 className="text-sm font-black text-primary">عروض حصرية</h3>
@@ -115,7 +115,7 @@ export function ServiceGrid() {
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[85vw] sm:max-w-[350px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
           <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
-            {/* حاوية الصورة - جعلتها أصغر */}
+            {/* حاوية الصورة */}
             <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">
               <Image 
                 src="https://i.postimg.cc/SNtjK4ZZ/IMG-20260224-WA0012.jpg" 

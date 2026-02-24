@@ -66,7 +66,7 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // تحديث الشعار بناءً على طلب المستخدم (هنا فقط)
+  // الشعار الرسمي للمنظومة
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
   // User Profile
@@ -308,12 +308,12 @@ export default function AlwadiPage() {
                                     "p-1 rounded-xl mb-1 transition-colors overflow-hidden",
                                     selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
                                 )}>
-                                    <div className="relative h-12 w-12 rounded-lg overflow-hidden">
+                                    <div className="relative h-12 w-24 rounded-lg overflow-hidden">
                                         <Image 
                                             src={ALWADI_LOGO}
                                             alt="Category Logo" 
                                             fill 
-                                            className="object-cover"
+                                            className="object-contain"
                                         />
                                     </div>
                                 </div>

@@ -541,7 +541,7 @@ export default function LandlineRedesignPage() {
                                                                 </div>
                                                                 <div className="flex flex-col items-start">
                                                                     <span className="text-sm font-black text-foreground group-hover/item:text-[#302C81] transition-colors">{pkg.name}</span>
-                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">جودة عالية</span>
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">تسديد مباشر</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-3 relative z-10">

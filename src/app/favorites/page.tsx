@@ -207,10 +207,14 @@ export default function FavoritesPage() {
             const commission = categoryPrice * 0.10;
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            // 3. إضافة الرصيد للمالك
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
+            // 4. سجل عمليات
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
@@ -301,9 +305,7 @@ export default function FavoritesPage() {
         <div className="flex flex-col items-center justify-center text-center h-64">
           <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
           <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            أضف شبكتك المفضلة هنا للوصول إليها بسرعة
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
         </div>
       );
     }

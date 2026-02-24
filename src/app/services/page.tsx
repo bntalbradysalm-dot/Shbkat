@@ -248,7 +248,6 @@ export default function ServicesPage() {
         const response = await fetch(`/services/networks-api/${network.id}/classes`);
         if (!response.ok) throw new Error('فشل تحميل الفئات الخارجية');
         const data = await response.json();
-        // External API mapping
         setCategories(data.map((c: any) => ({
             id: c.id,
             name: c.name,
@@ -334,20 +333,29 @@ export default function ServicesPage() {
             const commission = categoryPrice * 0.10;
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            
+            // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
-            // Logs
+            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
+            
+            // 5. سجل عملية للمالك
             batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
                 userId: ownerId, transactionDate: now, amount: payoutAmount,
                 transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
             });
+            
+            // 6. سجل الكروت المباعة
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, categoryName: selectedCategory.name,

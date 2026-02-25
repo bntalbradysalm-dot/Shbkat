@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { X } from 'lucide-react';
 
 /**
  * منبثق الأخطاء العالمي - تم تصغيره وتحديثه ليتوافق مع طلب المستخدم.
@@ -29,9 +30,9 @@ export function AppErrorDialog() {
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-[80vw] sm:max-w-[280px] p-6 rounded-[40px] border-none shadow-2xl flex flex-col items-center text-center z-[10000] outline-none [&>button]:hidden bg-white">
-        {/* أيقونة المعلومات البرتقالية المطلوبة */}
-        <div className="w-16 h-16 rounded-full border-[5px] border-[#FEA500] flex items-center justify-center mb-5 shadow-sm">
-          <span className="text-4xl font-black text-[#FEA500] leading-none select-none">i</span>
+        {/* أيقونة الخطأ الحمراء المطلوبة */}
+        <div className="w-16 h-16 rounded-full border-[5px] border-destructive flex items-center justify-center mb-5 shadow-sm">
+          <X className="h-10 w-10 text-destructive stroke-[3px]" />
         </div>
         
         {/* نص رسالة الخطأ */}

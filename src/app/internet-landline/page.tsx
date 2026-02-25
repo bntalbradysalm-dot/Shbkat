@@ -620,8 +620,8 @@ export default function LandlineRedesignPage() {
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: currentTheme.primary }} onClick={() => handlePayment(parseFloat(amount), activeTab === 'internet' ? 'إنترنت (ADSL)' : 'هاتف ثابت')}>تأكيد</AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

@@ -36,6 +36,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type CardCategory = {
     id: string;
@@ -66,7 +68,7 @@ type Network = {
 
 function NetworkPurchasePageComponent() {
   const params = useParams();
-  const networkId = params.networkId as string;
+  const networkId = params?.networkId as string;
   const searchParams = useSearchParams();
   
   const { user } = useUser();
@@ -92,13 +94,13 @@ function NetworkPurchasePageComponent() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) {
+    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !networkId || !networkData) {
       toast({
         variant: "destructive",
         title: "خطأ في البيانات",
@@ -153,7 +155,7 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
+        // 3. إضافة الرصيد للمالك
         batch.update(ownerDocRef, { balance: increment(payoutAmount) });
   
         // 4. سجل عملية للمشتري
@@ -174,7 +176,7 @@ function NetworkPurchasePageComponent() {
             transactionDate: now,
             amount: payoutAmount,
             transactionType: 'أرباح بيع كرت',
-            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
         });
 
         // 6. سجل الكروت المباعة للإدارة
@@ -191,23 +193,34 @@ function NetworkPurchasePageComponent() {
             commissionAmount: commission,
             payoutAmount: payoutAmount,
             buyerId: user.uid,
-            buyerName: userProfile.displayName,
-            buyerPhoneNumber: userProfile.phoneNumber,
+            buyerName: userProfile.displayName || 'مشترك',
+            buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
             payoutStatus: 'completed'
         });
         
-        await batch.commit();
+        await batch.commit().catch(async (error) => {
+            const permissionError = new FirestorePermissionError({
+                path: `batch_purchase/${networkId}`,
+                operation: 'write',
+                requestResourceData: { categoryId: selectedCategory.id }
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            throw error;
+        });
+
         setPurchasedCard(cardToPurchaseData);
         audioRef.current?.play().catch(() => {});
   
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({
-            variant: "destructive",
-            title: "فشلت عملية الشراء",
-            description: error.message || "حدث خطأ غير متوقع.",
-        });
+        if (error.code !== 'permission-denied') {
+            toast({
+                variant: "destructive",
+                title: "فشلت عملية الشراء",
+                description: error.message || "حدث خطأ غير متوقع.",
+            });
+        }
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);

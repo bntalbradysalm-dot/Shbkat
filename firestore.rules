@@ -3,13 +3,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /**
+     * وظيفة للتحقق من أن المستخدم مسجل دخول.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
     
     /**
      * تم فتح جميع الصلاحيات (القراءة والكتابة) لكل المستخدمين المسجلين بناءً على طلبكم.
-     * هذا يسمح للمستخدمين وملاك الشبكات بإجراء عمليات الشراء والتحويل والإدارة دون قيود.
+     * هذا يسمح للمستخدمين وملاك الشبكات بإجراء عمليات الشراء والتحويل والإدارة دون قيود برمجية.
+     * القواعد تطبق على كافة المجموعات (users, networks, soldCards, transactions, etc.)
      */
     match /{document=**} {
       allow read, write: if isSignedIn();

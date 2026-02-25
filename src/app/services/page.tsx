@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -56,6 +57,8 @@ import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -332,7 +335,14 @@ export default function ServicesPage() {
             // Local Purchase Logic
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-            const availableCardsSnapshot = await getDocs(q);
+            const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `networks/${selectedNetwork.id}/cards`,
+                    operation: 'list'
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
 
             if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
 
@@ -348,7 +358,7 @@ export default function ServicesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
+            // 3. إضافة الرصيد للمالك
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
             // 4. سجل عملية للمشتري
@@ -361,7 +371,7 @@ export default function ServicesPage() {
             // 5. سجل عملية للمالك
             batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
                 userId: ownerId, transactionDate: now, amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
             });
             
             // 6. سجل الكروت المباعة
@@ -370,14 +380,22 @@ export default function ServicesPage() {
                 categoryId: selectedCategory.id, categoryName: selectedCategory.name,
                 cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
                 price: categoryPrice, commissionAmount: commission, payoutAmount,
-                buyerId: user.uid, buyerName: userProfile.displayName,
-                buyerPhoneNumber: userProfile.phoneNumber, soldTimestamp: now, payoutStatus: 'completed'
+                buyerId: user.uid, buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', soldTimestamp: now, payoutStatus: 'completed'
             });
 
-            await batch.commit();
+            await batch.commit().catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `batch_purchase/${selectedNetwork.id}`,
+                    operation: 'write'
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
+
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         } else {
             // External Purchase Logic
             const response = await fetch(`/services/networks-api/order`, {
@@ -404,13 +422,15 @@ export default function ServicesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         }
         
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        if (error.code !== 'permission-denied') {
+            toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        }
     } finally {
         setIsProcessing(false);
     }

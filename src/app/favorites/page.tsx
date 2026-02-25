@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -23,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Favorite = {
   id: string;
@@ -122,10 +125,8 @@ export default function FavoritesPage() {
   };
 
   const handleNetworkClick = async (fav: Favorite) => {
-    // Inference for isLocal if not present
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
-    // We might need to fetch the local network to get the ownerId
     let ownerId = undefined;
     if (isLocal) {
         const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
@@ -152,13 +153,20 @@ export default function FavoritesPage() {
     try {
       if (isLocal) {
         const catsRef = collection(firestore, `networks/${fav.targetId}/cardCategories`);
-        const snapshot = await getDocs(catsRef);
+        const snapshot = await getDocs(catsRef).catch(async (err) => {
+            const permissionError = new FirestorePermissionError({
+                path: `networks/${fav.targetId}/cardCategories`,
+                operation: 'list'
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            throw err;
+        });
         const catsData = snapshot.docs.map(d => {
             const data = d.data();
             return { 
                 id: d.id, 
                 ...data,
-                dataLimit: data.capacity // Map capacity to dataLimit
+                dataLimit: data.capacity 
             } as CardCategory;
         });
         setCategories(catsData);
@@ -175,7 +183,9 @@ export default function FavoritesPage() {
         })));
       }
     } catch (err: any) {
-      setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      if (err.code !== 'permission-denied') {
+        setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      }
     } finally {
       setIsLoadingCategories(false);
     }
@@ -206,7 +216,14 @@ export default function FavoritesPage() {
         if (selectedNetwork.isLocal) {
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-            const availableCardsSnapshot = await getDocs(q);
+            const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `networks/${selectedNetwork.id}/cards`,
+                    operation: 'list'
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
 
             if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
 
@@ -216,14 +233,10 @@ export default function FavoritesPage() {
             const commission = categoryPrice * 0.10;
             const payoutAmount = categoryPrice - commission;
 
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            // 3. إضافة الرصيد للمالك
             batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
 
-            // 4. سجل عمليات
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
@@ -231,21 +244,29 @@ export default function FavoritesPage() {
             });
             batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
                 userId: ownerId, transactionDate: now, amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
             });
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, categoryName: selectedCategory.name,
                 cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
                 price: categoryPrice, commissionAmount: commission, payoutAmount,
-                buyerId: user.uid, buyerName: userProfile.displayName,
-                buyerPhoneNumber: userProfile.phoneNumber, soldTimestamp: now, payoutStatus: 'completed'
+                buyerId: user.uid, buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', soldTimestamp: now, payoutStatus: 'completed'
             });
 
-            await batch.commit();
+            await batch.commit().catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `batch_purchase/${selectedNetwork.id}`,
+                    operation: 'write'
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
+
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -271,13 +292,15 @@ export default function FavoritesPage() {
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         }
         
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        if (error.code !== 'permission-denied') {
+            toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        }
     } finally {
         setIsProcessing(false);
     }

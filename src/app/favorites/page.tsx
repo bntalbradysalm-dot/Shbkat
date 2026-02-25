@@ -85,9 +85,9 @@ export default function FavoritesPage() {
   // Favorites Query
   const favoritesQuery = useMemoFirebase(
     () =>
-      user
+      user && firestore
         ? query(
-            collection(firestore!, 'users', user.uid, 'favorites'),
+            collection(firestore, 'users', user.uid, 'favorites'),
             where('favoriteType', '==', 'Network')
           )
         : null,
@@ -97,7 +97,7 @@ export default function FavoritesPage() {
 
   // User Profile
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore!, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -494,11 +494,11 @@ export default function FavoritesPage() {
             <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
-          <DialogFooter className="flex gap-2">
-            <Button className="flex-1 rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
+          <DialogFooter className="grid grid-cols-2 gap-2">
+            <Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
             </Button>
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
+            <Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -565,9 +565,9 @@ export default function FavoritesPage() {
                     />
                 </div>
             </div>
-            <DialogFooter className="flex gap-3">
-                <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
-                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+            <DialogFooter className="grid grid-cols-2 gap-3">
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

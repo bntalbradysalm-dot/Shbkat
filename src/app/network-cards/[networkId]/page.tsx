@@ -324,7 +324,7 @@ function NetworkPurchasePageComponent() {
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePurchase} disabled={isProcessing}>
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
                         </AlertDialogAction>
-                        <AlertDialogCancel className="w-full rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             )}
@@ -388,9 +388,9 @@ function NetworkPurchasePageComponent() {
                         />
                     </div>
                 </div>
-                <DialogFooter className="flex gap-3">
-                    <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
-                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+                <DialogFooter className="grid grid-cols-2 gap-3">
+                    <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                    <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

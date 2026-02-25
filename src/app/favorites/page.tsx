@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -216,49 +215,72 @@ export default function FavoritesPage() {
         if (selectedNetwork.isLocal) {
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-            const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
-                const permissionError = new FirestorePermissionError({
-                    path: `networks/${selectedNetwork.id}/cards`,
-                    operation: 'list'
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                throw err;
-            });
+            const availableCardsSnapshot = await getDocs(q);
 
             if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             const ownerId = selectedNetwork.ownerId!;
-            const commission = categoryPrice * 0.10;
+            const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+            
+            // 3. إضافة الرصيد للمالك
+            const ownerRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            // 4. سجل عملية للمشتري
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
-            batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
-                userId: ownerId, transactionDate: now, amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
+            
+            // 5. سجل عملية للمالك
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId, 
+                transactionDate: now, 
+                amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت', 
+                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
             });
-            batch.set(doc(collection(firestore, 'soldCards')), {
-                networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
-                price: categoryPrice, commissionAmount: commission, payoutAmount,
-                buyerId: user.uid, buyerName: userProfile.displayName || 'مشترك',
-                buyerPhoneNumber: userProfile.phoneNumber || '', soldTimestamp: now, payoutStatus: 'completed'
+            
+            // 6. سجل الكروت المباعة
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id, 
+                ownerId, 
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id, 
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, 
+                cardNumber: cardData.cardNumber,
+                price: categoryPrice, 
+                commissionAmount: commission, 
+                payoutAmount,
+                buyerId: user.uid, 
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', 
+                soldTimestamp: now, 
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
                 const permissionError = new FirestorePermissionError({
                     path: `batch_purchase/${selectedNetwork.id}`,
-                    operation: 'write'
+                    operation: 'write',
+                    requestResourceData: { categoryId: selectedCategory.id }
                 });
                 errorEmitter.emit('permission-error', permissionError);
                 throw err;
@@ -283,9 +305,13 @@ export default function FavoritesPage() {
             const cardData = result.data.order.card;
 
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
             });
 
@@ -395,7 +421,7 @@ export default function FavoritesPage() {
 
       {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <DialogHeader className="sr-only">
@@ -457,7 +483,7 @@ export default function FavoritesPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center">
+        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle>تأكيد الشراء</DialogTitle>
             <DialogDescription>
@@ -516,7 +542,7 @@ export default function FavoritesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />

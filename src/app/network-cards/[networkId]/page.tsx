@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
@@ -142,7 +141,7 @@ function NetworkPurchasePageComponent() {
   
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
-        const commission = categoryPrice * 0.10;
+        const commission = Math.floor(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
   
         // 1. تحديث حالة الكرت
@@ -314,7 +313,7 @@ function NetworkPurchasePageComponent() {
 
         <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
             {selectedCategory && (
-                <AlertDialogContent className="rounded-3xl">
+                <AlertDialogContent className="rounded-3xl bg-white dark:bg-slate-900">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-center">تأكيد عملية الشراء</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
@@ -368,7 +367,7 @@ function NetworkPurchasePageComponent() {
         )}
 
         <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-            <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
+            <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
                     <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <Smartphone className="text-primary h-6 w-6" />

@@ -315,6 +315,7 @@ function NetworkPurchasePageComponent() {
             {selectedCategory && (
                 <AlertDialogContent className="rounded-3xl bg-white dark:bg-slate-900">
                     <AlertDialogHeader>
+                        <DialogTitle className="sr-only">تأكيد الشراء</DialogTitle>
                         <AlertDialogTitle className="text-center">تأكيد عملية الشراء</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
                             هل أنت متأكد من رغبتك في شراء كرت "{selectedCategory.name}"؟ سيتم خصم <span className="font-bold text-primary">{selectedCategory.price.toLocaleString('en-US')} ريال</span> من رصيدك.
@@ -369,6 +370,7 @@ function NetworkPurchasePageComponent() {
         <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
             <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
+                    <DialogTitle className="sr-only">إرسال SMS</DialogTitle>
                     <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <Smartphone className="text-primary h-6 w-6" />
                     </div>

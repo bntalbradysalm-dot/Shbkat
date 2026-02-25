@@ -349,55 +349,6 @@ export default function FavoritesPage() {
     setIsSmsDialogOpen(false);
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
-          ))}
-        </div>
-      );
-    }
-
-    if (!favorites || favorites.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center h-64">
-          <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
-          <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {filteredFavorites.map((fav, index) => (
-          <Card 
-            key={fav.id} 
-            className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
-            style={{ animationDelay: `${index * 30}ms` }}
-            onClick={() => handleNetworkClick(fav)}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
-              <div className="flex-1 text-right mx-4 space-y-1 text-white">
-                <h4 className="font-bold text-base text-white">{fav.name}</h4>
-                <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
-              </div>
-              <button 
-                onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                className="p-2 hover:scale-110 transition-transform"
-              >
-                <Heart className={cn("h-6 w-6 fill-white text-white")} />
-              </button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
@@ -415,7 +366,44 @@ export default function FavoritesPage() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-            {renderContent()}
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
+                    ))}
+                </div>
+            ) : !favorites || favorites.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center h-64">
+                    <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
+                    <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {filteredFavorites.map((fav, index) => (
+                        <Card 
+                            key={fav.id} 
+                            className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+                            style={{ animationDelay: `${index * 30}ms` }}
+                            onClick={() => handleNetworkClick(fav)}
+                        >
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
+                                <div className="flex-1 text-right mx-4 space-y-1 text-white">
+                                    <h4 className="font-bold text-base text-white">{fav.name}</h4>
+                                    <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
+                                </div>
+                                <button 
+                                    onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
+                                    className="p-2 hover:scale-110 transition-transform"
+                                >
+                                    <Heart className={cn("h-6 w-6 text-white fill-white")} />
+                                </button>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
       </div>
 

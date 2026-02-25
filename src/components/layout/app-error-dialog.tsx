@@ -29,7 +29,8 @@ export function AppErrorDialog() {
 
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-0 overflow-hidden rounded-[40px] border-none shadow-2xl flex flex-col items-center z-[10000] outline-none [&>button]:hidden bg-card animate-in zoom-in-95 duration-300">
+      {/* تم تعديل التنسيقات لإضافة حركة التكبير من الصغير إلى الكبير zoom-in-50 مع مدة 500ms */}
+      <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-0 overflow-hidden rounded-[40px] border-none shadow-2xl flex flex-col items-center z-[10000] outline-none [&>button]:hidden bg-card animate-in fade-in-0 zoom-in-50 duration-500">
         <div className="w-full flex flex-col items-center">
           {/* رأس المنبثق مع أيقونة الخطأ */}
           <div className="w-full bg-destructive/10 py-10 flex flex-col items-center justify-center relative overflow-hidden">
@@ -48,7 +49,7 @@ export function AppErrorDialog() {
             </div>
           </div>
           
-          {/* شريط الإغلاق السفلي (موافق) - تم تصغيره قليلاً */}
+          {/* شريط الإغلاق السفلي (موافق) */}
           <div className="w-full p-6 pt-0">
             <Button 
               onClick={handleClose}

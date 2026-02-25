@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -113,7 +114,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
     >
       <h4 className="text-sm font-black text-[#713CA4] mb-2 group-hover:text-[#713CA4]/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-2xl font-black text-foreground">
+        <span className="text-2xl font-black text-foreground dark:text-white">
             {offer.price.toLocaleString('en-US')}
         </span>
       </div>
@@ -464,8 +465,8 @@ export default function WhyServicesPage() {
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" onClick={() => handleProcessPayment(parseFloat(amount), 'رصيد')} style={{ backgroundColor: WHY_PRIMARY }}>تأكيد</AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -483,8 +484,8 @@ export default function WhyServicesPage() {
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
                         <AlertDialogAction onClick={() => selectedFastOffer && handleProcessPayment(selectedFastOffer.price, selectedFastOffer.title, selectedFastOffer.num)} className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: WHY_PRIMARY }}>تفعيل الآن</AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -502,8 +503,8 @@ export default function WhyServicesPage() {
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
                         <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: WHY_PRIMARY }}>تفعيل الآن</AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -259,6 +260,8 @@ export default function GamesPage() {
                 </div>
             </div>
 
+            <Toaster />
+
             <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
@@ -301,15 +304,13 @@ export default function GamesPage() {
                     </div>
 
                     <DialogFooter className="grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
                         <Button className="rounded-2xl h-12 font-black shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing || !playerId}>
                             {isProcessing ? <Loader2 className="animate-spin" /> : 'شحن الآن'}
                         </Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <Toaster />
         </div>
     );
 }

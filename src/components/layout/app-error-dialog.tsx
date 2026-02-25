@@ -41,7 +41,6 @@ export function AppErrorDialog() {
 
           {/* نص الخطأ في المنتصف */}
           <div className="p-8 pt-6 w-full text-center space-y-4">
-            <h3 className="text-xl font-black text-destructive tracking-tight">تنبيه!</h3>
             <div className="bg-muted/50 p-5 rounded-[28px] border-2 border-dashed border-destructive/10">
                 <p className="text-sm font-bold text-foreground/80 leading-relaxed">
                     {errorMessage}
@@ -49,11 +48,11 @@ export function AppErrorDialog() {
             </div>
           </div>
           
-          {/* شريط الإغلاق السفلي (موافق) */}
+          {/* شريط الإغلاق السفلي (موافق) - تم تصغيره قليلاً */}
           <div className="w-full p-6 pt-0">
             <Button 
               onClick={handleClose}
-              className="w-full h-14 rounded-2xl bg-mesh-gradient text-white font-black text-lg shadow-lg shadow-primary/20 active:scale-95 transition-all border-none"
+              className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-lg shadow-primary/20 active:scale-95 transition-all border-none"
             >
               موافق
             </Button>

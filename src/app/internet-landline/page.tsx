@@ -509,7 +509,10 @@ export default function LandlineRedesignPage() {
                                     <Accordion type="single" collapsible className="w-full space-y-4">
                                         {INTERNET_PACKAGES.map((category, idx) => (
                                             <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
-                                                <AccordionTrigger className="px-5 py-5 bg-white dark:bg-slate-900 rounded-[24px] hover:no-underline shadow-md border border-[#302C81]/5 data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group">
+                                                <AccordionTrigger 
+                                                    className="px-5 py-5 rounded-[24px] hover:no-underline shadow-md border-none data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group text-white"
+                                                    style={INTERNET_THEME.gradient}
+                                                >
                                                     <div className="flex items-center gap-4 flex-1">
                                                         <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform border border-white/20">
                                                             <Image 
@@ -520,8 +523,8 @@ export default function LandlineRedesignPage() {
                                                             />
                                                         </div>
                                                         <div className="flex flex-col items-start">
-                                                            <span className="text-[10px] font-bold text-muted-foreground opacity-70 uppercase tracking-widest leading-tight">فئات</span>
-                                                            <span className="text-sm font-black text-foreground leading-tight">{category.title.replace('M', ' ميجا')}</span>
+                                                            <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest leading-tight">فئات</span>
+                                                            <span className="text-sm font-black text-white leading-tight">{category.title}</span>
                                                         </div>
                                                     </div>
                                                 </AccordionTrigger>
@@ -617,8 +620,8 @@ export default function LandlineRedesignPage() {
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: currentTheme.primary }} onClick={() => handlePayment(parseFloat(amount), activeTab === 'internet' ? 'إنترنت (ADSL)' : 'هاتف ثابت')}>تأكيد</AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

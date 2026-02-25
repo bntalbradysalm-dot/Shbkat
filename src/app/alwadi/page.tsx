@@ -376,10 +376,10 @@ export default function AlwadiPage() {
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 sm:space-x-0">
-                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                 <AlertDialogAction onClick={handleFinalSubmit} className="w-full rounded-2xl h-12 font-bold shadow-lg">
                     تأكيد وإرسال
                 </AlertDialogAction>
+                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

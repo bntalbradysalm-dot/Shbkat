@@ -82,7 +82,6 @@ type Offer = {
     offertype: string; 
 };
 
-// --- STYLES ---
 const YEMEN_MOBILE_PRIMARY = '#B32C4C';
 const YEMEN_MOBILE_GRADIENT = {
     backgroundColor: '#B32C4C',
@@ -91,8 +90,6 @@ const YEMEN_MOBILE_GRADIENT = {
         radial-gradient(at 100% 100%, #8A1F38 0px, transparent 50%)
     `
 };
-
-// --- DATA DEFINITIONS ---
 
 const PREPAID_CATEGORIES = [
   {
@@ -114,7 +111,7 @@ const PREPAID_CATEGORIES = [
     offers: [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: '30 يوم', offertype: 'A5533822' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: '24 ساعة', offertype: 'A4826' },
-      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', icon: Zap, sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
       { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: '7 أيام', offertype: 'A88336' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: '30 يوم', offertype: 'A3823' },
       { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: '30 يوم', offertype: 'A88335' },
@@ -260,8 +257,6 @@ const POSTPAID_CATEGORIES = [
   }
 ];
 
-// --- COMPONENT ---
-
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
       className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
@@ -355,9 +350,6 @@ export default function YemenMobilePage() {
     return `${format(d, 'd', { locale: ar })}/${format(d, 'MMMM', { locale: ar })}/${format(d, 'yyyy', { locale: ar })}`;
   };
 
-  /**
-   * دالة مخصصة لتحسين رسائل الخطأ القادمة من المزود
-   */
   const getFriendlyErrorMessage = (msg: string) => {
     if (msg.includes('1009') || msg.includes('منطقة التحصيل')) {
         return "الرقم ليس من بوابة التحصيل المسموح بها ! يرجى التأكد من تواجدك في نطاق تغطية جنوبية ثم إجراء واستقبال 3 مكالمات بمدة 3 دقائق للمكالمة";
@@ -879,8 +871,8 @@ export default function YemenMobilePage() {
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" onClick={handlePayment} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تأكيد السداد</AlertDialogAction>
                 <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
-                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePayment} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تأكيد السداد</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -917,10 +909,10 @@ export default function YemenMobilePage() {
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                  <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
                   <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                       تفعيل الآن
                   </AlertDialogAction>
+                  <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>

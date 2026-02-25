@@ -57,7 +57,7 @@ export default function TelecomServicesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="relative h-14 w-14 overflow-hidden rounded-xl">
+                      <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-muted">
                         <Image
                           src={service.logo}
                           alt={`${service.name} logo`}

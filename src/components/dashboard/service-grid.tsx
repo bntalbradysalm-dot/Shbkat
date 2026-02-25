@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -115,6 +115,10 @@ export function ServiceGrid() {
       {/* Offers Modal */}
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-6 overflow-hidden rounded-[40px] border-none bg-white shadow-2xl flex flex-col items-center z-[9999] outline-none [&>button]:hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>العروض الحصرية</DialogTitle>
+            <DialogDescription>استعراض أحدث العروض والخصومات المتاحة حالياً</DialogDescription>
+          </DialogHeader>
           <div className="relative w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
             {/* حاوية الصورة */}
             <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border-2 border-muted bg-card mb-6">

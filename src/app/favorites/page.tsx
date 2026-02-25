@@ -88,7 +88,7 @@ export default function FavoritesPage() {
     () =>
       user
         ? query(
-            collection(firestore, 'users', user.uid, 'favorites'),
+            collection(firestore!, 'users', user.uid, 'favorites'),
             where('favoriteType', '==', 'Network')
           )
         : null,
@@ -98,7 +98,7 @@ export default function FavoritesPage() {
 
   // User Profile
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user ? doc(firestore!, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -128,7 +128,7 @@ export default function FavoritesPage() {
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
     let ownerId = undefined;
-    if (isLocal) {
+    if (isLocal && firestore) {
         const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
         if (!netSnap.empty) {
             ownerId = netSnap.docs[0].data().ownerId;
@@ -151,7 +151,7 @@ export default function FavoritesPage() {
     setPurchasedCard(null);
 
     try {
-      if (isLocal) {
+      if (isLocal && firestore) {
         const catsRef = collection(firestore, `networks/${fav.targetId}/cardCategories`);
         const snapshot = await getDocs(catsRef).catch(async (err) => {
             const permissionError = new FirestorePermissionError({
@@ -398,6 +398,10 @@ export default function FavoritesPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
+              <DialogHeader className="sr-only">
+                <DialogTitle>{selectedNetwork.name}</DialogTitle>
+                <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+              </DialogHeader>
               <div className="bg-mesh-gradient p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
@@ -465,10 +469,10 @@ export default function FavoritesPage() {
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
             <Button className="flex-1 rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
             </Button>
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -536,8 +540,8 @@ export default function FavoritesPage() {
                 </div>
             </div>
             <DialogFooter className="flex gap-3">
-                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
                 <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

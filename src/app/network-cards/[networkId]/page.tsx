@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
@@ -107,17 +108,6 @@ function NetworkPurchasePageComponent() {
       return;
     }
   
-    // السماح بالشراء إذا لم يكن المستخدم هو صاحب الشبكة
-    if (user.uid === networkData.ownerId) {
-      toast({
-        variant: "destructive",
-        title: "غير مسموح",
-        description: "لا يمكنك شراء كرت من شبكتك الخاصة.",
-      });
-      setIsConfirming(false);
-      return;
-    }
-  
     setIsProcessing(true);
     const categoryPrice = selectedCategory.price;
     const userBalance = userProfile?.balance ?? 0;
@@ -215,7 +205,7 @@ function NetworkPurchasePageComponent() {
         console.error("Purchase failed:", error);
         toast({
             variant: "destructive",
-            title: "فشل عملية الشراء",
+            title: "فشلت عملية الشراء",
             description: error.message || "حدث خطأ غير متوقع.",
         });
     } finally {
@@ -319,10 +309,10 @@ function NetworkPurchasePageComponent() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePurchase} disabled={isProcessing}>
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
                         </AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             )}
@@ -387,8 +377,8 @@ function NetworkPurchasePageComponent() {
                     </div>
                 </div>
                 <DialogFooter className="flex gap-3">
-                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
                     <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

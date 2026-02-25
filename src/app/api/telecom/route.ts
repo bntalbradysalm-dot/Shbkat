@@ -57,9 +57,6 @@ export async function POST(request: Request) {
             endpoint = 'mtn';
             apiRequestParams.action = action;
         }
-    } else if (service === 'why') {
-        endpoint = 'why';
-        apiRequestParams.action = action;
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 

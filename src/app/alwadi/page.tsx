@@ -82,8 +82,7 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
-      // محاولة تشغيل الصوت عند النجاح
-      audioRef.current.play().catch(e => console.error("Audio play failed. Make sure the link is a direct MP3 link.", e));
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
     }
   }, [showSuccess]);
 
@@ -159,8 +158,7 @@ export default function AlwadiPage() {
   if (showSuccess) {
     return (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
-        {/* ملف الصوت الذي طلبه المستخدم - يفضل استخدام رابط مباشر ينتهي بـ .mp3 */}
-        <audio ref={audioRef} src="https://files.fm/u/sb5wa6kr59" preload="auto" />
+        <audio ref={audioRef} src="https://file-examples.com/storage/fe25457f7e69a011a9649b2/2017/11/file_example_MP3_700KB.mp3" preload="auto" />
         
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">
@@ -190,10 +188,10 @@ export default function AlwadiPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
-                        <History className="ml-2 h-4 w-4" /> العمليات
+                    <Button className="rounded-2xl h-12 font-bold" onClick={() => handleFinalSubmit()}>
+                        تأكيد وإرسال
                     </Button>
-                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setShowSuccess(false)}>إلغاء</Button>
                 </div>
             </CardContent>
         </Card>

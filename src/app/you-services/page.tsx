@@ -36,6 +36,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -118,7 +119,7 @@ const YOU_CATEGORIES = [
       { offerId: 'smart_4g_weekly', offerName: 'باقة سمارت فورجي الاسبوعية', price: 2251, data: '4GB', validity: 'اسبوع', offertype: 'Smart4Giga_4G_PRE' },
       { offerId: 'waffer_plus_10gb', offerName: 'باقة وفر بلس 10 جيجا', price: 2500, data: '10GB', validity: 'شهر', offertype: 'WafferPlus10_4G_PRE' },
       { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 4901, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'Mix_5000_PRE' },
-      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_126iga_4C_PRE' },
+      { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_12Giga_4G_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 12705, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
     ]
   }
@@ -162,7 +163,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
 const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => void }) => (
     <div 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#FECC4F]/10 mb-3 cursor-pointer hover:bg-[#FECC4F]/5 transition-all active:scale-[0.98] group flex items-center justify-between"
-      onClick={onClick}
+      onClick={offer.onClick || onClick}
     >
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-[#FECC4F]/20 bg-white shrink-0">

@@ -114,6 +114,9 @@ const YOU_CATEGORIES = [
     offers: [
       { offerId: 'unified_300', offerName: 'باقة السعر الموحد 300', price: 2904, data: '500MB', minutes: '300', sms: '300', validity: 'شهر', offertype: 'Sawa_300_PRE' },
       { offerId: 'unified_4gb', offerName: 'باقة السعر الموحد 4 جيجا فورجي', price: 2904, data: '4GB', minutes: '300', sms: '200', validity: 'شهر', offertype: 'Mix_4GB_4G_PRE' },
+      { offerId: '4g_5gb', offerName: 'باقة فورجي 5 قيقا', price: 5445, data: '5GB', validity: 'شهر', offertype: 'Mix_5Giga_4G_PRE' },
+      { offerId: 'smart_4g_weekly', offerName: 'باقة سمارت فورجي الاسبوعية', price: 2251, data: '4GB', validity: 'اسبوع', offertype: 'Smart4Giga_4G_PRE' },
+      { offerId: 'waffer_plus_10gb', offerName: 'باقة وفر بلس 10 جيجا', price: 2500, data: '10GB', validity: 'شهر', offertype: 'WafferPlus10_4G_PRE' },
       { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_500O_PRE' },
       { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_126iga_4C_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 12705, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },

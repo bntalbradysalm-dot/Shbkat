@@ -14,7 +14,6 @@ import {
   Wallet,
   Hash,
   Sparkles,
-  Info,
   SatelliteDish
 } from 'lucide-react';
 import {
@@ -67,17 +66,14 @@ export default function AlwadiPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
-  // الشعار الرسمي المعتمد
   const ALWADI_LOGO = "https://i.postimg.cc/MKMWP3VG/15.jpg";
 
-  // User Profile
   const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  // Renewal Options
   const optionsCollection = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'alwadiOptions'), orderBy('price', 'asc')) : null),
     [firestore]
@@ -86,7 +82,8 @@ export default function AlwadiPage() {
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+      // محاولة تشغيل الصوت عند النجاح
+      audioRef.current.play().catch(e => console.error("Audio play failed. Make sure the link is a direct MP3 link.", e));
     }
   }, [showSuccess]);
 
@@ -139,16 +136,9 @@ export default function AlwadiPage() {
 
     try {
       const batch = writeBatch(firestore);
-      
-      // 1. Deduct balance
-      batch.update(userDocRef, {
-        balance: increment(-selectedOption.price),
-      });
-
-      // 2. Create renewal request
+      batch.update(userDocRef, { balance: increment(-selectedOption.price) });
       const renewalRequestsRef = collection(firestore, 'renewalRequests');
       batch.set(doc(renewalRequestsRef), renewalRequestData);
-      
       await batch.commit();
       
       setFinalRemainingBalance(currentBalance - selectedOption.price);
@@ -168,8 +158,10 @@ export default function AlwadiPage() {
 
   if (showSuccess) {
     return (
-      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0">
-        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
+        {/* ملف الصوت الذي طلبه المستخدم - يفضل استخدام رابط مباشر ينتهي بـ .mp3 */}
+        <audio ref={audioRef} src="https://files.fm/u/sb5wa6kr59" preload="auto" />
+        
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">
                 <div className="bg-white/20 p-4 rounded-full animate-bounce">
@@ -198,10 +190,10 @@ export default function AlwadiPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
                     <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
                         <History className="ml-2 h-4 w-4" /> العمليات
                     </Button>
+                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
                 </div>
             </CardContent>
         </Card>
@@ -214,7 +206,6 @@ export default function AlwadiPage() {
       <SimpleHeader title="منظومة الوادي" />
       <div className="flex-1 overflow-y-auto">
         
-        {/* Header Logo Section */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
@@ -239,7 +230,6 @@ export default function AlwadiPage() {
         </div>
 
         <div className="px-4 mt-6 space-y-8 pb-10">
-            {/* 1. Subscriber Input Form */}
             <Card className="rounded-[32px] border-none shadow-2xl bg-card overflow-hidden">
                 <CardHeader className="pb-0 pt-6">
                     <CardTitle className="text-sm font-black text-primary text-center">بيانات المشترك</CardTitle>
@@ -277,7 +267,6 @@ export default function AlwadiPage() {
                 </CardContent>
             </Card>
 
-            {/* 2. Packages Selection */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -338,7 +327,6 @@ export default function AlwadiPage() {
                 )}
             </div>
 
-            {/* 3. Submit Button */}
             <div className="pt-2">
                 <Button 
                     className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
@@ -351,7 +339,6 @@ export default function AlwadiPage() {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[40px] max-w-sm">
             <AlertDialogHeader>

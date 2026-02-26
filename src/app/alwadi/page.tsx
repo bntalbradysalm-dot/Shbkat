@@ -188,10 +188,12 @@ export default function AlwadiPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <Button className="rounded-2xl h-12 font-bold" onClick={() => handleFinalSubmit()}>
-                        تأكيد وإرسال
+                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>
+                        الرئيسية
                     </Button>
-                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setShowSuccess(false)}>إلغاء</Button>
+                    <Button className="rounded-2xl h-12 font-bold" onClick={() => router.push('/transactions')}>
+                        <History className="ml-2 h-4 w-4" /> العمليات
+                    </Button>
                 </div>
             </CardContent>
         </Card>

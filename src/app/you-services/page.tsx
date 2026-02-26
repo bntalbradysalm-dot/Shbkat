@@ -286,7 +286,7 @@ export default function YouServicesPage() {
 
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
-        const finalToDeduct = typeLabel.includes('شحن') ? payAmount : payAmount * 4;
+        const finalToDeduct = typeLabel.includes('شحن') ? payAmount : payAmount * 3;
 
         if ((userProfile?.balance ?? 0) < finalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
@@ -570,8 +570,8 @@ export default function YouServicesPage() {
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">المبلغ:</span><span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span></div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">النسبة (4 أضعاف):</span><span className="font-bold">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span></div>
-                            <div className="flex justify-between items-center py-3 bg-[#FECC4F]/10 rounded-xl px-2 mt-2"><span className="font-black text-[#4A3B00]">إجمالي الخصم:</span><span className="font-black text-[#E6B000] text-lg">{(parseFloat(amount || '0') * 4).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">النسبة:</span><span className="font-bold">{(parseFloat(amount || '0') * 2).toLocaleString('en-US')} ريال</span></div>
+                            <div className="flex justify-between items-center py-3 bg-[#FECC4F]/10 rounded-xl px-2 mt-2"><span className="font-black text-[#4A3B00]">إجمالي الخصم:</span><span className="font-black text-[#E6B000] text-lg">{(parseFloat(amount || '0') * 3).toLocaleString('en-US')} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

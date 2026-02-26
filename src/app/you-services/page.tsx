@@ -19,8 +19,8 @@ import {
   Mail,
   Phone as PhoneIcon,
   Clock,
-  Zap,
-  ShieldCheck,
+  AlertCircle,
+  Hash as HashIcon,
   Search,
   Users
 } from 'lucide-react';
@@ -117,7 +117,7 @@ const YOU_CATEGORIES = [
       { offerId: '4g_5gb', offerName: 'باقة فورجي 5 قيقا', price: 5445, data: '5GB', validity: 'شهر', offertype: 'Mix_5Giga_4G_PRE' },
       { offerId: 'smart_4g_weekly', offerName: 'باقة سمارت فورجي الاسبوعية', price: 2251, data: '4GB', validity: 'اسبوع', offertype: 'Smart4Giga_4G_PRE' },
       { offerId: 'waffer_plus_10gb', offerName: 'باقة وفر بلس 10 جيجا', price: 2500, data: '10GB', validity: 'شهر', offertype: 'WafferPlus10_4G_PRE' },
-      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 5000, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'MiX_500O_PRE' },
+      { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 4901, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'Mix_5000_PRE' },
       { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_126iga_4C_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 12705, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
     ]
@@ -621,7 +621,7 @@ export default function YouServicesPage() {
                         <CardContent className="p-8 space-y-6">
                             <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p></div>
                             <div className="w-full space-y-3 text-sm bg-[#FECC4F]/5 p-5 rounded-[24px] text-right border-2 border-dashed border-[#FECC4F]/20">
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-[#E6B000]">{lastTxDetails.transid}</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><HashIcon className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-[#E6B000]">{lastTxDetails.transid}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span><span className="font-black text-[#E6B000]">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>

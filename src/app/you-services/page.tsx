@@ -121,6 +121,7 @@ const YOU_CATEGORIES = [
       { offerId: 'sawa_mix', offerName: 'سوا مكس 1200', price: 4901, data: '1GB', minutes: '1200', sms: '800', validity: 'شهر', offertype: 'Mix_5000_PRE' },
       { offerId: '4g_mix_12gb', offerName: 'فورجي مكس 12جيجا', price: 9874, data: '12GB', minutes: '600', sms: '200', validity: 'شهر', offertype: 'Mix_12Giga_4G_PRE' },
       { offerId: 'smart_4g_15gb', offerName: 'سمارت فورجي 15 جيجا', price: 12705, data: '15GB', minutes: '-', sms: '-', validity: 'شهر', offertype: 'Smart15Giga_4G_PRE' },
+      { offerId: 'smart_daily', offerName: 'باقة سمارت اليومية', price: 1815, validity: 'شهر', offertype: 'SmartDaily_PRE' },
     ]
   }
 ];

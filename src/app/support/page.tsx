@@ -12,7 +12,8 @@ import {
   Loader2, 
   Sparkles,
   MessageCircleQuestion,
-  Eraser
+  Eraser,
+  HelpCircle
 } from 'lucide-react';
 import { supportChat } from '@/ai/flows/support-chat-flow';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,14 @@ type Message = {
   role: 'user' | 'model';
   content: string;
 };
+
+const quickQuestions = [
+  "كيف اغذي حسابي؟",
+  "كيف اشتري كرت شبكة؟",
+  "كيف اسدد رصيد هاتف؟",
+  "كيف اجدد اشتراك الوادي؟",
+  "كيف اشحن شدات ببجي؟",
+];
 
 export default function SupportChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -45,10 +54,11 @@ export default function SupportChatPage() {
     }
   }, [messages, isLoading]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSendMessage = async (textOverride?: string) => {
+    const textToSend = textOverride || inputValue;
+    if (!textToSend.trim() || isLoading) return;
 
-    const userMessage = inputValue.trim();
+    const userMessage = textToSend.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
@@ -99,6 +109,23 @@ export default function SupportChatPage() {
                 </Button>
             </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Questions Chips */}
+      <div className="px-4 pt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        {quickQuestions.map((q, i) => (
+          <Button
+            key={i}
+            variant="outline"
+            size="sm"
+            className="rounded-full whitespace-nowrap text-[10px] font-black border-primary/20 hover:bg-primary/5 h-8 shrink-0 flex items-center gap-1.5"
+            onClick={() => handleSendMessage(q)}
+            disabled={isLoading}
+          >
+            <HelpCircle size={12} className="text-primary" />
+            {q}
+          </Button>
+        ))}
       </div>
 
       {/* Chat Messages */}
@@ -152,7 +179,7 @@ export default function SupportChatPage() {
             disabled={isLoading}
           />
           <Button 
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage()}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
             className="absolute left-1.5 h-9 w-9 rounded-xl shadow-lg active:scale-95 transition-transform"

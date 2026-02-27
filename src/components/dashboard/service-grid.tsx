@@ -7,7 +7,7 @@ import {
   History,
   Wifi,
   Smartphone,
-  ShoppingBag,
+  MessageCircleQuestion,
   ArrowLeftRight,
   Heart,
   Gamepad2,
@@ -57,7 +57,7 @@ const services: Service[] = [
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
 
 const ServiceItem = ({

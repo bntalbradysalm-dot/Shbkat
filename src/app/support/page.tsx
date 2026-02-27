@@ -25,7 +25,7 @@ type Message = {
 
 export default function SupportChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInput) = useState('');
+  const [inputValue, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
@@ -37,7 +37,7 @@ export default function SupportChatPage() {
             { role: 'model', content: `مرحباً بك يا ${user?.displayName || 'عزيزنا العميل'}! أنا المساعد الذكي لمُحفظة شبكات. كيف يمكنني مساعدتك اليوم بخصوص خدماتنا؟` }
         ]);
     }
-  }, [user]);
+  }, [user, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -93,7 +93,7 @@ export default function SupportChatPage() {
                     size="icon" 
                     className="mr-auto text-white/50 hover:text-white hover:bg-white/10 rounded-full"
                     onClick={handleClearChat}
-                    title="مسح المحادثة"
+                    title="مُسح المحادثة"
                 >
                     <Eraser size={18} />
                 </Button>

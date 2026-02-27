@@ -22,7 +22,9 @@ import {
   Copy,
   MessageSquare,
   X,
-  CheckCircle
+  CheckCircle,
+  Clock,
+  Database
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -119,6 +121,7 @@ export function ServiceGrid() {
                 if (!netsResponse.ok) throw new Error('Failed to fetch networks');
                 const networks = await netsResponse.json();
                 
+                // البحث عن شبكة الخير
                 const alKhair = networks.find((n: any) => n.name.includes('الخير'));
                 
                 if (alKhair) {
@@ -127,10 +130,12 @@ export function ServiceGrid() {
                     if (!classesResponse.ok) throw new Error('Failed to fetch classes');
                     const classes = await classesResponse.json();
                     
-                    const targetPrices = [1000, 1200, 1500];
+                    // الخير 1000 والخير 1500 (حذف 1200)
+                    const targetPrices = [1000, 1500];
                     const filtered = classes.filter((c: any) => targetPrices.includes(Number(c.price)));
                     setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                 } else {
+                    // محاولة البحث محلياً إذا لم توجد في الربط
                     if (firestore) {
                         const netsRef = collection(firestore, 'networks');
                         const q = query(netsRef, where('name', '>=', 'الخير'), where('name', '<=', 'الخير' + '\uf8ff'), firestoreLimit(1));
@@ -141,7 +146,7 @@ export function ServiceGrid() {
                             const catsRef = collection(firestore, `networks/${net.id}/cardCategories`);
                             const catsSnap = await getDocs(catsRef);
                             const cats = catsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            const targetPrices = [1000, 1200, 1500];
+                            const targetPrices = [1000, 1500];
                             const filtered = cats.filter((c: any) => targetPrices.includes(Number(c.price)));
                             setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                         }
@@ -379,34 +384,54 @@ export function ServiceGrid() {
                     <p className="text-sm font-bold text-muted-foreground">جاري جلب العروض...</p>
                 </div>
             ) : specialOffers.length > 0 ? (
-                specialOffers.map((offer, idx) => (
-                    <Card key={offer.id} className="rounded-3xl border-none shadow-md bg-muted/30 hover:bg-primary/5 transition-all group animate-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 150}ms` }}>
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                                    <Wifi className="h-6 w-6" />
+                specialOffers.map((offer, idx) => {
+                    const priceNum = Number(offer.price);
+                    const dataInfo = priceNum === 1000 ? '15 قيقا' : priceNum === 1500 ? '25 قيقا' : '';
+                    
+                    return (
+                        <Card 
+                            key={offer.id} 
+                            className="rounded-3xl border-none shadow-md bg-muted/30 hover:bg-primary/5 transition-all group animate-in slide-in-from-bottom-4 cursor-pointer active:scale-95" 
+                            style={{ animationDelay: `${idx * 150}ms` }}
+                            onClick={() => handleOfferClick(offer)}
+                        >
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <Wifi className="h-6 w-6" />
+                                    </div>
+                                    <div className="text-right">
+                                        <h4 className="text-sm font-black">{offer.name}</h4>
+                                        <div className="flex flex-col gap-0.5 mt-1">
+                                            {dataInfo && (
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
+                                                    <Database className="h-3 w-3" />
+                                                    <span>{dataInfo}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                                                <Clock className="h-3 w-3" />
+                                                <span>صلاحية شهر</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <h4 className="text-sm font-black">{offer.name}</h4>
-                                    <p className="text-[10px] font-bold text-muted-foreground">شبكة الخير فورجي</p>
+                                <div className="text-left flex flex-col items-end">
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-lg font-black text-primary">{offer.price.toLocaleString()}</span>
+                                        <span className="text-[8px] font-bold text-muted-foreground">ر.ي</span>
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        className="h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg shadow-primary/20"
+                                    >
+                                        شراء <ArrowUpRight className="h-3 w-3 mr-1" />
+                                    </Button>
                                 </div>
-                            </div>
-                            <div className="text-left flex flex-col items-end">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-black text-primary">{offer.price.toLocaleString()}</span>
-                                    <span className="text-[8px] font-bold text-muted-foreground">ر.ي</span>
-                                </div>
-                                <Button 
-                                    size="sm" 
-                                    className="h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg shadow-primary/20"
-                                    onClick={() => handleOfferClick(offer)}
-                                >
-                                    شراء <ArrowUpRight className="h-3 w-3 mr-1" />
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))
+                            </CardContent>
+                        </Card>
+                    );
+                })
             ) : (
                 <div className="text-center py-10 opacity-40">
                     <AlertCircle className="h-12 w-12 mx-auto mb-2" />

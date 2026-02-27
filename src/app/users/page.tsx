@@ -28,35 +28,27 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   User as UserIcon,
   Users,
   Search,
   Trash2,
   Edit,
-  MessageSquare,
   PlusCircle,
   Crown,
   Wallet,
   Banknote,
   FileText,
-  RefreshCw,
+  LayoutGrid,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +59,13 @@ type User = {
   balance?: number;
   accountType?: 'user' | 'network-owner';
 };
+
+const filterOptions = [
+    { label: 'الكل', value: 'all', icon: LayoutGrid },
+    { label: 'لديه رصيد', value: 'with-balance', icon: Wallet },
+    { label: 'مستخدمون', value: 'user', icon: UserIcon },
+    { label: 'ملاك شبكات', value: 'network-owner', icon: Crown },
+];
 
 export default function UsersPage() {
   const firestore = useFirestore();
@@ -216,77 +215,138 @@ export default function UsersPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          
           <div className="grid grid-cols-2 gap-4">
-            <Card className="relative overflow-hidden">
+            <Card className="relative overflow-hidden border-none shadow-sm bg-primary/5">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">إجمالي الأرصدة</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-[10px] font-black text-primary uppercase tracking-widest">إجمالي الأرصدة</CardTitle>
+                <Wallet className="h-4 w-4 text-primary opacity-50" />
               </CardHeader>
               <CardContent>
-                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-none shadow-sm bg-muted/30">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">المستخدمين</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المستخدمين</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground opacity-50" />
               </CardHeader>
               <CardContent>
-                {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
               </CardContent>
             </Card>
           </div>
           
           <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input type="text" placeholder="البحث..." className="w-full pr-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input 
+                type="text" 
+                placeholder="ابحث عن مستخدم..." 
+                className="w-full pr-10 h-12 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary transition-all" 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+              />
           </div>
           
-          <Select value={accountTypeFilter} onValueChange={(value) => setAccountTypeFilter(value as any)}>
-            <SelectTrigger><SelectValue placeholder="الفلترة" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">الكل</SelectItem>
-              <SelectItem value="user">مستخدمون</SelectItem>
-              <SelectItem value="with-balance">عملاء لديهم رصيد</SelectItem>
-              <SelectItem value="network-owner">ملاك الشبكات</SelectItem>
-            </SelectContent>
-          </Select>
+          <div>
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1 mb-3">تصفية المستخدمين</h3>
+            <div className="grid grid-cols-2 gap-3">
+                {filterOptions.map((opt) => (
+                    <button
+                        key={opt.value}
+                        onClick={() => setAccountTypeFilter(opt.value as any)}
+                        className={cn(
+                            "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 gap-2",
+                            accountTypeFilter === opt.value
+                                ? "border-primary bg-primary/5 text-primary shadow-sm scale-[1.02]"
+                                : "border-transparent bg-card text-muted-foreground hover:bg-muted/50"
+                        )}
+                    >
+                        <opt.icon className={cn("h-5 w-5", accountTypeFilter === opt.value ? "text-primary" : "text-muted-foreground/60")} />
+                        <span className="text-[11px] font-black">{opt.label}</span>
+                    </button>
+                ))}
+            </div>
+          </div>
 
-          <div className="space-y-3 pb-20">
-            {isLoading ? <Skeleton className="h-24 w-full" /> : filteredUsers?.map((user) => (
-              <Card key={user.id}>
-                <CardContent className="p-3">
-                  <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                          <div className="p-1.5 rounded-full bg-primary/10"><UserIcon className="h-5 w-5 text-primary" /></div>
-                          <div className="text-right">
-                              <div className='flex items-center gap-2'>
-                                <p className="font-bold text-sm">{user.displayName}</p>
-                                {user.accountType === 'network-owner' && <Badge variant="secondary" className="h-5 text-[9px]"><Crown className="h-3 w-3 ml-1" />مالك</Badge>}
-                              </div>
-                              <p className="text-muted-foreground text-xs">{user.phoneNumber}</p>
-                          </div>
-                      </div>
-                      <div className="text-primary font-bold text-sm">{(user.balance ?? 0).toLocaleString('en-US')} ريال</div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-end gap-2">
-                    <Link href={`/users/${user.id}/report`}><Button variant="outline" size="icon" className="h-8 w-8"><FileText className="h-4 w-4" /></Button></Link>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild><Button variant="destructive" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>حذف المستخدم؟</AlertDialogTitle></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>إلغاء</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive">حذف</AlertDialogAction></AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(user)} className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
-                    <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => { setSelectedUser(user); setIsWithdrawDialogOpen(true); }}><Banknote className="h-4 w-4" /></Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setSelectedUser(user); setIsManualDepositOpen(true); }}><Wallet className="h-4 w-4" /></Button>
-                    <Button variant="default" size="icon" className="h-8 w-8" onClick={() => { setSelectedUser(user); setIsTopUpDialogOpen(true); }}><PlusCircle className="h-4 w-4" /></Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-3 pb-24">
+            <div className="flex justify-between items-center px-1 mb-1">
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">النتائج ({filteredUsers?.length || 0})</h3>
+            </div>
+            {isLoading ? (
+                [1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-3xl" />)
+            ) : filteredUsers?.length === 0 ? (
+                <div className="text-center py-10 opacity-30">
+                    <Users className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-xs font-bold">لا يوجد مستخدمون مطابقون</p>
+                </div>
+            ) : (
+                filteredUsers?.map((user) => (
+                <Card key={user.id} className="rounded-3xl border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                    <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/5 shadow-inner">
+                                <UserIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="text-right space-y-0.5">
+                                <div className='flex items-center gap-2'>
+                                    <p className="font-black text-sm text-foreground">{user.displayName}</p>
+                                    {user.accountType === 'network-owner' && (
+                                        <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black h-4 px-1.5 rounded-md">
+                                            مالك
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground text-[10px] font-bold font-mono tracking-wider">{user.phoneNumber}</p>
+                            </div>
+                        </div>
+                        <div className="text-primary font-black text-sm pt-1">
+                            {user.balance?.toLocaleString('en-US')} <span className="text-[9px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-3 border-t border-muted/50 flex items-center justify-end gap-2">
+                        <Link href={`/users/${user.id}/report`}>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl bg-muted/30 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                                <FileText className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl bg-muted/30 text-muted-foreground hover:text-destructive hover:bg-destructive/5">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-[32px]">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-center font-black">حذف المستخدم؟</AlertDialogTitle>
+                                <AlertDialogDescription className="text-center">سيتم حذف المستخدم وبياناته نهائياً من النظام.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
+                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(user.id)} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">حذف</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                        </AlertDialog>
+                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(user)} className="h-9 w-9 rounded-xl bg-muted/30 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setSelectedUser(user); setIsWithdrawDialogOpen(true); }} className="h-9 w-9 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20">
+                            <Banknote className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setSelectedUser(user); setIsManualDepositOpen(true); }} className="h-9 w-9 rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
+                            <Wallet className="h-4 w-4" />
+                        </Button>
+                        <Button variant="default" size="icon" onClick={() => { setSelectedUser(user); setIsTopUpDialogOpen(true); }} className="h-9 w-9 rounded-xl shadow-lg shadow-primary/20">
+                            <PlusCircle className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    </CardContent>
+                </Card>
+                ))
+            )}
           </div>
         </div>
       </div>
@@ -294,30 +354,72 @@ export default function UsersPage() {
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>تعديل</DialogTitle></DialogHeader>
-            <div className="space-y-4 py-4"><Input value={editingName} onChange={e => setEditingName(e.target.value)} placeholder="الاسم" /><Input value={editingPhoneNumber} onChange={e => setEditingPhoneNumber(e.target.value)} placeholder="الهاتف" /></div>
-            <DialogFooter><Button onClick={handleSaveChanges}>حفظ</Button></DialogFooter>
+        <DialogContent className="rounded-[32px] max-w-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">تعديل بيانات المستخدم</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">الاسم الرباعي</Label>
+                    <Input value={editingName} onChange={e => setEditingName(e.target.value)} placeholder="الاسم الكامل" className="h-12 rounded-2xl" />
+                </div>
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">رقم الهاتف</Label>
+                    <Input value={editingPhoneNumber} onChange={e => setEditingPhoneNumber(e.target.value)} placeholder="7xxxxxxxx" className="h-12 rounded-2xl" />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button onClick={handleSaveChanges} className="w-full h-12 rounded-2xl font-black">حفظ التغييرات</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isTopUpDialogOpen} onOpenChange={setIsTopUpDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>تغذية رصيد</DialogTitle></DialogHeader>
-            <div className="py-4"><Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="المبلغ" /></div>
-            <DialogFooter><Button onClick={handleTopUp}>تأكيد</Button></DialogFooter>
+        <DialogContent className="rounded-[32px] max-w-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">تغذية رصيد (صامتة)</DialogTitle>
+                <DialogDescription className="text-center">سيتم إضافة المبلغ للرصيد مع إشعار داخلي فقط.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">المبلغ المطلوب إضافته</Label>
+                <Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleTopUp} className="w-full h-12 rounded-2xl font-black">تأكيد التغذية</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isManualDepositOpen} onOpenChange={setIsManualDepositOpen}>
-        <DialogContent><DialogHeader><DialogTitle>إيداع وتبليغ</DialogTitle></DialogHeader>
-            <div className="py-4"><Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="المبلغ" /></div>
-            <DialogFooter><Button onClick={handleManualDeposit}>تأكيد وإرسال واتساب</Button></DialogFooter>
+        <DialogContent className="rounded-[32px] max-w-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">إيداع وتبليغ واتساب</DialogTitle>
+                <DialogDescription className="text-center">سيتم إضافة المبلغ وإرسال رسالة واتساب للعميل.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">مبلغ الإيداع</Label>
+                <Input type="number" value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleManualDeposit} className="w-full h-12 rounded-2xl font-black">تأكيد وإرسال واتساب</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>سحب نقدي</DialogTitle></DialogHeader>
-            <div className="py-4"><Input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="المبلغ" /></div>
-            <DialogFooter><Button onClick={handleWithdraw}>تأكيد السحب</Button></DialogFooter>
+        <DialogContent className="rounded-[32px] max-w-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">سحب نقدي من الرصيد</DialogTitle>
+                <DialogDescription className="text-center">سيتم خصم المبلغ من رصيد المستخدم حالاً.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-center">
+                <p className="text-[10px] font-bold text-primary mb-2">الرصيد المتاح: {selectedUser?.balance?.toLocaleString()} ريال</p>
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">المبلغ المراد سحبه</Label>
+                <Input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-destructive/20 focus-visible:ring-destructive" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleWithdraw} className="w-full h-12 rounded-2xl font-black bg-destructive hover:bg-destructive/90">تأكيد السحب النقدي</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

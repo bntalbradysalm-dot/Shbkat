@@ -58,8 +58,9 @@ const BalanceDisplay = () => {
                         <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                     </div>
                 </div>
-                <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-md shadow-inner border border-white/10">
-                    <Wallet className="h-7 w-7 text-white" />
+                {/* تم تصغير الحاوية هنا بناءً على الطلب */}
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md shadow-inner border border-white/10">
+                    <Wallet className="h-6 w-6 text-white" />
                 </div>
             </CardContent>
         </Card>

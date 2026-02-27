@@ -48,6 +48,7 @@ type UCPrice = {
 };
 
 const UC_PACKAGES: UCPrice[] = [
+    { amount: '10 شدة', price: 500, code: '10' },
     { amount: '60 شدة', price: 1800, code: '60' },
     { amount: '325 شدة', price: 8000, code: '325' },
     { amount: '385 شدة', price: 9000, code: '385' },

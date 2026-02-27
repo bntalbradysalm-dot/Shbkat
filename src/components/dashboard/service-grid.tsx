@@ -17,7 +17,8 @@ import {
   Zap,
   CheckCircle2,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';

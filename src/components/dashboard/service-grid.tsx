@@ -83,28 +83,49 @@ export function ServiceGrid() {
   const [specialOffers, setAlKhairOffers] = useState<any[]>([]);
   const [isFetchingOffers, setIsFetchingOffers] = useState(false);
 
-  // البحث عن شبكة الخير فورجي عند فتح المنبثق
+  // البحث عن عروض الخير فورجي من ربط بيتي عند فتح المنبثق
   useEffect(() => {
-    if (isOffersOpen && firestore) {
+    if (isOffersOpen) {
         const fetchAlKhairOffers = async () => {
             setIsFetchingOffers(true);
             try {
-                const netsRef = collection(firestore, 'networks');
-                const q = query(netsRef, where('name', '>=', 'شبكة الخير'), where('name', '<=', 'شبكة الخير' + '\uf8ff'), limit(1));
-                const snap = await getDocs(q);
+                // 1. جلب الشبكات الخارجية (ربط بيتي) عبر الـ API الداخلي
+                const netsResponse = await fetch('/services/networks-api');
+                if (!netsResponse.ok) throw new Error('Failed to fetch networks');
+                const networks = await netsResponse.json();
                 
-                if (!snap.empty) {
-                    const net = { id: snap.docs[0].id, ...snap.docs[0].data() };
-                    setAlKhairNetwork(net);
+                // 2. البحث عن شبكة الخير (الاسم الشائع هو "الخير فورجي")
+                const alKhair = networks.find((n: any) => n.name.includes('الخير'));
+                
+                if (alKhair) {
+                    setAlKhairNetwork({ id: alKhair.id, name: alKhair.name, isLocal: false });
                     
-                    const catsRef = collection(firestore, `networks/${net.id}/cardCategories`);
-                    const catsSnap = await getDocs(catsRef);
-                    const cats = catsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    // 3. جلب فئات الكروت لهذه الشبكة
+                    const classesResponse = await fetch(`/services/networks-api/${alKhair.id}/classes`);
+                    if (!classesResponse.ok) throw new Error('Failed to fetch classes');
+                    const classes = await classesResponse.json();
                     
-                    // تصفية فئات 1000، 1200، 1500
+                    // 4. تصفية فئات 1000، 1200، 1500 كما طلب المستخدم
                     const targetPrices = [1000, 1200, 1500];
-                    const filtered = cats.filter((c: any) => targetPrices.includes(Number(c.price)));
+                    const filtered = classes.filter((c: any) => targetPrices.includes(Number(c.price)));
                     setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
+                } else {
+                    // محاولة البحث في الشبكات المحلية كخيار ثانٍ إذا لم توجد في الربط الخارجي
+                    if (firestore) {
+                        const netsRef = collection(firestore, 'networks');
+                        const q = query(netsRef, where('name', '>=', 'الخير'), where('name', '<=', 'الخير' + '\uf8ff'), limit(1));
+                        const snap = await getDocs(q);
+                        if (!snap.empty) {
+                            const net = { id: snap.docs[0].id, ...snap.docs[0].data() };
+                            setAlKhairNetwork({ ...net, isLocal: true });
+                            const catsRef = collection(firestore, `networks/${net.id}/cardCategories`);
+                            const catsSnap = await getDocs(catsRef);
+                            const cats = catsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                            const targetPrices = [1000, 1200, 1500];
+                            const filtered = cats.filter((c: any) => targetPrices.includes(Number(c.price)));
+                            setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Failed to fetch Al Khair offers:", err);
@@ -115,6 +136,15 @@ export function ServiceGrid() {
         fetchAlKhairOffers();
     }
   }, [isOffersOpen, firestore]);
+
+  const handleOfferClick = (offer: any) => {
+    setIsOffersOpen(false);
+    if (alKhairNetwork?.isLocal) {
+        router.push(`/network-cards/${alKhairNetwork.id}?name=${encodeURIComponent(alKhairNetwork.name)}`);
+    } else if (alKhairNetwork) {
+        router.push(`/services/${alKhairNetwork.id}?name=${encodeURIComponent(alKhairNetwork.name)}`);
+    }
+  };
 
   return (
     <div className="relative bg-background rounded-t-[40px] mt-6 pt-8 pb-4">
@@ -159,7 +189,7 @@ export function ServiceGrid() {
         </Card>
       </div>
 
-      {/* Offers Modal - التحديث الجديد للعروض */}
+      {/* Offers Modal */}
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[90vw] sm:max-w-[380px] p-0 overflow-hidden rounded-[40px] border-none bg-white dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
           <DialogHeader className="sr-only">
@@ -205,10 +235,7 @@ export function ServiceGrid() {
                                 <Button 
                                     size="sm" 
                                     className="h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg shadow-primary/20"
-                                    onClick={() => {
-                                        setIsOffersOpen(false);
-                                        router.push(`/network-cards/${alKhairNetwork.id}?name=${encodeURIComponent(alKhairNetwork.name)}`);
-                                    }}
+                                    onClick={() => handleOfferClick(offer)}
                                 >
                                     شراء <ArrowUpRight className="h-3 w-3 mr-1" />
                                 </Button>

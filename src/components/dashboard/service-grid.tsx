@@ -18,17 +18,27 @@ import {
   CheckCircle2,
   ArrowUpRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Copy,
+  MessageSquare,
+  X,
+  CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, getDocs, limit, doc, writeBatch, increment, limit as firestoreLimit } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Service = {
   name: string;
@@ -78,42 +88,52 @@ export function ServiceGrid() {
   const [isOffersOpen, setIsOffersOpen] = useState(false);
   const firestore = useFirestore();
   const router = useRouter();
+  const { user } = useUser();
+  const { toast } = useToast();
   
   const [alKhairNetwork, setAlKhairNetwork] = useState<any>(null);
   const [specialOffers, setAlKhairOffers] = useState<any[]>([]);
   const [isFetchingOffers, setIsFetchingOffers] = useState(false);
 
-  // البحث عن عروض الخير فورجي من ربط بيتي عند فتح المنبثق
+  // Purchase States
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState<any | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [purchasedCard, setPurchasedCard] = useState<any>(null);
+  const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
+  const [smsRecipient, setSmsRecipient] = useState('');
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // User Profile
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<any>(userDocRef);
+
   useEffect(() => {
     if (isOffersOpen) {
         const fetchAlKhairOffers = async () => {
             setIsFetchingOffers(true);
             try {
-                // 1. جلب الشبكات الخارجية (ربط بيتي) عبر الـ API الداخلي
                 const netsResponse = await fetch('/services/networks-api');
                 if (!netsResponse.ok) throw new Error('Failed to fetch networks');
                 const networks = await netsResponse.json();
                 
-                // 2. البحث عن شبكة الخير (الاسم الشائع هو "الخير فورجي")
                 const alKhair = networks.find((n: any) => n.name.includes('الخير'));
                 
                 if (alKhair) {
                     setAlKhairNetwork({ id: alKhair.id, name: alKhair.name, isLocal: false });
-                    
-                    // 3. جلب فئات الكروت لهذه الشبكة
                     const classesResponse = await fetch(`/services/networks-api/${alKhair.id}/classes`);
                     if (!classesResponse.ok) throw new Error('Failed to fetch classes');
                     const classes = await classesResponse.json();
                     
-                    // 4. تصفية فئات 1000، 1200، 1500 كما طلب المستخدم
                     const targetPrices = [1000, 1200, 1500];
                     const filtered = classes.filter((c: any) => targetPrices.includes(Number(c.price)));
                     setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                 } else {
-                    // محاولة البحث في الشبكات المحلية كخيار ثانٍ إذا لم توجد في الربط الخارجي
                     if (firestore) {
                         const netsRef = collection(firestore, 'networks');
-                        const q = query(netsRef, where('name', '>=', 'الخير'), where('name', '<=', 'الخير' + '\uf8ff'), limit(1));
+                        const q = query(netsRef, where('name', '>=', 'الخير'), where('name', '<=', 'الخير' + '\uf8ff'), firestoreLimit(1));
                         const snap = await getDocs(q);
                         if (!snap.empty) {
                             const net = { id: snap.docs[0].id, ...snap.docs[0].data() };
@@ -138,12 +158,156 @@ export function ServiceGrid() {
   }, [isOffersOpen, firestore]);
 
   const handleOfferClick = (offer: any) => {
-    setIsOffersOpen(false);
-    if (alKhairNetwork?.isLocal) {
-        router.push(`/network-cards/${alKhairNetwork.id}?name=${encodeURIComponent(alKhairNetwork.name)}`);
-    } else if (alKhairNetwork) {
-        router.push(`/services/${alKhairNetwork.id}?name=${encodeURIComponent(alKhairNetwork.name)}`);
+    setShowConfirmPurchase(offer);
+  };
+
+  const handlePurchase = async () => {
+    const selectedCategory = showConfirmPurchase;
+    if (!selectedCategory || !alKhairNetwork || !user || !userProfile || !firestore || !userDocRef) {
+        toast({ variant: "destructive", title: "خطأ", description: "بيانات الشراء غير مكتملة." });
+        return;
     }
+
+    setIsProcessing(true);
+    const categoryPrice = selectedCategory.price;
+    const userBalance = userProfile?.balance ?? 0;
+
+    if (userBalance < categoryPrice) {
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
+        setIsProcessing(false);
+        return;
+    }
+
+    try {
+        const now = new Date().toISOString();
+        const batch = writeBatch(firestore);
+
+        if (alKhairNetwork.isLocal) {
+            const cardsRef = collection(firestore, `networks/${alKhairNetwork.id}/cards`);
+            const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
+            const availableCardsSnapshot = await getDocs(q);
+
+            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
+
+            const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
+            const cardData = cardToPurchaseDoc.data();
+            const ownerId = alKhairNetwork.ownerId!;
+            const commission = Math.floor(categoryPrice * 0.10);
+            const payoutAmount = categoryPrice - commission;
+
+            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            
+            const ownerRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
+
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${alKhairNetwork.name}`,
+                cardNumber: cardData.cardNumber,
+            });
+            
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId, 
+                transactionDate: now, 
+                amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت', 
+                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
+            });
+            
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: alKhairNetwork.id, 
+                ownerId, 
+                networkName: alKhairNetwork.name,
+                categoryId: selectedCategory.id, 
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, 
+                cardNumber: cardData.cardNumber,
+                price: categoryPrice, 
+                commissionAmount: commission, 
+                payoutAmount,
+                buyerId: user.uid, 
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', 
+                soldTimestamp: now, 
+                payoutStatus: 'completed'
+            });
+
+            await batch.commit().catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `batch_purchase/${alKhairNetwork.id}`,
+                    operation: 'write',
+                    requestResourceData: { categoryId: selectedCategory.id }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
+
+            setPurchasedCard({ cardID: cardData.cardNumber });
+            setShowConfirmPurchase(null);
+            setIsOffersOpen(false);
+        } else {
+            const response = await fetch(`/services/networks-api/order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ classId: selectedCategory.id })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
+            }
+
+            const result = await response.json();
+            const cardData = result.data.order.card;
+
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${alKhairNetwork.name}`,
+                cardNumber: cardData.cardID,
+            });
+
+            await batch.commit();
+            setPurchasedCard(cardData);
+            setShowConfirmPurchase(null);
+            setIsOffersOpen(false);
+        }
+        
+        audioRef.current?.play().catch(() => {});
+    } catch (error: any) {
+        console.error("Purchase failed:", error);
+        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (purchasedCard) {
+        navigator.clipboard.writeText(purchasedCard.cardID || purchasedCard.cardNumber);
+        toast({ title: "تم النسخ", description: "تم نسخ رقم الكرت بنجاح." });
+    }
+  };
+
+  const handleSendSms = () => {
+    if (!purchasedCard || !alKhairNetwork || !smsRecipient) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
+        return;
+    }
+    const msg = `شبكة: ${alKhairNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
+    window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
+    setIsSmsDialogOpen(false);
   };
 
   return (
@@ -261,6 +425,99 @@ export function ServiceGrid() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
+        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900 z-[10000]">
+          <DialogHeader>
+            <DialogTitle>تأكيد الشراء</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من شراء كرت "{showConfirmPurchase?.name}"؟
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 bg-muted/50 rounded-2xl space-y-2">
+            <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
+          </div>
+          <DialogFooter className="grid grid-cols-2 gap-2">
+            <Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
+            </Button>
+            <Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Popup */}
+      {purchasedCard && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
+            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <div className="bg-green-500 p-8 flex justify-center">
+                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                        <CheckCircle className="h-16 w-16 text-white" />
+                    </div>
+                </div>
+                <CardContent className="p-8 space-y-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
+                    </div>
+                    
+                    <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p>
+                        <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
+                            {purchasedCard.cardID || purchasedCard.cardNumber}
+                        </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
+                        </Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
+                        </Button>
+                    </div>
+                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setAlKhairNetwork(null); }}>إغلاق</Button>
+                </CardContent>
+            </Card>
+        </div>
+      )}
+
+      {/* SMS Dialog */}
+      <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10002] bg-white dark:bg-slate-900">
+            <DialogHeader>
+                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Smartphone className="text-primary h-6 w-6" />
+                </div>
+                <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                <DialogDescription className="text-center">
+                    أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-6">
+                <div className="space-y-2">
+                    <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
+                    <Input 
+                        id="sms-phone"
+                        placeholder="7xxxxxxxx" 
+                        type="tel" 
+                        value={smsRecipient} 
+                        onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
+                    />
+                </div>
+            </div>
+            <DialogFooter className="grid grid-cols-2 gap-3">
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
     </div>
   );
 }

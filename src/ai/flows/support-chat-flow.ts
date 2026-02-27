@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A support AI agent for Shabakat Wallet.
@@ -67,7 +68,19 @@ const supportChatFlow = ai.defineFlow(
     outputSchema: SupportChatOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        const {output} = await prompt(input);
+        if (!output) {
+            throw new Error("لم يتم الحصول على رد من المساعد الذكي.");
+        }
+        return output;
+    } catch (error: any) {
+        console.error("Gemini Error:", error);
+        // التحقق من نوع الخطأ لتقديم رسالة واضحة
+        if (error.message?.includes('API key not valid')) {
+            return { text: "عذراً، هناك مشكلة فنية مؤقتة في إعدادات المساعد الذكي. نرجو التواصل مع الدعم الفني عبر الواتساب." };
+        }
+        return { text: "عذراً، المساعد الذكي غير متاح حالياً بسبب ضغط الطلبات. يرجى المحاولة مرة أخرى بعد قليل." };
+    }
   }
 );

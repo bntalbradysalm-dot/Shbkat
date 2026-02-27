@@ -369,12 +369,12 @@ export function ServiceGrid() {
           {/* Header Section */}
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-                <Sparkles className="absolute top-4 left-4 h-12 w-12 text-white animate-pulse" />
-                <Zap className="absolute bottom-4 right-4 h-12 w-12 text-white animate-bounce" />
+                <Percent className="absolute top-4 left-4 h-12 w-12 text-white animate-pulse" />
+                <Percent className="absolute bottom-4 right-4 h-12 w-12 text-white animate-bounce" />
              </div>
              <Badge className="bg-white/20 text-white border-white/30 mb-2 font-black text-[10px] uppercase tracking-widest px-3">عرض محدود</Badge>
              <h2 className="text-2xl font-black text-white tracking-tight">عرض شبكة الخير</h2>
-             <p className="text-white/70 text-xs font-bold mt-1">أقوى باقات الفورجي بأسعار منافسة</p>
+             <p className="text-white/70 text-xs font-bold mt-1">أقوى باقات شبكة الخير بأسعار منافسة</p>
           </div>
 
           <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">

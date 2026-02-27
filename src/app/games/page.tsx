@@ -272,7 +272,7 @@ export default function GamesPage() {
             <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
-                        <div className="relative w-16 h-16 mx-auto mb-4 animate-in zoom-in-95 duration-500">
+                        <div className="relative w-16 h-16 mx-auto mb-4 animate-in zoom-in-95 duration-500 rounded-2xl overflow-hidden">
                             <Image 
                                 src={UC_ICON_URL}
                                 alt="UC Icon"

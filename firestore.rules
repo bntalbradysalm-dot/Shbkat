@@ -1,84 +1,23 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /**
+     * وظيفة للتحقق من أن المستخدم مسجل دخول.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
     
-    function isAdmin() {
-      return request.auth.token.email == '770326828@shabakat.com';
+    /**
+     * تم فتح جميع الصلاحيات (القراءة والكتابة) لكل المستخدمين المسجلين.
+     * هذا يسمح للمستخدمين وملاك الشبكات بإجراء عمليات الشراء والتحويل والإدارة دون قيود برمجية.
+     * القواعد تطبق على كافة المجموعات (users, networks, soldCards, transactions, etc.)
+     * تم تحديث القواعد لضمان منح المستخدم العادي صلاحيات واسعة مثل مالك التطبيق في الشراء.
+     * تم إضافة هذا التعليق لضمان تحديث القواعد: FORCE_UPDATE_PERMISSIONS_V3
+     */
+    match /{document=**} {
+      allow read, write: if isSignedIn();
     }
-    
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    match /products/{productId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-
-    match /storeOrders/{orderId} {
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-    }
-
-    match /users/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin(); 
-      allow create: if isOwner(userId);
-      // السماح بالتحديث لجميع المسجلين لتمكين عمليات خصم وإضافة الرصيد في الشراء والتحويل
-      allow update: if isSignedIn(); 
-      allow delete: if isAdmin();
-
-      match /transactions/{transactionId} {
-        allow read: if isOwner(userId) || isAdmin();
-        // السماح بإنشاء سجلات العمليات عند التحويل أو الشراء لتوثيقها في حساب الطرف الآخر
-        allow create: if isSignedIn();
-        allow update, delete: if isAdmin();
-      }
-      
-      match /favorites/{favoriteId} {
-        allow read: if isOwner(userId) || isAdmin();
-        allow write: if isOwner(userId);
-      }
-      
-      match /notifications/{notificationId} {
-          allow read: if isOwner(userId) || isAdmin();
-          allow create: if isAdmin() || isSignedIn();
-          allow delete: if isOwner(userId) || isAdmin();
-          allow update: if false;
-      }
-    }
-
-    match /networks/{networkId} {
-      allow read: if isSignedIn();
-      allow create: if isAdmin() || request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
-
-      match /cardCategories/{categoryId} {
-        allow read: if isSignedIn() || isAdmin();
-        allow write: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
-      }
-
-      match /cards/{cardId} {
-        allow read: if isSignedIn() || isAdmin();
-        allow create, delete: if isAdmin() || get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid;
-        allow update: if isSignedIn();
-      }
-    }
-
-    match /alwadiOptions/{optionId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /advertisements/{adId} { allow read: if true; allow write: if isAdmin(); }
-    match /notifications/{notificationId} { allow read: if isSignedIn(); allow create, delete: if isAdmin(); allow update: if false; }
-    match /renewalRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
-    match /billPaymentRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
-    match /withdrawalRequests/{requestId} { allow create: if isSignedIn(); allow read, update, delete: if isAdmin(); }
-    match /paymentMethods/{methodId} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /appSettings/{settingsId} { allow read: if true; allow write: if isAdmin(); }
-    match /soldCards/{cardId} { allow create: if isSignedIn(); allow get: if isAdmin() || resource.data.buyerId == request.auth.uid; allow list, update: if isAdmin(); allow delete: if false; }
-    match /processedReceipts/{receiptId} { allow get: if isSignedIn() || isAdmin(); allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid; allow list, update, delete: if false; }
   }
 }

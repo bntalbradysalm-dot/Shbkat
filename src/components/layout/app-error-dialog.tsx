@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { X } from 'lucide-react';
@@ -29,8 +29,11 @@ export function AppErrorDialog() {
 
   return (
     <Dialog open={!!errorMessage} onOpenChange={(open) => !open && handleClose()}>
-      {/* تم تعديل التنسيقات لإضافة حركة التكبير من الصغير إلى الكبير zoom-in-50 مع مدة 500ms */}
       <DialogContent className="max-w-[85vw] sm:max-w-[320px] p-0 overflow-hidden rounded-[40px] border-none shadow-2xl flex flex-col items-center z-[10000] outline-none [&>button]:hidden bg-card animate-in fade-in-0 zoom-in-50 duration-500">
+        <DialogHeader className="sr-only">
+          <DialogTitle>خطأ في العملية</DialogTitle>
+          <DialogDescription>تنبيه بوجود خطأ يحتاج إلى انتباه المستخدم</DialogDescription>
+        </DialogHeader>
         <div className="w-full flex flex-col items-center">
           {/* رأس المنبثق مع أيقونة الخطأ */}
           <div className="w-full bg-destructive/10 py-10 flex flex-col items-center justify-center relative overflow-hidden">
@@ -53,7 +56,8 @@ export function AppErrorDialog() {
           <div className="w-full p-6 pt-0">
             <Button 
               onClick={handleClose}
-              className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-lg shadow-primary/20 active:scale-95 transition-all border-none"
+              className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-lg shadow-primary/20 active:scale-95 transition-all border-none mx-auto block"
+              size="sm"
             >
               موافق
             </Button>

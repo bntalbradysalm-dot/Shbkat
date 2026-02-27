@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -48,6 +47,7 @@ type UCPrice = {
 };
 
 const UC_PACKAGES: UCPrice[] = [
+    { amount: '10 شدة', price: 500, code: '10' },
     { amount: '60 شدة', price: 1800, code: '60' },
     { amount: '325 شدة', price: 8000, code: '325' },
     { amount: '385 شدة', price: 9000, code: '385' },
@@ -55,6 +55,8 @@ const UC_PACKAGES: UCPrice[] = [
     { amount: '720 شدة', price: 17500, code: '720' },
     { amount: '1800 شدة', price: 39000, code: '1800' },
 ];
+
+const UC_ICON_URL = "https://i.postimg.cc/XYP5H9vQ/2J2L4wpmxzn-Xwg-CUwx-IV9y-L9w2NGG9RQd3I1Bu-KW.png";
 
 export default function GamesPage() {
     const router = useRouter();
@@ -239,8 +241,13 @@ export default function GamesPage() {
                             >
                                 <CardContent className="p-4 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-orange-100 dark:bg-orange-950/30 rounded-2xl group-hover:bg-orange-200 transition-colors">
-                                            <Star className="w-6 h-6 text-orange-500 fill-orange-500" />
+                                        <div className="relative h-12 w-12 shrink-0 rounded-2xl overflow-hidden group-hover:scale-110 transition-transform">
+                                            <Image 
+                                                src={UC_ICON_URL}
+                                                alt="UC Icon"
+                                                fill
+                                                className="object-contain"
+                                            />
                                         </div>
                                         <div className="text-right">
                                             <h4 className="font-black text-sm text-foreground">{pkg.amount}</h4>
@@ -265,8 +272,13 @@ export default function GamesPage() {
             <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm">
                     <DialogHeader>
-                        <div className="bg-orange-100 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <Star className="text-orange-500 fill-orange-500 h-6 w-6" />
+                        <div className="relative w-16 h-16 mx-auto mb-4 animate-in zoom-in-95 duration-500 rounded-2xl overflow-hidden">
+                            <Image 
+                                src={UC_ICON_URL}
+                                alt="UC Icon"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                         <DialogTitle className="text-center font-black">تأكيد شحن {selectedPackage?.amount}</DialogTitle>
                         <DialogDescription className="text-center">أدخل رقم اللاعب (Player ID) لإتمام العملية</DialogDescription>

@@ -56,6 +56,8 @@ import { Separator } from '@/components/ui/separator';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -167,7 +169,7 @@ export default function ServicesPage() {
 
   // User Profile
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -214,7 +216,7 @@ export default function ServicesPage() {
   // Favorites
   const favoritesQuery = useMemoFirebase(
     () =>
-      user
+      user && firestore
         ? query(
             collection(firestore, 'users', user.uid, 'favorites'),
             where('favoriteType', '==', 'Network')
@@ -241,7 +243,7 @@ export default function ServicesPage() {
     setPurchasedCard(null);
 
     try {
-      if (network.isLocal) {
+      if (network.isLocal && firestore) {
         const catsRef = collection(firestore, `networks/${network.id}/cardCategories`);
         const snapshot = await getDocs(catsRef);
         const catsData = snapshot.docs.map(d => {
@@ -249,7 +251,7 @@ export default function ServicesPage() {
             return { 
                 id: d.id, 
                 ...data,
-                dataLimit: data.capacity // Map capacity to dataLimit for display
+                dataLimit: data.capacity 
             } as CardCategory;
         });
         setCategories(catsData);
@@ -329,7 +331,6 @@ export default function ServicesPage() {
         const batch = writeBatch(firestore);
 
         if (selectedNetwork.isLocal) {
-            // Local Purchase Logic
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
             const availableCardsSnapshot = await getDocs(q);
@@ -339,7 +340,7 @@ export default function ServicesPage() {
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             const ownerId = selectedNetwork.ownerId!;
-            const commission = categoryPrice * 0.10;
+            const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
             // 1. تحديث حالة الكرت
@@ -348,38 +349,65 @@ export default function ServicesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
-            batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+            // 3. إضافة الرصيد للمالك
+            const ownerRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
 
             // 4. سجل عملية للمشتري
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
             
             // 5. سجل عملية للمالك
-            batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
-                userId: ownerId, transactionDate: now, amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId, 
+                transactionDate: now, 
+                amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت', 
+                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
             });
             
             // 6. سجل الكروت المباعة
-            batch.set(doc(collection(firestore, 'soldCards')), {
-                networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
-                price: categoryPrice, commissionAmount: commission, payoutAmount,
-                buyerId: user.uid, buyerName: userProfile.displayName,
-                buyerPhoneNumber: userProfile.phoneNumber, soldTimestamp: now, payoutStatus: 'completed'
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id, 
+                ownerId, 
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id, 
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, 
+                cardNumber: cardData.cardNumber,
+                price: categoryPrice, 
+                commissionAmount: commission, 
+                payoutAmount,
+                buyerId: user.uid, 
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', 
+                soldTimestamp: now, 
+                payoutStatus: 'completed'
             });
 
-            await batch.commit();
+            await batch.commit().catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `batch_purchase/${selectedNetwork.id}`,
+                    operation: 'write',
+                    requestResourceData: { categoryId: selectedCategory.id }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
+
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         } else {
-            // External Purchase Logic
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -395,22 +423,28 @@ export default function ServicesPage() {
             const cardData = result.data.order.card;
 
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
             });
 
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         }
         
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        if (error.code !== 'permission-denied') {
+            toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        }
     } finally {
         setIsProcessing(false);
     }
@@ -484,9 +518,13 @@ export default function ServicesPage() {
 
       {/* Network Details Dialog */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
+              <DialogHeader className="sr-only">
+                <DialogTitle>{selectedNetwork.name}</DialogTitle>
+                <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+              </DialogHeader>
               <div className="bg-mesh-gradient p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
@@ -543,7 +581,7 @@ export default function ServicesPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center">
+        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle>تأكيد الشراء</DialogTitle>
             <DialogDescription>
@@ -554,11 +592,11 @@ export default function ServicesPage() {
             <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
-            <Button className="flex-1 rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
+          <DialogFooter className="grid grid-cols-2 gap-2">
+            <Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
             </Button>
+            <Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -602,7 +640,7 @@ export default function ServicesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
@@ -625,9 +663,9 @@ export default function ServicesPage() {
                     />
                 </div>
             </div>
-            <DialogFooter className="flex gap-3">
-                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
-                <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+            <DialogFooter className="grid grid-cols-2 gap-3">
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Favorite = {
   id: string;
@@ -83,7 +85,7 @@ export default function FavoritesPage() {
   // Favorites Query
   const favoritesQuery = useMemoFirebase(
     () =>
-      user
+      user && firestore
         ? query(
             collection(firestore, 'users', user.uid, 'favorites'),
             where('favoriteType', '==', 'Network')
@@ -95,7 +97,7 @@ export default function FavoritesPage() {
 
   // User Profile
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
@@ -122,12 +124,10 @@ export default function FavoritesPage() {
   };
 
   const handleNetworkClick = async (fav: Favorite) => {
-    // Inference for isLocal if not present
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
-    // We might need to fetch the local network to get the ownerId
     let ownerId = undefined;
-    if (isLocal) {
+    if (isLocal && firestore) {
         const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
         if (!netSnap.empty) {
             ownerId = netSnap.docs[0].data().ownerId;
@@ -150,15 +150,22 @@ export default function FavoritesPage() {
     setPurchasedCard(null);
 
     try {
-      if (isLocal) {
+      if (isLocal && firestore) {
         const catsRef = collection(firestore, `networks/${fav.targetId}/cardCategories`);
-        const snapshot = await getDocs(catsRef);
+        const snapshot = await getDocs(catsRef).catch(async (err) => {
+            const permissionError = new FirestorePermissionError({
+                path: `networks/${fav.targetId}/cardCategories`,
+                operation: 'list'
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            throw err;
+        });
         const catsData = snapshot.docs.map(d => {
             const data = d.data();
             return { 
                 id: d.id, 
                 ...data,
-                dataLimit: data.capacity // Map capacity to dataLimit
+                dataLimit: data.capacity 
             } as CardCategory;
         });
         setCategories(catsData);
@@ -175,7 +182,9 @@ export default function FavoritesPage() {
         })));
       }
     } catch (err: any) {
-      setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      if (err.code !== 'permission-denied') {
+        setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      }
     } finally {
       setIsLoadingCategories(false);
     }
@@ -213,39 +222,73 @@ export default function FavoritesPage() {
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             const ownerId = selectedNetwork.ownerId!;
-            const commission = categoryPrice * 0.10;
+            const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
+            
             // 3. إضافة الرصيد للمالك
-            batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+            const ownerRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-            // 4. سجل عمليات
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            // 4. سجل عملية للمشتري
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
-            batch.set(doc(collection(firestore, `users/${ownerId}/transactions`)), {
-                userId: ownerId, transactionDate: now, amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+            
+            // 5. سجل عملية للمالك
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId, 
+                transactionDate: now, 
+                amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت', 
+                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
             });
-            batch.set(doc(collection(firestore, 'soldCards')), {
-                networkId: selectedNetwork.id, ownerId, networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, cardNumber: cardData.cardNumber,
-                price: categoryPrice, commissionAmount: commission, payoutAmount,
-                buyerId: user.uid, buyerName: userProfile.displayName,
-                buyerPhoneNumber: userProfile.phoneNumber, soldTimestamp: now, payoutStatus: 'completed'
+            
+            // 6. سجل الكروت المباعة
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id, 
+                ownerId, 
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id, 
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, 
+                cardNumber: cardData.cardNumber,
+                price: categoryPrice, 
+                commissionAmount: commission, 
+                payoutAmount,
+                buyerId: user.uid, 
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', 
+                soldTimestamp: now, 
+                payoutStatus: 'completed'
             });
 
-            await batch.commit();
+            await batch.commit().catch(async (err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `batch_purchase/${selectedNetwork.id}`,
+                    operation: 'write',
+                    requestResourceData: { categoryId: selectedCategory.id }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                throw err;
+            });
+
             setPurchasedCard({ cardID: cardData.cardNumber });
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -262,22 +305,28 @@ export default function FavoritesPage() {
             const cardData = result.data.order.card;
 
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
+            batch.set(buyerTxRef, {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
             });
 
             await batch.commit();
             setPurchasedCard(cardData);
             setShowConfirmPurchase(null);
-            setSelectedNetwork(null); // إغلاق منبق الشبكة
+            setSelectedNetwork(null); 
         }
         
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        if (error.code !== 'permission-denied') {
+            toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        }
     } finally {
         setIsProcessing(false);
     }
@@ -300,55 +349,6 @@ export default function FavoritesPage() {
     setIsSmsDialogOpen(false);
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
-          ))}
-        </div>
-      );
-    }
-
-    if (!favorites || favorites.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center h-64">
-          <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
-          <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {filteredFavorites.map((fav, index) => (
-          <Card 
-            key={fav.id} 
-            className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
-            style={{ animationDelay: `${index * 30}ms` }}
-            onClick={() => handleNetworkClick(fav)}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
-              <div className="flex-1 text-right mx-4 space-y-1 text-white">
-                <h4 className="font-bold text-base text-white">{fav.name}</h4>
-                <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
-              </div>
-              <button 
-                onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                className="p-2 hover:scale-110 transition-transform"
-              >
-                <Heart className={cn("h-6 w-6 fill-white text-white")} />
-              </button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
@@ -366,15 +366,56 @@ export default function FavoritesPage() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-            {renderContent()}
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
+                    ))}
+                </div>
+            ) : !favorites || favorites.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center h-64">
+                    <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
+                    <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">أضف شبكتك المفضلة هنا للوصول إليها بسرعة</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {filteredFavorites.map((fav, index) => (
+                        <Card 
+                            key={fav.id} 
+                            className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+                            style={{ animationDelay: `${index * 30}ms` }}
+                            onClick={() => handleNetworkClick(fav)}
+                        >
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
+                                <div className="flex-1 text-right mx-4 space-y-1 text-white">
+                                    <h4 className="font-bold text-base text-white">{fav.name}</h4>
+                                    <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
+                                </div>
+                                <button 
+                                    onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
+                                    className="p-2 hover:scale-110 transition-transform"
+                                >
+                                    <Heart className={cn("h-6 w-6 text-white fill-white")} />
+                                </button>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
       </div>
 
       {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
-        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden">
+        <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
+              <DialogHeader className="sr-only">
+                <DialogTitle>{selectedNetwork.name}</DialogTitle>
+                <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+              </DialogHeader>
               <div className="bg-mesh-gradient p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
@@ -430,7 +471,7 @@ export default function FavoritesPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center">
+        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle>تأكيد الشراء</DialogTitle>
             <DialogDescription>
@@ -441,11 +482,11 @@ export default function FavoritesPage() {
             <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
-            <Button className="flex-1 rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
+          <DialogFooter className="grid grid-cols-2 gap-2">
+            <Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
             </Button>
+            <Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -489,7 +530,7 @@ export default function FavoritesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
@@ -512,9 +553,9 @@ export default function FavoritesPage() {
                     />
                 </div>
             </div>
-            <DialogFooter className="flex gap-3">
-                <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
-                <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+            <DialogFooter className="grid grid-cols-2 gap-3">
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

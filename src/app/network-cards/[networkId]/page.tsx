@@ -35,6 +35,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type CardCategory = {
     id: string;
@@ -65,7 +67,7 @@ type Network = {
 
 function NetworkPurchasePageComponent() {
   const params = useParams();
-  const networkId = params.networkId as string;
+  const networkId = params?.networkId as string;
   const searchParams = useSearchParams();
   
   const { user } = useUser();
@@ -91,28 +93,17 @@ function NetworkPurchasePageComponent() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handlePurchase = async () => {
-    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !userProfile.displayName || !userProfile.phoneNumber || !networkId || !networkData) {
+    if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !networkId || !networkData) {
       toast({
         variant: "destructive",
         title: "خطأ في البيانات",
         description: "معلومات المستخدم أو الشبكة غير مكتملة. لا يمكن إتمام الشراء.",
-      });
-      setIsConfirming(false);
-      return;
-    }
-  
-    // السماح بالشراء إذا لم يكن المستخدم هو صاحب الشبكة
-    if (user.uid === networkData.ownerId) {
-      toast({
-        variant: "destructive",
-        title: "غير مسموح",
-        description: "لا يمكنك شراء كرت من شبكتك الخاصة.",
       });
       setIsConfirming(false);
       return;
@@ -150,7 +141,7 @@ function NetworkPurchasePageComponent() {
   
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
-        const commission = categoryPrice * 0.10;
+        const commission = Math.floor(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
   
         // 1. تحديث حالة الكرت
@@ -163,7 +154,7 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. إضافة الرصيد للمالك (بعد خصم العمولة)
+        // 3. إضافة الرصيد للمالك
         batch.update(ownerDocRef, { balance: increment(payoutAmount) });
   
         // 4. سجل عملية للمشتري
@@ -184,7 +175,7 @@ function NetworkPurchasePageComponent() {
             transactionDate: now,
             amount: payoutAmount,
             transactionType: 'أرباح بيع كرت',
-            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName}`,
+            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
         });
 
         // 6. سجل الكروت المباعة للإدارة
@@ -201,23 +192,34 @@ function NetworkPurchasePageComponent() {
             commissionAmount: commission,
             payoutAmount: payoutAmount,
             buyerId: user.uid,
-            buyerName: userProfile.displayName,
-            buyerPhoneNumber: userProfile.phoneNumber,
+            buyerName: userProfile.displayName || 'مشترك',
+            buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
             payoutStatus: 'completed'
         });
         
-        await batch.commit();
+        await batch.commit().catch(async (error) => {
+            const permissionError = new FirestorePermissionError({
+                path: `batch_purchase/${networkId}`,
+                operation: 'write',
+                requestResourceData: { categoryId: selectedCategory.id }
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            throw error;
+        });
+
         setPurchasedCard(cardToPurchaseData);
         audioRef.current?.play().catch(() => {});
   
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({
-            variant: "destructive",
-            title: "فشل عملية الشراء",
-            description: error.message || "حدث خطأ غير متوقع.",
-        });
+        if (error.code !== 'permission-denied') {
+            toast({
+                variant: "destructive",
+                title: "فشلت عملية الشراء",
+                description: error.message || "حدث خطأ غير متوقع.",
+            });
+        }
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -311,18 +313,19 @@ function NetworkPurchasePageComponent() {
 
         <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
             {selectedCategory && (
-                <AlertDialogContent className="rounded-3xl">
+                <AlertDialogContent className="rounded-3xl bg-white dark:bg-slate-900">
                     <AlertDialogHeader>
+                        <DialogTitle className="sr-only">تأكيد الشراء</DialogTitle>
                         <AlertDialogTitle className="text-center">تأكيد عملية الشراء</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
                             هل أنت متأكد من رغبتك في شراء كرت "{selectedCategory.name}"؟ سيتم خصم <span className="font-bold text-primary">{selectedCategory.price.toLocaleString('en-US')} ريال</span> من رصيدك.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4">
-                        <AlertDialogCancel className="w-full rounded-2xl h-12" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                         <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handlePurchase} disabled={isProcessing}>
                             {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
                         </AlertDialogAction>
+                        <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             )}
@@ -365,8 +368,9 @@ function NetworkPurchasePageComponent() {
         )}
 
         <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-            <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000]">
+            <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
+                    <DialogTitle className="sr-only">إرسال SMS</DialogTitle>
                     <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <Smartphone className="text-primary h-6 w-6" />
                     </div>
@@ -386,9 +390,9 @@ function NetworkPurchasePageComponent() {
                         />
                     </div>
                 </div>
-                <DialogFooter className="flex gap-3">
-                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
-                    <Button onClick={handleSendSms} className="flex-1 h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <DialogFooter className="grid grid-cols-2 gap-3">
+                    <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                    <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wallet, Send, User, CheckCircle, Search, Loader2 } from 'lucide-react';
+import { Wallet, Send, User, CheckCircle, Search, Loader2, Smartphone, Users } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,13 +18,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useFirestore, useUser, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, where, getDocs, updateDoc, increment, writeBatch } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, query, where, getDocs, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
+import { cn } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
 
 type UserProfile = {
   id: string;
@@ -45,17 +47,21 @@ const BalanceDisplay = () => {
     const isLoading = isUserLoading || isProfileLoading;
 
     return (
-        <Card className="shadow-lg">
-            <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                    <p className="font-medium text-muted-foreground">رصيدك الحالي</p>
-                    {isLoading ? (
-                        <Skeleton className="h-8 w-32 mt-2" />
-                    ) : (
-                        <p className="text-2xl font-bold text-primary mt-1">{(userProfile?.balance ?? 0).toLocaleString('en-US')} <span className="text-base">ريال</span></p>
-                    )}
+        <Card className="overflow-hidden rounded-[28px] shadow-xl text-white border-none mb-6 bg-mesh-gradient animate-in fade-in-0 zoom-in-95 duration-500">
+            <CardContent className="p-6 flex items-center justify-between">
+                <div className="text-right">
+                    <p className="text-[10px] font-black opacity-80 mb-1 uppercase tracking-widest">الرصيد المتوفر</p>
+                    <div className="flex items-baseline gap-1">
+                        <h2 className="text-3xl font-black text-white">
+                            {isLoading ? <Skeleton className="h-8 w-24 bg-white/20 rounded-lg" /> : (userProfile?.balance?.toLocaleString('en-US') || '0')}
+                        </h2>
+                        <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
+                    </div>
                 </div>
-                <Wallet className="h-8 w-8 text-primary" />
+                {/* تم تصغير الحاوية هنا بناءً على الطلب */}
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md shadow-inner border border-white/10">
+                    <Wallet className="h-6 w-6 text-white" />
+                </div>
             </CardContent>
         </Card>
     );
@@ -86,7 +92,7 @@ export default function TransferPage() {
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
-        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        audioRef.current.play().catch(e => console.error("Audio play failed", e));
     }
   }, [showSuccess]);
 
@@ -206,6 +212,35 @@ export default function TransferPage() {
     }
   };
 
+  const handleContactPick = async () => {
+    if (!('contacts' in navigator && 'ContactsManager' in window)) {
+        toast({
+            variant: "destructive",
+            title: "غير مدعوم",
+            description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
+        });
+        return;
+    }
+
+    try {
+        const props = ['tel'];
+        const opts = { multiple: false };
+        const contacts = await (navigator as any).contacts.select(props, opts);
+        
+        if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+            let selectedNumber = contacts[0].tel[0];
+            selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+            if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
+            if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
+            if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
+            
+            setRecipientPhone(selectedNumber.slice(0, 9));
+        }
+    } catch (err) {
+        console.error("Contacts selection failed:", err);
+    }
+  };
+
   if (isProcessing) {
     return <ProcessingOverlay message="جاري تنفيذ التحويل..." />;
   }
@@ -215,43 +250,47 @@ export default function TransferPage() {
       <>
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-        <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px]">
-            <CardContent className="p-8">
-                <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="bg-green-100 p-4 rounded-full">
-                        <CheckCircle className="h-16 w-16 text-green-600" />
+        <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+            <div className="bg-green-500 p-8 flex justify-center">
+                <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                    <CheckCircle className="h-16 w-16 text-white" />
+                </div>
+            </div>
+            <CardContent className="p-8 space-y-6">
+                <div>
+                    <h2 className="text-2xl font-black text-green-600">تم التحويل بنجاح</h2>
+                    <p className="text-sm text-muted-foreground mt-1">تمت العملية بنجاح لصالح المشترك</p>
+                </div>
+
+                <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
+                    <div className="flex justify-between items-center border-b border-muted pb-2">
+                        <span className="text-muted-foreground flex items-center gap-2"><User className="w-3.5 h-3.5" /> المستلم:</span>
+                        <span className="font-bold">{recipient?.displayName}</span>
                     </div>
-                    <h2 className="text-2xl font-bold">تم التحويل بنجاح</h2>
-                     <p className="text-sm text-muted-foreground">تم تحويل المبلغ بنجاح.</p>
-                    <div className="w-full space-y-3 text-sm bg-muted p-4 rounded-lg mt-2 text-right">
-                       <div className="flex justify-between">
-                            <span className="text-muted-foreground">المستلم:</span>
-                            <span className="font-semibold">{recipient?.displayName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">المبلغ المحول:</span>
-                            <span className="font-semibold">{Number(amount).toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">عمولة خدمات:</span>
-                            <span className="font-semibold">{commission.toLocaleString('en-US')} ريال</span>
-                        </div>
-                        <div className="flex justify-between border-t pt-2 mt-2">
-                            <span className="text-muted-foreground">الإجمالي المخصوم:</span>
-                            <span className="font-bold text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
-                        </div>
+                    <div className="flex justify-between items-center border-b border-muted pb-2">
+                        <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المحول:</span>
+                        <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
                     </div>
-                    <div className="w-full grid grid-cols-2 gap-3 pt-4">
-                        <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => router.push('/')}>الرئيسية</Button>
-                        <Button onClick={() => {
-                            setShowSuccess(false);
-                            setRecipient(null);
-                            setRecipientPhone('');
-                            setAmount('');
-                        }} className="flex-1 rounded-2xl h-12" variant="default">
-                           تحويل جديد
-                        </Button>
+                    <div className="flex justify-between items-center border-b border-muted pb-2">
+                        <span className="text-muted-foreground">عمولة خدمات:</span>
+                        <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
                     </div>
+                    <div className="flex justify-between items-center pt-1">
+                        <span className="font-black text-primary">الإجمالي المخصوم:</span>
+                        <span className="font-black text-primary text-base">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
+                    <Button className="rounded-2xl h-12 font-bold" onClick={() => {
+                        setShowSuccess(false);
+                        setRecipient(null);
+                        setRecipientPhone('');
+                        setAmount('');
+                    }}>
+                        تحويل جديد
+                    </Button>
                 </div>
             </CardContent>
         </Card>
@@ -262,18 +301,15 @@ export default function TransferPage() {
 
   return (
     <>
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
       <SimpleHeader title="تحويل لمشترك" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        
         <BalanceDisplay />
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center">تفاصيل التحويل</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="recipientPhone" className="text-muted-foreground">رقم المستلم</Label>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-primary/5 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="recipientPhone" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم هاتف المستلم</Label>
               <div className="relative">
                 <Input
                   id="recipientPhone"
@@ -283,39 +319,66 @@ export default function TransferPage() {
                   onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                   disabled={isProcessing}
                   maxLength={9}
-                  className="text-right"
+                  className="text-center font-black text-xl h-14 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary transition-all pr-12 pl-12"
                 />
-                 {isSearching && <Loader2 className="animate-spin absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
+                <button 
+                    onClick={handleContactPick}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                    title="جهات الاتصال"
+                >
+                    <Users className="h-5 w-5" />
+                </button>
+                {isSearching && <Loader2 className="animate-spin absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />}
               </div>
             </div>
             
             {recipient && (
-                <div className="p-3 bg-muted rounded-lg flex items-center gap-3 animate-in fade-in-0">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm font-semibold">المستلم: <span className="text-primary dark:text-primary-foreground">{recipient.displayName}</span></p>
+                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-4 animate-in fade-in-0 zoom-in-95 duration-300">
+                    <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm">
+                        <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">اسم المستلم</p>
+                        <p className="text-base font-black text-foreground">{recipient.displayName}</p>
+                    </div>
                 </div>
             )}
 
             {recipient && (
-                <div className="animate-in fade-in-0">
-                  <Label htmlFor="amount" className="text-muted-foreground">المبلغ</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    inputMode='numeric'
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
+                <div className="animate-in fade-in-0 slide-in-from-top-2 duration-500">
+                  <Label htmlFor="amount" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">المبلغ المراد تحويله</Label>
+                  <div className="relative mt-2">
+                    <Input
+                        id="amount"
+                        type="number"
+                        inputMode='numeric'
+                        placeholder="0.00"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-primary placeholder:text-primary/10 focus-visible:ring-primary"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-sm">ر.ي</div>
+                  </div>
                 </div>
             )}
 
-            <Button onClick={handleConfirmClick} className="w-full h-auto py-2" disabled={!recipient || !amount || isProcessing}>
+            <Button 
+                onClick={handleConfirmClick} 
+                className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20 transition-all active:scale-95" 
+                disabled={!recipient || !amount || isProcessing}
+            >
                 <Send className="ml-2 h-5 w-5"/>
-                تحويل
+                تنفيذ التحويل
             </Button>
-          </CardContent>
-        </Card>
+        </div>
+
+        {recipient && amount && (
+            <div className="bg-primary/5 p-4 rounded-2xl border border-primary/5 animate-in fade-in-0 duration-700">
+                <p className="text-[10px] text-center text-muted-foreground font-bold">
+                    سيتم خصم عمولة ثابتة قدرها <span className="text-primary font-black">{commission} ريال</span> لكل عملية تحويل.
+                </p>
+            </div>
+        )}
       </div>
     </div>
     <Toaster />
@@ -324,7 +387,7 @@ export default function TransferPage() {
         <AlertDialogContent className="rounded-[32px]">
             <AlertDialogHeader>
                 <AlertDialogTitle className="text-center font-black">تأكيد عملية التحويل</AlertDialogTitle>
-                <div className="space-y-2 pt-4 text-sm text-right">
+                <div className="space-y-3 pt-4 text-sm text-right">
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground">المبلغ المراد تحويله:</span>
                         <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
@@ -337,18 +400,18 @@ export default function TransferPage() {
                         <span className="font-black">الإجمالي المخصوم:</span>
                         <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
                     </div>
-                        <div className="text-center pt-4">
-                        <p className="text-xs text-muted-foreground">إلى المستلم:</p>
-                        <p className="font-bold text-base">{recipient?.displayName}</p>
-                        <p className="text-xs text-muted-foreground">({recipient?.phoneNumber})</p>
+                    <div className="text-center pt-4 pb-2">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">إلى المستلم</p>
+                        <p className="font-black text-base text-primary">{recipient?.displayName}</p>
+                        <p className="text-xs font-bold text-muted-foreground">({recipient?.phoneNumber})</p>
                     </div>
                 </div>
             </AlertDialogHeader>
-            <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
-                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+            <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
                 <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
                     {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
                 </AlertDialogAction>
+                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

@@ -1,6 +1,9 @@
 
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const EXTERNAL_API_URL = 'https://apis.baitynet.net/api/partner/networks';
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
 
@@ -12,6 +15,8 @@ export async function GET() {
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
+      next: { revalidate: 0 },
+      cache: 'no-store'
     });
 
     const data = await response.json();

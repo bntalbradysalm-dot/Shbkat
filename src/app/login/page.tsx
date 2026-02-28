@@ -1,3 +1,4 @@
+
 'use client';
 
 import { BalanceCard } from '@/components/dashboard/balance-card';
@@ -8,16 +9,38 @@ import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { Wifi, Banknote } from 'lucide-react';
+import { Wifi, Banknote, Loader2 } from 'lucide-react';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
 type UserProfile = {
   accountType?: 'user' | 'network-owner';
 };
+
+const CustomLoader = () => (
+  <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
+    <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white p-1">
+        <Image 
+            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+            alt="Star Mobile Logo" 
+            fill
+            className="object-cover"
+            priority
+        />
+    </div>
+    <div className="mt-8">
+        <div className="flex gap-1.5">
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+        </div>
+    </div>
+  </div>
+);
 
 const OwnerDashboard = () => (
   <div className="relative bg-background rounded-t-[40px] pt-4 pb-4">
@@ -73,14 +96,8 @@ export default function DashboardPage() {
 
   if (isLoading || isUserLoading) {
     return (
-       <div className="flex flex-col h-screen bg-background">
-        <Header />
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-48 w-full rounded-[40px]" />
-          <div className="grid grid-cols-3 gap-4 pt-8">
-            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-          </div>
-        </div>
+       <div className="fixed inset-0 flex flex-col items-center justify-center bg-mesh-gradient z-[9999]">
+         <CustomLoader />
       </div>
     )
   }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -99,35 +100,28 @@ type AppSettings = {
 };
 
 const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
-    <div className="relative w-12 h-12">
-      <svg
-        viewBox="0 0 50 50"
-        className="absolute inset-0 w-full h-full animate-spin"
-        style={{ animationDuration: '1.2s' }}
-      >
-        <path
-          d="M15 25 A10 10 0 0 0 35 25"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
+  <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
+    <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white p-1">
+        <Image 
+            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+            alt="Star Mobile Logo" 
+            fill
+            className="object-cover"
+            priority
         />
-        <path
-          d="M40 15 A15 15 0 0 1 40 35"
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="5"
-          strokeLinecap="round"
-          className="opacity-30"
-        />
-      </svg>
+    </div>
+    <div className="mt-8">
+        <div className="flex gap-1.5">
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+        </div>
     </div>
   </div>
 );
 
 const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-black/20 backdrop-blur-sm">
+  <div className="fixed inset-0 flex flex-col justify-center items-center z-[100] bg-mesh-gradient">
     <CustomLoader />
   </div>
 );
@@ -194,8 +188,8 @@ export default function AccountPage() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'تطبيق شبكات',
-                text: 'حمل تطبيق شبكات الآن واستمتع بخدماتنا المتميزة!',
+                title: 'تطبيق ستار موبايل',
+                text: 'حمل تطبيق ستار موبايل الآن واستمتع بخدماتنا المتميزة!',
                 url: appSettings.appLink,
             });
         } catch (error) {

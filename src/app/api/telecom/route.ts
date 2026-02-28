@@ -49,10 +49,8 @@ export async function POST(request: Request) {
         endpoint = 'adenet';
         apiRequestParams.action = action;
     } else if (service === 'you') {
-        // توجيه باقات يو إلى mtnoffer بناءً على التوثيق الجديد
         if (action === 'billoffer' || action === 'queryoffer') {
             endpoint = 'mtnoffer';
-            // في mtnoffer، لا نحتاج لمعلمة action في الرابط حسب التوثيق
             delete apiRequestParams.action;
         } else {
             endpoint = 'mtn';
@@ -71,15 +69,14 @@ export async function POST(request: Request) {
                 apiRequestParams.action = action;
                 break;
             case 'billoffer':
-                endpoint = 'yem';
-                apiRequestParams.action = action;
-                // إضافة المعامل المطلوب لتحديد العملية كتجديد
+                // تم توجيهه إلى offeryem لحل مشكلة "Offer id is required"
+                endpoint = 'offeryem';
+                apiRequestParams.action = 'billoffer';
                 apiRequestParams.method = 'Renew';
                 break;
             case 'billover': 
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                // إضافة المعامل المطلوب لتحديد العملية كتجديد
                 apiRequestParams.method = 'Renew';
                 break;
             case 'status':
@@ -117,7 +114,6 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // محاولة استخراج الرصيد من الرد النصي إذا لم يكن JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ 

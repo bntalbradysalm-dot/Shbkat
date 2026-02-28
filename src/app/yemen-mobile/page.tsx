@@ -195,7 +195,7 @@ const POSTPAID_CATEGORIES = [
       { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '200', minutes: '300', validity: 'اسبوع يوم', offertype: 'A88339' },
       { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
-      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A88335' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: 'شهر', offertype: 'A88335' },
       { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', minutes: '1100', sms: '600', validity: 'شهر', offertype: 'A88440' },
       { offerId: 'm_aamal_4g', offerName: 'مزايا أعمال فورجي', price: 5000, data: '6GB', minutes: '1500', sms: '1000', validity: 'شهر', offertype: 'A49053' },
     ]
@@ -560,11 +560,11 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    const loanAmt = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
-    const totalToDeduct = selectedOffer.price + loanAmt;
+    // بناءً على طلب المستخدم: إرسال قيمة الباقة فقط بدون السلفة مع كودها
+    const totalToDeduct = selectedOffer.price;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
         return;
     }
 
@@ -572,16 +572,15 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        const actionToUse = loanAmt > 0 ? 'billover' : 'billoffer';
-
+        // استخدام billoffer دائماً لإرسال قيمة الباقة الصافية
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 mobile: phone, 
-                action: actionToUse, 
+                action: 'billoffer', 
                 num: selectedOffer.offertype, 
-                amount: totalToDeduct, 
+                amount: selectedOffer.price, 
                 transid 
             })
         });
@@ -599,7 +598,7 @@ export default function YemenMobilePage() {
         batch.update(userDocRef, { balance: increment(-totalToDeduct) });
         batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
             userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}${loanAmt > 0 ? ` (شمل تسديد سلفة: ${loanAmt})` : ''}`, recipientPhoneNumber: phone,
+            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. (تم إرسال قيمة الباقة فقط بدون السلفة)`, recipientPhoneNumber: phone,
             transid: transid
         });
         await batch.commit();
@@ -621,7 +620,6 @@ export default function YemenMobilePage() {
   };
 
   const currentCategories = lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES;
-  const loanAmountForPackage = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -894,21 +892,16 @@ export default function YemenMobilePage() {
                           <span className="text-muted-foreground">سعر الباقة:</span>
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
-                      {billingInfo?.isLoan && (
-                        <div className="flex justify-between items-center py-2 border-b border-dashed">
-                            <span className="text-muted-foreground">مبلغ السلفة المسدد:</span>
-                            <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
-                        </div>
-                      )}
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
-                        <span className="font-black">إجمالي الخصم من المحفظة:</span>
+                        <span className="font-black">إجمالي الخصم:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-3xl font-black text-[#B32C4C]">
-                                {((selectedOffer?.price || 0) + loanAmountForPackage).toLocaleString('en-US')}
+                                {selectedOffer?.price.toLocaleString('en-US')}
                             </p>
                             <span className="text-sm font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
+                      <p className="text-[10px] text-muted-foreground font-bold text-center mt-2">سيتم إرسال قيمة الباقة فقط وكودها للمزود.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

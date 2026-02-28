@@ -186,6 +186,31 @@ export default function SignupPage() {
                 </div>
             </div>
 
+            {/* Location - Modern Chips Grid */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mr-3">
+                <MapPin className="h-3 w-3 text-white/60" />
+                <Label className="text-[9px] font-black text-white uppercase">اختر موقعك (مدينتك)</Label>
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-y-auto p-1 scrollbar-hide bg-black/5 rounded-2xl border border-white/5">
+                {locations.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setLocation(loc)}
+                    className={cn(
+                      "h-9 rounded-xl text-[10px] font-black border transition-all flex items-center justify-center text-center px-1",
+                      location === loc 
+                        ? "bg-white text-primary border-white shadow-lg" 
+                        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                    )}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Account Type - Cards Style */}
             <div className="space-y-2">
               <Label className="text-[9px] font-black mr-3 text-white uppercase">نوع الحساب</Label>
@@ -216,31 +241,6 @@ export default function SignupPage() {
                   <Crown className={cn("h-5 w-5", accountType === 'network-owner' ? "text-primary" : "text-white/40")} />
                   <span className="text-[10px] font-black">مالك شبكة</span>
                 </button>
-              </div>
-            </div>
-
-            {/* Location - Modern Chips Grid */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mr-3">
-                <MapPin className="h-3 w-3 text-white/60" />
-                <Label className="text-[9px] font-black text-white uppercase">اختر موقعك (مدينتك)</Label>
-              </div>
-              <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-y-auto p-1 scrollbar-hide bg-black/5 rounded-2xl border border-white/5">
-                {locations.map((loc) => (
-                  <button
-                    key={loc}
-                    type="button"
-                    onClick={() => setLocation(loc)}
-                    className={cn(
-                      "h-9 rounded-xl text-[10px] font-black border transition-all flex items-center justify-center text-center px-1",
-                      location === loc 
-                        ? "bg-white text-primary border-white shadow-lg" 
-                        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
-                    )}
-                  >
-                    {loc}
-                  </button>
-                ))}
               </div>
             </div>
             

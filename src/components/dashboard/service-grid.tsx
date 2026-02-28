@@ -413,7 +413,7 @@ export function ServiceGrid() {
                                         <div className="flex items-center gap-2">
                                             <h4 className="text-sm font-black">{offer.name}</h4>
                                             {isStrongOffer && (
-                                              <Badge className="bg-green-600 text-white text-[10px] h-5 font-black px-2 shadow-sm border-none">
+                                              <Badge className="bg-green-600 text-white text-[11px] h-6 font-black px-3 shadow-md border-none">
                                                 عرض حصري
                                               </Badge>
                                             )}

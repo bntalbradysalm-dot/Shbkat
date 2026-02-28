@@ -561,7 +561,6 @@ export default function YemenMobilePage() {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
     const loanAmt = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
-    // المبلغ الذي سيخصم من المحفظة هو سعر الباقة + السلفة (إن وجدت)
     const totalToDeduct = selectedOffer.price + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -572,12 +571,16 @@ export default function YemenMobilePage() {
     setIsActivatingOffer(true);
     try {
         const transid = Date.now().toString().slice(-8);
+        
+        // التحقق مما إذا كان الرقم لديه سلفة لاختيار الأكشن المناسب
+        const actionToUse = loanAmt > 0 ? 'billover' : 'billoffer';
+
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 mobile: phone, 
-                action: 'billover', 
+                action: actionToUse, 
                 num: selectedOffer.offertype, // إرسال كود الباقة في num
                 amount: totalToDeduct, // إرسال إجمالي السعر (الباقة + السلفة) لتصفية المديونية وتفعيل الباقة
                 transid 

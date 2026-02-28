@@ -369,13 +369,6 @@ export function ServiceGrid() {
           
           {/* Header Section */}
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-                <Percent className="absolute top-4 left-4 h-10 w-10 text-white animate-pulse" />
-                <Percent className="absolute top-10 right-10 h-6 w-6 text-white animate-bounce" />
-                <Percent className="absolute bottom-10 left-10 h-8 w-8 text-white animate-spin" style={{ animationDuration: '3s' }} />
-                <Percent className="absolute bottom-4 right-4 h-12 w-12 text-white animate-bounce" />
-                <Percent className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 text-white animate-pulse opacity-10" />
-             </div>
              <Badge className="bg-white/20 text-white border-white/30 mb-2 font-black text-[10px] uppercase tracking-widest px-3">عرض محدود</Badge>
              <h2 className="text-2xl font-black text-white tracking-tight">عرض شبكة الخير</h2>
              <p className="text-white/70 text-xs font-bold mt-1">أقوى باقات شبكة الخير بأسعار منافسة</p>

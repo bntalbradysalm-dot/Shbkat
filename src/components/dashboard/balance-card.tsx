@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, ShoppingBag, Heart, Gamepad2 } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2 } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,7 +27,7 @@ const availableServices = [
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
   { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
-  { id: 'store', name: 'المشتريات', icon: ShoppingBag, href: '/store' },
+  { id: 'support', name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
 
 type UserProfile = {

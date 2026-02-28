@@ -1,12 +1,12 @@
-
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
+/**
+ * تهيئة مكتبة Genkit مع ربطها بمحرك Gemini 1.5 Flash.
+ */
 export const ai = genkit({
   plugins: [
-    googleAI({
-      apiKey: process.env.GEMINI_API_KEY,
-    }),
+    googleAI(),
   ],
-  model: 'googleai/gemini-2.5-flash',
+  model: 'googleai/gemini-1.5-flash',
 });

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -48,10 +49,8 @@ export async function POST(request: Request) {
         endpoint = 'adenet';
         apiRequestParams.action = action;
     } else if (service === 'you') {
-        // توجيه باقات يو إلى mtnoffer بناءً على التوثيق الجديد
         if (action === 'billoffer' || action === 'queryoffer') {
             endpoint = 'mtnoffer';
-            // في mtnoffer، لا نحتاج لمعلمة action في الرابط حسب التوثيق
             delete apiRequestParams.action;
         } else {
             endpoint = 'mtn';
@@ -60,18 +59,26 @@ export async function POST(request: Request) {
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 
+        // الحالة الافتراضية (يمن موبايل YEM)
         switch(action) {
             case 'query':
             case 'bill':
             case 'solfa':
             case 'queryoffer':
-            case 'billoffer':
                 endpoint = 'yem';
                 apiRequestParams.action = action;
                 break;
-            case 'billover': 
+            case 'billoffer':
+                // تم توجيهه إلى offeryem لحل مشكلة "Offer id is required"
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
+                apiRequestParams.method = 'Renew';
+                break;
+            case 'billover': 
+                // العميل طلب تجاهل السلفة تماماً عند التفعيل، لذا نوجهه للرابط العادي
+                endpoint = 'offeryem';
+                apiRequestParams.action = 'billoffer';
+                apiRequestParams.method = 'Renew';
                 break;
             case 'status':
             case 'balance':
@@ -108,7 +115,6 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            // محاولة استخراج الرصيد من الرد النصي إذا لم يكن JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ 

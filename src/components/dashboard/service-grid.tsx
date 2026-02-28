@@ -130,8 +130,8 @@ export function ServiceGrid() {
                     if (!classesResponse.ok) throw new Error('Failed to fetch classes');
                     const classes = await classesResponse.json();
                     
-                    // الخير 1000 والخير 1500 (حذف 1200)
-                    const targetPrices = [1000, 1500];
+                    // الخير 50، الخير 1000، والخير 1500
+                    const targetPrices = [50, 1000, 1500];
                     const filtered = classes.filter((c: any) => targetPrices.includes(Number(c.price)));
                     setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                 } else {
@@ -146,7 +146,7 @@ export function ServiceGrid() {
                             const catsRef = collection(firestore, `networks/${net.id}/cardCategories`);
                             const catsSnap = await getDocs(catsRef);
                             const cats = catsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            const targetPrices = [1000, 1500];
+                            const targetPrices = [50, 1000, 1500];
                             const filtered = cats.filter((c: any) => targetPrices.includes(Number(c.price)));
                             setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                         }
@@ -386,22 +386,33 @@ export function ServiceGrid() {
             ) : specialOffers.length > 0 ? (
                 specialOffers.map((offer, idx) => {
                     const priceNum = Number(offer.price);
-                    const dataInfo = priceNum === 1000 ? '15 قيقا' : priceNum === 1500 ? '25 قيقا' : '';
+                    const dataInfo = priceNum === 50 ? '5 قيقا' : priceNum === 1000 ? '15 قيقا' : priceNum === 1500 ? '25 قيقا' : '';
+                    const durationInfo = priceNum === 50 ? 'ساعة واحدة' : 'صلاحية شهر';
+                    const isStrongOffer = priceNum === 50;
                     
                     return (
                         <Card 
                             key={offer.id} 
-                            className="rounded-3xl border-none shadow-md bg-muted/30 hover:bg-primary/5 transition-all group animate-in slide-in-from-bottom-4 cursor-pointer active:scale-95" 
+                            className={cn(
+                                "rounded-3xl border-none shadow-md hover:bg-primary/5 transition-all group animate-in slide-in-from-bottom-4 cursor-pointer active:scale-95",
+                                isStrongOffer ? "bg-primary/10 border-2 border-primary/20" : "bg-muted/30"
+                            )}
                             style={{ animationDelay: `${idx * 150}ms` }}
                             onClick={() => handleOfferClick(offer)}
                         >
                             <CardContent className="p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                                        <Wifi className="h-6 w-6" />
+                                    <div className={cn(
+                                        "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors",
+                                        isStrongOffer ? "bg-primary text-white" : "bg-primary/10 group-hover:bg-primary group-hover:text-white"
+                                    )}>
+                                        {isStrongOffer ? <Zap className="h-6 w-6" /> : <Wifi className="h-6 w-6" />}
                                     </div>
                                     <div className="text-right">
-                                        <h4 className="text-sm font-black">{offer.name}</h4>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="text-sm font-black">{offer.name}</h4>
+                                            {isStrongOffer && <Badge className="bg-destructive text-[8px] h-4 font-black">قوي جداً</Badge>}
+                                        </div>
                                         <div className="flex flex-col gap-0.5 mt-1">
                                             {dataInfo && (
                                                 <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
@@ -411,7 +422,7 @@ export function ServiceGrid() {
                                             )}
                                             <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
                                                 <Clock className="h-3 w-3" />
-                                                <span>صلاحية شهر</span>
+                                                <span>{durationInfo}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -423,7 +434,10 @@ export function ServiceGrid() {
                                     </div>
                                     <Button 
                                         size="sm" 
-                                        className="h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg shadow-primary/20"
+                                        className={cn(
+                                            "h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg",
+                                            isStrongOffer ? "bg-primary" : "shadow-primary/20"
+                                        )}
                                     >
                                         شراء <ArrowUpRight className="h-3 w-3 mr-1" />
                                     </Button>

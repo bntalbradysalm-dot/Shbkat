@@ -41,6 +41,7 @@ import { Input } from '@/components/ui/input';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 type Service = {
   name: string;

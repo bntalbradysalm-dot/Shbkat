@@ -1,6 +1,9 @@
 
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const API_BASE_URL = 'https://apis.baitynet.net/api/partner/networks';
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
 
@@ -21,20 +24,20 @@ export async function GET(
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
       },
+      next: { revalidate: 0 },
+      cache: 'no-store'
     });
 
     const data = await response.json();
 
     if (!response.ok) {
       console.error(`External API failed with status: ${response.status}`, data);
-      // Forward the error message from the external API
       return new NextResponse(
         JSON.stringify({ message: data?.message?.ar || `External API failed` }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    // The external API returns an object with a 'data' property containing the array.
     if (data && Array.isArray(data.data)) {
         return NextResponse.json(data.data);
     } else {

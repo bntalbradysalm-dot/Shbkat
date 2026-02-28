@@ -1,4 +1,7 @@
+
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 const API_BASE_URL = 'https://apis.baitynet.net/api/partner/orders';
 const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
@@ -31,6 +34,7 @@ export async function POST(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(externalApiBody),
+      cache: 'no-store'
     });
 
     const data = await response.json();

@@ -572,7 +572,6 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // التحقق مما إذا كان الرقم لديه سلفة لاختيار الأكشن المناسب
         const actionToUse = loanAmt > 0 ? 'billover' : 'billoffer';
 
         const response = await fetch('/api/telecom', {
@@ -581,8 +580,8 @@ export default function YemenMobilePage() {
             body: JSON.stringify({ 
                 mobile: phone, 
                 action: actionToUse, 
-                num: selectedOffer.offertype, // إرسال كود الباقة في num
-                amount: totalToDeduct, // إرسال إجمالي السعر (الباقة + السلفة) لتصفية المديونية وتفعيل الباقة
+                num: selectedOffer.offertype, 
+                amount: totalToDeduct, 
                 transid 
             })
         });

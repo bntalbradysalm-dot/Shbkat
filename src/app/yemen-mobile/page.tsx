@@ -165,7 +165,7 @@ const PREPAID_CATEGORIES = [
       { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74332' },
       { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74339' },
       { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A44345' },
-      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74351' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6ق ميجا', validity: '10 ايام', offertype: 'A74351' },
     ]
   }
 ];
@@ -252,7 +252,7 @@ const POSTPAID_CATEGORIES = [
       { offerId: 'net_10d_1gb', offerName: 'نت ثري جي 1 قيقا', price: 1400, data: '1GB', validity: '10 ايام', offertype: 'A74385' },
       { offerId: 'net_10d_2gb', offerName: 'نت ثري جي 2 قيقا', price: 2600, data: '2GB', validity: '10 ايام', offertype: 'A74340' },
       { offerId: 'net_10d_4gb', offerName: 'نت ثري جي 4 قيقا', price: 4800, data: '4GB', validity: '10 ايام', offertype: 'A74348' },
-      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6GB', validity: '10 ايام', offertype: 'A74354' },
+      { offerId: 'net_10d_6gb', offerName: 'نت ثري جي 6 قيقا', price: 6000, data: '6ق ميجا', validity: '10 ايام', offertype: 'A74354' },
     ]
   }
 ];
@@ -560,7 +560,7 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // بناءً على طلب المستخدم: إرسال قيمة الباقة فقط بدون السلفة مع كودها
+    // إرسال قيمة الباقة الصافية مع كودها للمزود
     const totalToDeduct = selectedOffer.price;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -572,7 +572,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // استخدام billoffer دائماً لإرسال قيمة الباقة الصافية
+        // استخدام billoffer لطلب تفعيل الباقة بالكود والمبلغ الصافي
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -598,7 +598,7 @@ export default function YemenMobilePage() {
         batch.update(userDocRef, { balance: increment(-totalToDeduct) });
         batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
             userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. (تم إرسال قيمة الباقة فقط بدون السلفة)`, recipientPhoneNumber: phone,
+            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. (تم إرسال قيمة الباقة فقط وكودها)`, recipientPhoneNumber: phone,
             transid: transid
         });
         await batch.commit();
@@ -866,9 +866,6 @@ export default function YemenMobilePage() {
                             {parseFloat(amount || '0').toLocaleString('en-US')} ريال
                         </span>
                     </div>
-                    {billingInfo?.isLoan && (
-                        <p className="text-[10px] text-destructive font-bold text-center mt-2">تنبيه: الرقم لديه سلفة ({billingInfo.loanAmount} ريال) لن تُخصم من محفظتك الآن.</p>
-                    )}
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
@@ -901,7 +898,6 @@ export default function YemenMobilePage() {
                             <span className="text-sm font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-bold text-center mt-2">سيتم إرسال قيمة الباقة فقط وكودها للمزود.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
@@ -953,7 +949,7 @@ export default function YemenMobilePage() {
 
                     <div className="grid grid-cols-2 gap-3">
                         <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تحديث</Button>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={() => { setShowSuccess(false); handleSearch(phone); }} style={{ backgroundColor: '#B32C4C' }}>تحديث</Button>
                     </div>
                 </CardContent>
             </Card>

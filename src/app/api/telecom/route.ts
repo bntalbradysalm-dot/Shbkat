@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 
+        // الحالة الافتراضية (يمن موبايل YEM)
         switch(action) {
             case 'query':
             case 'bill':
@@ -72,13 +73,13 @@ export async function POST(request: Request) {
             case 'billoffer':
                 endpoint = 'yem';
                 apiRequestParams.action = action;
-                // إضافة المعامل المطلوب لتجنب خطأ Method is required
+                // إضافة المعامل المطلوب لتحديد العملية كتجديد
                 apiRequestParams.method = 'Renew';
                 break;
             case 'billover': 
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                // إضافة المعامل المطلوب لتجنب خطأ Method is required
+                // إضافة المعامل المطلوب لتحديد العملية كتجديد
                 apiRequestParams.method = 'Renew';
                 break;
             case 'status':

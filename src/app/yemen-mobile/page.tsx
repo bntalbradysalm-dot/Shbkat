@@ -525,7 +525,7 @@ export default function YemenMobilePage() {
         const result = await response.json();
         
         if (!response.ok || (result.resultCode !== "0" && result.resultCode !== 0)) {
-            const providerError = result.resultDesc || result.message || 'فشلت عملية السداد من المزود.';
+            const providerError = result.resultDesc || result.message || 'فشل عملية السداد من المزود.';
             throw new Error(getFriendlyErrorMessage(providerError));
         }
 
@@ -912,7 +912,7 @@ export default function YemenMobilePage() {
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                  <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold" disabled={isActivatingOffer} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
+                  <AlertDialogAction onClick={handleActivateOffer} className="w-full rounded-2xl h-12 font-bold text-white" disabled={isActivatingOffer} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                       تفعيل الآن
                   </AlertDialogAction>
                   <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isActivatingOffer}>تراجع</AlertDialogCancel>

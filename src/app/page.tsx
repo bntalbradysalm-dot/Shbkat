@@ -101,7 +101,7 @@ export default function LoginPage() {
                 <Input
                   id="phone"
                   type="tel"
-                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12"
+                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/70 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12"
                   placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={e => setPhoneNumber(e.target.value)}
@@ -117,7 +117,7 @@ export default function LoginPage() {
                   id="password"
                   type={isPasswordVisible ? 'text' : 'password'}
                   placeholder="********"
-                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12 pl-12"
+                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/70 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12 pl-12"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />

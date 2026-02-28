@@ -113,7 +113,7 @@ export default function SignupPage() {
             <Link href="/" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
                 <ChevronRight className="h-5 w-5" />
             </Link>
-            <h1 className="font-black text-base text-white">انشاء حساب</h1>
+            <h1 className="font-black text-sm text-white">انشاء حساب</h1>
             <div className="w-9" />
         </header>
 
@@ -134,8 +134,8 @@ export default function SignupPage() {
               <Label className="text-[9px] font-black mr-3 text-white uppercase">الاسم الرباعي الكامل</Label>
               <div className="relative group">
                 <Input
-                  className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-11 text-sm"
-                  placeholder="محمد علي حسن أحمد"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-sm"
+                  placeholder="ادخل اسمك الرباعي"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -149,7 +149,7 @@ export default function SignupPage() {
               <div className="relative group">
                 <Input
                   type="tel"
-                  className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-11 text-center font-bold text-sm"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-center font-bold text-sm"
                   placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
@@ -166,7 +166,7 @@ export default function SignupPage() {
                     <div className="relative group">
                         <Input
                             type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-4 pl-4 text-sm"
+                            className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm"
                             placeholder="********"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -179,7 +179,7 @@ export default function SignupPage() {
                     <div className="relative group">
                         <Input
                             type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-4 pl-4 text-sm"
+                            className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm"
                             placeholder="********"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -226,11 +226,11 @@ export default function SignupPage() {
               <div className="space-y-3 pt-2 animate-in fade-in duration-500 bg-white/5 p-4 rounded-[24px] border border-white/10">
                  <div className="space-y-1.5">
                     <Label className="text-[9px] font-black mr-3 text-white">اسم شبكتك التجارية</Label>
-                    <Input className="h-10 bg-white/10 border-white/10 text-white rounded-xl text-sm" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="مثال: شبكة الخير" />
+                    <Input className="h-10 bg-white/10 border-white/10 text-white placeholder:text-white/70 rounded-xl text-sm" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="مثال: شبكة الخير" />
                  </div>
                  <div className="space-y-1.5">
                     <Label className="text-[9px] font-black mr-3 text-white">موقع الشبكة</Label>
-                    <Input className="h-10 bg-white/10 border-white/10 text-white rounded-xl text-sm" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - السوق" />
+                    <Input className="h-10 bg-white/10 border-white/10 text-white placeholder:text-white/70 rounded-xl text-sm" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - السوق" />
                  </div>
               </div>
             )}

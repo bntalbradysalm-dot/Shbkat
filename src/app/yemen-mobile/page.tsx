@@ -560,7 +560,7 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // إرسال قيمة الباقة الصافية مع كودها للمزود
+    // إرسال قيمة الباقة الصافية فقط للمزود كما طلب العميل (بدون سلفة)
     const totalToDeduct = selectedOffer.price;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -572,7 +572,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // استخدام billoffer لطلب تفعيل الباقة بالكود والمبلغ الصافي
+        // إرسال قيمة الباقة وكودها فقط للمزود
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -597,8 +597,12 @@ export default function YemenMobilePage() {
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-totalToDeduct) });
         batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
-            userId: user.uid, transactionDate: new Date().toISOString(), amount: totalToDeduct,
-            transactionType: `تفعيل ${selectedOffer.offerName}`, notes: `للرقم: ${phone}. (تم إرسال قيمة الباقة فقط وكودها)`, recipientPhoneNumber: phone,
+            userId: user.uid, 
+            transactionDate: new Date().toISOString(), 
+            amount: totalToDeduct,
+            transactionType: `تفعيل ${selectedOffer.offerName}`, 
+            notes: `للرقم: ${phone}`, 
+            recipientPhoneNumber: phone,
             transid: transid
         });
         await batch.commit();

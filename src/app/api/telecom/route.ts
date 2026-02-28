@@ -75,6 +75,7 @@ export async function POST(request: Request) {
                 apiRequestParams.method = 'Renew';
                 break;
             case 'billover': 
+                // العميل طلب تجاهل السلفة تماماً عند التفعيل، لذا نوجهه للرابط العادي
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 apiRequestParams.method = 'Renew';

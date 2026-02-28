@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 /**
  * شاشة الترحيب (Splash Screen)
  * تظهر عند فتح التطبيق وتنتظر حتى يصبح التطبيق جاهزاً بالكامل (isAppReady).
- * تم ضبط الوقت الأدنى ليكون 5 ثوانٍ لتعزيز الهوية البصرية.
+ * تم ضبط الوقت الأدنى ليكون 10 ثوانٍ لتعزيز الهوية البصرية (بناءً على طلب العميل).
  */
 export function SplashScreen({ 
   onComplete, 
@@ -21,15 +21,15 @@ export function SplashScreen({
   const [isExiting, setIsExiting] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
-  // ضمان بقاء الشاشة لمدة 5 ثوانٍ على الأقل للهوية البصرية (بناءً على طلب المستخدم)
+  // ضمان بقاء الشاشة لمدة 10 ثوانٍ على الأقل للهوية البصرية (بناءً على طلب المستخدم)
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 5000);
+    }, 10000); // تغيير المدة إلى 10 ثوانٍ
     return () => clearTimeout(timer);
   }, []);
 
-  // الاختفاء فقط عندما يكون التطبيق جاهزاً بالكامل ومر الوقت الأدنى (5 ثوانٍ)
+  // الاختفاء فقط عندما يكون التطبيق جاهزاً بالكامل ومر الوقت الأدنى (10 ثوانٍ)
   useEffect(() => {
     if (isAppReady && minTimeElapsed) {
       setIsExiting(true);

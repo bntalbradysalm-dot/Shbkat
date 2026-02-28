@@ -8,6 +8,7 @@ import { FirebaseProvider } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { AppErrorDialog } from '@/components/layout/app-error-dialog';
+import { SplashScreen } from '@/components/layout/splash-screen';
 
 export default function RootLayout({
   children,
@@ -16,6 +17,7 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const [isNavVisible, setIsNavVisible] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // قائمة الصفحات الرئيسية التي يجب أن يظهر فيها شريط التنقل
@@ -33,6 +35,19 @@ export default function RootLayout({
     setIsNavVisible(topLevelPages.includes(pathname));
   }, [pathname]);
 
+  // التحقق من حالة شاشة الترحيب في جلسة التصفح
+  useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem('has_seen_splash_v1');
+    if (hasSeenSplash) {
+      setShowSplash(false);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem('has_seen_splash_v1', 'true');
+  };
+
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -46,7 +61,9 @@ export default function RootLayout({
       <body className="antialiased bg-background">
         <FirebaseProvider>
           <ThemeProvider>
-            <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl">
+            <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl relative">
+              {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+              
               <div className="flex-1 flex flex-col relative">
                 <WelcomeModal />
                 <AppErrorDialog />

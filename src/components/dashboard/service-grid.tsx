@@ -407,7 +407,7 @@ export function ServiceGrid() {
                                         "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors",
                                         isStrongOffer ? "bg-primary text-white" : "bg-primary/10 group-hover:bg-primary group-hover:text-white"
                                     )}>
-                                        {isStrongOffer ? <span className="text-2xl">🔥</span> : <Wifi className="h-6 w-6" />}
+                                        {isStrongOffer ? <Wifi className="h-7 w-7 text-white" /> : <Wifi className="h-6 w-6" />}
                                     </div>
                                     <div className="text-right">
                                         <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle, Phone, Lock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,32 +11,10 @@ import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
-import { PromotionalImage } from '@/components/dashboard/promotional-image';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
-
-const CustomLoader = () => (
-  <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
-    <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white p-1">
-        <Image 
-            src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
-            alt="Star Mobile Logo" 
-            fill
-            className="object-cover"
-            priority
-        />
-    </div>
-    <div className="mt-8">
-        <div className="flex gap-1.5">
-            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-            <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-        </div>
-    </div>
-  </div>
-);
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -62,7 +40,7 @@ export default function LoginPage() {
       toast({ 
         variant: 'destructive', 
         title: 'خطأ في الاتصال', 
-        description: 'تحذير: لم يتم اكتشاف إعدادات Firebase. تأكد من ضبط الـ Env Variables في Vercel.' 
+        description: 'تحذير: لم يتم اكتشاف إعدادات Firebase.' 
       });
       return;
     }
@@ -84,75 +62,109 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-mesh-gradient z-[9999]">
-      <CustomLoader />
-    </div>
-  );
+  if (isUserLoading || user) return null;
 
   return (
     <>
-      <div className="flex flex-col justify-between h-screen bg-background p-6 text-foreground">
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="mb-8">
-             <PromotionalImage disableLink />
-              <div className="text-center mt-6">
-                <h1 className="text-2xl font-bold">أهلاً بك</h1>
-                <p className="text-muted-foreground">سجل دخولك للبدء</p>
-              </div>
+      <div className="flex flex-col min-h-screen bg-mesh-gradient text-white overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-sm mx-auto">
+          
+          {/* Logo Section */}
+          <div className="mb-10 text-center animate-in fade-in zoom-in duration-700">
+            <div className="relative w-32 h-32 mx-auto mb-6">
+                <div className="absolute inset-0 bg-white/20 rounded-[45px] blur-2xl animate-pulse" />
+                <div className="relative w-full h-full overflow-hidden rounded-[40px] border-4 border-white/30 shadow-2xl bg-white p-1">
+                    <Image 
+                        src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
+                        alt="Star Mobile Logo" 
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                </div>
+            </div>
+            <h1 className="text-3xl font-black tracking-tight drop-shadow-md">ستار موبايل</h1>
+            <p className="text-white/70 text-sm font-bold mt-2">عالم من الخدمات الرقمية بين يديك</p>
           </div>
 
           {!auth && (
-            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl mb-6 text-destructive text-sm flex items-start gap-3">
+            <div className="bg-destructive/20 border border-white/20 p-4 rounded-3xl mb-6 text-white text-xs flex items-start gap-3 backdrop-blur-md">
               <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p>تحذير: لم يتم اكتشاف إعدادات Firebase. تأكد من ضبط الـ Env Variables في Vercel.</p>
+              <p>تحذير: لم يتم اكتشاف إعدادات Firebase.</p>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6 text-right">
+          <form onSubmit={handleLogin} className="w-full space-y-5 animate-in slide-in-from-bottom-8 duration-1000">
             <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input
-                id="phone"
-                type="tel"
-                className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
-                placeholder="7xxxxxxxx"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
-              />
+              <Label htmlFor="phone" className="text-xs font-black mr-2 text-white/80 uppercase tracking-widest">رقم الهاتف</Label>
+              <div className="relative group">
+                <Input
+                  id="phone"
+                  type="tel"
+                  className="h-14 bg-white/10 border-white/10 text-white placeholder:text-white/30 text-center font-black text-lg rounded-[24px] focus-visible:ring-white/30 transition-all group-hover:bg-white/15 pr-12"
+                  placeholder="7xxxxxxxx"
+                  value={phoneNumber}
+                  onChange={e => setPhoneNumber(e.target.value)}
+                />
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-white transition-colors" />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <div className="relative">
+              <Label htmlFor="password" title="كلمة المرور" className="text-xs font-black mr-2 text-white/80 uppercase tracking-widest">كلمة المرور</Label>
+              <div className="relative group">
                 <Input
                   id="password"
                   type={isPasswordVisible ? 'text' : 'password'}
-                  placeholder="ادخل كلمة المرور"
-                  className="bg-muted focus-visible:ring-primary border-border text-right rounded-xl"
+                  placeholder="********"
+                  className="h-14 bg-white/10 border-white/10 text-white placeholder:text-white/30 text-center font-black text-lg rounded-[24px] focus-visible:ring-white/30 transition-all group-hover:bg-white/15 pr-12 pl-12"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
-                <button type="button" onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-white transition-colors" />
+                <button 
+                  type="button" 
+                  onClick={() => setIsPasswordVisible(!isPasswordVisible)} 
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                >
                   {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full text-lg font-bold h-12 rounded-xl" disabled={isLoading}>
-              {isLoading ? 'جاري الدخول...' : 'دخول'}
-            </Button>
+            <div className="pt-2">
+                <Button 
+                    type="submit" 
+                    className="w-full h-14 text-lg font-black bg-white text-primary hover:bg-white/90 rounded-[24px] shadow-xl transition-all active:scale-95 disabled:opacity-50" 
+                    disabled={isLoading}
+                >
+                {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'دخول'}
+                </Button>
+            </div>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-muted-foreground">ليس لديك حساب؟ <Link href="/signup" className="font-bold text-primary hover:underline">سجل الآن</Link></p>
+          <div className="mt-8 text-center animate-in fade-in duration-1000 delay-500">
+            <p className="text-white/60 text-sm font-bold">ليس لديك حساب؟</p>
+            <Link href="/signup" className="mt-2 inline-block py-2 px-6 rounded-full bg-white/10 border border-white/10 hover:bg-white/20 transition-all font-black text-white text-sm">انضم إلينا الآن</Link>
           </div>
         </div>
-        <footer className="text-center text-xs text-muted-foreground pb-4">
-          <p>تم التطوير بواسطة محمد راضي باشادي</p>
+
+        <footer className="text-center text-[10px] font-bold text-white/40 pb-8 animate-in fade-in duration-1000">
+          <p>© ستار موبايل - تطوير محمد راضي باشادي</p>
         </footer>
       </div>
       <Toaster />
     </>
   );
+}
+
+const Loader2 = ({ className }: { className?: string }) => (
+    <svg className={cn("animate-spin", className)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+);
+
+function cn(...inputs: any[]) {
+    return inputs.filter(Boolean).join(' ');
 }

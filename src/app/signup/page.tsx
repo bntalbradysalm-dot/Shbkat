@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,32 +13,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SimpleHeader } from '@/components/layout/simple-header';
-import { useAuth, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Phone, Lock, MapPin, Crown, ChevronRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 const locations = [
-  'سيئون',
-  'شبام',
-  'الغرفة',
-  'تريم',
-  'ساة',
-  'القطن',
-  'الحوطة',
-  'وادي بن علي',
-  'العقاد',
-  'وادي عمد',
-  'وادي العين',
-  'بور',
-  'تاربة',
-  'الخشعة',
+  'سيئون', 'شبام', 'الغرفة', 'تريم', 'ساة', 'القطن', 'الحوطة', 
+  'وادي بن علي', 'العقاد', 'وادي عمد', 'وادي العين', 'بور', 'تاربة', 'الخشعة'
 ];
 
 export default function SignupPage() {
@@ -51,7 +40,6 @@ export default function SignupPage() {
   const [networkLocation, setNetworkLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -62,65 +50,31 @@ export default function SignupPage() {
 
     const nameParts = fullName.trim().split(/\s+/);
     if (nameParts.length < 4) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال الاسم الرباعي الكامل.",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال الاسم الرباعي الكامل." });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "كلمتا المرور غير متطابقتين.",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "كلمتا المرور غير متطابقتين." });
       return;
-    }
-    if (!fullName || !phoneNumber || !location) {
-        toast({
-            variant: "destructive",
-            title: "خطأ",
-            description: "الرجاء تعبئة جميع الحقول.",
-          });
-        return;
-    }
-    
-    if (accountType === 'network-owner' && (!networkName || !networkLocation)) {
-       toast({
-            variant: "destructive",
-            title: "خطأ",
-            description: "الرجاء تعبئة اسم وموقع الشبكة.",
-          });
-        return;
     }
 
     setIsLoading(true);
     try {
-      // Using phone number to create an email for Firebase Auth
       const email = `${phoneNumber.trim()}@shabakat.com`;
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth!, email, password);
       const user = userCredential.user;
 
-      // Update user profile with full name
       if (user) {
-        await updateProfile(user, {
-          displayName: fullName.trim(),
-        });
+        await updateProfile(user, { displayName: fullName.trim() });
+        const batch = writeBatch(firestore!);
+        const userRef = doc(firestore!, 'users', user.uid);
         
-        const batch = writeBatch(firestore);
-
-        // 1. Create user document in Firestore
-        const userRef = doc(firestore, 'users', user.uid);
-        const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ');
-
         batch.set(userRef, {
           id: user.uid,
           displayName: fullName.trim(),
-          firstName: firstName,
-          lastName: lastName,
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' '),
           phoneNumber: phoneNumber.trim(),
           email: user.email,
           location: location,
@@ -130,9 +84,8 @@ export default function SignupPage() {
           photoURL: `https://i.postimg.cc/SNgTrrW2/default-avatar.jpg`
         });
         
-        // 2. If network owner, create network document
         if (accountType === 'network-owner') {
-          const networkRef = doc(collection(firestore, 'networks'));
+          const networkRef = doc(collection(firestore!, 'networks'));
           batch.set(networkRef, {
             name: networkName,
             location: networkLocation,
@@ -140,34 +93,13 @@ export default function SignupPage() {
             phoneNumber: phoneNumber.trim()
           });
         }
-        
         await batch.commit();
       }
 
-      toast({
-        title: "نجاح",
-        description: "تم إنشاء حسابك بنجاح! جاري توجيهك...",
-      });
-
-      // Redirect to home page after a short delay
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
-
+      toast({ title: "تم إنشاء الحساب", description: "مرحباً بك في ستار موبايل!" });
+      setTimeout(() => router.push('/'), 1500);
     } catch (error: any) {
-      let errorMessage = "حدث خطأ غير متوقع أثناء إنشاء الحساب.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'رقم الهاتف هذا مستخدم بالفعل.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'كلمة المرور ضعيفة جدًا. يجب أن تتكون من 6 أحرف على الأقل.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'رقم الهاتف غير صالح.';
-      }
-      toast({
-        variant: "destructive",
-        title: "خطأ في إنشاء الحساب",
-        description: errorMessage,
-      });
+      toast({ variant: "destructive", title: "خطأ", description: error.message || "فشل إنشاء الحساب." });
     } finally {
         setIsLoading(false);
     }
@@ -175,147 +107,158 @@ export default function SignupPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen bg-background text-foreground">
-        <SimpleHeader title="سجل الآن" />
-        <div className="flex-1 flex flex-col justify-center text-center px-6">
-          <div className="mb-8 flex flex-col items-center">
-             <div className="relative w-24 h-24 overflow-hidden rounded-3xl shadow-lg border border-border/50 mb-4">
-                <Image 
-                    src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
-                    alt="Shabakat Wallet Logo" 
-                    fill
-                    className="object-cover"
-                />
+      <div className="flex flex-col min-h-screen bg-mesh-gradient text-white pb-10">
+        
+        <header className="p-4 flex items-center justify-between animate-in fade-in duration-500">
+            <Link href="/" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                <ChevronRight className="h-6 w-6" />
+            </Link>
+            <h1 className="font-black text-lg">انشاء حساب</h1>
+            <div className="w-10" />
+        </header>
+
+        <div className="px-6 flex flex-col items-center">
+          <div className="my-8 text-center animate-in zoom-in duration-700">
+             <div className="relative w-20 h-20 mx-auto mb-4">
+                <div className="relative w-full h-full overflow-hidden rounded-[28px] border-4 border-white/30 shadow-2xl bg-white p-1">
+                    <Image src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" alt="Logo" fill className="object-cover" />
+                </div>
              </div>
-            <h1 className="text-3xl font-bold text-primary">انشاء حساب جديد</h1>
-            <p className="text-md text-muted-foreground mt-2">
-              ادخل معلوماتك لإنشاء حساب جديد
-            </p>
+            <h2 className="text-xl font-black">ابدأ رحلتك معنا</h2>
+            <p className="text-white/60 text-xs font-bold mt-1">سجل بياناتك للانضمام لعائلة ستار موبايل</p>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-4 text-right">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">الاسم الرباعي الكامل</Label>
-              <Input
-                id="fullName"
-                type="text"
-                className="bg-muted focus-visible:ring-primary border-border"
-                placeholder="ادخل اسمك الكامل"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input
-                id="phone"
-                type="tel"
-                className="bg-muted focus-visible:ring-primary border-border text-right"
-                placeholder="7xxxxxxxx"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                maxLength={9}
-                minLength={9}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={isPasswordVisible ? 'text' : 'password'}
-                  placeholder="ادخل كلمة المرور"
-                  className="bg-muted focus-visible:ring-primary border-border text-right"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                 <button
-                  type="button"
-                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
+          <form onSubmit={handleSignup} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
             
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">تاكيد كلمة المرور</Label>
-              <div className="relative">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">الاسم الرباعي الكامل</Label>
+              <div className="relative group">
                 <Input
-                  id="confirmPassword"
-                  type={isConfirmPasswordVisible ? 'text' : 'password'}
-                  placeholder="أعد إدخال كلمة المرور"
-                  className="bg-muted focus-visible:ring-primary border-border text-right"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-11"
+                  placeholder="محمد علي حسن أحمد"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  {isConfirmPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-white transition-colors" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="location">موقعك</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">رقم الهاتف</Label>
+              <div className="relative group">
+                <Input
+                  type="tel"
+                  className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-11 text-center font-bold"
+                  placeholder="7xxxxxxxx"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  maxLength={9}
+                  required
+                />
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-white transition-colors" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">كلمة المرور</Label>
+                    <div className="relative group">
+                        <Input
+                            type={isPasswordVisible ? 'text' : 'password'}
+                            className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-4 pl-4"
+                            placeholder="********"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">تأكيد المرور</Label>
+                    <div className="relative group">
+                        <Input
+                            type={isPasswordVisible ? 'text' : 'password'}
+                            className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-4 pl-4"
+                            placeholder="********"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">الموقع</Label>
               <Select onValueChange={setLocation} value={location} dir="rtl">
-                <SelectTrigger className="w-full bg-muted focus:ring-primary border-border">
-                  <SelectValue placeholder="اختر موقعك" />
+                <SelectTrigger className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus:ring-white/30">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-white/40" />
+                    <SelectValue placeholder="اختر مدينتك" />
+                  </div>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl">
                   {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
+                    <SelectItem key={loc} value={loc} className="rounded-xl">{loc}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="accountType">نوع الحساب</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">نوع الحساب</Label>
               <Select onValueChange={setAccountType} value={accountType} dir="rtl">
-                <SelectTrigger className="w-full bg-muted focus:ring-primary border-border">
-                  <SelectValue placeholder="اختر نوع الحساب" />
+                <SelectTrigger className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus:ring-white/30">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-white/40" />
+                    <SelectValue placeholder="اختر نوع الحساب" />
+                  </div>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">مستخدم</SelectItem>
-                  <SelectItem value="network-owner">مالك شبكة</SelectItem>
+                <SelectContent className="rounded-2xl">
+                  <SelectItem value="user" className="rounded-xl">مستخدم عادي</SelectItem>
+                  <SelectItem value="network-owner" className="rounded-xl">صاحب شبكة واي فاي</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {accountType === 'network-owner' && (
-              <div className="space-y-4 pt-2 animate-in fade-in-0">
-                 <div className="space-y-2">
-                    <Label htmlFor="networkName">اسم الشبكة</Label>
-                    <Input id="networkName" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="اكتب اسم شبكتك التجارية" />
+              <div className="space-y-3 pt-2 animate-in fade-in duration-500 bg-white/5 p-4 rounded-[28px] border border-white/10">
+                 <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black mr-3 text-white/70">اسم شبكتك التجارية</Label>
+                    <Input className="h-11 bg-white/10 border-white/5 text-white rounded-2xl" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="مثال: شبكة الخير" />
                  </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="networkLocation">عنوان الشبكة</Label>
-                    <Input id="networkLocation" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - الغرفة" />
+                 <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black mr-3 text-white/70">موقع الشبكة</Label>
+                    <Input className="h-11 bg-white/10 border-white/5 text-white rounded-2xl" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - السوق" />
                  </div>
               </div>
             )}
 
-
-            <Button type="submit" className="w-full text-lg font-bold h-12 !mt-6" disabled={isLoading}>
-              {isLoading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
-            </Button>
+            <div className="pt-4">
+                <Button 
+                    type="submit" 
+                    className="w-full h-14 text-lg font-black bg-white text-primary hover:bg-white/90 rounded-[24px] shadow-xl transition-all active:scale-95" 
+                    disabled={isLoading}
+                >
+                {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'إنشاء حساب جديد'}
+                </Button>
+            </div>
           </form>
         </div>
       </div>
       <Toaster />
     </>
   );
+}
+
+const Loader2 = ({ className }: { className?: string }) => (
+    <svg className={cn("animate-spin", className)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+);
+
+function cn(...inputs: any[]) {
+    return inputs.filter(Boolean).join(' ');
 }

@@ -43,7 +43,7 @@ export default function SupportChatPage() {
     // Welcome message
     if (messages.length === 0) {
         setMessages([
-            { role: 'model', content: `أهلاً بك في عالم "ستار موبايل" يا ${user?.displayName || 'عزيزنا العميل'}! أنا رفيقك الذكي الجديد، وبإمكانك سؤالي عن أي شيء وسأبذل جهدي لمساعدتك.` }
+            { role: 'model', content: `أهلاً بك في تطبيق "ستار موبايل" يا ${user?.displayName || 'عزيزنا العميل'}! أنا رفيقك الذكي الجديد، وبإمكانك سؤالي عن أي شيء وسأبذل جهدي لمساعدتك.` }
         ]);
     }
   }, [user, messages.length]);

@@ -6,21 +6,15 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Eye, EyeOff, User, Phone, Lock, MapPin, Crown, ChevronRight } from 'lucide-react';
+import { User, Phone, Lock, MapPin, Crown, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +33,6 @@ export default function SignupPage() {
   const [networkName, setNetworkName] = useState('');
   const [networkLocation, setNetworkLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -47,6 +40,11 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!location) {
+        toast({ variant: "destructive", title: "بيانات ناقصة", description: "الرجاء اختيار موقعك من القائمة." });
+        return;
+    }
 
     const nameParts = fullName.trim().split(/\s+/);
     if (nameParts.length < 4) {
@@ -128,13 +126,14 @@ export default function SignupPage() {
             <p className="text-white/70 text-[10px] font-bold mt-1">سجل بياناتك للانضمام لعائلة ستار موبايل</p>
           </div>
 
-          <form onSubmit={handleSignup} className="w-full space-y-3.5 animate-in slide-in-from-bottom-8 duration-1000">
+          <form onSubmit={handleSignup} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
             
+            {/* Full Name */}
             <div className="space-y-1.5">
               <Label className="text-[9px] font-black mr-3 text-white uppercase">الاسم الرباعي الكامل</Label>
               <div className="relative group">
                 <Input
-                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-sm"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-sm rounded-[18px] focus-visible:ring-white/40"
                   placeholder="ادخل اسمك الرباعي"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -144,12 +143,13 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {/* Phone Number */}
             <div className="space-y-1.5">
               <Label className="text-[9px] font-black mr-3 text-white uppercase">رقم الهاتف</Label>
               <div className="relative group">
                 <Input
                   type="tel"
-                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-center font-bold text-sm"
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-11 text-center font-bold text-sm rounded-[18px] focus-visible:ring-white/40"
                   placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
@@ -160,68 +160,91 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {/* Password Grid */}
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                     <Label className="text-[9px] font-black mr-3 text-white uppercase">كلمة المرور</Label>
-                    <div className="relative group">
-                        <Input
-                            type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm"
-                            placeholder="********"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <Input
+                        type="password"
+                        className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm rounded-[18px] focus-visible:ring-white/40"
+                        placeholder="********"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
                 </div>
                 <div className="space-y-1.5">
                     <Label className="text-[9px] font-black mr-3 text-white uppercase">تأكيد المرور</Label>
-                    <div className="relative group">
-                        <Input
-                            type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm"
-                            placeholder="********"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <Input
+                        type="password"
+                        className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/70 pr-4 pl-4 text-sm rounded-[18px] focus-visible:ring-white/40"
+                        placeholder="********"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                    />
                 </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[9px] font-black mr-3 text-white uppercase">الموقع</Label>
-              <Select onValueChange={setLocation} value={location} dir="rtl">
-                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus:ring-white/40 text-sm">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-white/60" />
-                    <SelectValue placeholder="اختر مدينتك" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc} className="rounded-xl">{loc}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-1.5">
+            {/* Account Type - Cards Style */}
+            <div className="space-y-2">
               <Label className="text-[9px] font-black mr-3 text-white uppercase">نوع الحساب</Label>
-              <Select onValueChange={setAccountType} value={accountType} dir="rtl">
-                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus:ring-white/40 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-white/60" />
-                    <SelectValue placeholder="اختر نوع الحساب" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  <SelectItem value="user" className="rounded-xl">مستخدم عادي</SelectItem>
-                  <SelectItem value="network-owner" className="rounded-xl">صاحب شبكة واي فاي</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAccountType('user')}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3 rounded-[24px] border-2 transition-all gap-1.5",
+                    accountType === 'user' 
+                      ? "bg-white text-primary border-white shadow-xl scale-[1.02]" 
+                      : "bg-white/5 border-white/10 text-white/60"
+                  )}
+                >
+                  <User className={cn("h-5 w-5", accountType === 'user' ? "text-primary" : "text-white/40")} />
+                  <span className="text-[10px] font-black">مستخدم عادي</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType('network-owner')}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3 rounded-[24px] border-2 transition-all gap-1.5",
+                    accountType === 'network-owner' 
+                      ? "bg-white text-primary border-white shadow-xl scale-[1.02]" 
+                      : "bg-white/5 border-white/10 text-white/60"
+                  )}
+                >
+                  <Crown className={cn("h-5 w-5", accountType === 'network-owner' ? "text-primary" : "text-white/40")} />
+                  <span className="text-[10px] font-black">مالك شبكة</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Location - Modern Chips Grid */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mr-3">
+                <MapPin className="h-3 w-3 text-white/60" />
+                <Label className="text-[9px] font-black text-white uppercase">اختر موقعك (مدينتك)</Label>
+              </div>
+              <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-y-auto p-1 scrollbar-hide bg-black/5 rounded-2xl border border-white/5">
+                {locations.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setLocation(loc)}
+                    className={cn(
+                      "h-9 rounded-xl text-[10px] font-black border transition-all flex items-center justify-center text-center px-1",
+                      location === loc 
+                        ? "bg-white text-primary border-white shadow-lg" 
+                        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                    )}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
             </div>
             
+            {/* Extra fields for network owners */}
             {accountType === 'network-owner' && (
               <div className="space-y-3 pt-2 animate-in fade-in duration-500 bg-white/5 p-4 rounded-[24px] border border-white/10">
                  <div className="space-y-1.5">
@@ -258,7 +281,3 @@ const Loader2 = ({ className }: { className?: string }) => (
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
 );
-
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(' ');
-}

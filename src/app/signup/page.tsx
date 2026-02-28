@@ -18,7 +18,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Eye, EyeOff, User, Phone, Lock, MapPin, Crown, ChevronRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, User, Phone, Lock, MapPin, Crown, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 

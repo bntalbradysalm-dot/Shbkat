@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, AlertTriangle, Phone, Lock, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle, Phone, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,10 +70,10 @@ export default function LoginPage() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-sm mx-auto">
           
           {/* Logo Section */}
-          <div className="mb-10 text-center animate-in fade-in zoom-in duration-700">
-            <div className="relative w-32 h-32 mx-auto mb-6">
-                <div className="absolute inset-0 bg-white/20 rounded-[45px] blur-2xl animate-pulse" />
-                <div className="relative w-full h-full overflow-hidden rounded-[40px] border-4 border-white/30 shadow-2xl bg-white p-1">
+          <div className="mb-8 text-center animate-in fade-in zoom-in duration-700">
+            <div className="relative w-28 h-28 mx-auto mb-4">
+                <div className="absolute inset-0 bg-white/20 rounded-[40px] blur-2xl animate-pulse" />
+                <div className="relative w-full h-full overflow-hidden rounded-[36px] border-4 border-white/30 shadow-2xl bg-white p-1">
                     <Image 
                         src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" 
                         alt="Star Mobile Logo" 
@@ -83,8 +83,8 @@ export default function LoginPage() {
                     />
                 </div>
             </div>
-            <h1 className="text-3xl font-black tracking-tight drop-shadow-md">ستار موبايل</h1>
-            <p className="text-white/70 text-sm font-bold mt-2">عالم من الخدمات الرقمية بين يديك</p>
+            <h1 className="text-2xl font-black tracking-tight text-white drop-shadow-sm">ستار موبايل</h1>
+            <p className="text-white/80 text-xs font-bold mt-1.5">عالم من الخدمات الرقمية بين يديك</p>
           </div>
 
           {!auth && (
@@ -94,40 +94,40 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="w-full space-y-5 animate-in slide-in-from-bottom-8 duration-1000">
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-xs font-black mr-2 text-white/80 uppercase tracking-widest">رقم الهاتف</Label>
+          <form onSubmit={handleLogin} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
+            <div className="space-y-1.5">
+              <Label htmlFor="phone" className="text-[10px] font-black mr-2 text-white uppercase tracking-widest">رقم الهاتف</Label>
               <div className="relative group">
                 <Input
                   id="phone"
                   type="tel"
-                  className="h-14 bg-white/10 border-white/10 text-white placeholder:text-white/30 text-center font-black text-lg rounded-[24px] focus-visible:ring-white/30 transition-all group-hover:bg-white/15 pr-12"
+                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12"
                   placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={e => setPhoneNumber(e.target.value)}
                 />
-                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-white transition-colors" />
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-white/60 group-focus-within:text-white transition-colors" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" title="كلمة المرور" className="text-xs font-black mr-2 text-white/80 uppercase tracking-widest">كلمة المرور</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" title="كلمة المرور" className="text-[10px] font-black mr-2 text-white uppercase tracking-widest">كلمة المرور</Label>
               <div className="relative group">
                 <Input
                   id="password"
                   type={isPasswordVisible ? 'text' : 'password'}
                   placeholder="********"
-                  className="h-14 bg-white/10 border-white/10 text-white placeholder:text-white/30 text-center font-black text-lg rounded-[24px] focus-visible:ring-white/30 transition-all group-hover:bg-white/15 pr-12 pl-12"
+                  className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 text-center font-black text-base rounded-[20px] focus-visible:ring-white/40 transition-all group-hover:bg-white/15 pr-12 pl-12"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
-                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-white transition-colors" />
+                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-white/60 group-focus-within:text-white transition-colors" />
                 <button 
                   type="button" 
                   onClick={() => setIsPasswordVisible(!isPasswordVisible)} 
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                 >
-                  {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
@@ -135,21 +135,21 @@ export default function LoginPage() {
             <div className="pt-2">
                 <Button 
                     type="submit" 
-                    className="w-full h-14 text-lg font-black bg-white text-primary hover:bg-white/90 rounded-[24px] shadow-xl transition-all active:scale-95 disabled:opacity-50" 
+                    className="w-full h-12 text-base font-black bg-white text-primary hover:bg-white/90 rounded-[20px] shadow-xl transition-all active:scale-95 disabled:opacity-50" 
                     disabled={isLoading}
                 >
-                {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'دخول'}
+                {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'دخول'}
                 </Button>
             </div>
           </form>
 
-          <div className="mt-8 text-center animate-in fade-in duration-1000 delay-500">
-            <p className="text-white/60 text-sm font-bold">ليس لديك حساب؟</p>
-            <Link href="/signup" className="mt-2 inline-block py-2 px-6 rounded-full bg-white/10 border border-white/10 hover:bg-white/20 transition-all font-black text-white text-sm">انضم إلينا الآن</Link>
+          <div className="mt-6 text-center animate-in fade-in duration-1000 delay-500">
+            <p className="text-white/70 text-xs font-bold">ليس لديك حساب؟</p>
+            <Link href="/signup" className="mt-2 inline-block py-1.5 px-5 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 transition-all font-black text-white text-[11px]">انضم إلينا الآن</Link>
           </div>
         </div>
 
-        <footer className="text-center text-[10px] font-bold text-white/40 pb-8 animate-in fade-in duration-1000">
+        <footer className="text-center text-[9px] font-bold text-white/50 pb-6 animate-in fade-in duration-1000">
           <p>© ستار موبايل - تطوير محمد راضي باشادي</p>
         </footer>
       </div>

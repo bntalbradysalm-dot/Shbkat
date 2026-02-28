@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, writeBatch, collection } from 'firebase/firestore';
+import { doc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Eye, EyeOff, User, Phone, Lock, MapPin, Crown, ChevronRight } from 'lucide-react';
@@ -111,62 +111,62 @@ export default function SignupPage() {
         
         <header className="p-4 flex items-center justify-between animate-in fade-in duration-500">
             <Link href="/" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-5 w-5" />
             </Link>
-            <h1 className="font-black text-lg">انشاء حساب</h1>
-            <div className="w-10" />
+            <h1 className="font-black text-base text-white">انشاء حساب</h1>
+            <div className="w-9" />
         </header>
 
         <div className="px-6 flex flex-col items-center">
-          <div className="my-8 text-center animate-in zoom-in duration-700">
-             <div className="relative w-20 h-20 mx-auto mb-4">
-                <div className="relative w-full h-full overflow-hidden rounded-[28px] border-4 border-white/30 shadow-2xl bg-white p-1">
+          <div className="my-6 text-center animate-in zoom-in duration-700">
+             <div className="relative w-16 h-16 mx-auto mb-3">
+                <div className="relative w-full h-full overflow-hidden rounded-[24px] border-4 border-white/30 shadow-2xl bg-white p-1">
                     <Image src="https://i.postimg.cc/VvxBNG2N/Untitled-1.jpg" alt="Logo" fill className="object-cover" />
                 </div>
              </div>
-            <h2 className="text-xl font-black">ابدأ رحلتك معنا</h2>
-            <p className="text-white/60 text-xs font-bold mt-1">سجل بياناتك للانضمام لعائلة ستار موبايل</p>
+            <h2 className="text-lg font-black text-white">ابدأ رحلتك معنا</h2>
+            <p className="text-white/70 text-[10px] font-bold mt-1">سجل بياناتك للانضمام لعائلة ستار موبايل</p>
           </div>
 
-          <form onSubmit={handleSignup} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
+          <form onSubmit={handleSignup} className="w-full space-y-3.5 animate-in slide-in-from-bottom-8 duration-1000">
             
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">الاسم الرباعي الكامل</Label>
+              <Label className="text-[9px] font-black mr-3 text-white uppercase">الاسم الرباعي الكامل</Label>
               <div className="relative group">
                 <Input
-                  className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-11"
+                  className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-11 text-sm"
                   placeholder="محمد علي حسن أحمد"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
                 />
-                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-white transition-colors" />
+                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-white transition-colors" />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">رقم الهاتف</Label>
+              <Label className="text-[9px] font-black mr-3 text-white uppercase">رقم الهاتف</Label>
               <div className="relative group">
                 <Input
                   type="tel"
-                  className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-11 text-center font-bold"
+                  className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-11 text-center font-bold text-sm"
                   placeholder="7xxxxxxxx"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   maxLength={9}
                   required
                 />
-                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-white transition-colors" />
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-white transition-colors" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">كلمة المرور</Label>
+                    <Label className="text-[9px] font-black mr-3 text-white uppercase">كلمة المرور</Label>
                     <div className="relative group">
                         <Input
                             type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-4 pl-4"
+                            className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-4 pl-4 text-sm"
                             placeholder="********"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -175,11 +175,11 @@ export default function SignupPage() {
                     </div>
                 </div>
                 <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">تأكيد المرور</Label>
+                    <Label className="text-[9px] font-black mr-3 text-white uppercase">تأكيد المرور</Label>
                     <div className="relative group">
                         <Input
                             type={isPasswordVisible ? 'text' : 'password'}
-                            className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus-visible:ring-white/30 pr-4 pl-4"
+                            className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus-visible:ring-white/40 pr-4 pl-4 text-sm"
                             placeholder="********"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -190,11 +190,11 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">الموقع</Label>
+              <Label className="text-[9px] font-black mr-3 text-white uppercase">الموقع</Label>
               <Select onValueChange={setLocation} value={location} dir="rtl">
-                <SelectTrigger className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus:ring-white/30">
+                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus:ring-white/40 text-sm">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-white/40" />
+                    <MapPin className="h-4 w-4 text-white/60" />
                     <SelectValue placeholder="اختر مدينتك" />
                   </div>
                 </SelectTrigger>
@@ -207,11 +207,11 @@ export default function SignupPage() {
             </div>
             
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-black mr-3 text-white/70 uppercase">نوع الحساب</Label>
+              <Label className="text-[9px] font-black mr-3 text-white uppercase">نوع الحساب</Label>
               <Select onValueChange={setAccountType} value={accountType} dir="rtl">
-                <SelectTrigger className="h-12 bg-white/10 border-white/10 text-white rounded-[20px] focus:ring-white/30">
+                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white rounded-[18px] focus:ring-white/40 text-sm">
                   <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-white/40" />
+                    <Crown className="h-4 w-4 text-white/60" />
                     <SelectValue placeholder="اختر نوع الحساب" />
                   </div>
                 </SelectTrigger>
@@ -223,25 +223,25 @@ export default function SignupPage() {
             </div>
             
             {accountType === 'network-owner' && (
-              <div className="space-y-3 pt-2 animate-in fade-in duration-500 bg-white/5 p-4 rounded-[28px] border border-white/10">
+              <div className="space-y-3 pt-2 animate-in fade-in duration-500 bg-white/5 p-4 rounded-[24px] border border-white/10">
                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black mr-3 text-white/70">اسم شبكتك التجارية</Label>
-                    <Input className="h-11 bg-white/10 border-white/5 text-white rounded-2xl" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="مثال: شبكة الخير" />
+                    <Label className="text-[9px] font-black mr-3 text-white">اسم شبكتك التجارية</Label>
+                    <Input className="h-10 bg-white/10 border-white/10 text-white rounded-xl text-sm" value={networkName} onChange={(e) => setNetworkName(e.target.value)} placeholder="مثال: شبكة الخير" />
                  </div>
                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black mr-3 text-white/70">موقع الشبكة</Label>
-                    <Input className="h-11 bg-white/10 border-white/5 text-white rounded-2xl" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - السوق" />
+                    <Label className="text-[9px] font-black mr-3 text-white">موقع الشبكة</Label>
+                    <Input className="h-10 bg-white/10 border-white/10 text-white rounded-xl text-sm" value={networkLocation} onChange={(e) => setNetworkLocation(e.target.value)} placeholder="مثال: سيئون - السوق" />
                  </div>
               </div>
             )}
 
-            <div className="pt-4">
+            <div className="pt-2">
                 <Button 
                     type="submit" 
-                    className="w-full h-14 text-lg font-black bg-white text-primary hover:bg-white/90 rounded-[24px] shadow-xl transition-all active:scale-95" 
+                    className="w-full h-12 text-base font-black bg-white text-primary hover:bg-white/90 rounded-[20px] shadow-xl transition-all active:scale-95" 
                     disabled={isLoading}
                 >
-                {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'إنشاء حساب جديد'}
+                {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'إنشاء حساب جديد'}
                 </Button>
             </div>
           </form>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import './globals.css';
@@ -34,7 +35,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   // التحقق من حالة شاشة الترحيب في جلسة التصفح
   useEffect(() => {
-    const hasSeenSplash = sessionStorage.getItem('has_seen_splash_v1');
+    // تم تحديث المفتاح لضمان ظهور الشاشة مرة أخرى بعد التعديلات
+    const hasSeenSplash = sessionStorage.getItem('has_seen_splash_v2');
     if (hasSeenSplash) {
       setShowSplash(false);
     }
@@ -42,7 +44,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
-    sessionStorage.setItem('has_seen_splash_v1', 'true');
+    sessionStorage.setItem('has_seen_splash_v2', 'true');
   };
 
   return (

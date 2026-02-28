@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -25,7 +26,7 @@ export function SplashScreen({
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 10000); // تغيير المدة إلى 10 ثوانٍ
+    }, 10000); 
     return () => clearTimeout(timer);
   }, []);
 
@@ -36,7 +37,7 @@ export function SplashScreen({
       const exitTimer = setTimeout(() => {
         setIsVisible(false);
         onComplete();
-      }, 800);
+      }, 1000); // وقت التلاشي لضمان انتقال سلس
       return () => clearTimeout(exitTimer);
     }
   }, [isAppReady, minTimeElapsed, onComplete]);

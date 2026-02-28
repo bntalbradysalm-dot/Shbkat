@@ -369,9 +369,12 @@ export function ServiceGrid() {
           
           {/* Header Section */}
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-                <Percent className="absolute top-4 left-4 h-12 w-12 text-white animate-pulse" />
+             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                <Percent className="absolute top-4 left-4 h-10 w-10 text-white animate-pulse" />
+                <Percent className="absolute top-10 right-10 h-6 w-6 text-white animate-bounce" />
+                <Percent className="absolute bottom-10 left-10 h-8 w-8 text-white animate-spin" style={{ animationDuration: '3s' }} />
                 <Percent className="absolute bottom-4 right-4 h-12 w-12 text-white animate-bounce" />
+                <Percent className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-16 w-16 text-white animate-pulse opacity-10" />
              </div>
              <Badge className="bg-white/20 text-white border-white/30 mb-2 font-black text-[10px] uppercase tracking-widest px-3">عرض محدود</Badge>
              <h2 className="text-2xl font-black text-white tracking-tight">عرض شبكة الخير</h2>
@@ -407,13 +410,13 @@ export function ServiceGrid() {
                                         "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors",
                                         isStrongOffer ? "bg-primary text-white" : "bg-primary/10 group-hover:bg-primary group-hover:text-white"
                                     )}>
-                                        {isStrongOffer ? <Wifi className="h-7 w-7 text-white" /> : <Wifi className="h-6 w-6" />}
+                                        <Wifi className={cn(isStrongOffer ? "h-7 w-7" : "h-6 w-6")} />
                                     </div>
                                     <div className="text-right">
                                         <div className="flex items-center gap-2">
                                             <h4 className="text-sm font-black">{offer.name}</h4>
                                             {isStrongOffer && (
-                                              <Badge className="bg-green-600 text-white text-[11px] h-6 font-black px-3 shadow-md border-none">
+                                              <Badge className="bg-green-600 text-white text-[11px] h-6 font-black px-3 shadow-md border-none flex items-center justify-center min-w-[80px]">
                                                 عرض حصري
                                               </Badge>
                                             )}

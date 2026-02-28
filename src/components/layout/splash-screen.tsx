@@ -2,29 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Loader2, Users, Clock, ShieldCheck } from 'lucide-react';
+import { Loader2, Users, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
  * شاشة الترحيب (Splash Screen)
- * تظهر عند فتح التطبيق لأول مرة لتوفير تجربة مستخدم احترافية.
+ * تظهر عند فتح التطبيق وتنتظر حتى يصبح التطبيق جاهزاً بالكامل (isAppReady).
  */
-export function SplashScreen({ onComplete }: { onComplete: () => void }) {
+export function SplashScreen({ 
+  onComplete, 
+  isAppReady 
+}: { 
+  onComplete: () => void; 
+  isAppReady: boolean;
+}) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
+  // ضمان بقاء الشاشة لمدة ثانيتين على الأقل للهوية البصرية
   useEffect(() => {
-    // تظهر الشاشة لمدة 3 ثواني ثم تبدأ بالاختفاء
     const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // الاختفاء فقط عندما يكون التطبيق جاهزاً ومر الوقت الأدنى
+  useEffect(() => {
+    if (isAppReady && minTimeElapsed) {
       setIsExiting(true);
-      setTimeout(() => {
+      const exitTimer = setTimeout(() => {
         setIsVisible(false);
         onComplete();
-      }, 800); // مدة حركة الاختفاء (fade-out)
-    }, 3500);
-
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+      }, 800);
+      return () => clearTimeout(exitTimer);
+    }
+  }, [isAppReady, minTimeElapsed, onComplete]);
 
   if (!isVisible) return null;
 
@@ -67,7 +81,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                 <div className="bg-white/20 p-2 rounded-xl mb-1">
                     <Users className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-white font-black text-lg">+10,000</span>
+                <span className="text-white font-black text-lg">+10.000</span>
                 <span className="text-white/60 text-[9px] font-bold uppercase tracking-widest">عميل</span>
             </div>
             

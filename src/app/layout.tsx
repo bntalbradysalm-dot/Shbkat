@@ -4,18 +4,15 @@ import './globals.css';
 import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { ThemeProvider } from '@/components/theme-provider';
-import { FirebaseProvider } from '@/firebase';
+import { FirebaseProvider, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { AppErrorDialog } from '@/components/layout/app-error-dialog';
 import { SplashScreen } from '@/components/layout/splash-screen';
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function AppContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isUserLoading } = useUser();
   const [isNavVisible, setIsNavVisible] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -49,6 +46,32 @@ export default function RootLayout({
   };
 
   return (
+    <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl relative">
+      {showSplash && (
+        <SplashScreen 
+          onComplete={handleSplashComplete} 
+          isAppReady={!isUserLoading} 
+        />
+      )}
+      
+      <div className="flex-1 flex flex-col relative">
+        <WelcomeModal />
+        <AppErrorDialog />
+        <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-24' : ''}`}>
+          {children}
+        </main>
+        {isNavVisible && <BottomNav />}
+      </div>
+    </div>
+  );
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
     <html lang="ar" dir="rtl">
       <head>
         <title>Star Mobile - ستار موبايل</title>
@@ -61,18 +84,9 @@ export default function RootLayout({
       <body className="antialiased bg-background">
         <FirebaseProvider>
           <ThemeProvider>
-            <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl relative">
-              {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
-              
-              <div className="flex-1 flex flex-col relative">
-                <WelcomeModal />
-                <AppErrorDialog />
-                <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-24' : ''}`}>
-                  {children}
-                </main>
-                {isNavVisible && <BottomNav />}
-              </div>
-            </div>
+            <AppContent>
+              {children}
+            </AppContent>
           </ThemeProvider>
         </FirebaseProvider>
       </body>

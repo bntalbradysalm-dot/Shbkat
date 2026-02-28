@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,10 +17,10 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+  <div className="bg-white/10 backdrop-blur-md p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/20">
     <div className="relative w-12 h-12">
       <svg viewBox="0 0 50 50" className="absolute inset-0 w-full h-full animate-spin">
-        <path d="M15 25 A10 10 0 0 0 35 25" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round" />
+        <path d="M15 25 A10 10 0 0 0 35 25" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
       </svg>
     </div>
   </div>
@@ -71,8 +72,13 @@ export default function LoginPage() {
     }
   };
 
-  // تعديل الشرط ليشمل وجود المستخدم لمنع الوميض قبل التوجيه
-  if (isUserLoading || user) return <div className="fixed inset-0 flex items-center justify-center bg-background"><CustomLoader /></div>;
+  // استخدام خلفية مطابقة لشاشة الترحيب لمنع الوميض الأبيض
+  if (isUserLoading || user) return (
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-mesh-gradient z-[9999]">
+      <CustomLoader />
+      <p className="mt-4 text-white/80 font-bold text-sm animate-pulse">جاري التحميل...</p>
+    </div>
+  );
 
   return (
     <>

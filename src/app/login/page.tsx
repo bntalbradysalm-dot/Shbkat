@@ -1,3 +1,4 @@
+
 'use client';
 
 import { BalanceCard } from '@/components/dashboard/balance-card';
@@ -8,7 +9,7 @@ import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { Wifi, Banknote } from 'lucide-react';
+import { Wifi, Banknote, Loader2 } from 'lucide-react';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -73,14 +74,15 @@ export default function DashboardPage() {
 
   if (isLoading || isUserLoading) {
     return (
-       <div className="flex flex-col h-screen bg-background">
-        <Header />
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-48 w-full rounded-[40px]" />
-          <div className="grid grid-cols-3 gap-4 pt-8">
-            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-          </div>
-        </div>
+       <div className="fixed inset-0 flex flex-col items-center justify-center bg-mesh-gradient z-[9999]">
+         <div className="bg-white/10 backdrop-blur-md p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/20">
+            <div className="relative w-12 h-12">
+                <svg viewBox="0 0 50 50" className="absolute inset-0 w-full h-full animate-spin">
+                    <path d="M15 25 A10 10 0 0 0 35 25" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
+                </svg>
+            </div>
+         </div>
+         <p className="mt-4 text-white/80 font-bold text-sm animate-pulse">جاري تحضير الواجهة...</p>
       </div>
     )
   }

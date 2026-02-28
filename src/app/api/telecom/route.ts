@@ -65,13 +65,20 @@ export async function POST(request: Request) {
             case 'bill':
             case 'solfa':
             case 'queryoffer':
+                endpoint = 'yem';
+                apiRequestParams.action = action;
+                break;
             case 'billoffer':
                 endpoint = 'yem';
                 apiRequestParams.action = action;
+                // إضافة المعامل المطلوب لتجنب خطأ Method is required
+                apiRequestParams.method = 'Renew';
                 break;
             case 'billover': 
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
+                // إضافة المعامل المطلوب لتجنب خطأ Method is required
+                apiRequestParams.method = 'Renew';
                 break;
             case 'status':
             case 'balance':

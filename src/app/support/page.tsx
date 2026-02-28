@@ -43,7 +43,7 @@ export default function SupportChatPage() {
     // Welcome message
     if (messages.length === 0) {
         setMessages([
-            { role: 'model', content: `مرحباً بك يا ${user?.displayName || 'عزيزنا العميل'}! أنا المساعد الذكي لمُحفظة شبكات. كيف يمكنني مساعدتك اليوم بخصوص خدماتنا؟` }
+            { role: 'model', content: `أهلاً بك في عالم "ستار موبايل" يا ${user?.displayName || 'عزيزنا العميل'}! أنا رفيقك الذكي الجديد، وبإمكانك سؤالي عن أي شيء وسأبذل جهدي لمساعدتك.` }
         ]);
     }
   }, [user, messages.length]);
@@ -72,14 +72,14 @@ export default function SupportChatPage() {
       setMessages(prev => [...prev, { role: 'model', content: response.text }]);
     } catch (error: any) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', content: "عذراً، حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى لاحقاً." }]);
+      setMessages(prev => [...prev, { role: 'model', content: "عذراً يا طيب، يبدو أن هناك ضغطاً كبيراً على الخدمة حالياً. جرب مراسلتي لاحقاً أو تواصل مع الإدارة مباشرة." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClearChat = () => {
-    setMessages([{ role: 'model', content: `مرحباً بك مجدداً! تم مسح المحادثة السابقة. كيف يمكنني مساعدتك الآن؟` }]);
+    setMessages([{ role: 'model', content: `مرحباً بك مجدداً في ستار موبايل! كيف أقدر أخدمك الآن؟` }]);
   };
 
   return (
@@ -95,8 +95,8 @@ export default function SupportChatPage() {
                     <Bot className="h-8 w-8 text-white" />
                 </div>
                 <div className="text-right">
-                    <h2 className="text-white font-black text-base">مساعد شبكات الذكي</h2>
-                    <p className="text-white/70 text-[10px] font-bold">اسألني عن الرصيد، الباقات، أو كيفية شحن حسابك</p>
+                    <h2 className="text-white font-black text-base">مساعد ستار موبايل</h2>
+                    <p className="text-white/70 text-[10px] font-bold">نسعى دائماً لخدمتكم بذكاء واحترافية</p>
                 </div>
                 <Button 
                     variant="ghost" 
@@ -151,7 +151,7 @@ export default function SupportChatPage() {
                 {msg.role === 'user' ? (
                     <><UserIcon size={12} /> <span className="text-[10px]">أنت</span></>
                 ) : (
-                    <><Bot size={12} /> <span className="text-[10px]">مساعد شبكات</span></>
+                    <><Bot size={12} /> <span className="text-[10px]">مساعد ستار موبايل</span></>
                 )}
               </div>
               {msg.content}
@@ -174,7 +174,7 @@ export default function SupportChatPage() {
             value={inputValue}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="اكتب سؤالك هنا..."
+            placeholder="اكتب استفسارك هنا..."
             className="flex-1 h-12 rounded-2xl pr-4 pl-12 bg-muted/50 border-none focus-visible:ring-primary font-bold text-sm"
             disabled={isLoading}
           />
@@ -187,7 +187,7 @@ export default function SupportChatPage() {
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 rotate-180" />}
           </Button>
         </div>
-        <p className="text-[9px] text-center text-muted-foreground mt-3 font-bold opacity-50">المساعد الذكي قد يخطئ أحياناً، نرجو التأكد من المعلومات الرسمية.</p>
+        <p className="text-[9px] text-center text-muted-foreground mt-3 font-bold opacity-50">المساعد الذكي لستار موبايل - تحت التطوير</p>
       </div>
     </div>
   );

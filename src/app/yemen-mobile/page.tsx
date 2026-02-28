@@ -561,6 +561,7 @@ export default function YemenMobilePage() {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
     const loanAmt = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
+    // المبلغ الذي سيخصم من المحفظة هو سعر الباقة + السلفة (إن وجدت)
     const totalToDeduct = selectedOffer.price + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -577,8 +578,8 @@ export default function YemenMobilePage() {
             body: JSON.stringify({ 
                 mobile: phone, 
                 action: 'billover', 
-                offertype: selectedOffer.offertype, 
-                amount: totalToDeduct,
+                num: selectedOffer.offertype, // إرسال كود الباقة في num
+                amount: totalToDeduct, // إرسال إجمالي السعر (الباقة + السلفة) لتصفية المديونية وتفعيل الباقة
                 transid 
             })
         });
@@ -893,7 +894,7 @@ export default function YemenMobilePage() {
                       </div>
                       {billingInfo?.isLoan && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed">
-                            <span className="text-muted-foreground">مبلغ السلفة:</span>
+                            <span className="text-muted-foreground">مبلغ السلفة المسدد:</span>
                             <span className="font-bold text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                         </div>
                       )}

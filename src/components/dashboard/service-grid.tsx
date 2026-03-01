@@ -392,6 +392,10 @@ export function ServiceGrid() {
                     const durationInfo = priceNum === 50 ? 'ساعة واحدة' : 'صلاحية 30 يوم';
                     const isStrongOffer = priceNum === 50;
                     
+                    const offerTitle = priceNum === 50 ? 'فئة 50 ريال' : 
+                                     priceNum === 1000 ? 'فئة 1000 ريال' : 
+                                     priceNum === 1500 ? 'فئة 1500 ريال' : offer.name;
+                    
                     return (
                         <div 
                             key={offer.id} 
@@ -421,7 +425,7 @@ export function ServiceGrid() {
                                         </div>
                                         <div className="text-right space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offer.name}</h4>
+                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
                                                 {isStrongOffer && (
                                                     <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">HOT</div>
                                                 )}
@@ -490,7 +494,7 @@ export function ServiceGrid() {
       </Dialog>
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[32px] max-w-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
+        <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="h-10 w-10 text-primary" />

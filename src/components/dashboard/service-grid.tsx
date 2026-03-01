@@ -373,7 +373,7 @@ export function ServiceGrid() {
                     <Megaphone className="h-8 w-8 text-white animate-bounce" />
                 </div>
                 <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
-                <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات فورجي بأسعار لا تقبل المنافسة</p>
+                <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
              </div>
           </div>
 

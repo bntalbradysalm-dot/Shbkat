@@ -26,7 +26,8 @@ import {
   Clock,
   Database,
   Star,
-  Trophy
+  Trophy,
+  Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -369,7 +370,7 @@ export function ServiceGrid() {
              
              <div className="relative z-10 flex flex-col items-center">
                 <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
-                    <Trophy className="h-8 w-8 text-white animate-bounce" />
+                    <Megaphone className="h-8 w-8 text-white animate-bounce" />
                 </div>
                 <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
                 <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات فورجي بأسعار لا تقبل المنافسة</p>

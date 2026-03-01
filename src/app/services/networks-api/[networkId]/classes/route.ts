@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const API_BASE_URL = 'https://apis.baitynet.net/api/partner/networks';
-const API_KEY = '677d3f8b-35a9-444b-b361-9e25c819e30a';
+const API_KEY = process.env.BAITYNET_NETWORKS_API_KEY;
 
 export async function GET(
   request: Request,
@@ -18,6 +18,10 @@ export async function GET(
   }
 
   try {
+    if (!API_KEY) {
+        throw new Error('BAITYNET_NETWORKS_API_KEY is not defined');
+    }
+
     const response = await fetch(`${API_BASE_URL}/${networkId}/classes`, {
       method: 'GET',
       headers: {
@@ -48,10 +52,10 @@ export async function GET(
         );
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching from external API:', error);
     return new NextResponse(
-        JSON.stringify({ message: 'An internal server error occurred.' }),
+        JSON.stringify({ message: error.message || 'An internal server error occurred.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

@@ -4,17 +4,14 @@
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
-// المعلمات المعتمدة لـ "اشحن لي" (Echehanly)
-const USERID = '23207';
-const USERNAME = '770326828';
-const PASSWORD = '770326828moh';
+// المعلمات المعتمدة من متغيرات البيئة
+const USERID = process.env.TELECOM_USERID;
+const USERNAME = process.env.TELECOM_USERNAME;
+const PASSWORD = process.env.TELECOM_PASSWORD;
 const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
 
-/**
- * وظيفة إنشاء الرمز المميز (Token) المطلوبة من المزود
- * المعادلة: md5(md5(Password) + transid + Username + identifier)
- */
 const generateToken = (transid: string, identifier: string) => {
+  if (!PASSWORD || !USERNAME) return '';
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
@@ -25,7 +22,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, service, ...payload } = body;
     
-    // المعرف هو رقم الهاتف أو رقم الحساب
+    if (!USERID || !USERNAME || !PASSWORD) {
+        return new NextResponse(JSON.stringify({ message: 'Telecom settings are missing in environment variables' }), { status: 500 });
+    }
+
     const identifier = payload.mobile || payload.playerid || USERNAME;
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    // توجيه الطلب بناءً على نوع الخدمة
     if (service === 'yem4g') {
         endpoint = 'yem4g';
         apiRequestParams.action = action;
@@ -59,7 +58,6 @@ export async function POST(request: Request) {
     } else if (service === 'games') {
         endpoint = 'gameswcards';
     } else { 
-        // الحالة الافتراضية (يمن موبايل YEM)
         switch(action) {
             case 'query':
             case 'bill':
@@ -69,13 +67,11 @@ export async function POST(request: Request) {
                 apiRequestParams.action = action;
                 break;
             case 'billoffer':
-                // تم توجيهه إلى offeryem لحل مشكلة "Offer id is required"
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 apiRequestParams.method = 'Renew';
                 break;
             case 'billover': 
-                // العميل طلب تجاهل السلفة تماماً عند التفعيل، لذا نوجهه للرابط العادي
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 apiRequestParams.method = 'Renew';

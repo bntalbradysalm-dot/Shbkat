@@ -24,7 +24,10 @@ import {
   X,
   CheckCircle,
   Clock,
-  Database
+  Database,
+  Star,
+  Trophy,
+  Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -122,7 +125,6 @@ export function ServiceGrid() {
                 if (!netsResponse.ok) throw new Error('Failed to fetch networks');
                 const networks = await netsResponse.json();
                 
-                // البحث عن شبكة الخير
                 const alKhair = networks.find((n: any) => n.name.includes('الخير'));
                 
                 if (alKhair) {
@@ -131,12 +133,10 @@ export function ServiceGrid() {
                     if (!classesResponse.ok) throw new Error('Failed to fetch classes');
                     const classes = await classesResponse.json();
                     
-                    // الخير 50، الخير 1000، والخير 1500
                     const targetPrices = [50, 1000, 1500];
                     const filtered = classes.filter((c: any) => targetPrices.includes(Number(c.price)));
                     setAlKhairOffers(filtered.sort((a: any, b: any) => a.price - b.price));
                 } else {
-                    // محاولة البحث محلياً إذا لم توجد في الربط
                     if (firestore) {
                         const netsRef = collection(firestore, 'networks');
                         const q = query(netsRef, where('name', '>=', 'الخير'), where('name', '<=', 'الخير' + '\uf8ff'), firestoreLimit(1));
@@ -318,7 +318,6 @@ export function ServiceGrid() {
 
   return (
     <div className="relative bg-background rounded-t-[40px] mt-6 pt-8 pb-4">
-      {/* SVG Gradient Definition */}
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -338,7 +337,6 @@ export function ServiceGrid() {
         ))}
       </div>
 
-      {/* Exclusive Offers Bar */}
       <div className="px-6 mt-8 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000">
         <Card 
           className="overflow-hidden border-none bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer rounded-2xl border border-primary/10 shadow-sm active:scale-95"
@@ -359,136 +357,167 @@ export function ServiceGrid() {
         </Card>
       </div>
 
-      {/* Offers Modal */}
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-[380px] p-0 overflow-hidden rounded-[40px] border-none bg-white dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
+        <DialogContent className="max-w-[95vw] sm:max-w-[400px] p-0 overflow-hidden rounded-[40px] border-none bg-[#F8FAFC] dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>عروض شبكة الخير فورجي</DialogTitle>
             <DialogDescription>استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
           </DialogHeader>
           
-          {/* Header Section */}
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
-             <Badge className="bg-white/20 text-white border-white/30 mb-2 font-black text-[10px] uppercase tracking-widest px-3">عرض محدود</Badge>
-             <h2 className="text-2xl font-black text-white tracking-tight">عرض شبكة الخير</h2>
-             <p className="text-white/70 text-xs font-bold mt-1">أقوى باقات شبكة الخير بأسعار منافسة</p>
+             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+             
+             <div className="relative z-10 flex flex-col items-center">
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
+                    <Megaphone className="h-8 w-8 text-white animate-bounce" />
+                </div>
+                <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
+                <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
+             </div>
           </div>
 
-          <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+          <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto no-scrollbar">
             {isFetchingOffers ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm font-bold text-muted-foreground">جاري جلب العروض...</p>
+                <div className="flex flex-col items-center justify-center py-16 gap-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-primary relative z-10" />
+                    </div>
+                    <p className="text-sm font-black text-primary animate-pulse tracking-widest">جاري تحميل العروض الحصرية...</p>
                 </div>
             ) : specialOffers.length > 0 ? (
                 specialOffers.map((offer, idx) => {
                     const priceNum = Number(offer.price);
                     const dataInfo = priceNum === 50 ? '5 قيقا' : priceNum === 1000 ? '15 قيقا' : priceNum === 1500 ? '25 قيقا' : '';
-                    const durationInfo = priceNum === 50 ? 'ساعة واحدة' : 'صلاحية شهر';
+                    const durationInfo = priceNum === 50 ? 'ساعة واحدة' : 'صلاحية 30 يوم';
                     const isStrongOffer = priceNum === 50;
                     
+                    const offerTitle = priceNum === 50 ? 'فئة 50 ريال' : 
+                                     priceNum === 1000 ? 'فئة 1000 ريال' : 
+                                     priceNum === 1500 ? 'فئة 1500 ريال' : offer.name;
+                    
                     return (
-                        <Card 
+                        <div 
                             key={offer.id} 
-                            className={cn(
-                                "rounded-3xl border-none shadow-md hover:bg-primary/5 transition-all group animate-in slide-in-from-bottom-4 cursor-pointer active:scale-95",
-                                isStrongOffer ? "bg-primary/10 border-2 border-primary/20" : "bg-muted/30"
-                            )}
+                            className="animate-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-both"
                             style={{ animationDelay: `${idx * 150}ms` }}
-                            onClick={() => handleOfferClick(offer)}
                         >
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors",
-                                        isStrongOffer ? "bg-primary text-white" : "bg-primary/10 group-hover:bg-primary group-hover:text-white"
-                                    )}>
-                                        <Wifi className={cn(isStrongOffer ? "h-7 w-7" : "h-6 w-6")} />
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="text-sm font-black">{offer.name}</h4>
-                                            {isStrongOffer && (
-                                              <Badge className="bg-green-600 text-white text-[11px] h-6 font-black px-3 shadow-md border-none flex items-center justify-center whitespace-nowrap">
-                                                عرض حصري
-                                              </Badge>
-                                            )}
+                            <Card 
+                                className={cn(
+                                    "relative overflow-hidden rounded-[32px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                    isStrongOffer 
+                                        ? "bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-[2px]" 
+                                        : "bg-white dark:bg-slate-900 border border-primary/5 hover:border-primary/20"
+                                )}
+                                onClick={() => handleOfferClick(offer)}
+                            >
+                                <div className={cn(
+                                    "relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors",
+                                    isStrongOffer ? "bg-white/95 dark:bg-slate-900/95" : "hover:bg-primary/[0.02]"
+                                )}>
+                                    {/* Left: Info */}
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110 duration-500",
+                                            isStrongOffer ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-primary/5 text-primary"
+                                        )}>
+                                            <Wifi className="h-7 w-7" />
                                         </div>
-                                        <div className="flex flex-col gap-0.5 mt-1">
-                                            {dataInfo && (
-                                                <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
+                                        <div className="text-right space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
+                                                {isStrongOffer && (
+                                                    <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">HOT</div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col gap-1 mt-1.5">
+                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
                                                     <Database className="h-3 w-3" />
                                                     <span>{dataInfo}</span>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
-                                                <Clock className="h-3 w-3" />
-                                                <span>{durationInfo}</span>
+                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span>{durationInfo}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="text-left flex flex-col items-end">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-lg font-black text-primary">{offer.price.toLocaleString()}</span>
-                                        <span className="text-[8px] font-bold text-muted-foreground">ر.ي</span>
+
+                                    {/* Right: Price & Button */}
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="flex flex-col items-end">
+                                            <span className={cn(
+                                                "text-2xl font-black tracking-tighter transition-all",
+                                                isStrongOffer ? "text-orange-600 scale-110" : "text-primary"
+                                            )}>
+                                                {offer.price.toLocaleString()}
+                                            </span>
+                                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
+                                        </div>
+                                        <Button 
+                                            size="sm" 
+                                            className={cn(
+                                                "h-8 rounded-xl text-[10px] font-black px-5 shadow-lg active:scale-95 transition-all",
+                                                isStrongOffer ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-90 border-none" : "bg-primary shadow-primary/20"
+                                            )}
+                                        >
+                                            شراء
+                                        </Button>
                                     </div>
-                                    <Button 
-                                        size="sm" 
-                                        className={cn(
-                                            "h-7 rounded-lg text-[10px] font-black px-4 mt-1 shadow-lg",
-                                            isStrongOffer ? "bg-primary" : "shadow-primary/20"
-                                        )}
-                                    >
-                                        شراء <ArrowUpRight className="h-3 w-3 mr-1" />
-                                    </Button>
+
+                                    {/* Decorative subtle background pattern */}
+                                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </Card>
+                        </div>
                     );
                 })
             ) : (
-                <div className="text-center py-10 opacity-40">
-                    <AlertCircle className="h-12 w-12 mx-auto mb-2" />
-                    <p className="text-xs font-bold">لا توجد عروض حالياً للشبكة</p>
+                <div className="text-center py-16 opacity-40">
+                    <div className="bg-muted/50 p-6 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-black text-muted-foreground">عفواً.. لا توجد عروض حالياً</p>
                 </div>
             )}
           </div>
           
-          <div className="p-6 pt-0 mt-auto">
+          <div className="p-6 pt-2 mt-auto">
             <Button 
                 onClick={() => setIsOffersOpen(false)}
                 className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-xl active:scale-95 transition-all border-none"
             >
-                إغلاق
+                إغلاق النافذة
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900 z-[10000]">
+        <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
-            <DialogTitle>تأكيد الشراء</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من شراء كرت "{showConfirmPurchase?.name}"؟
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
+            <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
+            <DialogDescription className="text-center font-bold">
+              هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 bg-muted/50 rounded-2xl space-y-2">
-            <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
+          <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
           </div>
-          <DialogFooter className="grid grid-cols-2 gap-2">
-            <Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
+          <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
+            <Button className="w-full h-12 rounded-2xl font-black text-base shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : 'تأكيد الشراء'}
             </Button>
-            <Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button>
+            <Button variant="outline" className="w-full h-12 rounded-2xl font-black text-base mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Success Popup */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
@@ -527,32 +556,32 @@ export function ServiceGrid() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10002] bg-white dark:bg-slate-900">
+        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
                 </div>
                 <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
-                <DialogDescription className="text-center">
+                <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
                 </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-6">
                 <div className="space-y-2">
-                    <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
+                    <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
                     <Input 
                         id="sms-phone"
                         placeholder="7xxxxxxxx" 
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
-                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground bg-muted/20 border-none" 
                     />
                 </div>
             </div>
             <DialogFooter className="grid grid-cols-2 gap-3">
-                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
-                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-black text-base shadow-lg" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-black text-base mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

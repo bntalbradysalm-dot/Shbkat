@@ -4,17 +4,20 @@
 import { NextResponse } from 'next/server';
 
 const API_URL = 'https://api.alwaadi.net/jsonrpc';
-const API_KEY = '2e679271d1f9426f10e1f00100afc2016a33cd54';
-const USER_ID = 51; // uid المستخدم المصرح له من التوثيق
+const API_KEY = process.env.ALWADI_API_KEY;
+const USER_ID = process.env.ALWADI_USER_ID ? parseInt(process.env.ALWADI_USER_ID) : 51;
 
 export async function POST(request: Request) {
   try {
     const { action, payload } = await request.json();
 
+    if (!API_KEY) {
+        throw new Error('ALWADI_API_KEY is not defined');
+    }
+
     let methodParams: any = {};
 
     if (action === 'search') {
-      // استخدام onchange لجلب بيانات الكرت (تاريخ الانتهاء والمشترك) كما في التوثيق
       methodParams = {
         model: 'renewal.proces',
         method: 'onchange',
@@ -27,7 +30,6 @@ export async function POST(request: Request) {
         }
       };
     } else if (action === 'renew') {
-      // تنفيذ عملية التجديد (إنشاء سجل جديد) وفقاً للمثال البرمجي
       methodParams = {
         model: 'renewal.proces',
         method: 'create',

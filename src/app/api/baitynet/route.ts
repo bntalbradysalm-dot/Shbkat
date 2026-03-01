@@ -4,15 +4,17 @@
 import { NextResponse } from 'next/server';
 
 const API_BASE_URL = 'https://apis.okamel.org/api/partner-yem/bill-balance';
-const API_KEY = 'fb845cb5-b835-4d88-8c8e-eb28cc38a2f2';
-const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzY4NjU4MDAyLCJleHAiOjE3NzEyNTAwMDJ9.rbU_VSMJIV487W6ekxwqXaMM0xrBSMqSGT8Gtzc2OMk';
+const API_KEY = process.env.BAITYNET_BALANCE_API_KEY;
+const AUTH_TOKEN = process.env.BAITYNET_BALANCE_AUTH_TOKEN;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // The request from the frontend will be { mobile, amount, type }
-    // The external API expects { data: { mobile, amount, type } }
+    if (!API_KEY || !AUTH_TOKEN) {
+        throw new Error('Okamel Balance configuration is missing in environment variables');
+    }
+
     const externalApiBody = {
       data: body
     };
@@ -30,7 +32,6 @@ export async function POST(request: Request) {
     const result = await response.json();
 
     if (!response.ok) {
-        // Forward the error from the external API
         return new NextResponse(
             JSON.stringify({ message: result.message || 'فشلت العملية من المصدر.' }),
             { status: response.status, headers: { 'Content-Type': 'application/json' } }
@@ -47,4 +48,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

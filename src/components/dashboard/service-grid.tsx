@@ -368,7 +368,7 @@ export function ServiceGrid() {
              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
              
              <div className="relative z-10 flex flex-col items-center">
-                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/20 mb-4 shadow-xl">
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
                     <Trophy className="h-8 w-8 text-white animate-bounce" />
                 </div>
                 <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
@@ -417,7 +417,7 @@ export function ServiceGrid() {
                                             "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110 duration-500",
                                             isStrongOffer ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-primary/5 text-primary"
                                         )}>
-                                            {isStrongOffer ? <Sparkles className="h-7 w-7" /> : <Wifi className="h-7 w-7" />}
+                                            <Wifi className="h-7 w-7" />
                                         </div>
                                         <div className="text-right space-y-1">
                                             <div className="flex items-center gap-2">

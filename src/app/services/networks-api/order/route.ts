@@ -20,7 +20,7 @@ export async function POST(
     }
 
     if (!API_KEY || !USER_IDENTIFIER || !USER_PASSWORD) {
-        throw new Error('Baitynet Network configuration is missing in environment variables');
+        return new NextResponse(JSON.stringify({ message: 'Config missing' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
     const externalApiBody = {
@@ -38,25 +38,35 @@ export async function POST(
       headers: {
         'x-api-key': API_KEY,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(externalApiBody),
       cache: 'no-store'
     });
 
-    const data = await response.json();
+    const contentType = response.headers.get("content-type");
 
     if (!response.ok) {
-      console.error(`External API failed with status: ${response.status}`, data);
+      const errorText = await response.text();
+      console.error(`Order creation failed with status: ${response.status}`, errorText);
       return new NextResponse(
-        JSON.stringify({ message: data?.error?.message?.ar || 'Failed to create order' }),
+        JSON.stringify({ message: `Order Error: ${response.status}` }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    return NextResponse.json(data);
+    if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        return NextResponse.json(data);
+    } else {
+        return new NextResponse(
+            JSON.stringify({ message: 'Invalid order response from provider' }),
+            { status: 502, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
 
   } catch (error: any) {
-    console.error('Error in POST /services/networks-api/order:', error);
+    console.error('Error in order route:', error);
     return new NextResponse(
         JSON.stringify({ message: error.message || 'An internal server error occurred.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }

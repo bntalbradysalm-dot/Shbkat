@@ -428,7 +428,7 @@ export function ServiceGrid() {
                                             <div className="flex items-center gap-2">
                                                 <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
                                                 {isStrongOffer && (
-                                                    <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">HOT</div>
+                                                    <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">عرض خاص</div>
                                                 )}
                                             </div>
                                             <div className="flex flex-col gap-1 mt-1.5">
@@ -556,7 +556,7 @@ export function ServiceGrid() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
+        <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />

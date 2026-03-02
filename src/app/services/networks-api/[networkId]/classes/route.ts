@@ -31,6 +31,7 @@ export async function GET(
         'x-api-key': API_KEY.trim(),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'User-Agent': 'StarMobileApp/1.0',
       },
       next: { revalidate: 0 },
       cache: 'no-store'
@@ -40,7 +41,7 @@ export async function GET(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Baitynet Classes API failed with status ${response.status}:`, errorText);
+      console.error(`Baitynet Classes API failed (${response.status}):`, errorText.substring(0, 200));
       return new NextResponse(
         JSON.stringify({ message: `API Error: ${response.status}` }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
@@ -59,17 +60,17 @@ export async function GET(
         }
     } else {
         const text = await response.text();
-        console.error("Received non-JSON response for classes:", text.substring(0, 300));
+        console.error("Classes API returned HTML:", text.substring(0, 300));
         return new NextResponse(
-            JSON.stringify({ message: 'Invalid response from provider (HTML received)' }),
+            JSON.stringify({ message: 'المصدر أعاد صفحة خطأ بدلاً من البيانات. تأكد من تفعيل الـ API Key للشبكة.' }),
             { status: 502, headers: { 'Content-Type': 'application/json' } }
         );
     }
 
   } catch (error: any) {
-    console.error('Error fetching classes:', error);
+    console.error('Error fetching classes on Vercel:', error);
     return new NextResponse(
-        JSON.stringify({ message: error.message || 'An internal server error occurred.' }),
+        JSON.stringify({ message: 'فشل تحميل فئات الكروت.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

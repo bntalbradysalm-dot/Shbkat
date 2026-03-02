@@ -21,7 +21,7 @@ export async function POST(
     }
 
     if (!API_KEY || !USER_IDENTIFIER || !USER_PASSWORD) {
-        return new NextResponse(JSON.stringify({ message: 'Config missing' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        return new NextResponse(JSON.stringify({ message: 'إعدادات شراء الكروت ناقصة في فيرسل.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
     const externalApiBody = {
@@ -40,6 +40,7 @@ export async function POST(
         'x-api-key': API_KEY.trim(),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'User-Agent': 'StarMobileApp/1.0',
       },
       body: JSON.stringify(externalApiBody),
       cache: 'no-store'
@@ -49,9 +50,9 @@ export async function POST(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Order creation failed with status: ${response.status}`, errorText);
+      console.error(`Order creation failed (${response.status}):`, errorText.substring(0, 200));
       return new NextResponse(
-        JSON.stringify({ message: `Order Error: ${response.status}` }),
+        JSON.stringify({ message: `فشل إنشاء الطلب: ${response.status}` }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -61,17 +62,17 @@ export async function POST(
         return NextResponse.json(data);
     } else {
         const text = await response.text();
-        console.error("Order response is not JSON:", text.substring(0, 300));
+        console.error("Order API returned HTML:", text.substring(0, 300));
         return new NextResponse(
-            JSON.stringify({ message: 'Invalid order response from provider' }),
+            JSON.stringify({ message: 'فشل في إتمام الشراء: استجابة غير صالحة من المصدر.' }),
             { status: 502, headers: { 'Content-Type': 'application/json' } }
         );
     }
 
   } catch (error: any) {
-    console.error('Error in order route:', error);
+    console.error('Order route exception on Vercel:', error);
     return new NextResponse(
-        JSON.stringify({ message: error.message || 'An internal server error occurred.' }),
+        JSON.stringify({ message: 'حدث خطأ تقني أثناء معالجة الطلب.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

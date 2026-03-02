@@ -4,13 +4,14 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const API_BASE_URL = 'https://apis.baitynet.net/api/partner/orders';
-const API_KEY = process.env.BAITYNET_NETWORKS_API_KEY;
-const USER_IDENTIFIER = process.env.BAITYNET_NETWORKS_USER_PHONE;
-const USER_PASSWORD = process.env.BAITYNET_NETWORKS_USER_PASS;
 
 export async function POST(
   request: Request
 ) {
+  const API_KEY = process.env.BAITYNET_NETWORKS_API_KEY;
+  const USER_IDENTIFIER = process.env.BAITYNET_NETWORKS_USER_PHONE;
+  const USER_PASSWORD = process.env.BAITYNET_NETWORKS_USER_PASS;
+
   try {
     const body = await request.json();
     const { classId } = body;
@@ -27,8 +28,8 @@ export async function POST(
       data: {
         class: classId,
         user: { 
-          identifier: USER_IDENTIFIER, 
-          password: USER_PASSWORD
+          identifier: USER_IDENTIFIER.trim(), 
+          password: USER_PASSWORD.trim()
         },
       }
     };
@@ -36,7 +37,7 @@ export async function POST(
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
       headers: {
-        'x-api-key': API_KEY,
+        'x-api-key': API_KEY.trim(),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -44,7 +45,7 @@ export async function POST(
       cache: 'no-store'
     });
 
-    const contentType = response.headers.get("content-type");
+    const contentType = response.headers.get("content-type") || "";
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -55,10 +56,12 @@ export async function POST(
       );
     }
     
-    if (contentType && contentType.includes("application/json")) {
+    if (contentType.includes("application/json")) {
         const data = await response.json();
         return NextResponse.json(data);
     } else {
+        const text = await response.text();
+        console.error("Order response is not JSON:", text.substring(0, 300));
         return new NextResponse(
             JSON.stringify({ message: 'Invalid order response from provider' }),
             { status: 502, headers: { 'Content-Type': 'application/json' } }

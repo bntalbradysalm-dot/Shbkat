@@ -146,24 +146,7 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
-        const ownerId = networkData.ownerId;
-        if (ownerId && ownerId !== 'admin') {
-            const ownerDocRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-            // سجل عملية للمالك
-            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: ownerId,
-                transactionDate: now,
-                amount: payoutAmount,
-                transactionType: 'أرباح مبيعات الكروت',
-                notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${networkName}`
-            });
-        }
-  
-        // 4. سجل عملية للمشتري
+        // 3. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -174,11 +157,11 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. سجل الكروت المباعة (مكتمل تلقائياً)
+        // 4. سجل الكروت المباعة (حالة معلقة بانتظار المشرف)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
-            ownerId: ownerId || 'admin',
+            ownerId: networkData.ownerId || 'admin',
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
@@ -191,7 +174,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'completed'
+            payoutStatus: 'pending'
         });
         
         await batch.commit().catch(async (err) => {

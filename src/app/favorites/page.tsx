@@ -41,10 +41,9 @@ type CardCategory = {
     id: string | number;
     name: string;
     price: number;
-    dataLimit?: string;
+    capacity?: string;
     validity?: string;
     expirationDate?: string;
-    capacity?: string; // Local network field
 };
 
 type CombinedNetwork = {
@@ -165,7 +164,7 @@ export default function FavoritesPage() {
             return { 
                 id: d.id, 
                 ...data,
-                dataLimit: data.capacity 
+                capacity: data.capacity 
             } as CardCategory;
         });
         setCategories(catsData);
@@ -177,7 +176,7 @@ export default function FavoritesPage() {
             id: c.id,
             name: c.name,
             price: c.price,
-            dataLimit: c.dataLimit,
+            capacity: c.dataLimit,
             expirationDate: c.expirationDate
         })));
       }
@@ -221,7 +220,7 @@ export default function FavoritesPage() {
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId;
+            
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
@@ -231,23 +230,7 @@ export default function FavoritesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. التحويل التلقائي للمالك (90% من القيمة)
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل عملية للمالك
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-            
-            // 4. سجل عملية للمشتري
+            // 3. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -258,11 +241,11 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
+            // 4. سجل الكروت المباعة (حالة معلقة ليحولها المسؤول يدوياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
-                ownerId: ownerId || 'admin', 
+                ownerId: selectedNetwork.ownerId || 'admin', 
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, 
                 categoryName: selectedCategory.name,
@@ -275,7 +258,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed'
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -445,11 +428,11 @@ export default function FavoritesPage() {
                         onClick={() => setShowConfirmPurchase(cat)}
                       >
                         <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex-1 text-right space-y-1">
+                          <div className="text-right space-y-1">
                             <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
                             <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
                                 {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.capacity}</span>}
-                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
+                                {cat.validity && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity}</span>}
                             </div>
                           </div>
                           <div className="text-left">

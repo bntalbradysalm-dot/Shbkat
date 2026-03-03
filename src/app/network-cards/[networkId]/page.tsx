@@ -146,8 +146,7 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. ملاحظة: تم إيقاف التحويل التلقائي للأرباح للمالك.
-        // سيقوم مالك التطبيق بالموافقة اليدوية في صفحة التقارير.
+        // NOTE: تم إيقاف التحويل التلقائي للأرباح للمالك.
         const ownerId = networkData.ownerId;
   
         // 4. سجل عملية للمشتري
@@ -315,7 +314,7 @@ function NetworkPurchasePageComponent() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <Button className="rounded-2xl h-12 font-bold" onClick={handleCopyCardDetails}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
-                            <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button>
+                            <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS</Button>
                         </div>
                         <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); router.push('/login'); }}>إغلاق</Button>
                     </CardContent>
@@ -327,7 +326,7 @@ function NetworkPurchasePageComponent() {
             <DialogContent className="rounded-[32px] max-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
                     <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"><Smartphone className="text-primary h-6 w-6" /></div>
-                    <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                    <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                     <DialogDescription className="text-center">أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-6">

@@ -206,9 +206,7 @@ export function ServiceGrid() {
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            const ownerRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerRef, { balance: increment(payoutAmount) });
-
+            // NOTE: تم إيقاف التحويل التلقائي للمالك.
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -219,19 +217,10 @@ export function ServiceGrid() {
                 cardNumber: cardData.cardNumber,
             });
             
-            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: ownerId, 
-                transactionDate: now, 
-                amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', 
-                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-            });
-            
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: alKhairNetwork.id, 
-                ownerId, 
+                ownerId: ownerId || 'admin', 
                 networkName: alKhairNetwork.name,
                 categoryId: selectedCategory.id, 
                 categoryName: selectedCategory.name,
@@ -244,7 +233,7 @@ export function ServiceGrid() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed'
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -546,11 +535,11 @@ export function ServiceGrid() {
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
-                            <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
                         </Button>
                     </div>
-                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setAlKhairNetwork(null); }}>إغلاق</Button>
+                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setAlKhairNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>
         </div>
@@ -563,7 +552,7 @@ export function ServiceGrid() {
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
                 </div>
-                <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
                 </DialogDescription>

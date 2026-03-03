@@ -271,7 +271,7 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // NOTE: تم إيقاف التحويل التلقائي للمالك بناءً على طلبك. 
+            // NOTE: تم إيقاف التحويل التلقائي للمالك. 
             // سيقوم مالك التطبيق بالموافقة اليدوية في صفحة التقارير.
             const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
@@ -452,7 +452,7 @@ export default function CombinedNetworksPage() {
             <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="sr-only">تأكيد خصم رصيد لشراء كرت شبكة</DialogDescription>
           </DialogHeader>
-          <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 mt-2">
+          <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ر.ي</span></p>
           </div>
@@ -470,7 +470,10 @@ export default function CombinedNetworksPage() {
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                 <CardContent className="p-8 space-y-6">
                     <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
-                    <div className="grid grid-cols-2 gap-3"><Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button><Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button></div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS</Button>
+                    </div>
                     <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>
@@ -479,6 +482,38 @@ export default function CombinedNetworksPage() {
 
       {isProcessing && <ProcessingOverlay message="جاري معالجة الشراء..." />}
       <Toaster />
+
+      {/* SMS Dialog */}
+      <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
+        <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
+            <DialogHeader>
+                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Smartphone className="text-primary h-6 w-6" />
+                </div>
+                <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
+                <DialogDescription className="text-center font-bold">
+                    أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-6">
+                <div className="space-y-2">
+                    <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
+                    <Input 
+                        id="sms-phone"
+                        placeholder="7xxxxxxxx" 
+                        type="tel" 
+                        value={smsRecipient} 
+                        onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground bg-muted/20 border-none" 
+                    />
+                </div>
+            </div>
+            <DialogFooter className="grid grid-cols-2 gap-3">
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-black text-base shadow-lg" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-black text-base mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

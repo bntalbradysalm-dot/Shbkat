@@ -231,10 +231,7 @@ export default function FavoritesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. إضافة الرصيد للمالك
-            const ownerRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerRef, { balance: increment(payoutAmount) });
-
+            // NOTE: تم إيقاف التحويل التلقائي للأرباح للمالك.
             // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
@@ -246,21 +243,11 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 5. سجل عملية للمالك
-            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: ownerId, 
-                transactionDate: now, 
-                amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', 
-                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-            });
-            
-            // 6. سجل الكروت المباعة
+            // 6. سجل الكروت المباعة للإدارة
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
-                ownerId, 
+                ownerId: ownerId || 'admin', 
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, 
                 categoryName: selectedCategory.name,
@@ -273,7 +260,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed'
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -383,22 +370,24 @@ export default function FavoritesPage() {
                     {filteredFavorites.map((fav, index) => (
                         <Card 
                             key={fav.id} 
-                            className="bg-mesh-gradient cursor-pointer text-white hover:opacity-90 transition-all rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+                            className="bg-mesh-gradient cursor-pointer text-white rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
                             style={{ animationDelay: `${index * 30}ms` }}
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between">
-                                <div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6 text-white" /></div>
-                                <div className="flex-1 text-right mx-4 space-y-1 text-white">
-                                    <h4 className="font-bold text-base text-white">{fav.name}</h4>
-                                    <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
-                                </div>
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
                                     className="p-2 hover:scale-110 transition-transform"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white fill-white")} />
                                 </button>
+                                <div className="flex-1 text-right mx-4 space-y-1 text-white">
+                                    <h4 className="font-bold text-base text-white">{fav.name}</h4>
+                                    <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
+                                </div>
+                                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/10">
+                                    <Wifi className="h-6 w-6 text-white" />
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
@@ -410,12 +399,12 @@ export default function FavoritesPage() {
       {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+            <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+          </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <DialogHeader className="sr-only">
-                <DialogTitle>{selectedNetwork.name}</DialogTitle>
-                <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
-              </DialogHeader>
               <div className="bg-mesh-gradient p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
@@ -471,12 +460,10 @@ export default function FavoritesPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center bg-white dark:bg-slate-900">
+        <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900">
           <DialogHeader>
-            <DialogTitle>تأكيد الشراء</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من شراء كرت "{showConfirmPurchase?.name}"؟
-            </DialogDescription>
+            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
+            <DialogDescription className="sr-only">تأكيد خصم رصيد لشراء كرت شبكة</DialogDescription>
           </DialogHeader>
           <div className="py-4 bg-muted/50 rounded-2xl space-y-2">
             <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
@@ -518,8 +505,8 @@ export default function FavoritesPage() {
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
-                            <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
                         </Button>
                     </div>
                     <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
@@ -530,12 +517,12 @@ export default function FavoritesPage() {
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
+        <DialogContent className="rounded-[32px] max-sm p-6 z-[10000] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
                 </div>
-                <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
                 </DialogDescription>

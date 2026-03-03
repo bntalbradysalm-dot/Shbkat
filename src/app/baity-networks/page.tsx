@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -198,29 +199,49 @@ export default function BaityNetworksPage() {
   const handlePurchase = async () => {
     const selectedCategory = showConfirmPurchase;
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef) return;
+    
     setIsProcessing(true);
     try {
         const response = await fetch(`/services/networks-api/order`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ classId: selectedCategory.id })
         });
-        if (!response.ok) throw new Error('فشل الطلب');
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'فشل تنفيذ الطلب من المصدر');
+        }
+        
         const result = await response.json();
         const cardData = result.data.order.card;
+        
         const batch = writeBatch(firestore);
         batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
-        batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-            userId: user.uid, transactionDate: new Date().toISOString(), amount: selectedCategory.price,
-            transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة بيتي: ${selectedNetwork?.name}`,
+        
+        const transactionPayload: any = {
+            userId: user.uid, 
+            transactionDate: new Date().toISOString(), 
+            amount: selectedCategory.price,
+            transactionType: `شراء كرت ${selectedCategory.name}`, 
+            notes: `شبكة بيتي: ${selectedNetwork?.name}`,
             cardNumber: cardData.cardID,
-        });
+        };
+        
+        if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+            transactionPayload.cardPassword = cardData.cardPass;
+        }
+
+        batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), transactionPayload);
         await batch.commit();
+        
         setPurchasedCard(cardData);
         setShowConfirmPurchase(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         toast({ variant: "destructive", title: "خطأ", description: error.message });
-    } finally { setIsProcessing(false); }
+    } finally { 
+        setIsProcessing(false); 
+    }
   };
 
   const handleCopy = () => {
@@ -235,7 +256,9 @@ export default function BaityNetworksPage() {
         toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
-    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID}`;
+    const cardInfo = purchasedCard.cardID;
+    const passInfo = purchasedCard.cardPass && purchasedCard.cardPass !== cardInfo ? `\nكلمة المرور: ${purchasedCard.cardPass}` : '';
+    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${cardInfo}${passInfo}`;
     window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
     setIsSmsDialogOpen(false);
   };
@@ -336,6 +359,12 @@ export default function BaityNetworksPage() {
                     <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
                         <p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p>
                         <p className="text-3xl font-black font-mono tracking-tighter text-foreground">{purchasedCard.cardID}</p>
+                        {purchasedCard.cardPass && purchasedCard.cardPass !== purchasedCard.cardID && (
+                            <div className="mt-2 pt-2 border-t border-dashed border-primary/10">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كلمة المرور</p>
+                                <p className="text-xl font-black font-mono text-foreground">{purchasedCard.cardPass}</p>
+                            </div>
+                        )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>

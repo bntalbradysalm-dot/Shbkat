@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -130,7 +131,7 @@ export default function CombinedNetworksPage() {
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch local networks
+  // Fetch local networks (currently hidden)
   const localNetworksQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'networks') : null),
     [firestore]
@@ -163,7 +164,6 @@ export default function CombinedNetworksPage() {
 
   // Combine All Networks (Local hidden temporarily)
   const allNetworksCombined = useMemo(() => {
-    // const local = (localNetworks || []).map(n => ({ ...n, isLocal: true })); // Hidden temporarily
     const local: any[] = []; 
     const api = apiNetworks;
     const combined = [...local, ...api];
@@ -247,7 +247,17 @@ export default function CombinedNetworksPage() {
   const handlePurchase = async () => {
     const selectedCategory = showConfirmPurchase;
     if (!selectedCategory || !selectedNetwork || !user || !userProfile || !firestore || !userDocRef) return;
+    
     setIsProcessing(true);
+    const categoryPrice = selectedCategory.price;
+    const userBalance = userProfile?.balance ?? 0;
+
+    if (userBalance < categoryPrice) {
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
+        setIsProcessing(false);
+        return;
+    }
+
     try {
         const now = new Date().toISOString();
         const batch = writeBatch(firestore);
@@ -288,67 +298,53 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            const soldCardRef = doc(collection(firestore, 'soldCards'));
-            batch.set(soldCardRef, {
-                networkId: selectedNetwork.id, 
-                ownerId: ownerId || 'admin', 
-                networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, 
-                categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, 
-                cardNumber: cardData.cardNumber,
-                price: selectedCategory.price, 
-                commissionAmount: commission, 
-                payoutAmount,
-                buyerId: user.uid, 
-                buyerName: userProfile.displayName || 'مشترك',
-                buyerPhoneNumber: userProfile.phoneNumber || '', 
-                soldTimestamp: now, 
-                payoutStatus: 'completed'
-            });
-
-            await batch.commit().catch(async (err) => {
-                const contextualError = new FirestorePermissionError({
-                    path: `batch_purchase/${selectedNetwork.id}`,
-                    operation: 'write',
-                    requestResourceData: { cardId: cardToPurchaseDoc.id }
-                });
-                errorEmitter.emit('permission-error', contextualError);
-                throw err;
-            });
-            
+            await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ classId: selectedCategory.id })
             });
-            if (!response.ok) throw new Error('فشل الطلب من المصدر الخارجي');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'فشل الطلب من المصدر الخارجي');
+            }
+            
             const result = await response.json();
             const cardData = result.data.order.card;
             
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+            
+            const transactionPayload: any = {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
-            });
+            };
+            
+            if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+                transactionPayload.cardPassword = cardData.cardPass;
+            }
+
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), transactionPayload);
             await batch.commit();
             setPurchasedCard(cardData);
         }
+        
         setShowConfirmPurchase(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);
-        if (error.name !== 'FirebaseError') {
-            toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
-        }
-    } finally { setIsProcessing(false); }
+        toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+    } finally { 
+        setIsProcessing(false); 
+    }
   };
 
   const handleCopy = () => {
     if (purchasedCard) {
-        navigator.clipboard.writeText(purchasedCard.cardID || purchasedCard.cardNumber);
+        const textToCopy = purchasedCard.cardID || purchasedCard.cardNumber;
+        navigator.clipboard.writeText(textToCopy);
         toast({ title: "تم النسخ" });
     }
   };
@@ -358,7 +354,9 @@ export default function CombinedNetworksPage() {
         toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
-    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
+    const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;
+    const passInfo = purchasedCard.cardPass && purchasedCard.cardPass !== cardInfo ? `\nكلمة المرور: ${purchasedCard.cardPass}` : '';
+    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${cardInfo}${passInfo}`;
     window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
     setIsSmsDialogOpen(false);
   };
@@ -394,18 +392,15 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            {/* Right: Wifi Icon */}
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
-                            {/* Center: Text */}
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            {/* Left: Heart Button */}
                             <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
@@ -441,7 +436,7 @@ export default function CombinedNetworksPage() {
                                     <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
                                     <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
                                         {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {cat.capacity}</span>}
-                                        {cat.validity && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity}</span>}
+                                        {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity || cat.expirationDate}</span>}
                                     </div>
                                 </div>
                                 <div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p></div>
@@ -485,9 +480,9 @@ export default function CombinedNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader className="sr-only">
-                    <DialogTitle>تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription>رقم الكرت الذي تم شراؤه</DialogDescription>
+                <DialogHeader>
+                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه</DialogDescription>
                 </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
@@ -505,6 +500,12 @@ export default function CombinedNetworksPage() {
                         <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
                             {purchasedCard.cardID || purchasedCard.cardNumber}
                         </p>
+                        {purchasedCard.cardPass && purchasedCard.cardPass !== (purchasedCard.cardID || purchasedCard.cardNumber) && (
+                            <div className="mt-2 pt-2 border-t border-dashed border-primary/10">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كلمة المرور</p>
+                                <p className="text-xl font-black font-mono text-foreground">{purchasedCard.cardPass}</p>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">

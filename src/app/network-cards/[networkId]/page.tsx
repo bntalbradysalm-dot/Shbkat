@@ -110,7 +110,7 @@ function NetworkPurchasePageComponent() {
     const userBalance = userProfile?.balance ?? 0;
   
     if (userBalance < categoryPrice) {
-        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك لا يكفي لإتمام الشراء." });
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام الشراء." });
         setIsProcessing(false);
         setIsConfirming(false);
         return;
@@ -119,7 +119,14 @@ function NetworkPurchasePageComponent() {
     try {
         const cardsRef = collection(firestore, `networks/${networkId}/cards`);
         const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-        const availableCardsSnapshot = await getDocs(q);
+        const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
+            const contextualError = new FirestorePermissionError({
+                path: `networks/${networkId}/cards`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            throw err;
+        });
   
         if (availableCardsSnapshot.empty) {
             throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
@@ -186,13 +193,24 @@ function NetworkPurchasePageComponent() {
             payoutStatus: ownerId ? 'completed' : 'admin_held'
         });
         
-        await batch.commit();
+        await batch.commit().catch(async (err) => {
+            const contextualError = new FirestorePermissionError({
+                path: `batch_purchase/${networkId}`,
+                operation: 'write',
+                requestResourceData: { cardId: cardToPurchaseData.id }
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            throw err;
+        });
+
         setPurchasedCard(cardToPurchaseData);
         audioRef.current?.play().catch(() => {});
   
     } catch (error: any) {
         console.error("Local network purchase failure:", error);
-        toast({ variant: "destructive", title: "فشل الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        if (error.name !== 'FirebaseError') {
+            toast({ variant: "destructive", title: "فشل الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        }
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -318,7 +336,7 @@ function NetworkPurchasePageComponent() {
         )}
 
         <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-            <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
+            <DialogContent className="rounded-[32px] max-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
                     <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"><Smartphone className="text-primary h-6 w-6" /></div>
                     <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>

@@ -199,7 +199,14 @@ export default function CombinedNetworksPage() {
     try {
       if (network.isLocal && firestore) {
         const catsRef = collection(firestore, `networks/${network.id}/cardCategories`);
-        const snapshot = await getDocs(catsRef);
+        const snapshot = await getDocs(catsRef).catch(async (err) => {
+            const contextualError = new FirestorePermissionError({
+                path: `networks/${network.id}/cardCategories`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            throw err;
+        });
         setCategories(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory)));
       } else {
         const response = await fetch(`/services/networks-api/${network.id}/classes`);
@@ -210,7 +217,9 @@ export default function CombinedNetworksPage() {
         })));
       }
     } catch (err: any) {
-      setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      if (err.name !== 'FirebaseError') {
+        setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
+      }
     } finally {
       setIsLoadingCategories(false);
     }
@@ -241,7 +250,15 @@ export default function CombinedNetworksPage() {
         if (selectedNetwork.isLocal) {
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-            const availableCardsSnapshot = await getDocs(q);
+            const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
+                const contextualError = new FirestorePermissionError({
+                    path: `networks/${selectedNetwork.id}/cards`,
+                    operation: 'list',
+                });
+                errorEmitter.emit('permission-error', contextualError);
+                throw err;
+            });
+
             if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
             
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
@@ -296,7 +313,16 @@ export default function CombinedNetworksPage() {
                 payoutStatus: ownerId ? 'completed' : 'admin_held'
             });
 
-            await batch.commit();
+            await batch.commit().catch(async (err) => {
+                const contextualError = new FirestorePermissionError({
+                    path: `batch_purchase/${selectedNetwork.id}`,
+                    operation: 'write',
+                    requestResourceData: { cardId: cardToPurchaseDoc.id }
+                });
+                errorEmitter.emit('permission-error', contextualError);
+                throw err;
+            });
+            
             setPurchasedCard({ cardID: cardData.cardNumber });
         } else {
             const response = await fetch(`/services/networks-api/order`, {
@@ -321,7 +347,9 @@ export default function CombinedNetworksPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);
-        toast({ variant: "destructive", title: "فشلت العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+        if (error.name !== 'FirebaseError') {
+            toast({ variant: "destructive", title: "فشلت العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+        }
     } finally { setIsProcessing(false); }
   };
 
@@ -370,16 +398,16 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                                <Wifi className="h-6 w-6 text-white" />
-                            </div>
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
+                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
+                            </button>
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
-                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
-                            </button>
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                                <Wifi className="h-6 w-6 text-white" />
+                            </div>
                         </CardContent>
                     </Card>
                 ))

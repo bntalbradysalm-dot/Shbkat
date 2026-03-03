@@ -561,11 +561,12 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // إلغاء فحص وإرسال السلفة نهائياً للباقات بناءً على طلب العميل
-    const totalToDeduct = selectedOffer.price;
+    // حساب المبلغ الإجمالي: سعر الباقة + مبلغ السلفة إن وجد لضمان قبول الطلب
+    const loanAmount = billingInfo?.loanAmount || 0;
+    const totalToDeduct = selectedOffer.price + loanAmount;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة السلفة.' });
         return;
     }
 
@@ -573,7 +574,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // إرسال طلب التفعيل الصافي فقط بدون معامل السلفة
+        // إرسال الإجمالي في حقل amount للمزود لسداد السلفة وتفعيل الباقة معاً
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -581,7 +582,7 @@ export default function YemenMobilePage() {
                 mobile: phone, 
                 action: 'billoffer', 
                 num: selectedOffer.offertype, 
-                amount: selectedOffer.price, 
+                amount: totalToDeduct, // إرسال الإجمالي (باقة + سلفة)
                 transid 
             })
         });
@@ -602,7 +603,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}`, 
+            notes: `للرقم: ${phone}${loanAmount > 0 ? ` (شامل سداد سلفة: ${loanAmount})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -892,17 +893,26 @@ export default function YemenMobilePage() {
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
 
+                      {billingInfo?.isLoan && (
+                        <div className="flex justify-between items-center py-2 border-b border-dashed animate-in fade-in duration-300">
+                            <span className="text-destructive font-bold flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم:
+                            </span>
+                            <span className="font-black text-destructive">{(billingInfo.loanAmount || 0).toLocaleString('en-US')} ريال</span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-3 mt-4">
-                        <span className="font-black">إجمالي الخصم من رصيدك:</span>
+                        <span className="font-black">إجمالي الخصم من محفظتك:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-2xl font-black text-[#B32C4C]">
-                                {selectedOffer?.price.toLocaleString('en-US')}
+                                {((selectedOffer?.price || 0) + (billingInfo?.loanAmount || 0)).toLocaleString('en-US')}
                             </p>
                             <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
                       
-                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: سيتم تفعيل الباقة بالسعر الصافي دون أي عمولات إضافية أو خصم ديون سابقة.</p>
+                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: سيتم إرسال المبلغ الإجمالي (الباقة + السلفة) للمزود لضمان تفعيل الخدمة بنجاح.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

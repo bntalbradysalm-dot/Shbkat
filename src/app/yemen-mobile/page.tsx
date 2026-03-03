@@ -561,11 +561,13 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    const loanAmount = billingInfo?.loanAmount || 0;
-    const totalToDeduct = selectedOffer.price + loanAmount;
+    // المنطق الجديد: إرسال السلفة فقط إذا كان الرقم متسلفاً فعلاً
+    const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
+    const loanAmountToApply = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
+    const totalToDeduct = selectedOffer.price + loanAmountToApply;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة سداد السلفة.' });
         return;
     }
 
@@ -573,16 +575,23 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
+        const payload: any = { 
+            mobile: phone, 
+            action: 'billoffer', 
+            num: selectedOffer.offertype, 
+            amount: totalToDeduct, 
+            transid 
+        };
+
+        // إرسال حقل solfa فقط إذا كان الرقم متسلفاً فعلاً
+        if (hasLoan) {
+            payload.solfa = loanAmountToApply;
+        }
+
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                mobile: phone, 
-                action: 'billoffer', 
-                num: selectedOffer.offertype, 
-                amount: totalToDeduct, 
-                transid 
-            })
+            body: JSON.stringify(payload)
         });
         const result = await response.json();
         
@@ -601,7 +610,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${loanAmount > 0 ? ` (شامل سداد سلفة: ${loanAmount})` : ''}`, 
+            notes: `للرقم: ${phone}${hasLoan ? ` (شامل سداد سلفة: ${loanAmountToApply})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -891,7 +900,8 @@ export default function YemenMobilePage() {
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
 
-                      {billingInfo?.isLoan && (
+                      {/* سطر السلفة يظهر فقط إذا كان هناك دين حقيقي */}
+                      {billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed animate-in fade-in duration-300">
                             <span className="text-destructive font-bold flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم:
@@ -904,13 +914,13 @@ export default function YemenMobilePage() {
                         <span className="font-black">إجمالي الخصم من محفظتك:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-2xl font-black text-[#B32C4C]">
-                                {((selectedOffer?.price || 0) + (billingInfo?.loanAmount || 0)).toLocaleString('en-US')}
+                                {((selectedOffer?.price || 0) + (billingInfo?.isLoan ? (billingInfo?.loanAmount || 0) : 0)).toLocaleString('en-US')}
                             </p>
                             <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
                       
-                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: سيتم إرسال المبلغ الإجمالي (الباقة + السلفة) للمزود لضمان تفعيل الخدمة بنجاح.</p>
+                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: يتم معالجة السلفة تلقائياً فقط عند وجودها لضمان تفعيل الخدمة.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

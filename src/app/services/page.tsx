@@ -428,14 +428,14 @@ export default function CombinedNetworksPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-6 text-white text-center relative">
+              <div className="bg-primary p-6 text-white text-center relative">
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
                     <Wifi className="h-8 w-8 text-white" />
                 </div>
                 <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
                 <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (
                   <div className="space-y-3">
                     {categories.map(cat => (
@@ -455,7 +455,7 @@ export default function CombinedNetworksPage() {
                   </div>
                 )}
               </div>
-              <div className="p-4 border-t"><Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
+              <div className="p-4 border-t bg-white dark:bg-slate-900"><Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
             </div>
           )}
         </DialogContent>
@@ -469,7 +469,7 @@ export default function CombinedNetworksPage() {
               هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
+          <div className="py-6 bg-white dark:bg-slate-800 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
           </div>

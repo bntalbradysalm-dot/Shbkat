@@ -419,7 +419,7 @@ export default function FavoritesPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-6 text-white relative">
+              <div className="bg-primary p-6 text-white relative">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
                     <Wifi className="h-10 w-10 text-white" />
@@ -429,7 +429,7 @@ export default function FavoritesPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 bg-background">
+              <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
@@ -464,7 +464,7 @@ export default function FavoritesPage() {
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-background border-t">
+              <div className="p-4 bg-white dark:bg-slate-900 border-t">
                 <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
               </div>
             </div>
@@ -478,7 +478,7 @@ export default function FavoritesPage() {
             <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟</DialogDescription>
           </DialogHeader>
-          <div className="py-4 bg-muted/50 rounded-2xl space-y-2 mt-4">
+          <div className="py-4 bg-white dark:bg-slate-800 rounded-2xl space-y-2 mt-4">
             <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>

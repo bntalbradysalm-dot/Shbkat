@@ -53,7 +53,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { Switch } from "@/components/ui/switch";
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -81,6 +80,7 @@ type Offer = {
     minutes?: string;
     validity?: string;
     offertype: string; 
+    id?: string; 
 };
 
 const YEMEN_MOBILE_PRIMARY = '#B32C4C';
@@ -320,7 +320,6 @@ export default function YemenMobilePage() {
   const [isActivatingOffer, setIsActivatingOffer] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastTxDetails, setLastTxDetails] = useState<any>(null);
-  const [isSettleLoanChecked, setIsSettleLoanChecked] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
@@ -562,15 +561,11 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // حساب مبلغ السلفة بشكل صريح للإرسال في معامل "solfa"
-    const loanToApply = isSettleLoanChecked 
-        ? (billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 122) 
-        : 0;
-        
-    const totalToDeduct = selectedOffer.price + loanToApply;
+    // إلغاء فحص وإرسال السلفة نهائياً للباقات بناءً على طلب العميل
+    const totalToDeduct = selectedOffer.price;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية مع السلفة المختارة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
         return;
     }
 
@@ -578,7 +573,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // تعديل مهم: إرسال معامل "solfa" بشكل صريح ضمن البيانات لحل مشكلة رفض المزود
+        // إرسال طلب التفعيل الصافي فقط بدون معامل السلفة
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -586,8 +581,7 @@ export default function YemenMobilePage() {
                 mobile: phone, 
                 action: 'billoffer', 
                 num: selectedOffer.offertype, 
-                amount: totalToDeduct, 
-                solfa: loanToApply, // إرسال السلفة بشكل منفصل ومباشر
+                amount: selectedOffer.price, 
                 transid 
             })
         });
@@ -608,7 +602,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${loanToApply > 0 ? ` (شامل سداد سلفة: ${loanToApply})` : ''}`, 
+            notes: `للرقم: ${phone}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -794,10 +788,7 @@ export default function YemenMobilePage() {
                                         <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-[#B32C4C]/10 rounded-b-2xl shadow-sm">
                                             <div className="grid grid-cols-1 gap-3">
                                                 {cat.offers.map((o) => (
-                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => {
-                                                        setSelectedOffer(o);
-                                                        setIsSettleLoanChecked(false);
-                                                    }} />
+                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
                                                 ))}
                                             </div>
                                         </AccordionContent>
@@ -901,33 +892,17 @@ export default function YemenMobilePage() {
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
 
-                      <div className="flex items-center justify-between py-3 px-3 bg-primary/5 rounded-2xl border border-primary/10">
-                          <div className="flex flex-col text-right">
-                              <span className="font-black text-primary text-xs">سداد السلفة</span>
-                              <span className="text-[10px] text-muted-foreground font-bold">
-                                {billingInfo?.isLoan 
-                                    ? `سداد المبلغ المستحق: ${billingInfo.loanAmount} ريال` 
-                                    : 'إضافة مبلغ سلفة افتراضي: 122 ريال'}
-                              </span>
-                          </div>
-                          <Switch 
-                            checked={isSettleLoanChecked} 
-                            onCheckedChange={setIsSettleLoanChecked}
-                            className="data-[state=checked]:bg-primary"
-                          />
-                      </div>
-
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-3 mt-4">
                         <span className="font-black">إجمالي الخصم من رصيدك:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-2xl font-black text-[#B32C4C]">
-                                {((selectedOffer?.price || 0) + (isSettleLoanChecked ? (billingInfo?.isLoan ? (billingInfo?.loanAmount || 0) : 122) : 0)).toLocaleString('en-US')}
+                                {selectedOffer?.price.toLocaleString('en-US')}
                             </p>
                             <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
                       
-                      <p className="text-[9px] text-muted-foreground text-center mt-2">ملاحظة: سيتم إرسال معامل "سداد سلفة" صريح للمزود لضمان نجاح العملية.</p>
+                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: سيتم تفعيل الباقة بالسعر الصافي دون أي عمولات إضافية أو خصم ديون سابقة.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

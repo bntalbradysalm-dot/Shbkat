@@ -61,6 +61,30 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
+const CARD_GRADIENTS = [
+    "from-blue-400 via-blue-500 to-blue-600",
+    "from-emerald-400 via-emerald-500 to-emerald-600",
+    "from-rose-400 via-rose-500 to-rose-600",
+    "from-amber-400 via-amber-500 to-orange-600",
+    "from-violet-400 via-violet-500 to-indigo-600",
+    "from-fuchsia-400 via-fuchsia-500 to-pink-600",
+];
+
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path d="M15 25 A10 10 0 0 0 35 25" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round" />
+        <path d="M40 15 A15 15 0 0 1 40 35" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round" className="opacity-30" />
+      </svg>
+    </div>
+  </div>
+);
+
 export default function FavoritesPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -385,36 +409,60 @@ export default function FavoritesPage() {
 
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-                  </div>
+                  <div className="flex justify-center py-10"><CustomLoader /></div>
                 ) : categoryError ? (
                   <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div>
                 ) : categories.length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground">لا توجد فئات متاحة حالياً.</p>
                 ) : (
-                  <div className="space-y-3">
-                    {categories.map((cat) => (
-                      <Card 
-                        key={cat.id} 
-                        className="rounded-2xl border-none shadow-sm bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => setShowConfirmPurchase(cat)}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="text-right space-y-1">
-                            <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
-                            <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
-                                {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.capacity}</span>}
-                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
+                  <div className="space-y-4">
+                    {categories.map((cat, idx) => {
+                        const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
+                        return (
+                            <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <Card 
+                                    className={cn(
+                                        "relative overflow-hidden rounded-[32px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "bg-gradient-to-br p-[2px]",
+                                        gradient
+                                    )}
+                                    onClick={() => setShowConfirmPurchase(cat)}
+                                >
+                                    <div className="relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                gradient
+                                            )}>
+                                                <Wifi className="h-7 w-7" />
+                                            </div>
+                                            <div className="text-right space-y-1">
+                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
+                                                <div className="flex flex-col gap-1 mt-1.5">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                                                        <Database className="h-3 w-3" />
+                                                        <span>{cat.capacity || '-'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                                                        <Clock className="h-3 w-3" />
+                                                        <span>{cat.validity || cat.expirationDate || '-'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-2xl font-black tracking-tighter text-primary">{cat.price.toLocaleString()}</span>
+                                                <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
+                                            </div>
+                                            <Button size="sm" className="h-8 rounded-xl text-[10px] font-black px-5 bg-primary shadow-lg shadow-primary/20">شراء</Button>
+                                        </div>
+                                    </div>
+                                </Card>
                             </div>
-                          </div>
-                          <div className="text-left">
-                            <p className="font-black text-primary text-base">{cat.price.toLocaleString()} ريال</p>
-                            <Button size="sm" className="h-7 rounded-lg text-[10px] px-4 mt-1">شراء</Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        );
+                    })}
                   </div>
                 )}
               </div>
@@ -452,14 +500,14 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
                 <CardContent className="p-8 space-y-6">
                     <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
                         <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
                     </div>
                     

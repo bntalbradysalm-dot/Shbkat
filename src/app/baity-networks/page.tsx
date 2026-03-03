@@ -82,6 +82,15 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
+const CARD_GRADIENTS = [
+    "from-blue-400 via-blue-500 to-blue-600",
+    "from-emerald-400 via-emerald-500 to-emerald-600",
+    "from-rose-400 via-rose-500 to-rose-600",
+    "from-amber-400 via-amber-500 to-orange-600",
+    "from-violet-400 via-violet-500 to-indigo-600",
+    "from-fuchsia-400 via-fuchsia-500 to-pink-600",
+];
+
 const CustomLoader = () => (
   <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
     <div className="relative w-12 h-12">
@@ -115,7 +124,7 @@ export default function BaityNetworksPage() {
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
-  const [showConfirmPurchase, setShowConfirmPurchase] = useState<CardCategory | null>(null);
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState<any | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -306,7 +315,55 @@ export default function BaityNetworksPage() {
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div> ) : (
-                  <div className="space-y-3">{categories.map((cat) => ( <Card key={cat.id} className="rounded-2xl border-none shadow-sm bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setShowConfirmPurchase(cat)}><CardContent className="p-4 flex items-center justify-between"><div className="flex-1 text-right space-y-1"><h4 className="font-black text-sm text-foreground">{cat.name}</h4><div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">{cat.dataLimit && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.dataLimit}</span>}{cat.expirationDate && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.expirationDate}</span>}</div></div><div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} ر.ي</p></div></CardContent></Card> ))}</div>
+                  <div className="space-y-4">
+                    {categories.map((cat, idx) => {
+                        const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
+                        return (
+                            <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <Card 
+                                    className={cn(
+                                        "relative overflow-hidden rounded-[32px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "bg-gradient-to-br p-[2px]",
+                                        gradient
+                                    )}
+                                    onClick={() => setShowConfirmPurchase(cat)}
+                                >
+                                    <div className="relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                gradient
+                                            )}>
+                                                <Wifi className="h-7 w-7" />
+                                            </div>
+                                            <div className="text-right space-y-1">
+                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
+                                                <div className="flex flex-col gap-1 mt-1.5">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                                                        <Database className="h-3 w-3" />
+                                                        <span>{cat.dataLimit || '-'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                                                        <Clock className="h-3 w-3" />
+                                                        <span>{cat.expirationDate || '-'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-2xl font-black tracking-tighter text-primary">{cat.price.toLocaleString()}</span>
+                                                <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
+                                            </div>
+                                            <Button size="sm" className="h-8 rounded-xl text-[10px] font-black px-5 bg-primary shadow-lg shadow-primary/20">شراء</Button>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        );
+                    })}
+                  </div>
                 )}
               </div>
               <div className="p-4 bg-white dark:bg-slate-900 border-t"><Button variant="outline" className="w-full rounded-2xl h-12 font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>

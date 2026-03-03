@@ -64,6 +64,13 @@ const services: Service[] = [
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
 
+const CARD_GRADIENTS = [
+    "from-amber-400 via-amber-500 to-orange-600",
+    "from-blue-400 via-blue-500 to-blue-600",
+    "from-emerald-400 via-emerald-500 to-emerald-600",
+    "from-rose-400 via-rose-500 to-rose-600",
+];
+
 const ServiceItem = ({
   name,
   icon: Icon,
@@ -295,7 +302,7 @@ export function ServiceGrid() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
     } finally {
         setIsProcessing(false);
     }
@@ -393,7 +400,7 @@ export function ServiceGrid() {
                     const priceNum = Number(offer.price);
                     const dataInfo = priceNum === 50 ? '5 قيقا' : priceNum === 1000 ? '15 قيقا' : priceNum === 1500 ? '25 قيقا' : '';
                     const durationInfo = priceNum === 50 ? 'ساعة واحدة' : 'صلاحية 30 يوم';
-                    const isStrongOffer = priceNum === 50;
+                    const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
                     
                     const offerTitle = priceNum === 50 ? 'فئة 50 ريال' : 
                                      priceNum === 1000 ? 'فئة 1000 ريال' : 
@@ -408,31 +415,22 @@ export function ServiceGrid() {
                             <Card 
                                 className={cn(
                                     "relative overflow-hidden rounded-[32px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
-                                    isStrongOffer 
-                                        ? "bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-[2px]" 
-                                        : "bg-white dark:bg-slate-900 border border-primary/5 hover:border-primary/20"
+                                    "bg-gradient-to-br p-[2px]",
+                                    gradient
                                 )}
                                 onClick={() => handleOfferClick(offer)}
                             >
-                                <div className={cn(
-                                    "relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors",
-                                    isStrongOffer ? "bg-white/95 dark:bg-slate-900/95" : "hover:bg-primary/[0.02]"
-                                )}>
-                                    {/* Left: Info */}
+                                <div className="relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                    {/* Right: Info (RTL correctly starting from right) */}
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
-                                            "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110 duration-500",
-                                            isStrongOffer ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-primary/5 text-primary"
+                                            "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                            gradient
                                         )}>
                                             <Wifi className="h-7 w-7" />
                                         </div>
                                         <div className="text-right space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
-                                                {isStrongOffer && (
-                                                    <div className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">عرض خاص</div>
-                                                )}
-                                            </div>
+                                            <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
                                             <div className="flex flex-col gap-1 mt-1.5">
                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
                                                     <Database className="h-3 w-3" />
@@ -446,30 +444,21 @@ export function ServiceGrid() {
                                         </div>
                                     </div>
 
-                                    {/* Right: Price & Button */}
+                                    {/* Left: Price & Button */}
                                     <div className="flex flex-col items-end gap-2">
                                         <div className="flex flex-col items-end">
-                                            <span className={cn(
-                                                "text-2xl font-black tracking-tighter transition-all",
-                                                isStrongOffer ? "text-orange-600 scale-110" : "text-primary"
-                                            )}>
+                                            <span className="text-2xl font-black tracking-tighter text-primary">
                                                 {offer.price.toLocaleString()}
                                             </span>
                                             <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
                                         </div>
                                         <Button 
                                             size="sm" 
-                                            className={cn(
-                                                "h-8 rounded-xl text-[10px] font-black px-5 shadow-lg active:scale-95 transition-all",
-                                                isStrongOffer ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-90 border-none" : "bg-primary shadow-primary/20"
-                                            )}
+                                            className="h-8 rounded-xl text-[10px] font-black px-5 bg-primary shadow-lg shadow-primary/20 active:scale-95 transition-all"
                                         >
                                             شراء
                                         </Button>
                                     </div>
-
-                                    {/* Decorative subtle background pattern */}
-                                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
                                 </div>
                             </Card>
                         </div>

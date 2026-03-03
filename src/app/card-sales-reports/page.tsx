@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -129,7 +130,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         <AlertDialog open={!!cardToApprove} onOpenChange={(isOpen) => !isOpen && setCardToApprove(null)}>
             <AlertDialogContent className="rounded-3xl">
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-center">تأكيد تحويل الأرباح</AlertDialogTitle>
+                    <AlertDialogTitle className="text-center font-black">تأكيد تحويل الأرباح</AlertDialogTitle>
                     <AlertDialogDescription className="text-center">
                         هل أنت متأكد من تحويل مبلغ {cardToApprove?.payoutAmount.toLocaleString('en-US')} ريال إلى حساب مالك الشبكة؟
                     </AlertDialogDescription>
@@ -212,7 +213,7 @@ export default function CardSalesReportsPage() {
       return (
         <div className="flex flex-col items-center justify-center text-center h-64">
           <AlertCircle className="h-16 w-16 text-muted-foreground opacity-20" />
-          <h3 className="mt-4 text-lg font-semibold">لا توجد شبكات مضافة</h3>
+          <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مضافة</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             ستظهر مبيعات الشبكات المحلية هنا بمجرد إضافتها.
           </p>

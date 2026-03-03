@@ -236,7 +236,7 @@ function NetworkPurchasePageComponent() {
     if (isLoadingCategories) {
         return (
             <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+                {[...Array(3)].map((_, i) => <Skeleton className="h-28 w-full rounded-xl" />)}
             </div>
         );
     }
@@ -319,9 +319,9 @@ function NetworkPurchasePageComponent() {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                    <DialogHeader>
-                        <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                        <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه للشبكة المحلية</DialogDescription>
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>تم الشراء بنجاح</DialogTitle>
+                        <DialogDescription>رقم الكرت الذي تم شراؤه للشبكة المحلية</DialogDescription>
                     </DialogHeader>
                     <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">

@@ -413,13 +413,13 @@ export default function FavoritesPage() {
 
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
-          <DialogHeader className="sr-only">
-            <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
-            <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
-          </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+                    <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+                </DialogHeader>
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20 relative z-10">
                     <Wifi className="h-8 w-8 text-white" />
                 </div>

@@ -348,7 +348,7 @@ export default function CombinedNetworksPage() {
     } catch (error: any) {
         console.error("Purchase execution error:", error);
         if (error.name !== 'FirebaseError') {
-            toast({ variant: "destructive", title: "فشلت العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+            toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
         }
     } finally { setIsProcessing(false); }
   };
@@ -422,13 +422,13 @@ export default function CombinedNetworksPage() {
 
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
-          <DialogHeader>
-            <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
-            <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
-          </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative">
+                <DialogHeader>
+                    <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+                    <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
+                </DialogHeader>
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
                     <Wifi className="h-8 w-8 text-white" />
                 </div>
@@ -464,12 +464,15 @@ export default function CombinedNetworksPage() {
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
             <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">
               هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 bg-white dark:bg-slate-800 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
+          <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
           </div>
@@ -494,7 +497,7 @@ export default function CombinedNetworksPage() {
                 <CardContent className="p-8 space-y-6">
                     <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
                     <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
+                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ الكرت</Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS</Button>
                     </div>
                     <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>

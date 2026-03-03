@@ -55,12 +55,12 @@ type Service = {
 
 const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'الشبكات المحلية', icon: Wifi, href: '/services' },
+  { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { name: 'شبكات بيتي', icon: Globe, href: '/baity-networks' },
+  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];

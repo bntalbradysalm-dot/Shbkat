@@ -242,21 +242,60 @@ export default function CombinedNetworksPage() {
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
             const availableCardsSnapshot = await getDocs(q);
-            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً.');
+            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
+            
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId!;
+            
+            // 1. تحديث حالة الكرت
+            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
+            batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
+            
+            // 3. تحويل الربح للمالك إذا وجد
+            const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
 
-            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
-            batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+            if (ownerId) {
+                batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId, 
+                    transactionDate: now, 
+                    amount: payoutAmount,
+                    transactionType: 'أرباح بيع كرت', 
+                    notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
+                });
+            }
+
+            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
+
+            // 5. سجل كرت مباع للإدارة
+            batch.set(doc(collection(firestore, 'soldCards')), {
+                networkId: selectedNetwork.id, 
+                ownerId: ownerId || 'admin', 
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id, 
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id, 
+                cardNumber: cardData.cardNumber,
+                price: selectedCategory.price, 
+                commissionAmount: commission, 
+                payoutAmount,
+                buyerId: user.uid, 
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '', 
+                soldTimestamp: now, 
+                payoutStatus: ownerId ? 'completed' : 'admin_held'
+            });
+
             await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
         } else {
@@ -264,9 +303,10 @@ export default function CombinedNetworksPage() {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ classId: selectedCategory.id })
             });
-            if (!response.ok) throw new Error('فشل الطلب من المصدر');
+            if (!response.ok) throw new Error('فشل الطلب من المصدر الخارجي');
             const result = await response.json();
             const cardData = result.data.order.card;
+            
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
@@ -280,7 +320,8 @@ export default function CombinedNetworksPage() {
         setSelectedNetwork(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
-        toast({ variant: "destructive", title: "خطأ", description: error.message });
+        console.error("Purchase execution error:", error);
+        toast({ variant: "destructive", title: "فشلت العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
     } finally { setIsProcessing(false); }
   };
 
@@ -317,14 +358,9 @@ export default function CombinedNetworksPage() {
         
         <div className="flex-1 overflow-y-auto px-4 pb-20 space-y-4">
             {isLoadingLocal || isLoadingApi ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                    <CustomLoader />
-                </div>
+                <div className="flex justify-center py-20"><CustomLoader /></div>
             ) : allNetworksCombined.length === 0 ? (
-                <div className="text-center py-20 opacity-40">
-                    <Wifi className="h-16 w-16 mx-auto mb-4" />
-                    <p className="font-bold">لا توجد شبكات متاحة حالياً</p>
-                </div>
+                <div className="text-center py-20 opacity-40"><Wifi className="h-16 w-16 mx-auto mb-4" /><p className="font-bold">لا توجد شبكات متاحة حالياً</p></div>
             ) : (
                 allNetworksCombined.map((net, index) => (
                     <Card 
@@ -334,26 +370,14 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            {/* أيقونة الشبكة على اليمين (في RTL ستظهر على اليمين) */}
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                                {net.isLocal ? (
-                                    <Wifi className="h-6 w-6 text-white" />
-                                ) : (
-                                    <Globe className="h-6 w-6 text-white" />
-                                )}
+                                {net.isLocal ? <Wifi className="h-6 w-6 text-white" /> : <Globe className="h-6 w-6 text-white" />}
                             </div>
-
-                            {/* معلومات الشبكة في المنتصف */}
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
-
-                            {/* زر القلب على اليسار (في RTL ستظهر على اليسار) */}
-                            <button 
-                                onClick={(e) => handleFavoriteClick(e, net)}
-                                className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
-                            >
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
                         </CardContent>
@@ -363,7 +387,6 @@ export default function CombinedNetworksPage() {
         </div>
       </div>
 
-      {/* تفاصيل الفئات */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
@@ -376,18 +399,10 @@ export default function CombinedNetworksPage() {
                 <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
-                {isLoadingCategories ? (
-                    <div className="flex justify-center py-10"><CustomLoader /></div>
-                ) : categoryError ? (
-                    <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p>
-                ) : (
+                {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (
                   <div className="space-y-3">
                     {categories.map(cat => (
-                        <Card 
-                            key={cat.id} 
-                            className="rounded-2xl cursor-pointer bg-muted/30 border-none hover:bg-muted/50 transition-colors" 
-                            onClick={() => setShowConfirmPurchase(cat)}
-                        >
+                        <Card key={cat.id} className="rounded-2xl cursor-pointer bg-muted/30 border-none hover:bg-muted/50 transition-colors" onClick={() => setShowConfirmPurchase(cat)}>
                             <CardContent className="p-4 flex justify-between items-center">
                                 <div className="text-right space-y-1">
                                     <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
@@ -396,59 +411,41 @@ export default function CombinedNetworksPage() {
                                         {cat.expirationDate && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {cat.expirationDate}</span>}
                                     </div>
                                 </div>
-                                <div className="text-left">
-                                    <p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p>
-                                </div>
+                                <div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p></div>
                             </CardContent>
                         </Card>
                     ))}
                   </div>
                 )}
               </div>
-              <div className="p-4 border-t">
-                <Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
-              </div>
+              <div className="p-4 border-t"><Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* تأكيد الشراء */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[32px] max-w-sm text-center">
-          <DialogHeader>
-            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle></DialogHeader>
           <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 mt-2">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ر.ي</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
-            <Button className="w-full h-12 rounded-2xl font-black" onClick={handlePurchase} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
-            </Button>
+            <Button className="w-full h-12 rounded-2xl font-black" onClick={handlePurchase} disabled={isProcessing}>{isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}</Button>
             <Button variant="outline" className="w-full h-12 rounded-2xl font-black mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* نجاح الشراء */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                 <CardContent className="p-8 space-y-6">
-                    <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
-                        <p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">
-                            {purchasedCard.cardID || purchasedCard.cardNumber}
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button>
-                    </div>
+                    <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
+                    <div className="grid grid-cols-2 gap-3"><Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button><Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button></div>
                     <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>

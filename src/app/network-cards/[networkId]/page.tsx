@@ -60,7 +60,7 @@ type UserProfile = {
 };
 
 type Network = {
-    ownerId: string;
+    ownerId?: string;
     name: string;
 };
 
@@ -100,11 +100,7 @@ function NetworkPurchasePageComponent() {
 
   const handlePurchase = async () => {
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef || !networkId || !networkData) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في البيانات",
-        description: "معلومات المستخدم أو الشبكة غير مكتملة. لا يمكن إتمام الشراء.",
-      });
+      toast({ variant: "destructive", title: "بيانات ناقصة", description: "معلومات الشراء غير مكتملة." });
       setIsConfirming(false);
       return;
     }
@@ -114,11 +110,7 @@ function NetworkPurchasePageComponent() {
     const userBalance = userProfile?.balance ?? 0;
   
     if (userBalance < categoryPrice) {
-        toast({
-            variant: "destructive",
-            title: "رصيد غير كافٍ",
-            description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء.",
-        });
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك لا يكفي لإتمام الشراء." });
         setIsProcessing(false);
         setIsConfirming(false);
         return;
@@ -130,32 +122,38 @@ function NetworkPurchasePageComponent() {
         const availableCardsSnapshot = await getDocs(q);
   
         if (availableCardsSnapshot.empty) {
-            throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
+            throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
         }
   
         const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
         const cardToPurchaseData = { id: cardToPurchaseDoc.id, ...cardToPurchaseDoc.data() } as NetworkCard;
         
-        const ownerId = networkData.ownerId;
-        const ownerDocRef = doc(firestore, 'users', ownerId);
-  
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
         const commission = Math.floor(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
   
         // 1. تحديث حالة الكرت
-        batch.update(cardToPurchaseDoc.ref, {
-            status: 'sold',
-            soldTo: user.uid,
-            soldTimestamp: now,
-        });
+        batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
         
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. إضافة الرصيد للمالك
-        batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+        // 3. تحويل الأرباح للمالك (إن وجد)
+        const ownerId = networkData.ownerId;
+        if (ownerId) {
+            const ownerDocRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+            
+            const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTransactionRef, {
+                userId: ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح بيع كرت',
+                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
+            });
+        }
   
         // 4. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
@@ -168,21 +166,11 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. سجل عملية للمالك
-        const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-        batch.set(ownerTransactionRef, {
-            userId: ownerId,
-            transactionDate: now,
-            amount: payoutAmount,
-            transactionType: 'أرباح بيع كرت',
-            notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-        });
-
-        // 6. سجل الكروت المباعة للإدارة
+        // 5. سجل الكروت المباعة للإدارة
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
-            ownerId: ownerId,
+            ownerId: ownerId || 'admin',
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
@@ -195,31 +183,16 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'completed'
+            payoutStatus: ownerId ? 'completed' : 'admin_held'
         });
         
-        await batch.commit().catch(async (error) => {
-            const permissionError = new FirestorePermissionError({
-                path: `batch_purchase/${networkId}`,
-                operation: 'write',
-                requestResourceData: { categoryId: selectedCategory.id }
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            throw error;
-        });
-
+        await batch.commit();
         setPurchasedCard(cardToPurchaseData);
         audioRef.current?.play().catch(() => {});
   
     } catch (error: any) {
-        console.error("Purchase failed:", error);
-        if (error.code !== 'permission-denied') {
-            toast({
-                variant: "destructive",
-                title: "فشلت عملية الشراء",
-                description: error.message || "حدث خطأ غير متوقع.",
-            });
-        }
+        console.error("Local network purchase failure:", error);
+        toast({ variant: "destructive", title: "فشل الشراء", description: error.message || "حدث خطأ غير متوقع." });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -229,22 +202,16 @@ function NetworkPurchasePageComponent() {
   const handleCopyCardDetails = () => {
     if (purchasedCard) {
         navigator.clipboard.writeText(purchasedCard.cardNumber);
-        toast({ title: "تم النسخ", description: "تم نسخ رقم الكرت بنجاح." });
+        toast({ title: "تم النسخ" });
     }
   };
   
   const handleSendSms = () => {
-    if (!purchasedCard || !selectedCategory || !smsRecipient || !networkName) {
-        toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم زبون صحيح." });
-        return;
-    }
+    if (!purchasedCard || !selectedCategory || !smsRecipient || !networkName) return;
     const messageBody = `شبكة: ${networkName}\nفئة: ${selectedCategory.name}\nرقم الكرت: ${purchasedCard.cardNumber}`;
-    const smsUri = `sms:${smsRecipient}?body=${encodeURIComponent(messageBody)}`;
-    window.location.href = smsUri;
+    window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(messageBody)}`;
     setIsSmsDialogOpen(false);
   };
-
-  if (isProcessing) return <ProcessingOverlay message="جاري تجهيز الكرت..." />;
 
   const renderContent = () => {
     if (isLoadingCategories) {
@@ -315,7 +282,6 @@ function NetworkPurchasePageComponent() {
             {selectedCategory && (
                 <AlertDialogContent className="rounded-3xl bg-white dark:bg-slate-900">
                     <AlertDialogHeader>
-                        <DialogTitle className="sr-only">تأكيد الشراء</DialogTitle>
                         <AlertDialogTitle className="text-center">تأكيد عملية الشراء</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
                             هل أنت متأكد من رغبتك في شراء كرت "{selectedCategory.name}"؟ سيتم خصم <span className="font-bold text-primary">{selectedCategory.price.toLocaleString('en-US')} ريال</span> من رصيدك.
@@ -335,31 +301,15 @@ function NetworkPurchasePageComponent() {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                    <div className="bg-green-500 p-8 flex justify-center">
-                        <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                            <CheckCircle className="h-16 w-16 text-white" />
-                        </div>
-                    </div>
+                    <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">
                         <div>
                             <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
-                            <p className="text-sm text-muted-foreground mt-1">هذا هو رقم الكرت الخاص بك</p>
+                            <p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardNumber}</p>
                         </div>
-                        
-                        <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
-                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p>
-                            <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
-                                {purchasedCard.cardNumber}
-                            </p>
-                        </div>
-                        
                         <div className="grid grid-cols-2 gap-3">
-                            <Button className="rounded-2xl h-12 font-bold" onClick={handleCopyCardDetails}>
-                                <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
-                            </Button>
-                            <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
-                                <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
-                            </Button>
+                            <Button className="rounded-2xl h-12 font-bold" onClick={handleCopyCardDetails}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
+                            <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button>
                         </div>
                         <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); router.push('/login'); }}>إغلاق</Button>
                     </CardContent>
@@ -370,24 +320,14 @@ function NetworkPurchasePageComponent() {
         <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
             <DialogContent className="rounded-[32px] max-w-sm p-6 z-[10000] bg-white dark:bg-slate-900">
                 <DialogHeader>
-                    <DialogTitle className="sr-only">إرسال SMS</DialogTitle>
-                    <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Smartphone className="text-primary h-6 w-6" />
-                    </div>
+                    <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"><Smartphone className="text-primary h-6 w-6" /></div>
                     <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
                     <DialogDescription className="text-center">أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-6">
                     <div className="space-y-2">
                         <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
-                        <Input 
-                            id="sms-phone"
-                            placeholder="7xxxxxxxx" 
-                            type="tel" 
-                            value={smsRecipient} 
-                            onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
-                            className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
-                        />
+                        <Input id="sms-phone" placeholder="7xxxxxxxx" type="tel" value={smsRecipient} onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} className="text-center text-2xl font-black h-14 rounded-2xl border-2 tracking-widest" />
                     </div>
                 </div>
                 <DialogFooter className="grid grid-cols-2 gap-3">
@@ -403,7 +343,7 @@ function NetworkPurchasePageComponent() {
 
 export default function NetworkCardsPage() {
     return (
-      <Suspense fallback={<div className="flex items-center justify-center h-full">Loading...</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
         <NetworkPurchasePageComponent />
       </Suspense>
     );

@@ -54,6 +54,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import Image from 'next/image';
+import { Switch } from '@/components/ui/switch';
 
 export const dynamic = 'force-dynamic';
 
@@ -319,6 +320,7 @@ export default function YemenMobilePage() {
   const [isActivatingOffer, setIsActivatingOffer] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastTxDetails, setLastTxDetails] = useState<any>(null);
+  const [shouldPayLoan, setShouldPayLoan] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
@@ -353,6 +355,9 @@ export default function YemenMobilePage() {
   const getFriendlyErrorMessage = (msg: string) => {
     if (msg.includes('1009') || msg.includes('منطقة التحصيل')) {
         return "الرقم ليس من بوابة التحصيل المسموح بها ! يرجى التأكد من تواجدك في نطاق تغطية جنوبية ثم إجراء واستقبال 3 مكالمات بمدة 3 دقائق للمكالمة";
+    }
+    if (msg.includes('solfa') || msg.includes('loan') || msg.includes('سلفة')) {
+        return "هذا الرقم عليه سلفة، يرجى تفعيل خيار 'سداد السلفة' لإتمام العملية.";
     }
     return msg;
   };
@@ -560,11 +565,11 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // إرسال قيمة الباقة الصافية فقط للمزود كما طلب العميل (السلفة ليست إلزامية للتفعيل هنا)
-    const totalToDeduct = selectedOffer.price;
+    const loanAmount = (billingInfo?.isLoan && shouldPayLoan) ? (billingInfo.loanAmount || 0) : 0;
+    const totalToDeduct = selectedOffer.price + loanAmount;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة مع السلفة.' });
         return;
     }
 
@@ -572,7 +577,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // إرسال قيمة الباقة وكودها فقط للمزود
+        // إرسال قيمة الباقة + السلفة (إذا تم اختيارها) للمزود في حقل amount
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -580,7 +585,7 @@ export default function YemenMobilePage() {
                 mobile: phone, 
                 action: 'billoffer', 
                 num: selectedOffer.offertype, 
-                amount: selectedOffer.price, 
+                amount: totalToDeduct, 
                 transid 
             })
         });
@@ -601,7 +606,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}`, 
+            notes: `للرقم: ${phone}${shouldPayLoan ? ` (شامل سداد سلفة: ${loanAmount})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -615,6 +620,7 @@ export default function YemenMobilePage() {
         });
         setShowSuccess(true);
         setSelectedOffer(null);
+        setShouldPayLoan(false);
         handleSearch(phone);
     } catch (e: any) {
         toast({ variant: "destructive", title: "تنبيه من المزود", description: e.message });
@@ -787,7 +793,10 @@ export default function YemenMobilePage() {
                                         <AccordionContent className="p-4 bg-white dark:bg-slate-900 border-x border-b border-[#B32C4C]/10 rounded-b-2xl shadow-sm">
                                             <div className="grid grid-cols-1 gap-3">
                                                 {cat.offers.map((o) => (
-                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => setSelectedOffer(o)} />
+                                                    <PackageItemCard key={o.offerId} offer={o} onClick={() => {
+                                                        setSelectedOffer(o);
+                                                        setShouldPayLoan(false);
+                                                    }} />
                                                 ))}
                                             </div>
                                         </AccordionContent>
@@ -879,27 +888,49 @@ export default function YemenMobilePage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      <AlertDialog open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
+      <AlertDialog open={!!selectedOffer} onOpenChange={() => {
+          setSelectedOffer(null);
+          setShouldPayLoan(false);
+      }}>
           <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
                   <div className="py-4 space-y-3 text-right text-sm">
                       <p className="text-center text-lg font-black text-[#B32C4C] mb-2">{selectedOffer?.offerName}</p>
-                      <div className="flex justify-between items-center py-2 border-b border-dashed">
-                          <span className="text-muted-foreground">نوع الخط:</span>
-                          <span className="font-bold">{lineTypeTab === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span>
-                      </div>
+                      
                       <div className="flex justify-between items-center py-2 border-b border-dashed">
                           <span className="text-muted-foreground">سعر الباقة:</span>
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
-                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
-                        <span className="font-black">إجمالي الخصم:</span>
+
+                      {billingInfo?.isLoan && (
+                          <div className="space-y-3 p-3 bg-destructive/5 rounded-2xl border border-destructive/10 mt-2">
+                              <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                      <Frown className="w-4 h-4 text-destructive" />
+                                      <span className="text-destructive font-black">تنبيه: سلفة مستحقة</span>
+                                  </div>
+                                  <span className="font-black text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
+                              </div>
+                              <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded-xl">
+                                  <span className="text-[10px] font-bold">هل ترغب في سداد السلفة الآن؟</span>
+                                  <Switch 
+                                      checked={shouldPayLoan} 
+                                      onCheckedChange={setShouldPayLoan}
+                                      className="data-[state=checked]:bg-destructive"
+                                  />
+                              </div>
+                              <p className="text-[9px] text-muted-foreground text-center">قد يفشل التفعيل إذا لم يتم سداد السلفة المطلوبة من المزود.</p>
+                          </div>
+                      )}
+
+                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-3 mt-4">
+                        <span className="font-black">إجمالي الخصم من رصيدك:</span>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-black text-[#B32C4C]">
-                                {selectedOffer?.price.toLocaleString('en-US')}
+                            <p className="text-2xl font-black text-[#B32C4C]">
+                                {((selectedOffer?.price || 0) + (shouldPayLoan ? (billingInfo?.loanAmount || 0) : 0)).toLocaleString('en-US')}
                             </p>
-                            <span className="text-sm font-black text-[#B32C4C]">ريال</span>
+                            <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
                   </div>

@@ -203,10 +203,29 @@ export function ServiceGrid() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // NOTE: تم إيقاف التحويل التلقائي للمالك.
+            // 3. التحويل التلقائي للمالك (90% من القيمة)
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${alKhairNetwork.name}`
+                });
+            }
+            
+            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -217,6 +236,7 @@ export function ServiceGrid() {
                 cardNumber: cardData.cardNumber,
             });
             
+            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: alKhairNetwork.id, 
@@ -233,7 +253,7 @@ export function ServiceGrid() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending'
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
@@ -350,9 +370,9 @@ export function ServiceGrid() {
 
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[400px] p-0 overflow-hidden rounded-[40px] border-none bg-[#F8FAFC] dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
-          <DialogHeader className="sr-only">
-            <DialogTitle>عروض شبكة الخير فورجي</DialogTitle>
-            <DialogDescription>استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
+          <DialogHeader>
+            <DialogTitle className="sr-only">عروض شبكة الخير فورجي</DialogTitle>
+            <DialogDescription className="sr-only">استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
           </DialogHeader>
           
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
@@ -513,6 +533,10 @@ export function ServiceGrid() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <DialogHeader>
+                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه من عروض الخير</DialogDescription>
+                </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />

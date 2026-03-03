@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2, Wifi } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2, Wifi, Clock } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,7 +278,7 @@ function NetworkPurchasePageComponent() {
                             </div>
                             <Separator className="my-2" />
                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">
-                                {category.validity && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
+                                {category.validity && <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> الصلاحية: {category.validity}</span>}
                             </div>
                         </div>
                     </CardContent>
@@ -319,6 +319,10 @@ function NetworkPurchasePageComponent() {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                    <DialogHeader>
+                        <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                        <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه للشبكة المحلية</DialogDescription>
+                    </DialogHeader>
                     <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">
                         <div>

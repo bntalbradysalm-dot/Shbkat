@@ -270,8 +270,22 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. سجل عملية المالك (بدون تحويل آلي للرصيد الآن)
+            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
             const ownerId = selectedNetwork.ownerId;
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
             
             // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
@@ -280,7 +294,7 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 5. سجل الكروت المباعة (حالة معلقة للتحويل اليدوي من الإدارة)
+            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -296,7 +310,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending'
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
@@ -408,9 +422,9 @@ export default function CombinedNetworksPage() {
 
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
-          <DialogHeader className="sr-only">
-            <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
-            <DialogDescription>استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
+          <DialogHeader>
+            <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+            <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
@@ -472,7 +486,10 @@ export default function CombinedNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
-                <DialogHeader className="sr-only"><DialogTitle>تم الشراء بنجاح</DialogTitle></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription className="sr-only">تفاصيل الكرت الذي تم شراؤه</DialogDescription>
+                </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                 <CardContent className="p-8 space-y-6">
                     <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>

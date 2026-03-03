@@ -231,7 +231,23 @@ export default function FavoritesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. سجل عملية للمشتري
+            // 3. التحويل التلقائي للمالك (90% من القيمة)
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
+            
+            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -242,7 +258,7 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 4. سجل الكروت المباعة (حالة معلقة للتحويل اليدوي)
+            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
@@ -259,7 +275,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending'
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
@@ -345,7 +361,7 @@ export default function FavoritesPage() {
             <Input
               type="text"
               placeholder="البحث في المفضلة..."
-              className="w-full pr-10 rounded-xl h-12"
+              className="w-full pr-10 rounded-xl h-12 bg-muted/20 border-2 border-black/10 focus-visible:ring-primary shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -434,7 +450,7 @@ export default function FavoritesPage() {
                           <div className="flex-1 text-right space-y-1">
                             <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
                             <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
-                                {cat.dataLimit && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.dataLimit}</span>}
+                                {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.capacity}</span>}
                                 {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
                             </div>
                           </div>
@@ -480,7 +496,10 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader className="sr-only"><DialogTitle>تم الشراء بنجاح</DialogTitle></DialogHeader>
+                <DialogHeader className="sr-only">
+                    <DialogTitle>تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription>تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
+                </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />

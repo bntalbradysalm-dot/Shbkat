@@ -130,7 +130,7 @@ export default function CombinedNetworksPage() {
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch local networks
+  // Fetch local networks (currently hidden)
   const localNetworksQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'networks') : null),
     [firestore]
@@ -163,7 +163,6 @@ export default function CombinedNetworksPage() {
 
   // Combine All Networks (Local hidden temporarily)
   const allNetworksCombined = useMemo(() => {
-    // const local = (localNetworks || []).map(n => ({ ...n, isLocal: true })); // Hidden temporarily
     const local: any[] = []; 
     const api = apiNetworks;
     const combined = [...local, ...api];
@@ -247,7 +246,17 @@ export default function CombinedNetworksPage() {
   const handlePurchase = async () => {
     const selectedCategory = showConfirmPurchase;
     if (!selectedCategory || !selectedNetwork || !user || !userProfile || !firestore || !userDocRef) return;
+    
     setIsProcessing(true);
+    const categoryPrice = selectedCategory.price;
+    const userBalance = userProfile?.balance ?? 0;
+
+    if (userBalance < categoryPrice) {
+        toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
+        setIsProcessing(false);
+        return;
+    }
+
     try {
         const now = new Date().toISOString();
         const batch = writeBatch(firestore);
@@ -288,75 +297,65 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            const soldCardRef = doc(collection(firestore, 'soldCards'));
-            batch.set(soldCardRef, {
-                networkId: selectedNetwork.id, 
-                ownerId: ownerId || 'admin', 
-                networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, 
-                categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, 
-                cardNumber: cardData.cardNumber,
-                price: selectedCategory.price, 
-                commissionAmount: commission, 
-                payoutAmount,
-                buyerId: user.uid, 
-                buyerName: userProfile.displayName || 'مشترك',
-                buyerPhoneNumber: userProfile.phoneNumber || '', 
-                soldTimestamp: now, 
-                payoutStatus: 'completed'
-            });
-
-            await batch.commit().catch(async (err) => {
-                const contextualError = new FirestorePermissionError({
-                    path: `batch_purchase/${selectedNetwork.id}`,
-                    operation: 'write',
-                    requestResourceData: { cardId: cardToPurchaseDoc.id }
-                });
-                errorEmitter.emit('permission-error', contextualError);
-                throw err;
-            });
-            
+            await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ classId: selectedCategory.id })
             });
-            if (!response.ok) throw new Error('فشل الطلب من المصدر الخارجي');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'فشل الطلب من المصدر الخارجي');
+            }
+            
             const result = await response.json();
             const cardData = result.data.order.card;
             
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+            
+            const transactionPayload: any = {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
-            });
+            };
+            
+            if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+                transactionPayload.cardPassword = cardData.cardPass;
+            }
+
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), transactionPayload);
             await batch.commit();
             setPurchasedCard(cardData);
         }
+        
         setShowConfirmPurchase(null);
-        setSelectedNetwork(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);
-        if (error.name !== 'FirebaseError') {
-            toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
-        }
-    } finally { setIsProcessing(false); }
+        toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+    } finally { 
+        setIsProcessing(false); 
+    }
   };
 
   const handleCopy = () => {
     if (purchasedCard) {
-        navigator.clipboard.writeText(purchasedCard.cardID || purchasedCard.cardNumber);
+        const textToCopy = purchasedCard.cardID || purchasedCard.cardNumber;
+        navigator.clipboard.writeText(textToCopy);
         toast({ title: "تم النسخ" });
     }
   };
 
   const handleSendSms = () => {
-    if (!purchasedCard || !selectedNetwork || !smsRecipient) return;
-    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
+    if (!purchasedCard || !selectedNetwork || !smsRecipient) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
+        return;
+    }
+    const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;
+    const passInfo = purchasedCard.cardPass && purchasedCard.cardPass !== cardInfo ? `\nكلمة المرور: ${purchasedCard.cardPass}` : '';
+    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${cardInfo}${passInfo}`;
     window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
     setIsSmsDialogOpen(false);
   };
@@ -392,18 +391,15 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            {/* Right: Wifi Icon */}
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
-                            {/* Center: Text */}
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            {/* Left: Heart Button */}
                             <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
@@ -418,8 +414,8 @@ export default function CombinedNetworksPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader className="p-0 space-y-0 mb-4">
+              <div className="bg-mesh-gradient p-0 relative overflow-hidden">
+                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
                     <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
@@ -439,7 +435,7 @@ export default function CombinedNetworksPage() {
                                     <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
                                     <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
                                         {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {cat.capacity}</span>}
-                                        {cat.validity && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity}</span>}
+                                        {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity || cat.expirationDate}</span>}
                                     </div>
                                 </div>
                                 <div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p></div>
@@ -480,19 +476,40 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       {purchasedCard && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription className="sr-only">تفاصيل الكرت الذي تم شراؤه</DialogDescription>
-                </DialogHeader>
-                <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <CardContent className="p-8 space-y-6">
-                    <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
+                    <div>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
+                        <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
+                    </div>
+                    
+                    <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p>
+                        <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
+                            {purchasedCard.cardID || purchasedCard.cardNumber}
+                        </p>
+                        {purchasedCard.cardPass && purchasedCard.cardPass !== (purchasedCard.cardID || purchasedCard.cardNumber) && (
+                            <div className="mt-2 pt-2 border-t border-dashed border-primary/10">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كلمة المرور</p>
+                                <p className="text-xl font-black font-mono text-foreground">{purchasedCard.cardPass}</p>
+                            </div>
+                        )}
+                    </div>
+                    
                     <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ الكرت</Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS</Button>
+                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}>
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
+                        </Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
+                        </Button>
                     </div>
                     <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
                 </CardContent>
@@ -532,6 +549,7 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
+      <Toaster />
     </>
   );
 }

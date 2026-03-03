@@ -161,14 +161,7 @@ export default function FavoritesPage() {
             errorEmitter.emit('permission-error', permissionError);
             throw err;
         });
-        const catsData = snapshot.docs.map(d => {
-            const data = d.data();
-            return { 
-                id: d.id, 
-                ...data,
-                capacity: data.capacity 
-            } as CardCategory;
-        });
+        const catsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CardCategory));
         setCategories(catsData);
       } else {
         const response = await fetch(`/services/networks-api/${fav.targetId}/classes`);
@@ -205,7 +198,6 @@ export default function FavoritesPage() {
     if (userBalance < categoryPrice) {
         toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام عملية الشراء." });
         setIsProcessing(false);
-        setShowConfirmPurchase(null);
         return;
     }
 
@@ -227,18 +219,12 @@ export default function FavoritesPage() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. التحويل اللحظي للمالك (90%)
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل المالك
                 const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
                 batch.set(ownerTxRef, {
                     userId: ownerId,
@@ -249,50 +235,14 @@ export default function FavoritesPage() {
                 });
             }
 
-            // 4. سجل عملية للمشتري
-            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
-            batch.set(buyerTxRef, {
-                userId: user.uid, 
-                transactionDate: now, 
-                amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, 
-                notes: `شبكة: ${selectedNetwork.name}`,
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
-            
-            // 5. سجل الكروت المباعة (مكتملة تلقائياً)
-            const soldCardRef = doc(collection(firestore, 'soldCards'));
-            batch.set(soldCardRef, {
-                networkId: selectedNetwork.id, 
-                ownerId: ownerId || 'admin', 
-                networkName: selectedNetwork.name,
-                categoryId: selectedCategory.id, 
-                categoryName: selectedCategory.name,
-                cardId: cardToPurchaseDoc.id, 
-                cardNumber: cardData.cardNumber,
-                price: categoryPrice, 
-                commissionAmount: commission, 
-                payoutAmount,
-                buyerId: user.uid, 
-                buyerName: userProfile.displayName || 'مشترك',
-                buyerPhoneNumber: userProfile.phoneNumber || '', 
-                soldTimestamp: now, 
-                payoutStatus: 'completed'
-            });
 
-            await batch.commit().catch(async (err) => {
-                const permissionError = new FirestorePermissionError({
-                    path: `batch_purchase/${selectedNetwork.id}`,
-                    operation: 'write',
-                    requestResourceData: { categoryId: selectedCategory.id }
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                throw err;
-            });
-
+            await batch.commit();
             setPurchasedCard({ cardID: cardData.cardNumber });
-            setShowConfirmPurchase(null);
-            setSelectedNetwork(null); 
         } else {
             const response = await fetch(`/services/networks-api/order`, {
                 method: 'POST',
@@ -302,35 +252,34 @@ export default function FavoritesPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
+                throw new Error(errorData.message || 'فشل تنفيذ الطلب من المصدر');
             }
 
             const result = await response.json();
             const cardData = result.data.order.card;
 
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
-            const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
-            batch.set(buyerTxRef, {
-                userId: user.uid, 
-                transactionDate: now, 
-                amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, 
-                notes: `شبكة: ${selectedNetwork.name}`,
+            
+            const transactionPayload: any = {
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
-            });
+            };
+            
+            if (cardData.cardPass && cardData.cardPass !== cardData.cardID) {
+                transactionPayload.cardPassword = cardData.cardPass;
+            }
 
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), transactionPayload);
             await batch.commit();
             setPurchasedCard(cardData);
-            setShowConfirmPurchase(null);
-            setSelectedNetwork(null); 
         }
         
+        setShowConfirmPurchase(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        if (error.name !== 'FirebaseError') {
-            toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
-        }
+        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
     } finally {
         setIsProcessing(false);
     }
@@ -338,8 +287,9 @@ export default function FavoritesPage() {
 
   const handleCopy = () => {
     if (purchasedCard) {
-        navigator.clipboard.writeText(purchasedCard.cardID || purchasedCard.cardNumber);
-        toast({ title: "تم النسخ", description: "تم نسخ رقم الكرت بنجاح." });
+        const textToCopy = purchasedCard.cardID || purchasedCard.cardNumber;
+        navigator.clipboard.writeText(textToCopy);
+        toast({ title: "تم النسخ" });
     }
   };
 
@@ -348,7 +298,9 @@ export default function FavoritesPage() {
         toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم الزبون.' });
         return;
     }
-    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${purchasedCard.cardID || purchasedCard.cardNumber}`;
+    const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;
+    const passInfo = purchasedCard.cardPass && purchasedCard.cardPass !== cardInfo ? `\nكلمة المرور: ${purchasedCard.cardPass}` : '';
+    const msg = `شبكة: ${selectedNetwork.name}\nرقم الكرت: ${cardInfo}${passInfo}`;
     window.location.href = `sms:${smsRecipient}?body=${encodeURIComponent(msg)}`;
     setIsSmsDialogOpen(false);
   };
@@ -392,18 +344,15 @@ export default function FavoritesPage() {
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                {/* Right: Wifi Icon */}
                                 <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
                                 
-                                {/* Center: Text */}
                                 <div className="flex-1 text-right mx-4 space-y-1 text-white overflow-hidden">
                                     <h4 className="font-bold text-base text-white truncate">{fav.name}</h4>
                                     <p className="text-[10px] opacity-80 text-white/80 truncate">{fav.location}</p>
                                 </div>
                                 
-                                {/* Left: Heart Button */}
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
                                     className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
@@ -422,8 +371,8 @@ export default function FavoritesPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader className="p-0 space-y-0 mb-4">
+              <div className="bg-mesh-gradient p-0 relative overflow-hidden">
+                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
                     <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
@@ -456,7 +405,7 @@ export default function FavoritesPage() {
                             <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
                             <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
                                 {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.capacity}</span>}
-                                {cat.validity && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity}</span>}
+                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
                             </div>
                           </div>
                           <div className="text-left">
@@ -499,15 +448,10 @@ export default function FavoritesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Success Popup */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription className="sr-only">تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
-                </DialogHeader>
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />
@@ -524,11 +468,17 @@ export default function FavoritesPage() {
                         <p className="text-3xl font-black font-mono tracking-tighter text-foreground">
                             {purchasedCard.cardID || purchasedCard.cardNumber}
                         </p>
+                        {purchasedCard.cardPass && purchasedCard.cardPass !== (purchasedCard.cardID || purchasedCard.cardNumber) && (
+                            <div className="mt-2 pt-2 border-t border-dashed border-primary/10">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">كلمة المرور</p>
+                                <p className="text-xl font-black font-mono text-foreground">{purchasedCard.cardPass}</p>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
-                            <Copy className="ml-2 h-4 w-4" /> نسخ
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
                             <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
@@ -544,6 +494,9 @@ export default function FavoritesPage() {
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
+                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Smartphone className="text-primary h-6 w-6" />
+                </div>
                 <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
@@ -551,20 +504,20 @@ export default function FavoritesPage() {
             </DialogHeader>
             <div className="space-y-4 py-6">
                 <div className="space-y-2">
-                    <Label htmlFor="sms-phone" className="text-sm font-bold text-muted-foreground pr-1">رقم جوال الزبون</Label>
+                    <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
                     <Input 
                         id="sms-phone"
                         placeholder="7xxxxxxxx" 
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
-                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground" 
+                        className="text-center text-2xl font-black h-14 rounded-2xl border-2 focus-visible:ring-primary tracking-widest text-foreground bg-muted/20 border-none" 
                     />
                 </div>
             </div>
             <DialogFooter className="grid grid-cols-2 gap-3">
-                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-bold" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
-                <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
+                <Button onClick={handleSendSms} className="w-full h-12 rounded-2xl font-black text-base shadow-lg" disabled={!smsRecipient || smsRecipient.length < 9}>إرسال الآن</Button>
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-black text-base mt-0" onClick={() => setIsSmsDialogOpen(false)}>إلغاء</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

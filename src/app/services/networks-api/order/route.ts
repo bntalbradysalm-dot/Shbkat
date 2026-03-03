@@ -52,13 +52,22 @@ export async function POST(
       const errorText = await response.text();
       console.error(`Order creation failed (${response.status}):`, errorText.substring(0, 200));
       return new NextResponse(
-        JSON.stringify({ message: `فشل إنشاء الطلب: ${response.status}` }),
+        JSON.stringify({ message: `فشل إنشاء الطلب من المصدر: ${response.status}` }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
     if (contentType.includes("application/json")) {
         const data = await response.json();
+        
+        // التحقق من حالة الطلب الداخلية بناءً على توثيق بيتي
+        if (data.status !== 200) {
+            return new NextResponse(
+                JSON.stringify({ message: data.message?.ar || data.message?.en || 'فشل تنفيذ الطلب من قبل المزود.' }),
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        
         return NextResponse.json(data);
     } else {
         const text = await response.text();

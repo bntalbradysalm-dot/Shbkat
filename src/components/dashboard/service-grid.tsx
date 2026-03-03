@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   Sparkles,
   Zap,
-  CheckCircle2,
   ArrowUpRight,
   Loader2,
   AlertCircle,
@@ -203,18 +202,12 @@ export function ServiceGrid() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. التحويل التلقائي للمالك (90% من القيمة)
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل عملية للمالك
                 const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
                 batch.set(ownerTxRef, {
                     userId: ownerId,
@@ -225,7 +218,6 @@ export function ServiceGrid() {
                 });
             }
             
-            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -236,7 +228,6 @@ export function ServiceGrid() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: alKhairNetwork.id, 
@@ -370,22 +361,22 @@ export function ServiceGrid() {
 
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[400px] p-0 overflow-hidden rounded-[40px] border-none bg-[#F8FAFC] dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
-          <DialogHeader>
-            <DialogTitle className="sr-only">عروض شبكة الخير فورجي</DialogTitle>
-            <DialogDescription className="sr-only">استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
-          </DialogHeader>
-          
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
+             <DialogHeader className="p-0 mb-4">
+                <DialogTitle className="sr-only">عروض شبكة الخير فورجي</DialogTitle>
+                <DialogDescription className="sr-only">استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
+                        <Megaphone className="h-8 w-8 text-white animate-bounce" />
+                    </div>
+                    <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
+                    <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
+                </div>
+             </DialogHeader>
+             
              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
-             
-             <div className="relative z-10 flex flex-col items-center">
-                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
-                    <Megaphone className="h-8 w-8 text-white animate-bounce" />
-                </div>
-                <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
-                <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
-             </div>
           </div>
 
           <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto no-scrollbar">
@@ -533,18 +524,14 @@ export function ServiceGrid() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه من عروض الخير</DialogDescription>
-                </DialogHeader>
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
                 <CardContent className="p-8 space-y-6">
                     <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
                         <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
                     </div>
                     
@@ -556,7 +543,7 @@ export function ServiceGrid() {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
+                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>

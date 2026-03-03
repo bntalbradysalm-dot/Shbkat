@@ -270,23 +270,9 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
+            // 3. سجل عملية المالك (بدون تحويل آلي للرصيد الآن)
             const ownerId = selectedNetwork.ownerId;
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل عملية للمالك
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-
+            
             // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
@@ -294,7 +280,7 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 5. سجل الكروت المباعة (مكتمل تلقائياً)
+            // 5. سجل الكروت المباعة (حالة معلقة للتحويل اليدوي من الإدارة)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -310,7 +296,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed'
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -377,7 +363,7 @@ export default function CombinedNetworksPage() {
                 <Input 
                     type="text" 
                     placeholder="البحث في الشبكات..." 
-                    className="w-full pr-10 rounded-xl h-12 bg-muted/20 border border-black/10 focus-visible:ring-primary shadow-sm" 
+                    className="w-full pr-10 rounded-xl h-12 bg-muted/20 border-2 border-black/10 focus-visible:ring-primary shadow-sm" 
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
@@ -398,16 +384,19 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-0">
+                            {/* أيقونة الشبكة على اليمين */}
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
+                            {/* اسم وموقع الشبكة في المنتصف */}
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden order-1">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-2">
+                            {/* زر القلب على اليسار */}
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
                         </CardContent>
@@ -442,7 +431,7 @@ export default function CombinedNetworksPage() {
                                     <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
                                     <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
                                         {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {cat.capacity}</span>}
-                                        {cat.expirationDate && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {cat.expirationDate}</span>}
+                                        {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity || cat.expirationDate}</span>}
                                     </div>
                                 </div>
                                 <div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p></div>

@@ -5,7 +5,7 @@ import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc, getDocs, writeBatch, increment, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet, Smartphone, Loader2 } from 'lucide-react';
+import { Wifi, MapPin, Heart, Search, X, AlertCircle, Database, Calendar, CheckCircle, Copy, MessageSquare, Wallet, Smartphone, Loader2, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -231,23 +231,7 @@ export default function FavoritesPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل عملية للمالك
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-            
-            // 4. سجل عملية للمشتري
+            // 3. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -258,7 +242,7 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 5. سجل الكروت المباعة (مكتمل تلقائياً)
+            // 4. سجل الكروت المباعة (حالة معلقة للتحويل اليدوي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
@@ -275,7 +259,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed'
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -390,7 +374,7 @@ export default function FavoritesPage() {
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-0">
+                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
                                 <div className="flex-1 text-right mx-4 space-y-1 text-white order-1 overflow-hidden">
@@ -399,7 +383,7 @@ export default function FavoritesPage() {
                                 </div>
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                                    className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-2"
+                                    className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white fill-white")} />
                                 </button>
@@ -449,9 +433,9 @@ export default function FavoritesPage() {
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex-1 text-right space-y-1">
                             <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
-                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
                                 {cat.dataLimit && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.dataLimit}</span>}
-                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
+                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
                             </div>
                           </div>
                           <div className="text-left">

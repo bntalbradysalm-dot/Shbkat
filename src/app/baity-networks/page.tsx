@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -127,8 +126,8 @@ export default function BaityNetworksPage() {
       try {
         const response = await fetch('/services/networks-api');
         if (response.ok) {
-          const data: Network[] = await response.json();
-          setNetworks(data.map(n => ({
+          const data = await response.json();
+          setNetworks(data.map((n: any) => ({
             id: String(n.id),
             name: n.name,
             location: n.desc || 'شبكة API',
@@ -294,8 +293,8 @@ export default function BaityNetworksPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader className="p-0 space-y-0 mb-4">
+              <div className="bg-mesh-gradient p-0 relative overflow-hidden">
+                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">تفاصيل شبكة بيتي</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت لشبكات بيتي</DialogDescription>
                     <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
@@ -342,10 +341,6 @@ export default function BaityNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader className="sr-only">
-                    <DialogTitle>تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription>تفاصيل الكرت الذي تم شراؤه لشبكات بيتي</DialogDescription>
-                </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />

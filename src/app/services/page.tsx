@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -415,8 +414,8 @@ export default function CombinedNetworksPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader className="p-0 space-y-0 mb-4">
+              <div className="bg-mesh-gradient p-0 relative overflow-hidden">
+                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
                     <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
@@ -480,18 +479,14 @@ export default function CombinedNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه</DialogDescription>
-                </DialogHeader>
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
                 <CardContent className="p-8 space-y-6">
                     <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
                         <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
                     </div>
                     
@@ -554,6 +549,7 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
+      <Toaster />
     </>
   );
 }

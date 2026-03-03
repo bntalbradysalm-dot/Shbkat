@@ -561,13 +561,16 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // المنطق الجديد: إرسال السلفة فقط إذا كان الرقم متسلفاً فعلاً
-    const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
-    const loanAmountToApply = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
+    /**
+     * منطق السلفة الذكي: الاعتماد الكلي على سيرفر اشحن لي
+     * يتم إرسال حقل solfa فقط إذا أكد الاستعلام المسبق من المزود وجودها.
+     */
+    const hasLoanFromServer = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
+    const loanAmountToApply = hasLoanFromServer ? (billingInfo?.loanAmount || 0) : 0;
     const totalToDeduct = selectedOffer.price + loanAmountToApply;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة سداد السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة سداد السلفة المكتشفة من السيرفر.' });
         return;
     }
 
@@ -575,6 +578,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
+        // بناء حزمة البيانات للمزود
         const payload: any = { 
             mobile: phone, 
             action: 'billoffer', 
@@ -583,8 +587,8 @@ export default function YemenMobilePage() {
             transid 
         };
 
-        // إرسال حقل solfa فقط إذا كان الرقم متسلفاً فعلاً
-        if (hasLoan) {
+        // إرسال معامل solfa فقط إذا كان السيرفر الخارجي قد أكد وجودها
+        if (hasLoanFromServer) {
             payload.solfa = loanAmountToApply;
         }
 
@@ -610,7 +614,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${hasLoan ? ` (شامل سداد سلفة: ${loanAmountToApply})` : ''}`, 
+            notes: `للرقم: ${phone}${hasLoanFromServer ? ` (شامل سداد سلفة مكتشفة من السيرفر: ${loanAmountToApply})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -900,18 +904,18 @@ export default function YemenMobilePage() {
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
 
-                      {/* سطر السلفة يظهر فقط إذا كان هناك دين حقيقي */}
+                      {/* سطر السلفة يظهر فقط وفقط إذا أكد المزود وجود دين حقيقي */}
                       {billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed animate-in fade-in duration-300">
                             <span className="text-destructive font-bold flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم:
+                                <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم (من المزود):
                             </span>
                             <span className="font-black text-destructive">{(billingInfo.loanAmount || 0).toLocaleString('en-US')} ريال</span>
                         </div>
                       )}
 
                       <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-3 mt-4">
-                        <span className="font-black">إجمالي الخصم من محفظتك:</span>
+                        <span className="font-black">إجمالي الخصم النهائي:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-2xl font-black text-[#B32C4C]">
                                 {((selectedOffer?.price || 0) + (billingInfo?.isLoan ? (billingInfo?.loanAmount || 0) : 0)).toLocaleString('en-US')}
@@ -920,7 +924,7 @@ export default function YemenMobilePage() {
                         </div>
                       </div>
                       
-                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: يتم معالجة السلفة تلقائياً فقط عند وجودها لضمان تفعيل الخدمة.</p>
+                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: يتم سداد السلفة تلقائياً بناءً على طلب سيرفر المزود لضمان تفعيل الخدمة.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

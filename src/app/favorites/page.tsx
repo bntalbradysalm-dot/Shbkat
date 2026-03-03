@@ -179,7 +179,7 @@ export default function FavoritesPage() {
             name: c.name,
             price: c.price,
             capacity: c.dataLimit,
-            expirationDate: c.expirationDate
+            validity: c.expirationDate
         })));
       }
     } catch (err: any) {
@@ -387,21 +387,26 @@ export default function FavoritesPage() {
                     {filteredFavorites.map((fav, index) => (
                         <Card 
                             key={fav.id} 
-                            className="bg-mesh-gradient cursor-pointer text-white rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md"
+                            className="bg-mesh-gradient cursor-pointer text-white rounded-2xl animate-in fade-in-0 slide-in-from-bottom-2 border-none shadow-md overflow-hidden"
                             style={{ animationDelay: `${index * 30}ms` }}
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
+                                {/* Right: Wifi Icon */}
+                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
-                                <div className="flex-1 text-right mx-4 space-y-1 text-white order-1 overflow-hidden">
+                                
+                                {/* Center: Text */}
+                                <div className="flex-1 text-right mx-4 space-y-1 text-white overflow-hidden">
                                     <h4 className="font-bold text-base text-white truncate">{fav.name}</h4>
                                     <p className="text-[10px] opacity-80 text-white/80 truncate">{fav.location}</p>
                                 </div>
+                                
+                                {/* Left: Heart Button */}
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                                    className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0"
+                                    className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white fill-white")} />
                                 </button>
@@ -418,15 +423,15 @@ export default function FavoritesPage() {
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader>
+                <DialogHeader className="p-0 space-y-0 mb-4">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+                    <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
+                        <Wifi className="h-8 w-8 text-white" />
+                    </div>
+                    <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                    <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
                 </DialogHeader>
-                <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20 relative z-10">
-                    <Wifi className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-xl font-black text-white relative z-10">{selectedNetwork.name}</h2>
-                <p className="text-xs text-white/70 font-bold mt-1 relative z-10">{selectedNetwork.location}</p>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">

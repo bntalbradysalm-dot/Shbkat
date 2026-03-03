@@ -218,7 +218,7 @@ export default function CombinedNetworksPage() {
         if (!response.ok) throw new Error('فشل تحميل الفئات');
         const data = await response.json();
         setCategories(data.map((c: any) => ({
-            id: c.id, name: c.name, price: c.price, capacity: c.dataLimit, expirationDate: c.expirationDate
+            id: c.id, name: c.name, price: c.price, capacity: c.dataLimit, validity: c.expirationDate
         })));
       }
     } catch (err: any) {
@@ -392,16 +392,19 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
+                            {/* Right: Wifi Icon */}
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
-                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden order-1">
+                            {/* Center: Text */}
+                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0">
+                            {/* Left: Heart Button */}
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
                         </CardContent>
@@ -415,16 +418,16 @@ export default function CombinedNetworksPage() {
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative">
-                <DialogHeader>
+              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
+                <DialogHeader className="p-0 space-y-0 mb-4">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
+                    <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
+                        <Wifi className="h-8 w-8 text-white" />
+                    </div>
+                    <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                    <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
                 </DialogHeader>
-                <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
-                    <Wifi className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
-                <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (

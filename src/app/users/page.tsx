@@ -274,7 +274,7 @@ export default function UsersPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline gap-1">
-                    <h2 className="text-3xl font-black">
+                    <h2 className="text-3xl font-black text-white">
                         {isFetchingAgentBalance ? <Skeleton className="h-8 w-32 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
                     </h2>
                     <span className="text-[10px] font-bold opacity-70">ريال يمني</span>

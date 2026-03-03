@@ -326,7 +326,7 @@ export default function CombinedNetworksPage() {
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
             const transactionPayload: any = {
-                userId: user.uid, transactionDate: now, amount: selectedCategory.price,
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
             };
@@ -425,60 +425,63 @@ export default function CombinedNetworksPage() {
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-0 relative overflow-hidden">
-                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                
+                <DialogHeader className="pt-12 pb-8 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
-                    <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
-                        <Wifi className="h-8 w-8 text-white" />
+                    <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
+                        <Wifi className="h-7 w-7 text-white" />
                     </div>
-                    <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
-                    <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
+                    <h2 className="text-xl font-black text-white drop-shadow-md">{selectedNetwork.name}</h2>
+                    <p className="text-[10px] text-white/70 font-bold mt-1 bg-white/10 py-1 px-3 rounded-full border border-white/5 inline-block">{selectedNetwork.location}</p>
                 </DialogHeader>
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {categories.map((cat, idx) => {
                         const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
                         return (
                             <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
                                 <Card 
                                     className={cn(
-                                        "relative overflow-hidden rounded-[32px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "relative overflow-hidden rounded-[28px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
                                         "bg-gradient-to-br p-[2px]",
                                         gradient
                                     )}
                                     onClick={() => setShowConfirmPurchase(cat)}
                                 >
-                                    <div className="relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
-                                        <div className="flex items-center gap-4">
+                                    <div className="relative rounded-[26px] p-3.5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                        <div className="flex items-center gap-3">
                                             <div className={cn(
-                                                "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
                                                 gradient
                                             )}>
-                                                <Wifi className="h-7 w-7" />
+                                                <Wifi className="h-5 w-5" />
                                             </div>
-                                            <div className="text-right space-y-1">
-                                                <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
-                                                <div className="flex flex-col gap-1 mt-1.5">
-                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
-                                                        <Database className="h-3 w-3" />
+                                            <div className="text-right space-y-0.5">
+                                                <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
+                                                <div className="flex gap-2.5 mt-1">
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-primary">
+                                                        <Database className="h-2.5 w-2.5" />
                                                         <span>{cat.capacity || '-'}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
-                                                        <Clock className="h-3 w-3" />
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground">
+                                                        <Clock className="h-2.5 w-2.5" />
                                                         <span>{cat.validity || cat.expirationDate || '-'}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-2">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-2xl font-black tracking-tighter text-primary">{cat.price.toLocaleString()}</span>
-                                                <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
+                                        <div className="flex flex-col items-end gap-1.5">
+                                            <div className="flex flex-col items-end leading-tight">
+                                                <span className="text-xl font-black tracking-tighter text-primary">{cat.price.toLocaleString()}</span>
+                                                <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
                                             </div>
-                                            <Button size="sm" className="h-8 rounded-xl text-[10px] font-black px-5 bg-primary shadow-lg shadow-primary/20">شراء</Button>
+                                            <Button size="sm" className="h-7 rounded-lg text-[9px] font-black px-4 bg-primary shadow-md shadow-primary/20">شراء</Button>
                                         </div>
                                     </div>
                                 </Card>
@@ -488,7 +491,7 @@ export default function CombinedNetworksPage() {
                   </div>
                 )}
               </div>
-              <div className="p-4 border-t bg-white dark:bg-slate-900"><Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
+              <div className="p-4 border-t bg-white dark:bg-slate-900"><Button variant="outline" className="w-full h-11 rounded-2xl font-black text-sm" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
             </div>
           )}
         </DialogContent>

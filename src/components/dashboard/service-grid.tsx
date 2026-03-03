@@ -369,24 +369,19 @@ export function ServiceGrid() {
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[400px] p-0 overflow-hidden rounded-[40px] border-none bg-[#F8FAFC] dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
-             <DialogHeader className="p-0 mb-4">
-                <DialogTitle className="sr-only">عروض شبكة الخير فورجي</DialogTitle>
-                <DialogDescription className="sr-only">استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
-                
-                <div className="relative z-10 flex flex-col items-center">
-                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
-                        <Megaphone className="h-8 w-8 text-white animate-bounce" />
-                    </div>
-                    <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
-                    <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
-                </div>
-             </DialogHeader>
-             
              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+             
+             <div className="relative z-10 flex flex-col items-center">
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10 mb-4 shadow-xl">
+                    <Megaphone className="h-8 w-8 text-white animate-bounce" />
+                </div>
+                <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">عروض شبكة الخير</h2>
+                <p className="text-white/80 text-xs font-bold mt-1.5 bg-white/10 py-1 px-4 rounded-full border border-white/5">أقوى باقات شبكة الخير فورجي</p>
+             </div>
           </div>
 
-          <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto no-scrollbar">
+          <div className="p-5 space-y-3 max-h-[65vh] overflow-y-auto no-scrollbar">
             {isFetchingOffers ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-4">
                     <div className="relative">
@@ -414,47 +409,45 @@ export function ServiceGrid() {
                         >
                             <Card 
                                 className={cn(
-                                    "relative overflow-hidden rounded-[32px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                    "relative overflow-hidden rounded-[28px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
                                     "bg-gradient-to-br p-[2px]",
                                     gradient
                                 )}
                                 onClick={() => handleOfferClick(offer)}
                             >
-                                <div className="relative rounded-[30px] p-5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
-                                    {/* Right: Info (RTL correctly starting from right) */}
-                                    <div className="flex items-center gap-4">
+                                <div className="relative rounded-[26px] p-3.5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                    <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "h-14 w-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                            "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
                                             gradient
                                         )}>
-                                            <Wifi className="h-7 w-7" />
+                                            <Wifi className="h-5 w-5" />
                                         </div>
-                                        <div className="text-right space-y-1">
-                                            <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
-                                            <div className="flex flex-col gap-1 mt-1.5">
-                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
-                                                    <Database className="h-3 w-3" />
+                                        <div className="text-right space-y-0.5">
+                                            <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{offerTitle}</h4>
+                                            <div className="flex gap-2.5 mt-1">
+                                                <div className="flex items-center gap-1 text-[9px] font-bold text-primary">
+                                                    <Database className="h-2.5 w-2.5" />
                                                     <span>{dataInfo}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
-                                                    <Clock className="h-3 w-3" />
+                                                <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground">
+                                                    <Clock className="h-2.5 w-2.5" />
                                                     <span>{durationInfo}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Left: Price & Button */}
-                                    <div className="flex flex-col items-end gap-2">
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-2xl font-black tracking-tighter text-primary">
+                                    <div className="flex flex-col items-end gap-1.5">
+                                        <div className="flex flex-col items-end leading-tight">
+                                            <span className="text-xl font-black tracking-tighter text-primary">
                                                 {offer.price.toLocaleString()}
                                             </span>
-                                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">ريال يمني</span>
+                                            <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
                                         </div>
                                         <Button 
                                             size="sm" 
-                                            className="h-8 rounded-xl text-[10px] font-black px-5 bg-primary shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                                            className="h-7 rounded-lg text-[9px] font-black px-4 bg-primary shadow-md shadow-primary/20 active:scale-95 transition-all"
                                         >
                                             شراء
                                         </Button>

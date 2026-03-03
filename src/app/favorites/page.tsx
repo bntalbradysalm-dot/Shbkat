@@ -416,9 +416,9 @@ export default function FavoritesPage() {
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
-                <DialogHeader className="sr-only">
-                    <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
-                    <DialogDescription>تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
+                <DialogHeader>
+                    <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+                    <DialogDescription className="sr-only">تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
                 </DialogHeader>
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20 relative z-10">
                     <Wifi className="h-8 w-8 text-white" />
@@ -473,7 +473,10 @@ export default function FavoritesPage() {
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
-            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-10 w-10 text-primary" />
+            </div>
+            <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟</DialogDescription>
           </DialogHeader>
           <div className="py-4 bg-white dark:bg-slate-800 rounded-2xl space-y-2 mt-4">
@@ -481,10 +484,10 @@ export default function FavoritesPage() {
             <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-2 mt-6">
-            <Button className="w-full rounded-xl font-bold" onClick={handlePurchase} disabled={isProcessing}>
+            <Button className="w-full h-12 rounded-2xl font-bold" onClick={handlePurchase} disabled={isProcessing}>
                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد الشراء'}
             </Button>
-            <Button variant="outline" className="w-full rounded-xl mt-0 font-bold" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
+            <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -494,9 +497,9 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader className="sr-only">
-                    <DialogTitle>تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription>تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
+                <DialogHeader>
+                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription className="sr-only">تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
                 </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">

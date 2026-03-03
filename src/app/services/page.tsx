@@ -465,7 +465,7 @@ export default function CombinedNetworksPage() {
         <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-10 w-10 text-primary" />
+                <CheckCircle className="h-10 w-10 text-primary" />
             </div>
             <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">

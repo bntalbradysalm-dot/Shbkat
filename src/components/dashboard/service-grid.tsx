@@ -55,12 +55,12 @@ type Service = {
 
 const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'الشبكات المحلية', icon: Wifi, href: '/services' },
+  { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { name: 'شبكات بيتي', icon: Globe, href: '/baity-networks' },
+  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -203,12 +203,29 @@ export function ServiceGrid() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            const ownerRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerRef, { balance: increment(payoutAmount) });
+            // 3. التحويل التلقائي للمالك (90% من القيمة)
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
 
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${alKhairNetwork.name}`
+                });
+            }
+            
+            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -219,19 +236,11 @@ export function ServiceGrid() {
                 cardNumber: cardData.cardNumber,
             });
             
-            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: ownerId, 
-                transactionDate: now, 
-                amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت', 
-                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-            });
-            
+            // 5. سجل الكروت المباعة (حالة مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: alKhairNetwork.id, 
-                ownerId, 
+                ownerId: ownerId || 'admin', 
                 networkName: alKhairNetwork.name,
                 categoryId: selectedCategory.id, 
                 categoryName: selectedCategory.name,
@@ -361,9 +370,9 @@ export function ServiceGrid() {
 
       <Dialog open={isOffersOpen} onOpenChange={setIsOffersOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-[400px] p-0 overflow-hidden rounded-[40px] border-none bg-[#F8FAFC] dark:bg-slate-950 shadow-2xl flex flex-col z-[9999] outline-none [&>button]:hidden">
-          <DialogHeader className="sr-only">
-            <DialogTitle>عروض شبكة الخير فورجي</DialogTitle>
-            <DialogDescription>استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
+          <DialogHeader>
+            <DialogTitle className="sr-only">عروض شبكة الخير فورجي</DialogTitle>
+            <DialogDescription className="sr-only">استعراض العروض الخاصة لشبكة الخير فورجي</DialogDescription>
           </DialogHeader>
           
           <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
@@ -500,7 +509,7 @@ export function ServiceGrid() {
         <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-10 w-10 text-primary" />
+                <CheckCircle className="h-10 w-10 text-primary" />
             </div>
             <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">
@@ -524,6 +533,10 @@ export function ServiceGrid() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <DialogHeader>
+                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription className="sr-only">رقم الكرت الذي تم شراؤه من عروض الخير</DialogDescription>
+                </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />
@@ -546,11 +559,11 @@ export function ServiceGrid() {
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}>
-                            <MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
+                            <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
                         </Button>
                     </div>
-                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setAlKhairNetwork(null); }}>إغلاق</Button>
+                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setAlKhairNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>
         </div>
@@ -563,7 +576,7 @@ export function ServiceGrid() {
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />
                 </div>
-                <DialogTitle className="text-center text-xl font-black">إرسال كرت لزبون</DialogTitle>
+                <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).
                 </DialogDescription>

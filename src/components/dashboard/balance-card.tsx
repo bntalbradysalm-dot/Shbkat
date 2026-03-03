@@ -20,12 +20,12 @@ import Link from "next/link";
 
 const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { id: 'digital-cards', name: 'الشبكات المحلية', icon: Wifi, href: '/services' },
+  { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { id: 'baity-nets', name: 'شبكات بيتي', icon: Globe, href: '/baity-networks' },
+  { id: 'transfer', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
   { id: 'support', name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -40,7 +40,7 @@ export function BalanceCard() {
   const firestore = useFirestore();
 
   const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
-  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات المحلية
+  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 

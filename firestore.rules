@@ -1,23 +1,16 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * وظيفة للتحقق من أن المستخدم مسجل دخول.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    /**
      * تم فتح جميع الصلاحيات (القراءة والكتابة) لكل المستخدمين المسجلين.
-     * هذا يسمح للمستخدمين وملاك الشبكات بإجراء عمليات الشراء والتحويل والإدارة دون قيود برمجية.
-     * القواعد تطبق على كافة المجموعات (users, networks, soldCards, transactions, etc.)
-     * تم تحديث القواعد لضمان منح المستخدم العادي صلاحيات واسعة مثل مالك التطبيق في الشراء.
-     * تم إضافة هذا التعليق لضمان تحديث القواعد: FORCE_UPDATE_PERMISSIONS_V3
+     * هذا يضمن أن الإدارة والمستخدمين يمكنهم الوصول لكافة المجموعات (soldCards, transactions, etc.) دون قيود أمنية.
+     * تم تحديث القواعد لحل مشكلة Permission Denied في لوحة التحكم.
+     * تم إضافة هذا التعليق لضمان تحديث القواعد: FORCE_UPDATE_FULL_ACCESS_V10
      */
     match /{document=**} {
-      allow read, write: if isSignedIn();
+      allow read, write: if request.auth != null;
     }
   }
 }

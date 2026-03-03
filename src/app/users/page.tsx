@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -258,26 +259,26 @@ export default function UsersPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           
           <div className="space-y-4">
-            {/* Agent Balance Card - Full Width */}
-            <Card className="relative overflow-hidden border-none shadow-xl bg-mesh-gradient text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-[10px] font-black opacity-80 uppercase tracking-widest">رصيد الوكيل (المزود)</CardTitle>
+            {/* Agent Balance Card - Smaller & Compact */}
+            <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-5">
+                <CardTitle className="text-[9px] font-black opacity-80 uppercase tracking-widest">رصيد الوكيل (المزود)</CardTitle>
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 rounded-full hover:bg-white/10 text-white"
+                    className="h-7 w-7 rounded-full hover:bg-white/10 text-white"
                     onClick={fetchAgentBalance}
                     disabled={isFetchingAgentBalance}
                 >
-                    <RefreshCw className={cn("h-4 w-4", isFetchingAgentBalance && "animate-spin")} />
+                    <RefreshCw className={cn("h-3.5 w-3.5", isFetchingAgentBalance && "animate-spin")} />
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-5 pb-4">
                 <div className="flex items-baseline gap-1">
-                    <h2 className="text-3xl font-black text-white">
-                        {isFetchingAgentBalance ? <Skeleton className="h-8 w-32 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                    <h2 className="text-2xl font-black text-white">
+                        {isFetchingAgentBalance ? <Skeleton className="h-7 w-24 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
                     </h2>
-                    <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
+                    <span className="text-[9px] font-bold opacity-70">ريال يمني</span>
                 </div>
               </CardContent>
             </Card>

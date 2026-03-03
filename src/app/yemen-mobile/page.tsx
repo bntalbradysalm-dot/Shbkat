@@ -54,7 +54,6 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import Image from 'next/image';
-import { Switch } from '@/components/ui/switch';
 
 export const dynamic = 'force-dynamic';
 
@@ -196,7 +195,7 @@ const POSTPAID_CATEGORIES = [
       { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '200', minutes: '300', validity: 'اسبوع يوم', offertype: 'A88339' },
       { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
-      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: 'شهر', offertype: 'A88335' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A88335' },
       { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', minutes: '1100', sms: '600', validity: 'شهر', offertype: 'A88440' },
       { offerId: 'm_aamal_4g', offerName: 'مزايا أعمال فورجي', price: 5000, data: '6GB', minutes: '1500', sms: '1000', validity: 'شهر', offertype: 'A49053' },
     ]
@@ -320,7 +319,6 @@ export default function YemenMobilePage() {
   const [isActivatingOffer, setIsActivatingOffer] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastTxDetails, setLastTxDetails] = useState<any>(null);
-  const [shouldPayLoan, setShouldPayLoan] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
@@ -355,9 +353,6 @@ export default function YemenMobilePage() {
   const getFriendlyErrorMessage = (msg: string) => {
     if (msg.includes('1009') || msg.includes('منطقة التحصيل')) {
         return "الرقم ليس من بوابة التحصيل المسموح بها ! يرجى التأكد من تواجدك في نطاق تغطية جنوبية ثم إجراء واستقبال 3 مكالمات بمدة 3 دقائق للمكالمة";
-    }
-    if (msg.includes('solfa') || msg.includes('loan') || msg.includes('سلفة')) {
-        return "هذا الرقم عليه سلفة، يرجى تفعيل خيار 'سداد السلفة' لإتمام العملية.";
     }
     return msg;
   };
@@ -565,11 +560,12 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    const loanAmount = (billingInfo?.isLoan && shouldPayLoan) ? (billingInfo.loanAmount || 0) : 0;
-    const totalToDeduct = selectedOffer.price + loanAmount;
+    // سحب السلفة تلقائياً إذا كانت موجودة لضمان نجاح العملية
+    const loanAmountToPay = billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 0;
+    const totalToDeduct = selectedOffer.price + loanAmountToPay;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة مع السلفة.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة مع السلفة المستحقة.' });
         return;
     }
 
@@ -577,7 +573,6 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // إرسال قيمة الباقة + السلفة (إذا تم اختيارها) للمزود في حقل amount
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -606,7 +601,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${shouldPayLoan ? ` (شامل سداد سلفة: ${loanAmount})` : ''}`, 
+            notes: `للرقم: ${phone}${loanAmountToPay > 0 ? ` (شامل سداد سلفة: ${loanAmountToPay})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -620,7 +615,6 @@ export default function YemenMobilePage() {
         });
         setShowSuccess(true);
         setSelectedOffer(null);
-        setShouldPayLoan(false);
         handleSearch(phone);
     } catch (e: any) {
         toast({ variant: "destructive", title: "تنبيه من المزود", description: e.message });
@@ -795,7 +789,6 @@ export default function YemenMobilePage() {
                                                 {cat.offers.map((o) => (
                                                     <PackageItemCard key={o.offerId} offer={o} onClick={() => {
                                                         setSelectedOffer(o);
-                                                        setShouldPayLoan(false);
                                                     }} />
                                                 ))}
                                             </div>
@@ -888,10 +881,7 @@ export default function YemenMobilePage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      <AlertDialog open={!!selectedOffer} onOpenChange={() => {
-          setSelectedOffer(null);
-          setShouldPayLoan(false);
-      }}>
+      <AlertDialog open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
           <AlertDialogContent className="rounded-[32px]">
               <AlertDialogHeader>
                   <AlertDialogTitle className="text-center font-black">تأكيد تفعيل الباقة</AlertDialogTitle>
@@ -904,23 +894,9 @@ export default function YemenMobilePage() {
                       </div>
 
                       {billingInfo?.isLoan && (
-                          <div className="space-y-3 p-3 bg-destructive/5 rounded-2xl border border-destructive/10 mt-2">
-                              <div className="flex justify-between items-center">
-                                  <div className="flex items-center gap-2">
-                                      <Frown className="w-4 h-4 text-destructive" />
-                                      <span className="text-destructive font-black">تنبيه: سلفة مستحقة</span>
-                                  </div>
-                                  <span className="font-black text-destructive">{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
-                              </div>
-                              <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded-xl">
-                                  <span className="text-[10px] font-bold">هل ترغب في سداد السلفة الآن؟</span>
-                                  <Switch 
-                                      checked={shouldPayLoan} 
-                                      onCheckedChange={setShouldPayLoan}
-                                      className="data-[state=checked]:bg-destructive"
-                                  />
-                              </div>
-                              <p className="text-[9px] text-muted-foreground text-center">قد يفشل التفعيل إذا لم يتم سداد السلفة المطلوبة من المزود.</p>
+                          <div className="flex justify-between items-center py-2 border-b border-dashed text-destructive font-black">
+                              <span>سداد سلفة مستحقة (إلزامي):</span>
+                              <span>{billingInfo.loanAmount?.toLocaleString('en-US')} ريال</span>
                           </div>
                       )}
 
@@ -928,11 +904,15 @@ export default function YemenMobilePage() {
                         <span className="font-black">إجمالي الخصم من رصيدك:</span>
                         <div className="flex items-baseline gap-1">
                             <p className="text-2xl font-black text-[#B32C4C]">
-                                {((selectedOffer?.price || 0) + (shouldPayLoan ? (billingInfo?.loanAmount || 0) : 0)).toLocaleString('en-US')}
+                                {((selectedOffer?.price || 0) + (billingInfo?.isLoan ? (billingInfo?.loanAmount || 0) : 0)).toLocaleString('en-US')}
                             </p>
                             <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
+                      
+                      {billingInfo?.isLoan && (
+                          <p className="text-[9px] text-muted-foreground text-center mt-2">ملاحظة: الرقم لديه سلفة سيتم خصم قيمتها وتفعيل الباقة مباشرة.</p>
+                      )}
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

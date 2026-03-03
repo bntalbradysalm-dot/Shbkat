@@ -334,21 +334,7 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            {/* زر القلب على اليسار */}
-                            <button 
-                                onClick={(e) => handleFavoriteClick(e, net)}
-                                className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
-                            >
-                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
-                            </button>
-
-                            {/* معلومات الشبكة في المنتصف */}
-                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
-                                <h4 className="font-black text-base text-white truncate">{net.name}</h4>
-                                <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
-                            </div>
-
-                            {/* أيقونة الشبكة على اليمين */}
+                            {/* أيقونة الشبكة على اليمين (في RTL ستظهر على اليمين) */}
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
                                 {net.isLocal ? (
                                     <Wifi className="h-6 w-6 text-white" />
@@ -356,6 +342,20 @@ export default function CombinedNetworksPage() {
                                     <Globe className="h-6 w-6 text-white" />
                                 )}
                             </div>
+
+                            {/* معلومات الشبكة في المنتصف */}
+                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
+                                <h4 className="font-black text-base text-white truncate">{net.name}</h4>
+                                <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
+                            </div>
+
+                            {/* زر القلب على اليسار (في RTL ستظهر على اليسار) */}
+                            <button 
+                                onClick={(e) => handleFavoriteClick(e, net)}
+                                className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
+                            >
+                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
+                            </button>
                         </CardContent>
                     </Card>
                 ))

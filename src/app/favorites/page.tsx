@@ -225,13 +225,9 @@ export default function FavoritesPage() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -242,7 +238,6 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
-            // 6. سجل الكروت المباعة للإدارة (بانتظار التحويل اليدوي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
@@ -374,16 +369,19 @@ export default function FavoritesPage() {
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                                {/* أيقونة الشبكة يمين */}
+                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
-                                <div className="flex-1 text-right mx-4 space-y-1 text-white">
-                                    <h4 className="font-bold text-base text-white">{fav.name}</h4>
-                                    <p className="text-[10px] opacity-80 text-white/80">{fav.location}</p>
+                                {/* الاسم والمنطقة منتصف */}
+                                <div className="flex-1 text-right mx-4 space-y-1 text-white order-1 overflow-hidden">
+                                    <h4 className="font-bold text-base text-white truncate">{fav.name}</h4>
+                                    <p className="text-[10px] opacity-80 text-white/80 truncate">{fav.location}</p>
                                 </div>
+                                {/* القلب يسار */}
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                                    className="p-2 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
+                                    className="p-2 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white fill-white")} />
                                 </button>
@@ -395,7 +393,6 @@ export default function FavoritesPage() {
         </div>
       </div>
 
-      {/* Details Popup */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           <DialogHeader className="sr-only">
@@ -457,7 +454,6 @@ export default function FavoritesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
@@ -481,7 +477,7 @@ export default function FavoritesPage() {
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+            <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />
@@ -502,7 +498,7 @@ export default function FavoritesPage() {
                     
                     <div className="grid grid-cols-2 gap-3">
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
-                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
+                            <Copy className="ml-2 h-4 w-4" /> نسخ
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
                             <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS

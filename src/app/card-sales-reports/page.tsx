@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc, increment, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wifi, User, Phone, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp } from 'lucide-react';
@@ -13,7 +13,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 type Network = {
@@ -93,13 +91,9 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         
         const batch = writeBatch(firestore);
         
-        // 1. Update card status to completed
         batch.update(soldCardRef, { payoutStatus: 'completed' });
-        
-        // 2. Add payoutAmount to owner's balance
         batch.update(ownerRef, { balance: increment(cardToApprove.payoutAmount) });
 
-        // 3. Create transaction log for owner
         const transactionRef = doc(ownerTransactionsRef);
         batch.set(transactionRef, {
              userId: cardToApprove.ownerId,
@@ -119,7 +113,6 @@ const NetworkDetails = ({ network }: { network: Network }) => {
             setCardToApprove(null);
         }
     };
-
 
     if (isLoadingSold) {
         return (
@@ -168,7 +161,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                     <div className="text-xl font-black text-green-600">{totalPayout.toLocaleString('en-US')}</div>
                     <p className="text-[9px] font-bold text-muted-foreground">ريال يمني</p>
                 </CardContent>
-            </div>
+            </Card>
         </div>
 
         {soldCards && soldCards.length > 0 ? (

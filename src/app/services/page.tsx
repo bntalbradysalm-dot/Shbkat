@@ -254,38 +254,26 @@ export default function CombinedNetworksPage() {
         if (selectedNetwork.isLocal) {
             const cardsRef = collection(firestore, `networks/${selectedNetwork.id}/cards`);
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-            const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
-                const contextualError = new FirestorePermissionError({
-                    path: `networks/${selectedNetwork.id}/cards`,
-                    operation: 'list',
-                });
-                errorEmitter.emit('permission-error', contextualError);
-                throw err;
-            });
+            const availableCardsSnapshot = await getDocs(q);
 
             if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
             
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
             const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
 
-            // سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
 
-            // سجل كرت مباع للإدارة (بانتظار الموافقة اليدوية وتحويل الأرباح)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -389,14 +377,19 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                            {/* أيقونة الشبكة على اليمين */}
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
-                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
+                            
+                            {/* النص في المنتصف */}
+                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden order-1">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
+                            
+                            {/* زر القلب على اليسار */}
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
                         </CardContent>
@@ -487,9 +480,6 @@ export default function CombinedNetworksPage() {
             </Card>
         </div>
       )}
-
-      {isProcessing && <ProcessingOverlay message="جاري معالجة الشراء..." />}
-      <Toaster />
 
       {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>

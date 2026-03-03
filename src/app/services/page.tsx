@@ -428,7 +428,7 @@ export default function CombinedNetworksPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-8 text-white text-center relative">
+              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative">
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
                     <Wifi className="h-8 w-8 text-white" />
                 </div>

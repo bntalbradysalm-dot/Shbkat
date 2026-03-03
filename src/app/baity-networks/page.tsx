@@ -28,16 +28,7 @@ import {
   deleteDocumentNonBlocking,
   useDoc
 } from '@/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  doc, 
-  writeBatch, 
-  increment, 
-  getDocs, 
-  limit as firestoreLimit 
-} from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, increment, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -256,14 +247,12 @@ export default function BaityNetworksPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-8 text-white relative text-center">
-                <div className="flex flex-col items-center text-center gap-2 mt-2">
-                  <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl">
-                    <Wifi className="h-10 w-10 text-white" />
-                  </div>
-                  <h2 className="text-xl font-black text-white mt-2">{selectedNetwork.name}</h2>
-                  <p className="text-xs opacity-80 text-white/80">{selectedNetwork.location}</p>
+              <div className="bg-mesh-gradient pt-14 pb-10 px-8 text-white text-center relative overflow-hidden">
+                <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl w-16 h-16 mx-auto mb-3 flex items-center justify-center relative z-10">
+                    <Wifi className="h-8 w-8 text-white" />
                 </div>
+                <h2 className="text-xl font-black text-white mt-2 relative z-10">{selectedNetwork.name}</h2>
+                <p className="text-xs opacity-80 text-white/80 relative z-10">{selectedNetwork.location}</p>
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-background">
                 {isLoadingCategories ? ( <div className="flex flex-col items-center justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div> ) : (
@@ -277,7 +266,7 @@ export default function BaityNetworksPage() {
       </Dialog>
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900">
+        <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900 border-none shadow-2xl">
           <DialogHeader><DialogTitle>تأكيد الشراء</DialogTitle><DialogDescription>هل أنت متأكد من شراء كرت "{showConfirmPurchase?.name}"؟</DialogDescription></DialogHeader>
           <div className="py-4 bg-muted/50 rounded-2xl space-y-2"><p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p><p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p></div>
           <DialogFooter className="grid grid-cols-2 gap-2"><Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>{isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}</Button><Button variant="outline" className="w-full rounded-xl mt-0" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button></DialogFooter>
@@ -292,7 +281,7 @@ export default function BaityNetworksPage() {
                 <CardContent className="p-8 space-y-6">
                     <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p></div>
                     <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3"><p className="text-[10px] font-bold text-primary uppercase tracking-widest">رقم الكرت</p><p className="text-3xl font-black font-mono tracking-tighter text-foreground">{purchasedCard.cardID}</p></div>
-                    <div className="grid grid-cols-2 gap-3"><Button className="rounded-2xl h-12 font-bold" onClick={() => { navigator.clipboard.writeText(purchasedCard.cardID); toast({ title: "تم النسخ" }); }}><Copy className="ml-2 h-4 w-4" /> نسخ الكرت</Button><Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> إرسال SMS</Button></div>
+                    <div className="grid grid-cols-2 gap-3"><Button className="rounded-2xl h-12 font-bold" onClick={() => { navigator.clipboard.writeText(purchasedCard.cardID); toast({ title: "تم النسخ" }); }}><Copy className="ml-2 h-4 w-4" /> نسخ الكرت</Button><Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS</Button></div>
                     <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>

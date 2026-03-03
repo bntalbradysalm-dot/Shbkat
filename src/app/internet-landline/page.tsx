@@ -204,8 +204,6 @@ export default function LandlineRedesignPage() {
             
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
-            // Success: "resultCode":"0"
-            // Pending: "resultCode":"-2"
             if (result.resultCode === "0" || result.resultCode === 0 || result.resultCode === "-2" || result.resultCode === -2) {
                 setQueryResult({
                     resultCode: String(result.resultCode),
@@ -433,44 +431,33 @@ export default function LandlineRedesignPage() {
 
                 {phone.length === 8 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={currentTheme.gradient}>
-                                <div className={cn(
-                                    "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
-                                    activeTab === 'internet' ? "grid grid-cols-3" : "grid grid-cols-2"
-                                )}>
-                                    <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
-                                        <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
-                                    </div>
-                                    
-                                    {activeTab === 'internet' && (
-                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
-                                            <p className="text-sm font-black">{formatRemainData(queryResult.remainAmount)}</p>
-                                        </div>
-                                    )}
-
-                                    <div className="p-3 flex flex-col justify-center">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
-                                        <p className="text-sm font-black">{queryResult.mobileType === "1" ? 'فوترة' : 'دفع مسبق'}</p>
-                                    </div>
-                                </div>
-                                {queryResult.resultCode === "-2" && (
-                                    <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
-                                        <Info className="w-3 h-3" /> جاري معالجة الطلب في المزود...
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
                                 <TabsTrigger value="internet" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#302C81] data-[state=active]:text-white transition-all">الإنترنت الأرضي</TabsTrigger>
                                 <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#F18312] data-[state=active]:text-white transition-all">الهاتف الثابت</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300">
+                            <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
+                                {queryResult && (
+                                    <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
+                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] grid grid-cols-2">
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
+                                                <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
+                                            </div>
+                                            <div className="p-3 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
+                                                <p className="text-sm font-black">{formatRemainData(queryResult.remainAmount)}</p>
+                                            </div>
+                                        </div>
+                                        {queryResult.resultCode === "-2" && (
+                                            <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
+                                                <Info className="w-3 h-3" /> جاري معالجة طلب الإنترنت في المزود...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#302C81]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">
@@ -557,7 +544,27 @@ export default function LandlineRedesignPage() {
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300">
+                            <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
+                                {queryResult && (
+                                    <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
+                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] grid grid-cols-2">
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد/المبلغ المستحق</p>
+                                                <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
+                                            </div>
+                                            <div className="p-3 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
+                                                <p className="text-sm font-black">{queryResult.mobileType === "1" ? 'فوترة' : 'دفع مسبق'}</p>
+                                            </div>
+                                        </div>
+                                        {queryResult.resultCode === "-2" && (
+                                            <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
+                                                <Info className="w-3 h-3" /> جاري معالجة طلب الثابت في المزود...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#F18312]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">

@@ -562,11 +562,12 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    const loanAmountToApply = isSettleLoanChecked 
+    // حساب مبلغ السلفة بشكل صريح للإرسال في معامل "solfa"
+    const loanToApply = isSettleLoanChecked 
         ? (billingInfo?.isLoan ? (billingInfo.loanAmount || 0) : 122) 
         : 0;
         
-    const totalToDeduct = selectedOffer.price + loanAmountToApply;
+    const totalToDeduct = selectedOffer.price + loanToApply;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
         toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية مع السلفة المختارة.' });
@@ -577,6 +578,7 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
+        // تعديل مهم: إرسال معامل "solfa" بشكل صريح ضمن البيانات لحل مشكلة رفض المزود
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -585,6 +587,7 @@ export default function YemenMobilePage() {
                 action: 'billoffer', 
                 num: selectedOffer.offertype, 
                 amount: totalToDeduct, 
+                solfa: loanToApply, // إرسال السلفة بشكل منفصل ومباشر
                 transid 
             })
         });
@@ -605,7 +608,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${loanAmountToApply > 0 ? ` (شامل سداد سلفة: ${loanAmountToApply})` : ''}`, 
+            notes: `للرقم: ${phone}${loanToApply > 0 ? ` (شامل سداد سلفة: ${loanToApply})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -924,7 +927,7 @@ export default function YemenMobilePage() {
                         </div>
                       </div>
                       
-                      <p className="text-[9px] text-muted-foreground text-center mt-2">ملاحظة: تفعيل خيار سداد السلفة يضمن نجاح العملية في حال كان الرقم مدين للمزود.</p>
+                      <p className="text-[9px] text-muted-foreground text-center mt-2">ملاحظة: سيتم إرسال معامل "سداد سلفة" صريح للمزود لضمان نجاح العملية.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

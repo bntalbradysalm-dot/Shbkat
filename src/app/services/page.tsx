@@ -349,7 +349,7 @@ export default function CombinedNetworksPage() {
                 <Input 
                     type="text" 
                     placeholder="البحث في الشبكات..." 
-                    className="w-full pr-10 rounded-xl h-12 bg-muted/20 border-none focus-visible:ring-primary" 
+                    className="w-full pr-10 rounded-xl h-12 bg-muted/20 border border-black/10 focus-visible:ring-primary shadow-sm" 
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />

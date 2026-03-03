@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type Network = {
   id: string;
@@ -211,8 +212,8 @@ export default function CardSalesReportsPage() {
     return (
         <div className="space-y-6">
             <div className="text-center space-y-1">
-                <h2 className="text-xl font-black text-primary">تقارير مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">متابعة المبيعات والعمولات (10% عمولة للتطبيق)</p>
+                <h2 className="text-xl font-black text-primary">طلبات تحويل الأرباح</h2>
+                <p className="text-sm font-bold text-muted-foreground">متابعة مبيعات الكروت المحلية وتحويل مستحقات الملاك</p>
                 {!isAdmin && <p className="text-[10px] text-orange-600 font-bold">ملاحظة: يتم تحويل الأرباح لحسابكم بعد مراجعة الإدارة</p>}
             </div>
             
@@ -242,7 +243,7 @@ export default function CardSalesReportsPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="تقارير المبيعات" />
+      <SimpleHeader title="تحويل الأرباح" />
       <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
       <Toaster/>
     </div>

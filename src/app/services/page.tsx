@@ -18,7 +18,10 @@ import {
   Smartphone,
   X,
   Globe,
-  Clock
+  Clock,
+  Star,
+  Trophy,
+  Megaphone
 } from 'lucide-react';
 import { 
   useCollection, 
@@ -271,20 +274,18 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // NOTE: تم إيقاف التحويل التلقائي للمالك. 
-            // سيقوم مالك التطبيق بالموافقة اليدوية في صفحة التقارير.
             const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
 
-            // 4. سجل عملية للمشتري
+            // سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
 
-            // 5. سجل كرت مباع للإدارة (بانتظار الموافقة اليدوية)
+            // سجل كرت مباع للإدارة (بانتظار الموافقة اليدوية وتحويل الأرباح)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -300,7 +301,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending' // دائماً "معلق" ليقوم المسؤول بتحويله يدوياً
+                payoutStatus: 'pending'
             });
 
             await batch.commit().catch(async (err) => {
@@ -388,16 +389,16 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
-                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
-                            </button>
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                                <Wifi className="h-6 w-6 text-white" />
+                            </div>
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                                <Wifi className="h-6 w-6 text-white" />
-                            </div>
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0">
+                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
+                            </button>
                         </CardContent>
                     </Card>
                 ))
@@ -447,24 +448,31 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[32px] max-sm text-center">
+        <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
-            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
-            <DialogDescription className="sr-only">تأكيد خصم رصيد لشراء كرت شبكة</DialogDescription>
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-10 w-10 text-primary" />
+            </div>
+            <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
+            <DialogDescription className="text-center font-bold">
+              هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ر.ي</span></p>
+          <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
-            <Button className="w-full h-12 rounded-2xl font-black" onClick={handlePurchase} disabled={isProcessing}>{isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}</Button>
-            <Button variant="outline" className="w-full h-12 rounded-2xl font-black mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
+            <Button className="w-full h-12 rounded-2xl font-black text-base shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : 'تأكيد الشراء'}
+            </Button>
+            <Button variant="outline" className="w-full h-12 rounded-2xl font-black text-base mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {purchasedCard && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>

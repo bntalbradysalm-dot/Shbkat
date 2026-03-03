@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -30,6 +29,7 @@ import {
   Banknote,
   Code,
   UserRound,
+  TrendingUp
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -67,6 +67,7 @@ const managementLinks = [
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة المتجر', icon: ShoppingBag, href: '/store-management' },
   { title: 'طلبات المتجر', icon: PackageCheck, href: '/store-orders' },
+  { title: 'تحويل الأرباح', icon: TrendingUp, href: '/card-sales-reports' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },

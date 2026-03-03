@@ -103,7 +103,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                         <div className="text-xl font-black text-green-600">{totalPayout.toLocaleString('en-US')}</div>
                         <p className="text-[9px] font-bold text-muted-foreground">ريال يمني</p>
                     </CardContent>
-                </div>
+                </Card>
             </div>
 
             {soldCards && soldCards.length > 0 ? (

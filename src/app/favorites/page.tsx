@@ -182,7 +182,7 @@ export default function FavoritesPage() {
         })));
       }
     } catch (err: any) {
-      if (err.code !== 'permission-denied') {
+      if (err.name !== 'FirebaseError') {
         setCategoryError(err.message || 'حدث خطأ أثناء جلب الفئات');
       }
     } finally {
@@ -221,7 +221,7 @@ export default function FavoritesPage() {
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId!;
+            const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
@@ -326,7 +326,7 @@ export default function FavoritesPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        if (error.code !== 'permission-denied') {
+        if (error.name !== 'FirebaseError') {
             toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
         }
     } finally {
@@ -390,7 +390,7 @@ export default function FavoritesPage() {
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
+                                <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-0">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
                                 <div className="flex-1 text-right mx-4 space-y-1 text-white order-1 overflow-hidden">
@@ -399,7 +399,7 @@ export default function FavoritesPage() {
                                 </div>
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
-                                    className="p-2 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0"
+                                    className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-2"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white fill-white")} />
                                 </button>
@@ -496,6 +496,7 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <DialogHeader className="sr-only"><DialogTitle>تم الشراء بنجاح</DialogTitle></DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />
@@ -532,9 +533,6 @@ export default function FavoritesPage() {
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
-                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Smartphone className="text-primary h-6 w-6" />
-                </div>
                 <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).

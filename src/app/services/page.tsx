@@ -261,6 +261,9 @@ export default function CombinedNetworksPage() {
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             
+            const commission = Math.floor(selectedCategory.price * 0.10);
+            const payoutAmount = selectedCategory.price - commission;
+
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
             
@@ -269,9 +272,6 @@ export default function CombinedNetworksPage() {
             
             // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
             const ownerId = selectedNetwork.ownerId;
-            const commission = Math.floor(selectedCategory.price * 0.10);
-            const payoutAmount = selectedCategory.price - commission;
-
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
@@ -310,7 +310,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'completed' // تم التحويل تلقائياً
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
@@ -398,7 +398,7 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-0">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
@@ -407,7 +407,7 @@ export default function CombinedNetworksPage() {
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0">
+                            <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-2">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
                         </CardContent>
@@ -461,9 +461,6 @@ export default function CombinedNetworksPage() {
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-10 w-10 text-primary" />
-            </div>
             <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">
               هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟
@@ -486,6 +483,7 @@ export default function CombinedNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
+                <DialogHeader className="sr-only"><DialogTitle>تم الشراء بنجاح</DialogTitle></DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                 <CardContent className="p-8 space-y-6">
                     <div><h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2><p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
@@ -503,9 +501,6 @@ export default function CombinedNetworksPage() {
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
-                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Smartphone className="text-primary h-6 w-6" />
-                </div>
                 <DialogTitle className="text-center text-xl font-black">ارسال كرت لزبون</DialogTitle>
                 <DialogDescription className="text-center font-bold">
                     أدخل رقم جوال الزبون لإرسال تفاصيل الكرت إليه عبر رسالة نصية (SMS).

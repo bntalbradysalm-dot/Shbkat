@@ -1,4 +1,3 @@
-
 'use server';
 
 import { NextResponse } from 'next/server';
@@ -69,12 +68,10 @@ export async function POST(request: Request) {
             case 'billoffer':
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                apiRequestParams.method = 'Renew';
-                break;
-            case 'billover': 
-                endpoint = 'offeryem';
-                apiRequestParams.action = 'billoffer';
-                apiRequestParams.method = 'Renew';
+                // If the client didn't provide a method, default to Renew
+                if (!apiRequestParams.method) {
+                    apiRequestParams.method = 'Renew';
+                }
                 break;
             case 'status':
             case 'balance':

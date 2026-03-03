@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -561,16 +560,13 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    /**
-     * منطق السلفة الذكي: الاعتماد الكلي على سيرفر اشحن لي
-     * يتم إرسال حقل solfa فقط إذا أكد الاستعلام المسبق من المزود وجودها.
-     */
-    const hasLoanFromServer = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
-    const loanAmountToApply = hasLoanFromServer ? (billingInfo?.loanAmount || 0) : 0;
-    const totalToDeduct = selectedOffer.price + loanAmountToApply;
+    // سحب قيمة السلفة من الاستعلام المسبق
+    const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
+    const loanAmt = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
+    const totalToDeduct = selectedOffer.price + loanAmt;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {
-        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل هذه الباقة شاملة سداد السلفة المكتشفة من السيرفر.' });
+        toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لتفعيل الباقة شاملة سداد السلفة.' });
         return;
     }
 
@@ -578,19 +574,17 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // بناء حزمة البيانات للمزود
+        // بناء طلب التفعيل والتحصيل الموحد بناءً على التوثيق
         const payload: any = { 
             mobile: phone, 
             action: 'billoffer', 
-            num: selectedOffer.offertype, 
-            amount: totalToDeduct, 
+            service: 'yemen',
+            offerkey: selectedOffer.offertype, 
+            method: 'Renew',
+            solfa: hasLoan ? 'Y' : 'N',
+            amount: selectedOffer.price, // القيمة الأساسية للباقة
             transid 
         };
-
-        // إرسال معامل solfa فقط إذا كان السيرفر الخارجي قد أكد وجودها
-        if (hasLoanFromServer) {
-            payload.solfa = loanAmountToApply;
-        }
 
         const response = await fetch('/api/telecom', {
             method: 'POST',
@@ -614,7 +608,7 @@ export default function YemenMobilePage() {
             transactionDate: new Date().toISOString(), 
             amount: totalToDeduct,
             transactionType: `تفعيل ${selectedOffer.offerName}`, 
-            notes: `للرقم: ${phone}${hasLoanFromServer ? ` (شامل سداد سلفة مكتشفة من السيرفر: ${loanAmountToApply})` : ''}`, 
+            notes: `للرقم: ${phone}${hasLoan ? ` (شامل سداد سلفة: ${loanAmt})` : ''}`, 
             recipientPhoneNumber: phone,
             transid: transid
         });
@@ -904,11 +898,10 @@ export default function YemenMobilePage() {
                           <span className="font-bold">{selectedOffer?.price.toLocaleString('en-US')} ريال</span>
                       </div>
 
-                      {/* سطر السلفة يظهر فقط وفقط إذا أكد المزود وجود دين حقيقي */}
                       {billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-dashed animate-in fade-in duration-300">
                             <span className="text-destructive font-bold flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم (من المزود):
+                                <AlertCircle className="w-3 h-3" /> سداد سلفة الرقم:
                             </span>
                             <span className="font-black text-destructive">{(billingInfo.loanAmount || 0).toLocaleString('en-US')} ريال</span>
                         </div>
@@ -923,8 +916,6 @@ export default function YemenMobilePage() {
                             <span className="text-[10px] font-black text-[#B32C4C]">ريال</span>
                         </div>
                       </div>
-                      
-                      <p className="text-[9px] text-muted-foreground text-center mt-2 italic">ملاحظة: يتم سداد السلفة تلقائياً بناءً على طلب سيرفر المزود لضمان تفعيل الخدمة.</p>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

@@ -17,7 +17,8 @@ import {
   Loader2,
   Smartphone,
   X,
-  Globe
+  Globe,
+  Clock
 } from 'lucide-react';
 import { 
   useCollection, 
@@ -270,22 +271,11 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. تحويل الربح للمالك إذا وجد
+            // NOTE: تم إيقاف التحويل التلقائي للمالك بناءً على طلبك. 
+            // سيقوم مالك التطبيق بالموافقة اليدوية في صفحة التقارير.
             const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
-
-            if (ownerId) {
-                batch.update(doc(firestore, 'users', ownerId), { balance: increment(payoutAmount) });
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId, 
-                    transactionDate: now, 
-                    amount: payoutAmount,
-                    transactionType: 'أرباح بيع كرت', 
-                    notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-                });
-            }
 
             // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
@@ -294,7 +284,7 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 5. سجل كرت مباع للإدارة
+            // 5. سجل كرت مباع للإدارة (بانتظار الموافقة اليدوية)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -310,7 +300,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: ownerId ? 'completed' : 'admin_held'
+                payoutStatus: 'pending' // دائماً "معلق" ليقوم المسؤول بتحويله يدوياً
             });
 
             await batch.commit().catch(async (err) => {
@@ -417,6 +407,10 @@ export default function CombinedNetworksPage() {
 
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
+            <DialogDescription>استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
+          </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white text-center relative">
@@ -454,7 +448,10 @@ export default function CombinedNetworksPage() {
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[32px] max-sm text-center">
-          <DialogHeader><DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
+            <DialogDescription className="sr-only">تأكيد خصم رصيد لشراء كرت شبكة</DialogDescription>
+          </DialogHeader>
           <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 mt-2">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>
             <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ر.ي</span></p>

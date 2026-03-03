@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2 } from 'lucide-react';
+import { Calendar, CheckCircle, Copy, AlertCircle, Database, CreditCard, MessageSquare, Smartphone, Loader2, Wifi } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -146,21 +146,9 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. تحويل الأرباح للمالك (إن وجد)
+        // 3. ملاحظة: تم إيقاف التحويل التلقائي للأرباح للمالك.
+        // سيقوم مالك التطبيق بالموافقة اليدوية في صفحة التقارير.
         const ownerId = networkData.ownerId;
-        if (ownerId) {
-            const ownerDocRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-            
-            const ownerTransactionRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTransactionRef, {
-                userId: ownerId,
-                transactionDate: now,
-                amount: payoutAmount,
-                transactionType: 'أرباح بيع كرت',
-                notes: `بيع كرت ${selectedCategory.name} للمشتري ${userProfile.displayName || 'مشترك'}`,
-            });
-        }
   
         // 4. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
@@ -173,7 +161,7 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. سجل الكروت المباعة للإدارة
+        // 5. سجل الكروت المباعة للإدارة (بانتظار الموافقة اليدوية)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -190,7 +178,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: ownerId ? 'completed' : 'admin_held'
+            payoutStatus: 'pending' // دائماً "معلق" ليتم تحويله يدوياً من قبل الإدارة
         });
         
         await batch.commit().catch(async (err) => {

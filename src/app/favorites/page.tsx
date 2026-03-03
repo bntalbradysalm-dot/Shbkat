@@ -504,9 +504,9 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">تم الشراء بنجاح</DialogTitle>
-                    <DialogDescription className="sr-only">تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
+                <DialogHeader className="sr-only">
+                    <DialogTitle>تم الشراء بنجاح</DialogTitle>
+                    <DialogDescription>تم شراء الكرت بنجاح وهو جاهز للاستخدام</DialogDescription>
                 </DialogHeader>
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
@@ -528,7 +528,7 @@ export default function FavoritesPage() {
                     
                     <div className="grid grid-cols-2 gap-3">
                         <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
-                            <Copy className="ml-2 h-4 w-4" /> نسخ
+                            <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
                             <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS

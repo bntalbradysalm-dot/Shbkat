@@ -561,7 +561,6 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // حساب المبلغ الإجمالي: سعر الباقة + مبلغ السلفة إن وجد لضمان قبول الطلب
     const loanAmount = billingInfo?.loanAmount || 0;
     const totalToDeduct = selectedOffer.price + loanAmount;
 
@@ -574,7 +573,6 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // إرسال الإجمالي في حقل amount للمزود لسداد السلفة وتفعيل الباقة معاً
         const response = await fetch('/api/telecom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -582,7 +580,7 @@ export default function YemenMobilePage() {
                 mobile: phone, 
                 action: 'billoffer', 
                 num: selectedOffer.offertype, 
-                amount: totalToDeduct, // إرسال الإجمالي (باقة + سلفة)
+                amount: totalToDeduct, 
                 transid 
             })
         });

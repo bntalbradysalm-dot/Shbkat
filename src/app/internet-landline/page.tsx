@@ -20,7 +20,9 @@ import {
   ShieldCheck,
   Users,
   Phone as PhoneIcon,
-  Loader2
+  Loader2,
+  Database,
+  Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -57,10 +59,11 @@ type UserProfile = {
 };
 
 type QueryResult = {
-    balance?: string;
-    packagePrice?: string;
-    expireDate?: string;
-    message?: string;
+    resultCode: string;
+    balance: string;
+    remainAmount?: string;
+    mobileType?: string;
+    resultDesc?: string;
 };
 
 // --- THEME CONSTANTS ---
@@ -191,47 +194,29 @@ export default function LandlineRedesignPage() {
         setIsSearching(true);
         setQueryResult(null);
         try {
-            const searchType = activeTab === 'internet' ? 'adsl' : 'line';
-            
+            const transid = Date.now().toString().slice(-8);
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post', type: searchType })
+                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post', transid })
             });
             const result = await response.json();
+            
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
-            const raw = result.balance || result.resultDesc || '';
-            let balanceResult = activeTab === 'internet' ? '0.00 GB' : '0 ريال';
-            let price = '0';
-            let expiry = '...';
-
-            if (activeTab === 'internet') {
-                const balMatch = raw.match(/(الرصيد المتبقي|رصيد الباقة):\s*([\d.]+)/i);
-                if (balMatch) balanceResult = `${balMatch[2]} GB`;
-                else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) balanceResult = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
+            // Success: "resultCode":"0"
+            // Pending: "resultCode":"-2"
+            if (result.resultCode === "0" || result.resultCode === 0 || result.resultCode === "-2" || result.resultCode === -2) {
+                setQueryResult({
+                    resultCode: String(result.resultCode),
+                    balance: result.balance || '0.00',
+                    remainAmount: result.remainAmount ? String(result.remainAmount) : undefined,
+                    mobileType: result.mobileType ? String(result.mobileType) : undefined,
+                    resultDesc: result.resultDesc
+                });
             } else {
-                const billMatch = raw.match(/(إجمالي الفاتورة|المبلغ المستحق|الفاتورة|عليه|المبلغ|مبلغ الفاتورة الحالية|الفاتورة الحالية):\s*([\d.]+)/i);
-                if (billMatch) {
-                    balanceResult = `${parseFloat(billMatch[2]).toLocaleString('en-US')} ريال`;
-                } else if (!isNaN(parseFloat(raw)) && parseFloat(raw) > 0) {
-                    balanceResult = `${parseFloat(raw).toLocaleString('en-US')} ريال`;
-                } else {
-                    balanceResult = 'لا توجد متأخرات';
-                }
+                throw new Error(result.resultDesc || result.message || `خطأ من المزود: ${result.resultCode}`);
             }
-
-            const priceMatch = raw.match(/(قيمة الباقة|تأمين الهاتف|المبلغ):\s*([\d.]+)/i);
-            if (priceMatch) price = priceMatch[2] || priceMatch[1];
-
-            const dateMatch = raw.match(/(تأريخ الانتهاء|تاريخ الفاتورة):\s*(\d{4})[-]?(\d{2})[-]?(\d{2})/i);
-            if (dateMatch) {
-                expiry = `${parseInt(dateMatch[4])}/${parseInt(dateMatch[3])}/${dateMatch[2]}`;
-            } else if (raw.match(/\d{4}\/\d{2}\/\d{2}/)) {
-                expiry = raw.match(/\d{4}\/\d{2}\/\d{2}/)![0];
-            }
-            
-            setQueryResult({ balance: balanceResult, packagePrice: price, expireDate: expiry, message: result.resultDesc });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
         } finally {
@@ -326,6 +311,13 @@ export default function LandlineRedesignPage() {
             setIsProcessing(false);
             setIsConfirmingPayment(false);
         }
+    };
+
+    const formatRemainData = (val?: string) => {
+        if (!val) return '0 MB';
+        const num = parseFloat(val);
+        if (num >= 1024) return (num / 1024).toFixed(2) + ' GB';
+        return num + ' MB';
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
@@ -445,30 +437,30 @@ export default function LandlineRedesignPage() {
                             <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={currentTheme.gradient}>
                                 <div className={cn(
                                     "bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] flex items-center justify-center",
-                                    activeTab === 'internet' ? "grid grid-cols-3" : "w-full py-4"
+                                    activeTab === 'internet' ? "grid grid-cols-3" : "grid grid-cols-2"
                                 )}>
-                                    {activeTab === 'internet' ? (
-                                        <>
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.balance}</p>
-                                            </div>
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                            </div>
-                                            <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">مبلغ الفاتورة الحالي</p>
-                                            <p className="text-xl font-black">{queryResult.balance}</p>
+                                    <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
+                                        <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
+                                    </div>
+                                    
+                                    {activeTab === 'internet' && (
+                                        <div className="p-3 border-l border-white/10 flex flex-col justify-center">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
+                                            <p className="text-sm font-black">{formatRemainData(queryResult.remainAmount)}</p>
                                         </div>
                                     )}
+
+                                    <div className="p-3 flex flex-col justify-center">
+                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
+                                        <p className="text-sm font-black">{queryResult.mobileType === "1" ? 'فوترة' : 'دفع مسبق'}</p>
+                                    </div>
                                 </div>
+                                {queryResult.resultCode === "-2" && (
+                                    <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
+                                        <Info className="w-3 h-3" /> جاري معالجة الطلب في المزود...
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -555,7 +547,6 @@ export default function LandlineRedesignPage() {
                                                                     <ArrowUpRight className="w-4 h-4" />
                                                                 </div>
                                                             </div>
-                                                            {/* Subtle Glow Effect */}
                                                             <div className="absolute top-0 right-0 w-24 h-full bg-[#302C81]/5 blur-2xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity" />
                                                         </div>
                                                     ))}

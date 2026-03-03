@@ -225,9 +225,29 @@ export default function FavoritesPage() {
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
+            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
+            
+            // 4. سجل عملية للمشتري
             const buyerTxRef = doc(collection(firestore, `users/${user.uid}/transactions`));
             batch.set(buyerTxRef, {
                 userId: user.uid, 
@@ -238,6 +258,7 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
             
+            // 5. سجل الكروت المباعة (مكتمل تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
@@ -254,7 +275,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending'
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {
@@ -369,16 +390,13 @@ export default function FavoritesPage() {
                             onClick={() => handleNetworkClick(fav)}
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
-                                {/* أيقونة الشبكة يمين */}
                                 <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                     <Wifi className="h-6 w-6 text-white" />
                                 </div>
-                                {/* الاسم والمنطقة منتصف */}
                                 <div className="flex-1 text-right mx-4 space-y-1 text-white order-1 overflow-hidden">
                                     <h4 className="font-bold text-base text-white truncate">{fav.name}</h4>
                                     <p className="text-[10px] opacity-80 text-white/80 truncate">{fav.location}</p>
                                 </div>
-                                {/* القلب يسار */}
                                 <button 
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
                                     className="p-2 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0"

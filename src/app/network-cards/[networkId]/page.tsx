@@ -146,8 +146,22 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // NOTE: تم إيقاف التحويل التلقائي للأرباح للمالك.
+        // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
         const ownerId = networkData.ownerId;
+        if (ownerId && ownerId !== 'admin') {
+            const ownerDocRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+            // سجل عملية للمالك
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح مبيعات الكروت',
+                notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${networkName}`
+            });
+        }
   
         // 4. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
@@ -160,7 +174,7 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. سجل الكروت المباعة للإدارة (بانتظار الموافقة اليدوية)
+        // 5. سجل الكروت المباعة (مكتمل تلقائياً)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
@@ -177,7 +191,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'pending' // دائماً "معلق" ليتم تحويله يدوياً من قبل الإدارة
+            payoutStatus: 'completed'
         });
         
         await batch.commit().catch(async (err) => {
@@ -252,16 +266,15 @@ function NetworkPurchasePageComponent() {
                                     <h3 className="font-bold text-base">{category.name}</h3>
                                     <p className="font-semibold text-primary">{category.price.toLocaleString('en-US')} ريال</p>
                                 </div>
-                                <Button 
-                                    size="default" 
-                                    className="h-auto py-2 px-5 text-sm font-bold rounded-lg"
+                                <button 
+                                    className="h-10 py-2 px-5 text-sm font-bold rounded-lg bg-primary text-white hover:bg-primary/90"
                                     onClick={() => {
                                         setSelectedCategory(category);
                                         setIsConfirming(true);
                                     }}
                                 >
                                     شراء
-                                </Button>
+                                </button>
                             </div>
                             <Separator className="my-2" />
                             <div className="text-xs text-muted-foreground flex items-center justify-start gap-x-4 gap-y-1">

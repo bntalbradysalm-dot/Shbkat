@@ -67,7 +67,7 @@ const managementLinks = [
   { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة المتجر', icon: ShoppingBag, href: '/store-management' },
   { title: 'طلبات المتجر', icon: PackageCheck, href: '/store-orders' },
-  { title: 'تحويل الأرباح', icon: TrendingUp, href: '/card-sales-reports' },
+  { title: 'تقارير مبيعات الكروت', icon: TrendingUp, href: '/card-sales-reports' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },

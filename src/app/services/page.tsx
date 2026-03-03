@@ -261,19 +261,40 @@ export default function CombinedNetworksPage() {
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
+            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
             const ownerId = selectedNetwork.ownerId;
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
 
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
+
+            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
 
+            // 5. سجل الكروت المباعة (مكتمل تلقائياً)
             batch.set(doc(collection(firestore, 'soldCards')), {
                 networkId: selectedNetwork.id, 
                 ownerId: ownerId || 'admin', 
@@ -289,7 +310,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending'
+                payoutStatus: 'completed' // تم التحويل تلقائياً
             });
 
             await batch.commit().catch(async (err) => {
@@ -377,18 +398,15 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            {/* أيقونة الشبكة على اليمين */}
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 order-2">
                                 <Wifi className="h-6 w-6 text-white" />
                             </div>
                             
-                            {/* النص في المنتصف */}
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden order-1">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
                                 <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
                             </div>
                             
-                            {/* زر القلب على اليسار */}
                             <button onClick={(e) => handleFavoriteClick(e, net)} className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0 order-0">
                                 <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
                             </button>
@@ -512,6 +530,9 @@ export default function CombinedNetworksPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
+      <Toaster />
     </>
   );
 }

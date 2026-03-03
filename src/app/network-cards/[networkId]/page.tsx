@@ -139,6 +139,7 @@ function NetworkPurchasePageComponent() {
         const now = new Date().toISOString();
         const commission = Math.floor(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
+        const ownerId = networkData.ownerId;
   
         // 1. تحديث حالة الكرت
         batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
@@ -146,7 +147,23 @@ function NetworkPurchasePageComponent() {
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. سجل عملية للمشتري
+        // 3. التحويل اللحظي للمالك (90%)
+        if (ownerId && ownerId !== 'admin') {
+            const ownerDocRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+            // سجل المالك
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح مبيعات الكروت',
+                notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${networkName}`
+            });
+        }
+
+        // 4. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -157,11 +174,11 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 4. سجل الكروت المباعة (حالة معلقة بانتظار المشرف)
+        // 5. سجل الكروت المباعة (مكتملة تلقائياً)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
-            ownerId: networkData.ownerId || 'admin',
+            ownerId: ownerId || 'admin',
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
@@ -174,7 +191,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'pending'
+            payoutStatus: 'completed'
         });
         
         await batch.commit().catch(async (err) => {

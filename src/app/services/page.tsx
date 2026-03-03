@@ -263,6 +263,7 @@ export default function CombinedNetworksPage() {
             
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
+            const ownerId = selectedNetwork.ownerId;
 
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
@@ -270,17 +271,34 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. سجل عملية للمشتري
+            // 3. التحويل اللحظي للمالك (90% من القيمة)
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                // سجل عملية للمالك في سجلاته الشخصية
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
+
+            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
 
-            // 4. سجل الكروت المباعة (حالة معلقة - بانتظار تحويل المشرف للمالك)
-            batch.set(doc(collection(firestore, 'soldCards')), {
+            // 5. سجل الكروت المباعة العام (حالة مكتملة تلقائياً)
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 
-                ownerId: selectedNetwork.ownerId || 'admin', 
+                ownerId: ownerId || 'admin', 
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id, 
                 categoryName: selectedCategory.name,
@@ -293,7 +311,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '', 
                 soldTimestamp: now, 
-                payoutStatus: 'pending' // تم التغيير لـ pending ليقوم المشرف بتحويلها يدوياً
+                payoutStatus: 'completed'
             });
 
             await batch.commit().catch(async (err) => {

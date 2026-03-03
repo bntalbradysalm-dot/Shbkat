@@ -560,7 +560,7 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // إرسال قيمة الباقة الصافية فقط للمزود كما طلب العميل (بدون سلفة)
+    // إرسال قيمة الباقة الصافية فقط للمزود كما طلب العميل (السلفة ليست إلزامية للتفعيل هنا)
     const totalToDeduct = selectedOffer.price;
 
     if ((userProfile?.balance ?? 0) < totalToDeduct) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -40,6 +40,7 @@ import {
   Banknote,
   FileText,
   LayoutGrid,
+  RefreshCw,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -83,6 +84,10 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
+  // Agent Balance States
+  const [agentBalance, setAgentBalance] = useState<string | null>(null);
+  const [isFetchingAgentBalance, setIsFetchingAgentBalance] = useState(false);
+
   const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
@@ -96,6 +101,40 @@ export default function UsersPage() {
     if (!users) return 0;
     return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
   }, [users]);
+
+  // Fetch Agent Balance logic
+  const fetchAgentBalance = useCallback(async () => {
+    setIsFetchingAgentBalance(true);
+    try {
+      const transid = Date.now().toString().slice(-8);
+      const response = await fetch('/api/telecom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            action: 'balance',
+            transid: transid,
+            mobile: '000000000' // Using dummy mobile as per documentation "any number"
+        })
+      });
+      const result = await response.json();
+      
+      if (response.ok && (result.resultCode === "0" || result.resultCode === 0)) {
+        setAgentBalance(result.balance);
+      } else {
+        setAgentBalance('خطأ');
+        console.error("Agent Balance API Error:", result);
+      }
+    } catch (e) {
+      setAgentBalance('خطأ');
+      console.error("Agent Balance Fetch Failed:", e);
+    } finally {
+      setIsFetchingAgentBalance(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAgentBalance();
+  }, [fetchAgentBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -218,25 +257,51 @@ export default function UsersPage() {
         <SimpleHeader title="إدارة المستخدمين" />
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="relative overflow-hidden border-none shadow-sm bg-primary/5">
+          <div className="space-y-4">
+            {/* Agent Balance Card - Full Width */}
+            <Card className="relative overflow-hidden border-none shadow-xl bg-mesh-gradient text-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-[10px] font-black text-primary uppercase tracking-widest">إجمالي الأرصدة</CardTitle>
-                <Wallet className="h-4 w-4 text-primary opacity-50" />
+                <CardTitle className="text-[10px] font-black opacity-80 uppercase tracking-widest">رصيد الوكيل (المزود)</CardTitle>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full hover:bg-white/10 text-white"
+                    onClick={fetchAgentBalance}
+                    disabled={isFetchingAgentBalance}
+                >
+                    <RefreshCw className={cn("h-4 w-4", isFetchingAgentBalance && "animate-spin")} />
+                </Button>
               </CardHeader>
               <CardContent>
-                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                <div className="flex items-baseline gap-1">
+                    <h2 className="text-3xl font-black">
+                        {isFetchingAgentBalance ? <Skeleton className="h-8 w-32 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                    </h2>
+                    <span className="text-[10px] font-bold opacity-70">ريال يمني</span>
+                </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-muted/30">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المستخدمين</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground opacity-50" />
-              </CardHeader>
-              <CardContent>
-                {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
-              </CardContent>
-            </Card>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Card className="relative overflow-hidden border-none shadow-sm bg-primary/5">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-[10px] font-black text-primary uppercase tracking-widest">إجمالي الأرصدة</CardTitle>
+                    <Wallet className="h-4 w-4 text-primary opacity-50" />
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المستخدمين</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground opacity-50" />
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                </CardContent>
+                </Card>
+            </div>
           </div>
           
           <div className="relative">
@@ -392,7 +457,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isManualDepositOpen} onOpenChange={setIsManualDepositOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">إيداع وتبليغ واتساب</DialogTitle>
                 <DialogDescription className="text-center">سيتم إضافة المبلغ وإرسال رسالة واتساب للعميل.</DialogDescription>

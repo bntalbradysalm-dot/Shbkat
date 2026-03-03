@@ -50,10 +50,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -110,7 +108,6 @@ export default function CombinedNetworksPage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTypeTab, setActiveTypeTab] = useState('local');
   
   const [apiNetworks, setApiNetworks] = useState<CombinedNetwork[]>([]);
   const [isLoadingApi, setIsLoadingApi] = useState(true);
@@ -160,6 +157,20 @@ export default function CombinedNetworksPage() {
     fetchApiNetworks();
   }, []);
 
+  // Combine All Networks
+  const allNetworksCombined = useMemo(() => {
+    const local = (localNetworks || []).map(n => ({ ...n, isLocal: true }));
+    const api = apiNetworks;
+    const combined = [...local, ...api];
+    
+    if (!searchTerm) return combined;
+    
+    return combined.filter(net => 
+        net.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        net.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [localNetworks, apiNetworks, searchTerm]);
+
   // User Profile
   const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -177,15 +188,6 @@ export default function CombinedNetworksPage() {
   );
   const { data: favorites } = useCollection<Favorite>(favoritesQuery);
   const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
-
-  const filteredLocal = useMemo(() => {
-    if (!localNetworks) return [];
-    return localNetworks.filter((net: any) => net.name.toLowerCase().includes(searchTerm.toLowerCase())).map((n: any) => ({ ...n, isLocal: true }));
-  }, [localNetworks, searchTerm]);
-
-  const filteredApi = useMemo(() => {
-    return apiNetworks.filter(net => net.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [apiNetworks, searchTerm]);
 
   const handleNetworkClick = async (network: CombinedNetwork) => {
     setSelectedNetwork(network);
@@ -300,73 +302,160 @@ export default function CombinedNetworksPage() {
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
         <SimpleHeader title="الشبكات" />
-        <div className="p-4"><div className="relative"><Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" /><Input type="text" placeholder="البحث في الشبكات..." className="w-full pr-10 rounded-xl h-12" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div></div>
+        <div className="p-4">
+            <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    type="text" 
+                    placeholder="البحث في الشبكات..." 
+                    className="w-full pr-10 rounded-xl h-12 bg-muted/20 border-none focus-visible:ring-primary" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                />
+            </div>
+        </div>
         
-        <Tabs value={activeTypeTab} onValueChange={setActiveTypeTab} className="px-4">
-            <TabsList className="grid w-full grid-cols-2 h-12 rounded-2xl bg-muted/50 p-1 mb-4">
-                <TabsTrigger value="local" className="rounded-xl font-bold">شبكات محلية</TabsTrigger>
-                <TabsTrigger value="api" className="rounded-xl font-bold">شبكات بيتي</TabsTrigger>
-            </TabsList>
+        <div className="flex-1 overflow-y-auto px-4 pb-20 space-y-4">
+            {isLoadingLocal || isLoadingApi ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <CustomLoader />
+                </div>
+            ) : allNetworksCombined.length === 0 ? (
+                <div className="text-center py-20 opacity-40">
+                    <Wifi className="h-16 w-16 mx-auto mb-4" />
+                    <p className="font-bold">لا توجد شبكات متاحة حالياً</p>
+                </div>
+            ) : (
+                allNetworksCombined.map((net, index) => (
+                    <Card 
+                        key={net.id} 
+                        className="bg-mesh-gradient cursor-pointer text-white rounded-2xl border-none shadow-md overflow-hidden animate-in fade-in-0 slide-in-from-bottom-2"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        onClick={() => handleNetworkClick(net)}
+                    >
+                        <CardContent className="p-4 flex items-center justify-between gap-2">
+                            {/* زر القلب على اليسار */}
+                            <button 
+                                onClick={(e) => handleFavoriteClick(e, net)}
+                                className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
+                            >
+                                <Heart className={cn("h-5 w-5 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} />
+                            </button>
 
-            <TabsContent value="local" className="space-y-4 pb-4">
-                {isLoadingLocal ? <div className="flex flex-col items-center justify-center py-10"><CustomLoader /></div> : filteredLocal.length === 0 ? <p className="text-center py-10 opacity-50">لا توجد شبكات محلية</p> : filteredLocal.map((net, i) => (
-                    <Card key={net.id} className="bg-mesh-gradient cursor-pointer text-white rounded-2xl border-none shadow-md" onClick={() => handleNetworkClick(net)}>
-                        <CardContent className="p-4 flex items-center justify-between"><div className="p-3 bg-white/20 rounded-xl"><Wifi className="h-6 w-6" /></div><div className="flex-1 text-right mx-4"><h4 className="font-bold">{net.name}</h4><p className="text-[10px] opacity-80">{net.location}</p></div><button onClick={(e) => handleFavoriteClick(e, net)}><Heart className={cn("h-6 w-6 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} /></button></CardContent>
-                    </Card>
-                ))}
-            </TabsContent>
+                            {/* معلومات الشبكة في المنتصف */}
+                            <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
+                                <h4 className="font-black text-base text-white truncate">{net.name}</h4>
+                                <p className="text-[10px] text-white/70 font-bold truncate opacity-80">{net.location}</p>
+                            </div>
 
-            <TabsContent value="api" className="space-y-4 pb-4">
-                {isLoadingApi ? <div className="flex flex-col items-center justify-center py-10"><CustomLoader /></div> : filteredApi.length === 0 ? <p className="text-center py-10 opacity-50">لا توجد شبكات بيتي</p> : filteredApi.map((net, i) => (
-                    <Card key={net.id} className="bg-mesh-gradient cursor-pointer text-white rounded-2xl border-none shadow-md" onClick={() => handleNetworkClick(net)}>
-                        <CardContent className="p-4 flex items-center justify-between"><div className="p-3 bg-white/20 rounded-xl"><Globe className="h-6 w-6" /></div><div className="flex-1 text-right mx-4"><h4 className="font-bold">{net.name}</h4><p className="text-[10px] opacity-80">{net.location}</p></div><button onClick={(e) => handleFavoriteClick(e, net)}><Heart className={cn("h-6 w-6 text-white", favoriteNetworkIds.has(net.id) && 'fill-white')} /></button></CardContent>
+                            {/* أيقونة الشبكة على اليمين */}
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                                {net.isLocal ? (
+                                    <Wifi className="h-6 w-6 text-white" />
+                                ) : (
+                                    <Globe className="h-6 w-6 text-white" />
+                                )}
+                            </div>
+                        </CardContent>
                     </Card>
-                ))}
-            </TabsContent>
-        </Tabs>
+                ))
+            )}
+        </div>
       </div>
 
+      {/* تفاصيل الفئات */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-mesh-gradient p-6 text-white text-center"><div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-2"><Wifi className="h-8 w-8" /></div><h2 className="text-xl font-black">{selectedNetwork.name}</h2></div>
+              <div className="bg-mesh-gradient p-6 text-white text-center relative">
+                <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
+                    {selectedNetwork.isLocal ? <Wifi className="h-8 w-8 text-white" /> : <Globe className="h-8 w-8 text-white" />}
+                </div>
+                <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
+                <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
+              </div>
               <div className="flex-1 overflow-y-auto p-4">
-                {isLoadingCategories ? <div className="flex justify-center py-10"><CustomLoader /></div> : categoryError ? <p className="text-center text-destructive">{categoryError}</p> : (
-                  <div className="space-y-3">{categories.map(cat => (
-                    <Card key={cat.id} className="rounded-2xl cursor-pointer bg-muted/30" onClick={() => setShowConfirmPurchase(cat)}><CardContent className="p-4 flex justify-between items-center"><div className="text-right space-y-1"><h4 className="font-bold text-sm">{cat.name}</h4><div className="flex gap-2 text-[10px] opacity-60">{cat.capacity && <span>{cat.capacity}</span>}{cat.expirationDate && <span>{cat.expirationDate}</span>}</div></div><div className="text-left"><p className="font-black text-primary">{cat.price.toLocaleString()} ر.ي</p></div></CardContent></Card>
-                  ))}</div>
+                {isLoadingCategories ? (
+                    <div className="flex justify-center py-10"><CustomLoader /></div>
+                ) : categoryError ? (
+                    <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {categories.map(cat => (
+                        <Card 
+                            key={cat.id} 
+                            className="rounded-2xl cursor-pointer bg-muted/30 border-none hover:bg-muted/50 transition-colors" 
+                            onClick={() => setShowConfirmPurchase(cat)}
+                        >
+                            <CardContent className="p-4 flex justify-between items-center">
+                                <div className="text-right space-y-1">
+                                    <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
+                                    <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
+                                        {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {cat.capacity}</span>}
+                                        {cat.expirationDate && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {cat.expirationDate}</span>}
+                                    </div>
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                  </div>
                 )}
               </div>
-              <div className="p-4 border-t"><Button variant="outline" className="w-full rounded-2xl" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
+              <div className="p-4 border-t">
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
+      {/* تأكيد الشراء */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-w-sm text-center">
-          <DialogHeader><DialogTitle>تأكيد الشراء</DialogTitle></DialogHeader>
-          <div className="py-4 bg-muted/50 rounded-2xl"><p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ر.ي</p></div>
-          <DialogFooter className="grid grid-cols-2 gap-2"><Button className="w-full rounded-xl" onClick={handlePurchase} disabled={isProcessing}>{isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}</Button><Button variant="outline" className="w-full rounded-xl" onClick={() => setShowConfirmPurchase(null)}>إلغاء</Button></DialogFooter>
+        <DialogContent className="rounded-[32px] max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 mt-2">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ر.ي</span></p>
+          </div>
+          <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
+            <Button className="w-full h-12 rounded-2xl font-black" onClick={handlePurchase} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد'}
+            </Button>
+            <Button variant="outline" className="w-full h-12 rounded-2xl font-black mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* نجاح الشراء */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background">
+            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] border-none bg-background overflow-hidden">
                 <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                 <CardContent className="p-8 space-y-6">
-                    <div><h2 className="text-2xl font-black text-green-600">تم الشراء!</h2><p className="text-3xl font-black font-mono mt-4 tracking-widest">{purchasedCard.cardID || purchasedCard.cardNumber}</p></div>
-                    <div className="grid grid-cols-2 gap-3"><Button className="rounded-2xl" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button><Button variant="outline" className="rounded-2xl" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button></div>
-                    <Button variant="ghost" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
+                    <div>
+                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <p className="text-3xl font-black font-mono mt-6 tracking-[0.2em] bg-muted py-4 rounded-2xl border-2 border-dashed border-primary/20">
+                            {purchasedCard.cardID || purchasedCard.cardNumber}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}><Copy className="ml-2 h-4 w-4" /> نسخ</Button>
+                        <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}><MessageSquare className="ml-2 h-4 w-4" /> SMS</Button>
+                    </div>
+                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setSelectedNetwork(null); }}>إغلاق</Button>
                 </CardContent>
             </Card>
         </div>
       )}
 
-      {isProcessing && <ProcessingOverlay message="جاري الشراء..." />}
+      {isProcessing && <ProcessingOverlay message="جاري معالجة الشراء..." />}
       <Toaster />
     </>
   );

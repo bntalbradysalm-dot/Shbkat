@@ -371,7 +371,7 @@ export default function CombinedNetworksPage() {
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
                             <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                                {net.isLocal ? <Wifi className="h-6 w-6 text-white" /> : <Globe className="h-6 w-6 text-white" />}
+                                <Wifi className="h-6 w-6 text-white" />
                             </div>
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
                                 <h4 className="font-black text-base text-white truncate">{net.name}</h4>
@@ -393,7 +393,7 @@ export default function CombinedNetworksPage() {
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-6 text-white text-center relative">
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
-                    {selectedNetwork.isLocal ? <Wifi className="h-8 w-8 text-white" /> : <Globe className="h-8 w-8 text-white" />}
+                    <Wifi className="h-8 w-8 text-white" />
                 </div>
                 <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
                 <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
@@ -425,7 +425,7 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[32px] max-w-sm text-center">
+        <DialogContent className="rounded-[32px] max-sm text-center">
           <DialogHeader><DialogTitle className="text-center font-black">تأكيد عملية الشراء</DialogTitle></DialogHeader>
           <div className="py-6 bg-muted/50 rounded-[28px] border-2 border-dashed border-primary/10 mt-2">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">سيتم خصم المبلغ من رصيدك</p>

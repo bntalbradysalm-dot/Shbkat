@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2 } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -20,12 +20,12 @@ import Link from "next/link";
 
 const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
+  { id: 'digital-cards', name: 'الشبكات المحلية', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { id: 'exchange', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
+  { id: 'baity-nets', name: 'شبكات بيتي', icon: Globe, href: '/baity-networks' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
   { id: 'support', name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -40,7 +40,7 @@ export function BalanceCard() {
   const firestore = useFirestore();
 
   const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
-  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات
+  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات المحلية
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 

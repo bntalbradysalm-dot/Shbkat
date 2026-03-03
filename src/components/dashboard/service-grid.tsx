@@ -27,7 +27,8 @@ import {
   Database,
   Star,
   Trophy,
-  Megaphone
+  Megaphone,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -54,12 +55,12 @@ type Service = {
 
 const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
-  { name: 'الشبكات', icon: Wifi, href: '/services' },
+  { name: 'الشبكات المحلية', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
+  { name: 'شبكات بيتي', icon: Globe, href: '/baity-networks' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -74,6 +75,7 @@ const ServiceItem = ({
     <Link href={href}>
       <div className="group flex flex-col items-center justify-start space-y-2 focus:outline-none animate-in fade-in-0 zoom-in-95 cursor-pointer"
         style={{
+          paddingTop: '2px',
           animationDelay: `${100 + index * 50}ms`,
           animationFillMode: 'backwards',
         }}
@@ -84,7 +86,7 @@ const ServiceItem = ({
             style={{ stroke: 'url(#icon-gradient)' }}
           />
         </div>
-        <span className="text-xs font-bold text-primary text-center px-1">{name}</span>
+        <span className="text-[11px] font-black text-primary text-center px-1 leading-tight">{name}</span>
       </div>
     </Link>
   );

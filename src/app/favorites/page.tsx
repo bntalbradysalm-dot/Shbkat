@@ -419,7 +419,7 @@ export default function FavoritesPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-primary p-6 text-white relative">
+              <div className="bg-mesh-gradient p-8 text-white relative text-center">
                 <div className="flex flex-col items-center text-center gap-2 mt-2">
                   <div className="bg-white/20 p-4 rounded-full border-2 border-white/30 backdrop-blur-md shadow-xl animate-in zoom-in-95 duration-500">
                     <Wifi className="h-10 w-10 text-white" />

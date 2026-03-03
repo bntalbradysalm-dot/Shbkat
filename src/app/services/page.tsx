@@ -270,7 +270,7 @@ export default function CombinedNetworksPage() {
             // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. التحويل التلقائي للمالك (خصم 10% عمولة)
+            // 3. التحويل التلقائي للمالك (90% من القيمة)
             const ownerId = selectedNetwork.ownerId;
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
@@ -428,7 +428,7 @@ export default function CombinedNetworksPage() {
           </DialogHeader>
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
-              <div className="bg-primary p-6 text-white text-center relative">
+              <div className="bg-mesh-gradient p-8 text-white text-center relative">
                 <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
                     <Wifi className="h-8 w-8 text-white" />
                 </div>

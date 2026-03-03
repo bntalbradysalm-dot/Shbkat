@@ -1,4 +1,3 @@
-
 'use client';
 
 import { BalanceCard } from '@/components/dashboard/balance-card';
@@ -44,6 +43,7 @@ const CustomLoader = () => (
 
 const OwnerDashboard = () => (
   <div className="relative bg-background rounded-t-[40px] pt-4 pb-4">
+      {/* 
       <div className="px-6 animate-in fade-in-0 duration-500">
           <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-primary">لوحة تحكم المالك</h3>
@@ -63,6 +63,7 @@ const OwnerDashboard = () => (
               </Card>
           </Link>
       </div>
+      */}
        <div className="mt-4">
         <ServiceGrid />
         <RecentTransactions />

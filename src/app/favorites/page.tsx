@@ -76,7 +76,7 @@ export default function FavoritesPage() {
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
-  const [showConfirmPurchase, setShowConfirmPurchase] = useState<CardCategory | null>(null);
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState<any | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -103,9 +103,11 @@ export default function FavoritesPage() {
 
   const filteredFavorites = useMemo(() => {
     if (!favorites) return [];
+    // Hide local favorites temporarily
     return favorites.filter(fav => 
-      fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fav.location.toLowerCase().includes(searchTerm.toLowerCase())
+      fav.isLocal !== true &&
+      (fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fav.location.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [favorites, searchTerm]);
 
@@ -374,7 +376,7 @@ export default function FavoritesPage() {
                         <Card key={i} className="p-4 rounded-2xl animate-pulse"><div className="flex gap-4"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-48" /></div></div></Card>
                     ))}
                 </div>
-            ) : !favorites || favorites.length === 0 ? (
+            ) : !favorites || filteredFavorites.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center h-64">
                     <Heart className="h-16 w-16 text-muted-foreground opacity-20" />
                     <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مفضلة</h3>
@@ -471,7 +473,7 @@ export default function FavoritesPage() {
       </Dialog>
 
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
-        <DialogContent className="rounded-[28px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
+        <DialogContent className="rounded-[32px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl outline-none">
           <DialogHeader>
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-10 w-10 text-primary" />
@@ -479,13 +481,13 @@ export default function FavoritesPage() {
             <DialogTitle className="text-center font-black text-xl">تأكيد عملية الشراء</DialogTitle>
             <DialogDescription className="text-center font-bold">هل أنت متأكد من شراء كرت <span className="text-primary">"{showConfirmPurchase?.name}"</span>؟</DialogDescription>
           </DialogHeader>
-          <div className="py-4 bg-white dark:bg-slate-800 rounded-2xl space-y-2 mt-4">
-            <p className="text-xs text-muted-foreground">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-2xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} ريال</p>
+          <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
           </div>
-          <DialogFooter className="grid grid-cols-2 gap-2 mt-6">
+          <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
             <Button className="w-full h-12 rounded-2xl font-bold" onClick={handlePurchase} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : 'تأكيد الشراء'}
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : 'تأكيد الشراء'}
             </Button>
             <Button variant="outline" className="w-full h-12 rounded-2xl font-bold mt-0" onClick={() => setShowConfirmPurchase(null)}>تراجع</Button>
           </DialogFooter>

@@ -125,7 +125,7 @@ export default function CombinedNetworksPage() {
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
-  const [showConfirmPurchase, setShowConfirmPurchase] = useState<CardCategory | null>(null);
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState<any | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -161,9 +161,10 @@ export default function CombinedNetworksPage() {
     fetchApiNetworks();
   }, []);
 
-  // Combine All Networks
+  // Combine All Networks (Local hidden temporarily)
   const allNetworksCombined = useMemo(() => {
-    const local = (localNetworks || []).map(n => ({ ...n, isLocal: true }));
+    // const local = (localNetworks || []).map(n => ({ ...n, isLocal: true })); // Hidden temporarily
+    const local: any[] = []; 
     const api = apiNetworks;
     const combined = [...local, ...api];
     
@@ -265,18 +266,12 @@ export default function CombinedNetworksPage() {
             const payoutAmount = selectedCategory.price - commission;
             const ownerId = selectedNetwork.ownerId;
 
-            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
-            
-            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            // 3. التحويل اللحظي للمالك (90% من القيمة)
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                // سجل عملية للمالك في سجلاته الشخصية
                 const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
                 batch.set(ownerTxRef, {
                     userId: ownerId,
@@ -287,14 +282,12 @@ export default function CombinedNetworksPage() {
                 });
             }
 
-            // 4. سجل عملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
                 userId: user.uid, transactionDate: now, amount: selectedCategory.price,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
 
-            // 5. سجل الكروت المباعة العام (حالة مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id, 

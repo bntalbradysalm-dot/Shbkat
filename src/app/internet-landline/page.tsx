@@ -195,10 +195,18 @@ export default function LandlineRedesignPage() {
         setQueryResult(null);
         try {
             const transid = Date.now().toString().slice(-8);
+            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
+            
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'query', service: 'post', transid })
+                body: JSON.stringify({ 
+                    mobile: phone, 
+                    action: 'query', 
+                    service: 'post', 
+                    type: serviceType,
+                    transid 
+                })
             });
             const result = await response.json();
             

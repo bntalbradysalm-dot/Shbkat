@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -296,8 +295,8 @@ export default function UsersPage() {
                     </CardContent>
                 </Card>
 
-                {/* Baity Balance */}
-                <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl" style={{ filter: 'hue-rotate(45deg)' }}>
+                {/* Baity Balance - Updated to light green gradient */}
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
                         <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد بيتي</CardTitle>
                         <RefreshCw 
@@ -454,7 +453,7 @@ export default function UsersPage() {
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تعديل بيانات المستخدم</DialogTitle>
             </DialogHeader>
@@ -475,7 +474,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isTopUpDialogOpen} onOpenChange={setIsTopUpDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تغذية رصيد (صامتة)</DialogTitle>
                 <DialogDescription className="text-center">سيتم إضافة المبلغ للرصيد مع إشعار داخلي فقط.</DialogDescription>
@@ -507,7 +506,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">سحب نقدي من الرصيد</DialogTitle>
                 <DialogDescription className="text-center">سيتم خصم المبلغ من رصيد المستخدم حالاً.</DialogDescription>

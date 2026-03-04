@@ -225,10 +225,22 @@ export default function LandlineRedesignPage() {
                 let displayExpiry = '...';
 
                 if (activeTab === 'internet') {
-                    // Extract Remaining Data (GB)
-                    const balMatch = raw.match(/(الرصيد المتبقي|رصيد الحساب|البيانات المتبقية):\s*([\d.]+)/i);
-                    if (balMatch) displayBalance = `${balMatch[2]} GB`;
-                    else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${result.balance} GB`;
+                    // Extract Data Volume (GB/MB)
+                    // Priority 1: Check for explicit data units in the response text
+                    const dataMatch = raw.match(/([\d.]+)\s*(GB|جيجا|ميجابايت|MB|ميجا)/i);
+                    if (dataMatch) {
+                        const unit = dataMatch[2].toLowerCase();
+                        if (unit.includes('m') || unit.includes('ميجا')) {
+                            displayBalance = `${(parseFloat(dataMatch[1]) / 1024).toFixed(2)} GB`;
+                        } else {
+                            displayBalance = `${dataMatch[1]} GB`;
+                        }
+                    } else {
+                        // Priority 2: Try specific labels
+                        const balMatch = raw.match(/(الرصيد المتبقي|البيانات المتبقية):\s*([\d.]+)/i);
+                        if (balMatch) displayBalance = `${balMatch[2]} GB`;
+                        else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${result.balance} GB`;
+                    }
 
                     // Extract Package Price
                     const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);

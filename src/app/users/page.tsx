@@ -280,7 +280,7 @@ export default function UsersPage() {
                 {/* Telecom Balance */}
                 <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
-                        <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد المزود</CardTitle>
+                        <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد اشحن لي</CardTitle>
                         <RefreshCw 
                             className={cn("h-3 w-3 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
                             onClick={fetchAllBalances}

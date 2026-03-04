@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,14 +15,10 @@ import {
   Calendar,
   History,
   Globe,
-  ChevronLeft,
-  Zap,
   ArrowUpRight,
-  ShieldCheck,
   Users,
   Phone as PhoneIcon,
   Loader2,
-  Database,
   Info,
   Clock
 } from 'lucide-react';
@@ -49,8 +46,6 @@ import { useRouter } from 'next/navigation';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -64,8 +59,6 @@ type QueryResult = {
     balance: string; // الرصيد المتبقي (البيانات أو العملة)
     packagePrice?: string; // قيمة الباقة
     expireDate?: string; // تاريخ الانتهاء
-    remainAmount?: string;
-    mobileType?: string;
     resultDesc?: string;
 };
 
@@ -118,30 +111,6 @@ const INTERNET_PACKAGES = [
             { name: "420GB", price: 39375 },
             { name: "720GB", price: 59850 },
         ]
-    },
-    {
-        title: "سوبر شامل 2 ميجا",
-        items: [
-            { name: "28GB", price: 2900 },
-            { name: "54GB", price: 5100 },
-            { name: "192GB", price: 16100 },
-        ]
-    },
-    {
-        title: "سوبر شامل 4 ميجا",
-        items: [
-            { name: "70GB", price: 7300 },
-            { name: "284GB", price: 26600 },
-            { name: "485GB", price: 40300 },
-        ]
-    },
-    {
-        title: "سوبر شامل 8 ميجا",
-        items: [
-            { name: "124GB", price: 13000 },
-            { name: "425GB", price: 39800 },
-            { name: "725GB", price: 60200 },
-        ]
     }
 ];
 
@@ -176,16 +145,6 @@ export default function LandlinePage() {
         }
     }, [showSuccess]);
 
-    useEffect(() => {
-        if (phone.length !== 8) {
-            setQueryResult(null);
-        }
-    }, [phone]);
-
-    useEffect(() => {
-        setQueryResult(null);
-    }, [activeTab]);
-
     const handleSearch = async () => {
         if (!phone || phone.length !== 8) return;
         
@@ -219,7 +178,6 @@ export default function LandlinePage() {
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
             if (isSuccess || isPending) {
-                const raw = result.balance || '0';
                 const desc = (result.resultDesc || '').toLowerCase();
                 
                 let displayBalance = '0.00 GB';
@@ -227,20 +185,48 @@ export default function LandlinePage() {
                 let displayExpiry = '...';
 
                 if (activeTab === 'internet') {
-                    // بناءً على ملاحظة المستخدم، حقل balance هو الذي يحتوي على الجيجا المتبقية في رد السيرفر
-                    const balVal = parseFloat(String(result.balance || "0"));
-                    displayBalance = `${balVal.toFixed(2)} GB`;
+                    // 1. استخراج الجيجابايت المتبقية
+                    // التحقق أولاً من remainAmount (بالميجابايت حسب التوثيق)
+                    let mbValue = 0;
+                    if (result.remainAmount !== undefined && result.remainAmount !== null && String(result.remainAmount).trim() !== "") {
+                        mbValue = parseFloat(String(result.remainAmount));
+                    } else {
+                        // محاولة البحث في النص الوصفي
+                        const dataMatch = desc.match(/([\d.]+)\s*(gb|gig|جيجا)/i);
+                        if (dataMatch) {
+                            mbValue = parseFloat(dataMatch[1]) * 1024;
+                        } else {
+                            const mbMatch = desc.match(/([\d.]+)\s*(mb|meg|ميجا)/i);
+                            if (mbMatch) mbValue = parseFloat(mbMatch[1]);
+                        }
+                    }
+                    
+                    if (!isNaN(mbValue) && mbValue > 0) {
+                        displayBalance = `${(mbValue / 1024).toFixed(2)} GB`;
+                    } else if (result.balance && !isNaN(parseFloat(String(result.balance)))) {
+                        // أحياناً الموزع يضع الجيجا في حقل balance إذا كان remainAmount فارغاً
+                        displayBalance = `${parseFloat(String(result.balance)).toFixed(2)} GB`;
+                    }
 
-                    // محاولة استخراج قيمة الباقة وتاريخ الانتهاء من النص الوصفي
-                    const priceMatch = desc.match(/(قيمة الباقة|package price):\s*([\d.]+)/i);
-                    if (priceMatch) displayPackage = `${parseFloat(priceMatch[2]).toLocaleString('en-US')} ر.ي`;
-                    else if (result.packagePrice) displayPackage = `${parseFloat(result.packagePrice).toLocaleString('en-US')} ر.ي`;
+                    // 2. استخراج قيمة الباقة
+                    const priceMatch = desc.match(/(قيمة الباقة|package price|price):\s*([\d.]+)/i);
+                    if (priceMatch) {
+                        displayPackage = `${parseFloat(priceMatch[2]).toLocaleString('en-US')} ر.ي`;
+                    } else if (result.packagePrice && !isNaN(parseFloat(String(result.packagePrice)))) {
+                        displayPackage = `${parseFloat(String(result.packagePrice)).toLocaleString('en-US')} ر.ي`;
+                    }
 
-                    const dateMatch = desc.match(/(تاريخ الانتهاء|expire date):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
-                    if (dateMatch) displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
-                    else if (result.expireDate) displayExpiry = result.expireDate;
+                    // 3. استخراج تاريخ الانتهاء
+                    const dateMatch = desc.match(/(تاريخ الانتهاء|expire date|expire|ends):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
+                    if (dateMatch) {
+                        displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
+                    } else if (result.expireDate) {
+                        displayExpiry = result.expireDate;
+                    }
                 } else {
-                    displayBalance = result.balance ? `${parseFloat(result.balance).toLocaleString('en-US')} ر.ي` : '0 ر.ي';
+                    // الهاتف الثابت - عرض الرصيد المالي
+                    const bal = parseFloat(String(result.balance || "0"));
+                    displayBalance = `${!isNaN(bal) ? bal.toLocaleString('en-US') : "0"} ر.ي`;
                 }
 
                 setQueryResult({
@@ -248,8 +234,6 @@ export default function LandlinePage() {
                     balance: displayBalance,
                     packagePrice: displayPackage,
                     expireDate: displayExpiry,
-                    remainAmount: result.remainAmount ? String(result.remainAmount) : undefined,
-                    mobileType: result.mobileType ? String(result.mobileType) : undefined,
                     resultDesc: result.resultDesc
                 });
             } else {
@@ -474,17 +458,20 @@ export default function LandlinePage() {
                                 {queryResult && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
+                                            {/* الخانة الأولى (اليمين): تاريخ الانتهاء */}
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.balance}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
+                                            {/* الخانة الثانية (الوسط): قيمة الباقة */}
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
                                                 <p className="text-sm font-black">{queryResult.packagePrice || '...'}</p>
                                             </div>
+                                            {/* الخانة الثالثة (اليسار): الرصيد المتبقي */}
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
@@ -584,16 +571,12 @@ export default function LandlinePage() {
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
+                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-[#4A3B00]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">المبلغ المستحق</p>
                                                 <p className="text-sm font-black">
                                                     {queryResult.balance}
                                                 </p>
-                                            </div>
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
-                                                <p className="text-sm font-black">{queryResult.mobileType === "1" ? 'فوترة' : 'دفع مسبق'}</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">الحالة</p>

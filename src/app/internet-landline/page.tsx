@@ -22,7 +22,8 @@ import {
   Phone as PhoneIcon,
   Loader2,
   Database,
-  Info
+  Info,
+  Clock
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -60,7 +61,9 @@ type UserProfile = {
 
 type QueryResult = {
     resultCode: string;
-    balance: string;
+    balance: string; // الرصيد المتبقي
+    packagePrice?: string; // قيمة الباقة
+    expireDate?: string; // تاريخ الانتهاء
     remainAmount?: string;
     mobileType?: string;
     resultDesc?: string;
@@ -212,10 +215,37 @@ export default function LandlineRedesignPage() {
             
             if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
             
-            if (result.resultCode === "0" || result.resultCode === 0 || result.resultCode === "-2" || result.resultCode === -2) {
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (isSuccess || isPending) {
+                const raw = result.balance || '';
+                let displayBalance = '0 ر.ي';
+                let displayPackage = '0 ر.ي';
+                let displayExpiry = '...';
+
+                // في حالة الإنترنت، نقوم بمحاولة استخراج البيانات من النص إذا كان عبارة عن نص مدمج
+                if (activeTab === 'internet') {
+                    const balMatch = raw.match(/(الرصيد المتبقي|رصيد الحساب):\s*([\d.]+)/i);
+                    if (balMatch) displayBalance = `${parseFloat(balMatch[2]).toLocaleString('en-US')} ر.ي`;
+                    else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${parseFloat(result.balance).toLocaleString('en-US')} ر.ي`;
+
+                    const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
+                    if (priceMatch) displayPackage = `${parseFloat(priceMatch[1]).toLocaleString('en-US')} ر.ي`;
+
+                    const dateMatch = raw.match(/(تاريخ الانتهاء|تأريخ الانتهاء):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
+                    if (dateMatch) displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
+                    else if (result.expireDate) displayExpiry = result.expireDate;
+                } else {
+                    // في حالة الثابت
+                    displayBalance = result.balance ? `${parseFloat(result.balance).toLocaleString('en-US')} ر.ي` : '0 ر.ي';
+                }
+
                 setQueryResult({
                     resultCode: String(result.resultCode),
-                    balance: result.balance || '0.00',
+                    balance: displayBalance,
+                    packagePrice: displayPackage,
+                    expireDate: displayExpiry,
                     remainAmount: result.remainAmount ? String(result.remainAmount) : undefined,
                     mobileType: result.mobileType ? String(result.mobileType) : undefined,
                     resultDesc: result.resultDesc
@@ -320,9 +350,9 @@ export default function LandlineRedesignPage() {
     };
 
     const formatRemainData = (val?: string) => {
-        if (!val) return '0 MB';
+        if (!val) return '0 GB';
         const num = parseFloat(val);
-        if (isNaN(num)) return '0 MB';
+        if (isNaN(num)) return '0 GB';
         if (num >= 1024) return (num / 1024).toFixed(2) + ' GB';
         return num + ' MB';
     };
@@ -451,18 +481,16 @@ export default function LandlineRedesignPage() {
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
-                                                <p className="text-sm font-black">
-                                                    {isNaN(parseFloat(queryResult.balance)) ? '0' : parseFloat(queryResult.balance).toLocaleString('en-US')} ر.ي
-                                                </p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
-                                                <p className="text-sm font-black">{formatRemainData(queryResult.remainAmount)}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                                <p className="text-sm font-black">{queryResult.packagePrice || '...'}</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الحالة</p>
-                                                <p className="text-[10px] font-black">{queryResult.resultCode === "0" ? 'نشط' : 'معلق'}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
@@ -566,7 +594,7 @@ export default function LandlineRedesignPage() {
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">المبلغ المستحق</p>
                                                 <p className="text-sm font-black">
-                                                    {isNaN(parseFloat(queryResult.balance)) ? '0' : parseFloat(queryResult.balance).toLocaleString('en-US')} ر.ي
+                                                    {queryResult.balance}
                                                 </p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">

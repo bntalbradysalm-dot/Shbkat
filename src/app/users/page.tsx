@@ -291,7 +291,7 @@ export default function UsersPage() {
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
                         <div className="flex items-baseline gap-1">
-                            <h2 className="text-lg font-black text-white">
+                            <h2 className="text-2xl font-black text-white">
                                 {isFetchingBalances ? <Skeleton className="h-5 w-16 bg-white/20" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
                             </h2>
                             <span className="text-[8px] font-bold opacity-70">ر.ي</span>
@@ -310,7 +310,7 @@ export default function UsersPage() {
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
                         <div className="flex items-baseline gap-1">
-                            <h2 className="text-lg font-black text-white">
+                            <h2 className="text-2xl font-black text-white">
                                 {isFetchingBalances ? <Skeleton className="h-5 w-16 bg-white/20" /> : (parseFloat(baityBalance || '0').toLocaleString('en-US'))}
                             </h2>
                             <span className="text-[8px] font-bold opacity-70">ر.ي</span>

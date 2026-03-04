@@ -31,7 +31,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,7 +61,7 @@ type UserProfile = {
 
 type QueryResult = {
     resultCode: string;
-    balance: string; // الرصيد المتبقي (البيانات)
+    balance: string; // الرصيد المتبقي (البيانات أو العملة)
     packagePrice?: string; // قيمة الباقة
     expireDate?: string; // تاريخ الانتهاء
     remainAmount?: string;
@@ -225,28 +225,32 @@ export default function LandlineRedesignPage() {
                 let displayExpiry = '...';
 
                 if (activeTab === 'internet') {
-                    // Extract Data Volume (GB/MB)
-                    // Priority 1: Check for explicit data units in the response text
-                    const dataMatch = raw.match(/([\d.]+)\s*(GB|جيجا|ميجابايت|MB|ميجا)/i);
-                    if (dataMatch) {
-                        const unit = dataMatch[2].toLowerCase();
-                        if (unit.includes('m') || unit.includes('ميجا')) {
-                            displayBalance = `${(parseFloat(dataMatch[1]) / 1024).toFixed(2)} GB`;
-                        } else {
-                            displayBalance = `${dataMatch[1]} GB`;
+                    // بناءً على التوثيق: remainAmount هو حجم البيانات المتبقية (عادة بالميجابايت)
+                    if (result.remainAmount !== undefined && result.remainAmount !== null && result.remainAmount !== "") {
+                        const mb = parseFloat(String(result.remainAmount));
+                        if (!isNaN(mb)) {
+                            displayBalance = `${(mb / 1024).toFixed(2)} GB`;
                         }
                     } else {
-                        // Priority 2: Try specific labels
-                        const balMatch = raw.match(/(الرصيد المتبقي|البيانات المتبقية):\s*([\d.]+)/i);
-                        if (balMatch) displayBalance = `${balMatch[2]} GB`;
-                        else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${result.balance} GB`;
+                        // محاولة الاستخراج من النص إذا لم يوجد الحقل remainAmount
+                        const dataMatch = raw.match(/([\d.]+)\s*(GB|جيجا|ميجابايت|MB|ميجا)/i);
+                        if (dataMatch) {
+                            const unit = dataMatch[2].toLowerCase();
+                            if (unit.includes('m') || unit.includes('ميجا')) {
+                                displayBalance = `${(parseFloat(dataMatch[1]) / 1024).toFixed(2)} GB`;
+                            } else {
+                                displayBalance = `${dataMatch[1]} GB`;
+                            }
+                        } else if (result.balance && !isNaN(parseFloat(result.balance))) {
+                            displayBalance = `${result.balance} GB`;
+                        }
                     }
 
-                    // Extract Package Price
+                    // استخراج قيمة الباقة
                     const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
                     if (priceMatch) displayPackage = `${parseFloat(priceMatch[1]).toLocaleString('en-US')} ر.ي`;
 
-                    // Extract Expiry Date
+                    // استخراج تاريخ الانتهاء
                     const dateMatch = raw.match(/(تاريخ الانتهاء|تأريخ الانتهاء):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
                     if (dateMatch) displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
                     else if (result.expireDate) displayExpiry = result.expireDate;

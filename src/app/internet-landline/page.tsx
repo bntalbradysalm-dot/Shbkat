@@ -61,7 +61,7 @@ type UserProfile = {
 
 type QueryResult = {
     resultCode: string;
-    balance: string; // الرصيد المتبقي
+    balance: string; // الرصيد المتبقي (البيانات)
     packagePrice?: string; // قيمة الباقة
     expireDate?: string; // تاريخ الانتهاء
     remainAmount?: string;
@@ -220,24 +220,25 @@ export default function LandlineRedesignPage() {
 
             if (isSuccess || isPending) {
                 const raw = result.balance || '';
-                let displayBalance = '0 ر.ي';
+                let displayBalance = '0 GB';
                 let displayPackage = '0 ر.ي';
                 let displayExpiry = '...';
 
-                // في حالة الإنترنت، نقوم بمحاولة استخراج البيانات من النص إذا كان عبارة عن نص مدمج
                 if (activeTab === 'internet') {
-                    const balMatch = raw.match(/(الرصيد المتبقي|رصيد الحساب):\s*([\d.]+)/i);
-                    if (balMatch) displayBalance = `${parseFloat(balMatch[2]).toLocaleString('en-US')} ر.ي`;
-                    else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${parseFloat(result.balance).toLocaleString('en-US')} ر.ي`;
+                    // Extract Remaining Data (GB)
+                    const balMatch = raw.match(/(الرصيد المتبقي|رصيد الحساب|البيانات المتبقية):\s*([\d.]+)/i);
+                    if (balMatch) displayBalance = `${balMatch[2]} GB`;
+                    else if (result.balance && !isNaN(parseFloat(result.balance))) displayBalance = `${result.balance} GB`;
 
+                    // Extract Package Price
                     const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
                     if (priceMatch) displayPackage = `${parseFloat(priceMatch[1]).toLocaleString('en-US')} ر.ي`;
 
+                    // Extract Expiry Date
                     const dateMatch = raw.match(/(تاريخ الانتهاء|تأريخ الانتهاء):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
                     if (dateMatch) displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
                     else if (result.expireDate) displayExpiry = result.expireDate;
                 } else {
-                    // في حالة الثابت
                     displayBalance = result.balance ? `${parseFloat(result.balance).toLocaleString('en-US')} ر.ي` : '0 ر.ي';
                 }
 
@@ -347,14 +348,6 @@ export default function LandlineRedesignPage() {
             setIsProcessing(false);
             setIsConfirmingPayment(false);
         }
-    };
-
-    const formatRemainData = (val?: string) => {
-        if (!val) return '0 GB';
-        const num = parseFloat(val);
-        if (isNaN(num)) return '0 GB';
-        if (num >= 1024) return (num / 1024).toFixed(2) + ' GB';
-        return num + ' MB';
     };
 
     if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
@@ -481,16 +474,16 @@ export default function LandlineRedesignPage() {
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.balance}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
                                                 <p className="text-sm font-black">{queryResult.packagePrice || '...'}</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (

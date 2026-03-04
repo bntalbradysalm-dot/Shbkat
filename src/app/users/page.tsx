@@ -100,7 +100,11 @@ export default function UsersPage() {
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
-    return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
+    return users.reduce((acc, user) => {
+      // استثناء رصيد مالك التطبيق من الإجمالي بناءً على رقم الهاتف المحدد
+      if (user.phoneNumber === '770326828') return acc;
+      return acc + (user.balance ?? 0);
+    }, 0);
   }, [users]);
 
   // Combined fetch logic for all external balances

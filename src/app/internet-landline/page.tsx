@@ -145,7 +145,7 @@ const INTERNET_PACKAGES = [
     }
 ];
 
-export default function LandlineRedesignPage() {
+export default function LandlinePage() {
     const router = useRouter();
     const { toast } = useToast();
     const firestore = useFirestore();
@@ -219,39 +219,24 @@ export default function LandlineRedesignPage() {
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
             if (isSuccess || isPending) {
-                const raw = result.balance || '';
-                let displayBalance = '0 GB';
+                const raw = result.balance || '0';
+                const desc = (result.resultDesc || '').toLowerCase();
+                
+                let displayBalance = '0.00 GB';
                 let displayPackage = '0 ر.ي';
                 let displayExpiry = '...';
 
                 if (activeTab === 'internet') {
-                    // بناءً على التوثيق: remainAmount هو حجم البيانات المتبقية (عادة بالميجابايت)
-                    if (result.remainAmount !== undefined && result.remainAmount !== null && result.remainAmount !== "") {
-                        const mb = parseFloat(String(result.remainAmount));
-                        if (!isNaN(mb)) {
-                            displayBalance = `${(mb / 1024).toFixed(2)} GB`;
-                        }
-                    } else {
-                        // محاولة الاستخراج من النص إذا لم يوجد الحقل remainAmount
-                        const dataMatch = raw.match(/([\d.]+)\s*(GB|جيجا|ميجابايت|MB|ميجا)/i);
-                        if (dataMatch) {
-                            const unit = dataMatch[2].toLowerCase();
-                            if (unit.includes('m') || unit.includes('ميجا')) {
-                                displayBalance = `${(parseFloat(dataMatch[1]) / 1024).toFixed(2)} GB`;
-                            } else {
-                                displayBalance = `${dataMatch[1]} GB`;
-                            }
-                        } else if (result.balance && !isNaN(parseFloat(result.balance))) {
-                            displayBalance = `${result.balance} GB`;
-                        }
-                    }
+                    // بناءً على ملاحظة المستخدم، حقل balance هو الذي يحتوي على الجيجا المتبقية في رد السيرفر
+                    const balVal = parseFloat(String(result.balance || "0"));
+                    displayBalance = `${balVal.toFixed(2)} GB`;
 
-                    // استخراج قيمة الباقة
-                    const priceMatch = raw.match(/قيمة الباقة:\s*([\d.]+)/i);
-                    if (priceMatch) displayPackage = `${parseFloat(priceMatch[1]).toLocaleString('en-US')} ر.ي`;
+                    // محاولة استخراج قيمة الباقة وتاريخ الانتهاء من النص الوصفي
+                    const priceMatch = desc.match(/(قيمة الباقة|package price):\s*([\d.]+)/i);
+                    if (priceMatch) displayPackage = `${parseFloat(priceMatch[2]).toLocaleString('en-US')} ر.ي`;
+                    else if (result.packagePrice) displayPackage = `${parseFloat(result.packagePrice).toLocaleString('en-US')} ر.ي`;
 
-                    // استخراج تاريخ الانتهاء
-                    const dateMatch = raw.match(/(تاريخ الانتهاء|تأريخ الانتهاء):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
+                    const dateMatch = desc.match(/(تاريخ الانتهاء|expire date):\s*(\d{4})[-/](\d{2})[-/](\d{2})/i);
                     if (dateMatch) displayExpiry = `${dateMatch[4]}/${dateMatch[3]}/${dateMatch[2]}`;
                     else if (result.expireDate) displayExpiry = result.expireDate;
                 } else {
@@ -490,16 +475,16 @@ export default function LandlineRedesignPage() {
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.balance}</p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
                                                 <p className="text-sm font-black">{queryResult.packagePrice || '...'}</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.balance}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
@@ -512,7 +497,7 @@ export default function LandlineRedesignPage() {
 
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#302C81]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
-                                    <div className="relative relative max-w-[240px] mx-auto">
+                                    <div className="relative max-w-[240px] mx-auto">
                                         <Input 
                                             type="number" 
                                             placeholder="0.00" 

@@ -31,7 +31,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/accordion";
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -512,7 +512,7 @@ export default function LandlineRedesignPage() {
 
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#302C81]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
-                                    <div className="relative max-w-[240px] mx-auto">
+                                    <div className="relative relative max-w-[240px] mx-auto">
                                         <Input 
                                             type="number" 
                                             placeholder="0.00" 

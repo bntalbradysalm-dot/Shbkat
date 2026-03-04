@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -317,7 +318,7 @@ export default function CombinedNetworksPage() {
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل الطلب من المصدر الخارجي');
+                throw new Error(errorData.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
             }
             
             const result = await response.json();
@@ -344,7 +345,7 @@ export default function CombinedNetworksPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);
-        toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+        toast({ variant: "destructive", title: "فشل العملية", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally { 
         setIsProcessing(false); 
     }
@@ -447,7 +448,7 @@ export default function CombinedNetworksPage() {
                             <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
                                 <Card 
                                     className={cn(
-                                        "relative overflow-hidden rounded-[28px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "relative overflow-hidden rounded-[28px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
                                         "bg-gradient-to-br p-[2px]",
                                         gradient
                                     )}
@@ -563,6 +564,7 @@ export default function CombinedNetworksPage() {
         </div>
       )}
 
+      {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
@@ -579,7 +581,7 @@ export default function CombinedNetworksPage() {
                     <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
                     <Input 
                         id="sms-phone"
-                        placeholder="7xxxxxxxx" 
+                        placeholder="73xxxxxxx" 
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
@@ -595,7 +597,6 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
-      <Toaster />
     </>
   );
 }

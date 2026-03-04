@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -276,7 +277,7 @@ export function ServiceGrid() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData?.message || 'فشل إنشاء الطلب.');
+                throw new Error(errorData?.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
             }
 
             const result = await response.json();
@@ -302,7 +303,7 @@ export function ServiceGrid() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally {
         setIsProcessing(false);
     }
@@ -555,7 +556,7 @@ export function ServiceGrid() {
                     <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
                     <Input 
                         id="sms-phone"
-                        placeholder="7xxxxxxxx" 
+                        placeholder="73xxxxxxx" 
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -276,7 +277,7 @@ export default function FavoritesPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل تنفيذ الطلب من المصدر');
+                throw new Error(errorData.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
             }
 
             const result = await response.json();
@@ -303,7 +304,7 @@ export default function FavoritesPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally {
         setIsProcessing(false);
     }
@@ -319,7 +320,7 @@ export default function FavoritesPage() {
 
   const handleSendSms = () => {
     if (!purchasedCard || !selectedNetwork || !smsRecipient) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم الزبون.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدل رقم الزبون.' });
         return;
     }
     const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;

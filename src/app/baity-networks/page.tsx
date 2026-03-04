@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -217,7 +218,7 @@ export default function BaityNetworksPage() {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'فشل تنفيذ الطلب من المصدر');
+            throw new Error(errorData.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
         }
         
         const result = await response.json();
@@ -246,7 +247,7 @@ export default function BaityNetworksPage() {
         setShowConfirmPurchase(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
-        toast({ variant: "destructive", title: "خطأ", description: error.message });
+        toast({ variant: "destructive", title: "خطأ", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally { 
         setIsProcessing(false); 
     }
@@ -401,14 +402,14 @@ export default function BaityNetworksPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
                 <CardContent className="p-8 space-y-6">
                     <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
                         <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
                     </div>
                     <div className="p-6 bg-muted rounded-[24px] border-2 border-dashed border-primary/20 space-y-3">

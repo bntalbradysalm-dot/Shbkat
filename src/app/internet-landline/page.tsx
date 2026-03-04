@@ -322,6 +322,7 @@ export default function LandlineRedesignPage() {
     const formatRemainData = (val?: string) => {
         if (!val) return '0 MB';
         const num = parseFloat(val);
+        if (isNaN(num)) return '0 MB';
         if (num >= 1024) return (num / 1024).toFixed(2) + ' GB';
         return num + ' MB';
     };
@@ -448,14 +449,20 @@ export default function LandlineRedesignPage() {
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] grid grid-cols-2">
+                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
-                                                <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
+                                                <p className="text-sm font-black">
+                                                    {isNaN(parseFloat(queryResult.balance)) ? '0' : parseFloat(queryResult.balance).toLocaleString('en-US')} ر.ي
+                                                </p>
                                             </div>
-                                            <div className="p-3 flex flex-col justify-center">
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
                                                 <p className="text-sm font-black">{formatRemainData(queryResult.remainAmount)}</p>
+                                            </div>
+                                            <div className="p-3 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الحالة</p>
+                                                <p className="text-[10px] font-black">{queryResult.resultCode === "0" ? 'نشط' : 'معلق'}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
@@ -555,14 +562,20 @@ export default function LandlineRedesignPage() {
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] text-center text-white min-h-[80px] grid grid-cols-2">
+                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد/المبلغ المستحق</p>
-                                                <p className="text-sm font-black">{parseFloat(queryResult.balance).toLocaleString()} ر.ي</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">المبلغ المستحق</p>
+                                                <p className="text-sm font-black">
+                                                    {isNaN(parseFloat(queryResult.balance)) ? '0' : parseFloat(queryResult.balance).toLocaleString('en-US')} ر.ي
+                                                </p>
                                             </div>
-                                            <div className="p-3 flex flex-col justify-center">
+                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
                                                 <p className="text-sm font-black">{queryResult.mobileType === "1" ? 'فوترة' : 'دفع مسبق'}</p>
+                                            </div>
+                                            <div className="p-3 flex flex-col justify-center">
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الحالة</p>
+                                                <p className="text-[10px] font-black">{queryResult.resultCode === "0" ? 'نشط' : 'معلق'}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (

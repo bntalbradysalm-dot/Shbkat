@@ -85,9 +85,10 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Agent Balance States
+  // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
-  const [isFetchingAgentBalance, setIsFetchingAgentBalance] = useState(false);
+  const [baityBalance, setBaityBalance] = useState<string | null>(null);
+  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
   const { toast } = useToast();
 
@@ -103,39 +104,54 @@ export default function UsersPage() {
     return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
   }, [users]);
 
-  // Fetch Agent Balance logic
-  const fetchAgentBalance = useCallback(async () => {
-    setIsFetchingAgentBalance(true);
+  // Combined fetch logic for all external balances
+  const fetchAllBalances = useCallback(async () => {
+    setIsFetchingBalances(true);
     try {
       const transid = Date.now().toString().slice(-8);
-      const response = await fetch('/api/telecom', {
+      
+      // 1. Fetch Telecom Balance
+      const telecomPromise = fetch('/api/telecom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             action: 'balance',
             transid: transid,
-            mobile: '000000000' // Using dummy mobile as per documentation "any number"
+            mobile: '000000000' 
         })
-      });
-      const result = await response.json();
+      }).then(res => res.json());
+
+      // 2. Fetch Baity Balance
+      const baityPromise = fetch('/api/baitynet/balance').then(res => res.json());
+
+      const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (response.ok && (result.resultCode === "0" || result.resultCode === 0)) {
-        setAgentBalance(result.balance);
+      // Handle Telecom Result
+      if (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) {
+        setAgentBalance(telecomResult.balance);
       } else {
         setAgentBalance('خطأ');
-        console.error("Agent Balance API Error:", result);
       }
+
+      // Handle Baity Result
+      if (baityResult.status === 200 && baityResult.data) {
+        setBaityBalance(String(baityResult.data.balance || '0'));
+      } else {
+        setBaityBalance('خطأ');
+      }
+
     } catch (e) {
       setAgentBalance('خطأ');
-      console.error("Agent Balance Fetch Failed:", e);
+      setBaityBalance('خطأ');
+      console.error("Agent Balances Fetch Failed:", e);
     } finally {
-      setIsFetchingAgentBalance(false);
+      setIsFetchingBalances(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAgentBalance();
-  }, [fetchAgentBalance]);
+    fetchAllBalances();
+  }, [fetchAllBalances]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -259,29 +275,46 @@ export default function UsersPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           
           <div className="space-y-4">
-            {/* Agent Balance Card - Smaller & Compact */}
-            <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-5">
-                <CardTitle className="text-[9px] font-black opacity-80 uppercase tracking-widest">رصيد الوكيل (المزود)</CardTitle>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 rounded-full hover:bg-white/10 text-white"
-                    onClick={fetchAgentBalance}
-                    disabled={isFetchingAgentBalance}
-                >
-                    <RefreshCw className={cn("h-3.5 w-3.5", isFetchingAgentBalance && "animate-spin")} />
-                </Button>
-              </CardHeader>
-              <CardContent className="px-5 pb-4">
-                <div className="flex items-baseline gap-1">
-                    <h2 className="text-2xl font-black text-white">
-                        {isFetchingAgentBalance ? <Skeleton className="h-7 w-24 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
-                    </h2>
-                    <span className="text-[9px] font-bold opacity-70">ريال يمني</span>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Split Balance Card Section */}
+            <div className="grid grid-cols-2 gap-3">
+                {/* Telecom Balance */}
+                <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
+                        <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد المزود</CardTitle>
+                        <RefreshCw 
+                            className={cn("h-3 w-3 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
+                            onClick={fetchAllBalances}
+                        />
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                        <div className="flex items-baseline gap-1">
+                            <h2 className="text-lg font-black text-white">
+                                {isFetchingBalances ? <Skeleton className="h-5 w-16 bg-white/20" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                            </h2>
+                            <span className="text-[8px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Baity Balance */}
+                <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl" style={{ filter: 'hue-rotate(45deg)' }}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
+                        <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد بيتي</CardTitle>
+                        <RefreshCw 
+                            className={cn("h-3 w-3 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
+                            onClick={fetchAllBalances}
+                        />
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                        <div className="flex items-baseline gap-1">
+                            <h2 className="text-lg font-black text-white">
+                                {isFetchingBalances ? <Skeleton className="h-5 w-16 bg-white/20" /> : (parseFloat(baityBalance || '0').toLocaleString('en-US'))}
+                            </h2>
+                            <span className="text-[8px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <Card className="relative overflow-hidden border-none shadow-sm bg-primary/5">

@@ -64,19 +64,19 @@ const ServiceItem = ({
   return (
     <Link href={href} className="w-full">
       <div 
-        className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 aspect-square rounded-[32px] shadow-sm border border-border/40 hover:shadow-md transition-all duration-300 active:scale-95 animate-in fade-in-0 zoom-in-95"
+        className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 aspect-[1.1/1] rounded-[28px] shadow-sm border border-border/40 hover:shadow-md transition-all duration-300 active:scale-95 animate-in fade-in-0 zoom-in-95"
         style={{
           animationDelay: `${100 + index * 50}ms`,
           animationFillMode: 'backwards',
         }}
       >
-        <div className="mb-2">
+        <div className="mb-1.5">
           <Icon 
-            className="h-9 w-9 text-primary transition-transform group-hover:scale-110" 
+            className="h-8 w-8 text-primary transition-transform group-hover:scale-110" 
             style={{ strokeWidth: 1.5 }}
           />
         </div>
-        <span className="text-[11px] font-black text-foreground text-center px-1 leading-tight">{name}</span>
+        <span className="text-[10px] font-black text-foreground text-center px-1 leading-tight">{name}</span>
       </div>
     </Link>
   );
@@ -97,13 +97,13 @@ export function ServiceGrid() {
   );
 
   return (
-    <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-6">
+    <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-5">
       
-      {/* Banner Section (Dynamic from Ads Management) */}
+      {/* Banner Section (Shorter height - aspect 21/7) */}
       <div className="px-4">
         {isLoadingAds ? (
-          <Card className="w-full aspect-[21/9] rounded-[32px] flex items-center justify-center bg-muted/30 border-none">
-            <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
+          <Card className="w-full aspect-[21/7] rounded-[28px] flex items-center justify-center bg-muted/30 border-none">
+            <Loader2 className="h-5 w-5 animate-spin text-primary/30" />
           </Card>
         ) : ads && ads.length > 0 ? (
           <Carousel
@@ -115,7 +115,7 @@ export function ServiceGrid() {
             <CarouselContent>
               {ads.map((ad) => (
                 <CarouselItem key={ad.id}>
-                  <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-sm border border-border/20">
+                  <div className="relative w-full aspect-[21/7] rounded-[28px] overflow-hidden shadow-sm border border-border/20">
                     <Image
                       src={ad.imageUrl}
                       alt="Promotional Banner"
@@ -135,16 +135,16 @@ export function ServiceGrid() {
           </Carousel>
         ) : (
           /* Default Placeholder if no ads */
-          <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-sm bg-mesh-gradient flex flex-col items-center justify-center text-white p-6">
-             <Star className="h-8 w-8 mb-2 opacity-50" />
-             <h3 className="font-black text-lg">ستار موبايل</h3>
-             <p className="text-[10px] font-bold opacity-80">عالم من الخدمات الرقمية بين يديك</p>
+          <div className="relative w-full aspect-[21/7] rounded-[28px] overflow-hidden shadow-sm bg-mesh-gradient flex flex-col items-center justify-center text-white p-4">
+             <Star className="h-6 w-6 mb-1 opacity-50" />
+             <h3 className="font-black text-base">ستار موبايل</h3>
+             <p className="text-[9px] font-bold opacity-80">عالم من الخدمات الرقمية بين يديك</p>
           </div>
         )}
       </div>
 
-      {/* 9 Services Grid (3x3) */}
-      <div className="grid grid-cols-3 gap-4 px-4">
+      {/* 9 Services Grid (3x3) - Compact Height */}
+      <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem 
             key={service.name} 
@@ -155,21 +155,21 @@ export function ServiceGrid() {
       </div>
 
       {/* Featured Offers Card */}
-      <div className="px-4 mt-2 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000">
+      <div className="px-4 mt-1 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000">
         <Card 
-          className="overflow-hidden border-none bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer rounded-[24px] border border-primary/10 shadow-sm active:scale-95"
+          className="overflow-hidden border-none bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer rounded-[22px] border border-primary/10 shadow-sm active:scale-95"
         >
-          <Link href="/services" className="p-4 flex items-center justify-between w-full">
+          <Link href="/services" className="p-3.5 flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
-                <Percent className="h-4 w-4 text-white" />
+                <Percent className="h-3.5 w-3.5 text-white" />
               </div>
               <div className="text-right">
-                <h3 className="text-sm font-black text-primary">عروض حصرية</h3>
-                <p className="text-[10px] text-muted-foreground font-bold">اطلع على أحدث العروض والخدمات المضافة</p>
+                <h3 className="text-xs font-black text-primary">عروض حصرية</h3>
+                <p className="text-[9px] text-muted-foreground font-bold">اطلع على أحدث العروض والخدمات المضافة</p>
               </div>
             </div>
-            <ChevronLeft className="h-5 w-5 text-primary/50" />
+            <ChevronLeft className="h-4 w-4 text-primary/50" />
           </Link>
         </Card>
       </div>

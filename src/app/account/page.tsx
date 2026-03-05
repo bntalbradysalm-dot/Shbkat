@@ -395,7 +395,7 @@ export default function AccountPage() {
             <div className="bg-mesh-gradient h-32 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
                     <Image 
-                        src="https://i.postimg.cc/V6YjZwsz/Photo-Room-20230331-185039.png" 
+                        src="https://i.postimg.cc/Yqy7ZM3F/20260302-161935.jpg" 
                         alt="Developer" 
                         width={100} 
                         height={100} 

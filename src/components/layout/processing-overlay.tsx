@@ -30,12 +30,16 @@ const CustomLoader = () => (
   </div>
 );
 
+/**
+ * مؤشر تحميل شفاف يظهر فوق المحتوى
+ * تم إزالة الخلفية الداكنة والضبابية بناءً على طلب المستخدم
+ */
 export const ProcessingOverlay = ({ message }: { message: string }) => {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center animate-in fade-in-0 p-4">
-      <div className="flex flex-col items-center justify-center gap-4 text-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in-0 p-4 pointer-events-none">
+      <div className="flex flex-col items-center justify-center gap-4 text-center pointer-events-auto">
         <CustomLoader />
-        <p className="text-sm font-bold text-white drop-shadow-md animate-pulse">{message}</p>
+        <p className="text-sm font-black text-primary animate-pulse drop-shadow-sm">{message}</p>
       </div>
     </div>
   );

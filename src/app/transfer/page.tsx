@@ -58,7 +58,6 @@ const BalanceDisplay = () => {
                         <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
                     </div>
                 </div>
-                {/* تم تصغير الحاوية هنا بناءً على الطلب */}
                 <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md shadow-inner border border-white/10">
                     <Wallet className="h-6 w-6 text-white" />
                 </div>
@@ -240,14 +239,10 @@ export default function TransferPage() {
         console.error("Contacts selection failed:", err);
     }
   };
-
-  if (isProcessing) {
-    return <ProcessingOverlay message="جاري تنفيذ التحويل..." />;
-  }
   
   if (showSuccess) {
     return (
-      <>
+      <div className="flex flex-col h-full">
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         <div className="fixed inset-0 bg-background z-50 flex items-center justify-center animate-in fade-in-0 p-4">
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
@@ -295,13 +290,16 @@ export default function TransferPage() {
             </CardContent>
         </Card>
       </div>
-    </>
+    </div>
     )
   }
 
   return (
-    <>
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+      {/* مؤشرات التحميل الشفافة */}
+      {isSearching && <ProcessingOverlay message="جاري البحث..." />}
+      {isProcessing && <ProcessingOverlay message="جاري تنفيذ التحويل..." />}
+
       <SimpleHeader title="تحويل لمشترك" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
@@ -380,41 +378,41 @@ export default function TransferPage() {
             </div>
         )}
       </div>
-    </div>
-    <Toaster />
 
-    <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        <AlertDialogContent className="rounded-[32px]">
-            <AlertDialogHeader>
-                <AlertDialogTitle className="text-center font-black">تأكيد عملية التحويل</AlertDialogTitle>
-                <div className="space-y-3 pt-4 text-sm text-right">
-                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground">المبلغ المراد تحويله:</span>
-                        <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground">عمولة خدمات:</span>
-                        <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
-                    </div>
-                    <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
-                        <span className="font-black">الإجمالي المخصوم:</span>
-                        <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
-                    </div>
-                    <div className="text-center pt-4 pb-2">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">إلى المستلم</p>
-                        <p className="font-black text-base text-primary">{recipient?.displayName}</p>
-                        <p className="text-xs font-bold text-muted-foreground">({recipient?.phoneNumber})</p>
-                    </div>
-                </div>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
-                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
-                    {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
-                </AlertDialogAction>
-                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-    </AlertDialog>
-    </>
+      <Toaster />
+
+      <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+          <AlertDialogContent className="rounded-[32px]">
+              <AlertDialogHeader>
+                  <AlertDialogTitle className="text-center font-black">تأكيد عملية التحويل</AlertDialogTitle>
+                  <div className="space-y-3 pt-4 text-sm text-right">
+                      <div className="flex justify-between items-center py-2 border-b border-dashed">
+                          <span className="text-muted-foreground">المبلغ المراد تحويله:</span>
+                          <span className="font-bold">{Number(amount).toLocaleString('en-US')} ريال</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-dashed">
+                          <span className="text-muted-foreground">عمولة خدمات:</span>
+                          <span className="font-bold">{commission.toLocaleString('en-US')} ريال</span>
+                      </div>
+                      <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
+                          <span className="font-black">الإجمالي المخصوم:</span>
+                          <span className="font-bold text-lg text-destructive">{(Number(amount) + commission).toLocaleString('en-US')} ريال</span>
+                      </div>
+                      <div className="text-center pt-4 pb-2">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">إلى المستلم</p>
+                          <p className="font-black text-base text-primary">{recipient?.displayName}</p>
+                          <p className="text-xs font-bold text-muted-foreground">({recipient?.phoneNumber})</p>
+                      </div>
+                  </div>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
+                  <AlertDialogAction className="w-full rounded-2xl h-12 font-bold" onClick={handleFinalConfirmation} disabled={isProcessing}>
+                      {isProcessing ? 'جاري التحويل...' : 'تأكيد'}
+                  </AlertDialogAction>
+                  <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0" disabled={isProcessing}>إلغاء</AlertDialogCancel>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

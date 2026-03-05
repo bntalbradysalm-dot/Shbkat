@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -186,12 +185,10 @@ export default function LandlinePage() {
 
                 if (activeTab === 'internet') {
                     // 1. استخراج الجيجابايت المتبقية
-                    // التحقق أولاً من remainAmount (بالميجابايت حسب التوثيق)
                     let mbValue = 0;
                     if (result.remainAmount !== undefined && result.remainAmount !== null && String(result.remainAmount).trim() !== "") {
                         mbValue = parseFloat(String(result.remainAmount));
                     } else {
-                        // محاولة البحث في النص الوصفي
                         const dataMatch = desc.match(/([\d.]+)\s*(gb|gig|جيجا)/i);
                         if (dataMatch) {
                             mbValue = parseFloat(dataMatch[1]) * 1024;
@@ -204,7 +201,6 @@ export default function LandlinePage() {
                     if (!isNaN(mbValue) && mbValue > 0) {
                         displayBalance = `${(mbValue / 1024).toFixed(2)} GB`;
                     } else if (result.balance && !isNaN(parseFloat(String(result.balance)))) {
-                        // أحياناً الموزع يضع الجيجا في حقل balance إذا كان remainAmount فارغاً
                         displayBalance = `${parseFloat(String(result.balance)).toFixed(2)} GB`;
                     }
 
@@ -224,7 +220,6 @@ export default function LandlinePage() {
                         displayExpiry = result.expireDate;
                     }
                 } else {
-                    // الهاتف الثابت - عرض الرصيد المالي
                     const bal = parseFloat(String(result.balance || "0"));
                     displayBalance = `${!isNaN(bal) ? bal.toLocaleString('en-US') : "0"} ر.ي`;
                 }
@@ -335,12 +330,9 @@ export default function LandlinePage() {
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ السداد..." />;
-    if (isSearching) return <ProcessingOverlay message="جاري الاستعلام..." />;
-
     if (showSuccess && lastTxDetails) {
         return (
-            <>
+            <div className="flex flex-col h-full">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
@@ -385,12 +377,16 @@ export default function LandlinePage() {
                         </CardContent>
                     </Card>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+            {/* مؤشرات التحميل الشفافة */}
+            {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
+            {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
+
             <SimpleHeader title="الثابت والإنترنت الأرضي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 
@@ -458,17 +454,14 @@ export default function LandlinePage() {
                                 {queryResult && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
-                                            {/* الخانة الأولى (اليمين): تاريخ الانتهاء */}
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
                                                 <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
-                                            {/* الخانة الثانية (الوسط): قيمة الباقة */}
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
                                                 <p className="text-sm font-black">{queryResult.packagePrice || '...'}</p>
                                             </div>
-                                            {/* الخانة الثالثة (اليسار): الرصيد المتبقي */}
                                             <div className="p-3 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
                                                 <p className="text-sm font-black">{queryResult.balance}</p>

@@ -28,7 +28,10 @@ import {
   Star,
   Trophy,
   Megaphone,
-  Globe
+  Globe,
+  PhoneCall,
+  Phone,
+  Signal
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -67,11 +70,10 @@ const services: Service[] = [
 ];
 
 const telecomShortcuts = [
-  { name: 'يمن موبايل', logo: 'https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg', href: '/yemen-mobile' },
-  { name: 'يو', logo: 'https://i.postimg.cc/Y9hz6kzg/shrkt-yw.jpg', href: '/you-services' },
-  { name: 'يمن فورجي', logo: 'https://i.postimg.cc/FsmGqt98/1768999789252.jpg', href: '/yemen-4g' },
-  { name: 'عدن نت', logo: 'https://i.postimg.cc/FFV6dDqd/FB-IMG-1770843160346.jpg', href: '/aden-net' },
-  { name: 'الثابت', logo: 'https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg', href: '/internet-landline' },
+  { name: 'يمن موبايل', icon: PhoneCall, color: '#B32C4C', bg: 'bg-[#B32C4C]/10', href: '/yemen-mobile' },
+  { name: 'يو', icon: Signal, color: '#E6B000', bg: 'bg-[#FECC4F]/20', href: '/you-services' },
+  { name: 'يمن فورجي', icon: Zap, color: '#106BA2', bg: 'bg-[#106BA2]/10', href: '/yemen-4g' },
+  { name: 'الثابت', icon: Phone, color: '#F18312', bg: 'bg-[#F18312]/10', href: '/internet-landline' },
 ];
 
 const CARD_GRADIENTS = [
@@ -336,7 +338,7 @@ export function ServiceGrid() {
   };
 
   return (
-    <div className="relative bg-background rounded-t-[40px] mt-2 pt-6 pb-4">
+    <div className="relative bg-background rounded-t-[40px] mt-0 pt-2 pb-4">
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -346,18 +348,19 @@ export function ServiceGrid() {
         </defs>
       </svg>
 
-      {/* Telecom Quick Shortcuts */}
-      <div className="flex gap-4 overflow-x-auto no-scrollbar px-6 mb-8 animate-in fade-in-0 slide-in-from-right-4 duration-700">
-        {telecomShortcuts.map((item, i) => (
-          <Link href={item.href} key={i} className="flex flex-col items-center gap-2 shrink-0 group">
-            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/10 shadow-sm group-hover:shadow-md group-hover:border-primary/30 transition-all active:scale-95 bg-white p-0.5">
-              <div className="relative w-full h-full rounded-full overflow-hidden">
-                <Image src={item.logo} alt={item.name} fill className="object-cover" />
+      {/* Telecom Quick Shortcuts - UPDATED: Smaller, Icons, moved up */}
+      <div className="flex justify-around items-center px-6 mb-5 animate-in fade-in-0 slide-in-from-right-4 duration-700">
+        {telecomShortcuts.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <Link href={item.href} key={i} className="flex flex-col items-center gap-1.5 shrink-0 group">
+              <div className={cn("w-11 h-11 rounded-full flex items-center justify-center border-2 border-transparent shadow-sm group-hover:shadow-md transition-all active:scale-90", item.bg)}>
+                <Icon size={20} color={item.color} className="transition-transform group-hover:scale-110" strokeWidth={2.5} />
               </div>
-            </div>
-            <span className="text-[10px] font-black text-foreground truncate max-w-[60px]">{item.name}</span>
-          </Link>
-        ))}
+              <span className="text-[9px] font-black text-foreground">{item.name}</span>
+            </Link>
+          );
+        })}
       </div>
       
       <div className="grid grid-cols-3 gap-y-6 gap-x-4 px-6">

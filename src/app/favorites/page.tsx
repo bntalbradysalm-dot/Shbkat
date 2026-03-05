@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -320,7 +319,7 @@ export default function FavoritesPage() {
 
   const handleSendSms = () => {
     if (!purchasedCard || !selectedNetwork || !smsRecipient) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدل رقم الزبون.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
     const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;
@@ -457,7 +456,7 @@ export default function FavoritesPage() {
 
                                         <div className="flex flex-col items-end gap-1.5">
                                             <div className="flex flex-col items-end leading-tight">
-                                                <span className="text-xl font-black tracking-tighter text-primary">{cat.price.toLocaleString()}</span>
+                                                <span className="text-xl font-black tracking-tighter text-primary">{cat.price.toLocaleString('en-US')}</span>
                                                 <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
                                             </div>
                                             <Button size="sm" className="h-7 rounded-lg text-[9px] font-black px-4 bg-primary shadow-md shadow-primary/20">شراء</Button>
@@ -489,7 +488,7 @@ export default function FavoritesPage() {
           </DialogHeader>
           <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString('en-US')} <span className="text-sm">ريال</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
             <Button className="w-full h-12 rounded-2xl font-bold" onClick={handlePurchase} disabled={isProcessing}>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -442,7 +441,7 @@ export function ServiceGrid() {
                                     <div className="flex flex-col items-end gap-1.5">
                                         <div className="flex flex-col items-end leading-tight">
                                             <span className="text-xl font-black tracking-tighter text-primary">
-                                                {offer.price.toLocaleString()}
+                                                {offer.price.toLocaleString('en-US')}
                                             </span>
                                             <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
                                         </div>
@@ -492,7 +491,7 @@ export function ServiceGrid() {
           </DialogHeader>
           <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString('en-US')} <span className="text-sm">ريال</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
             <Button className="w-full h-12 rounded-2xl font-black text-base shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing}>

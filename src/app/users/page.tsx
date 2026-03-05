@@ -201,7 +201,7 @@ export default function UsersPage() {
             userId: selectedUser.id,
             transactionDate: new Date().toISOString(),
             amount: amount,
-            transactionType: 'إيداع يدوي',
+            transactionType: 'إيداع رصيد',
             notes: 'إيداع من الإدارة',
         });
         await batch.commit();

@@ -14,22 +14,10 @@ import {
   Gamepad2,
   Percent,
   ChevronLeft,
-  Loader2,
-  Star,
 } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
+import React from 'react';
+import { Card } from '@/components/ui/card';
 
 type Service = {
   name: string;
@@ -48,12 +36,6 @@ const services: Service[] = [
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
-
-type Advertisement = {
-  id: string;
-  imageUrl: string;
-  linkUrl?: string;
-};
 
 const ServiceItem = ({
   name,
@@ -83,66 +65,9 @@ const ServiceItem = ({
 };
 
 export function ServiceGrid() {
-  const firestore = useFirestore();
-  
-  // Fetch Advertisements for the Banner
-  const adsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'advertisements') : null),
-    [firestore]
-  );
-  const { data: ads, isLoading: isLoadingAds } = useCollection<Advertisement>(adsCollection);
-
-  const plugin = React.useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
-  );
-
   return (
     <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-5">
       
-      {/* Banner Section (Shorter height - aspect 21/7) */}
-      <div className="px-4">
-        {isLoadingAds ? (
-          <Card className="w-full aspect-[21/7] rounded-[28px] flex items-center justify-center bg-muted/30 border-none">
-            <Loader2 className="h-5 w-5 animate-spin text-primary/30" />
-          </Card>
-        ) : ads && ads.length > 0 ? (
-          <Carousel
-            plugins={[plugin.current]}
-            className="w-full"
-            onMouseEnter={plugin.current.stop}
-            onMouseLeave={plugin.current.reset}
-          >
-            <CarouselContent>
-              {ads.map((ad) => (
-                <CarouselItem key={ad.id}>
-                  <div className="relative w-full aspect-[21/7] rounded-[28px] overflow-hidden shadow-sm border border-border/20">
-                    <Image
-                      src={ad.imageUrl}
-                      alt="Promotional Banner"
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                    {ad.linkUrl && (
-                      <Link href={ad.linkUrl} className="absolute inset-0 z-10">
-                        <span className="sr-only">انقر للتفاصيل</span>
-                      </Link>
-                    )}
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-        ) : (
-          /* Default Placeholder if no ads */
-          <div className="relative w-full aspect-[21/7] rounded-[28px] overflow-hidden shadow-sm bg-mesh-gradient flex flex-col items-center justify-center text-white p-4">
-             <Star className="h-6 w-6 mb-1 opacity-50" />
-             <h3 className="font-black text-base">ستار موبايل</h3>
-             <p className="text-[9px] font-bold opacity-80">عالم من الخدمات الرقمية بين يديك</p>
-          </div>
-        )}
-      </div>
-
       {/* 9 Services Grid (3x3) - Compact Height */}
       <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (

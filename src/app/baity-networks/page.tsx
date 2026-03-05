@@ -47,18 +47,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 // Types
-type Network = {
-  id: number;
-  name: string;
-  desc: string; 
-};
-
 type CombinedNetwork = {
     id: string;
     name: string;
@@ -185,20 +180,6 @@ export default function BaityNetworksPage() {
     }
   };
 
-  const handleFavoriteClick = async (e: React.MouseEvent, network: CombinedNetwork) => {
-    e.preventDefault(); e.stopPropagation();
-    if (!user || !firestore) return;
-    const isFavorited = favoriteNetworkIds.has(network.id);
-    if (isFavorited) {
-      const fav = favorites?.find(f => f.targetId === network.id);
-      if (fav) deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'favorites', fav.id));
-    } else {
-      addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'favorites'), {
-        userId: user.uid, targetId: network.id, name: network.name, location: network.location, favoriteType: 'Network', isLocal: false
-      });
-    }
-  };
-
   const handlePurchase = async () => {
     const selectedCategory = showConfirmPurchase;
     if (!selectedCategory || !user || !userProfile || !firestore || !userDocRef) return;
@@ -270,7 +251,6 @@ export default function BaityNetworksPage() {
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
         
-        {/* Header - Image Style */}
         <div className="bg-mesh-gradient pt-12 pb-16 px-6 rounded-b-[40px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
@@ -316,7 +296,6 @@ export default function BaityNetworksPage() {
                 onClick={() => handleNetworkClick(network)}
               >
                 <CardContent className="p-5 flex items-center justify-between gap-4">
-                    {/* WiFi Icon Group */}
                     <div className="p-4 bg-primary/5 rounded-[24px] border border-primary/5 group-hover:bg-primary/10 transition-colors">
                         <Wifi className="h-8 w-8 text-primary" />
                     </div>
@@ -351,7 +330,6 @@ export default function BaityNetworksPage() {
         </div>
       </div>
 
-      {/* Categories Dialog - Styled like the image */}
       <Dialog open={!!selectedNetwork} onOpenChange={(open) => !open && !isProcessing && setSelectedNetwork(null)}>
         <DialogContent className="max-w-[95%] sm:max-w-md rounded-[40px] p-0 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-[#F8FAFC] dark:bg-slate-950">
           {selectedNetwork && (
@@ -389,7 +367,6 @@ export default function BaityNetworksPage() {
                                 onClick={() => setShowConfirmPurchase(cat)}
                             >
                                 <CardContent className="p-0 flex items-stretch h-36">
-                                    {/* Left Side: Price & Action */}
                                     <div className="w-[30%] bg-muted/30 flex flex-col items-center justify-center p-3 border-l border-dashed">
                                         <div className="text-center mb-3">
                                             <p className={cn("text-2xl font-black", isFeatured ? "text-orange-600" : "text-primary")}>{cat.price.toLocaleString('en-US')}</p>
@@ -401,7 +378,6 @@ export default function BaityNetworksPage() {
                                         )}>شراء</Button>
                                     </div>
 
-                                    {/* Middle: Details */}
                                     <div className="flex-1 p-4 flex flex-col justify-center text-right space-y-3">
                                         <div className="flex items-center justify-end gap-2">
                                             {isFeatured && <Badge className="bg-orange-500 text-white border-none text-[8px] h-4">عرض خاص</Badge>}
@@ -419,7 +395,6 @@ export default function BaityNetworksPage() {
                                         </div>
                                     </div>
 
-                                    {/* Right Side: Icon */}
                                     <div className="w-[20%] flex items-center justify-center p-4">
                                         <div className={cn(
                                             "h-14 w-14 rounded-full flex items-center justify-center shadow-lg bg-gradient-to-br text-white",
@@ -450,7 +425,6 @@ export default function BaityNetworksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation & Purchase Dialogs - Keep original logic but style them nicely */}
       <Dialog open={!!showConfirmPurchase} onOpenChange={(open) => !open && setShowConfirmPurchase(null)}>
         <DialogContent className="rounded-[40px] max-sm text-center bg-white dark:bg-slate-900 z-[10000] border-none shadow-2xl">
           <DialogHeader>

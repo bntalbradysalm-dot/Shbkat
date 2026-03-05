@@ -56,7 +56,7 @@ const ServiceItem = ({
           <Icon 
             className="h-8 w-8 transition-transform group-hover:scale-110" 
             style={{ 
-                strokeWidth: 2.5,
+                strokeWidth: 2,
                 stroke: 'url(#icon-gradient)'
             }}
           />

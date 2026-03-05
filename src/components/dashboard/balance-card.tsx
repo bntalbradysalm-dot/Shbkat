@@ -19,9 +19,13 @@ import {
 } from "@/components/ui/dialog";
 import Link from "next/link";
 
+const Icon4G = ({ size }: { size?: number }) => (
+  <span className="font-black leading-none" style={{ fontSize: size ? `${size * 0.8}px` : '10px' }}>4G</span>
+);
+
 const availableServices = [
   { id: 'yemen-mobile', name: 'يمن موبايل', icon: PhoneCall, href: '/yemen-mobile' },
-  { id: 'yemen-4g', name: 'يمن فورجي', icon: Zap, href: '/yemen-4g' },
+  { id: 'yemen-4g', name: 'يمن فورجي', icon: Icon4G, href: '/yemen-4g' },
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
@@ -150,7 +154,7 @@ export function BalanceCard() {
       </Card>
 
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
           <DialogHeader>
             <DialogTitle className="text-center">اختيار اختصار مفضل</DialogTitle>
             <DialogDescription className="text-center">
@@ -167,7 +171,7 @@ export function BalanceCard() {
                   className="flex flex-col h-24 gap-2 rounded-2xl border-primary/10 hover:bg-primary/5 hover:border-primary/30"
                   onClick={() => selectService(service)}
                 >
-                  <ServiceIcon className="h-8 w-8 text-primary" />
+                  <ServiceIcon size={12} />
                   <span className="text-xs font-bold">{service.name}</span>
                 </Button>
               );

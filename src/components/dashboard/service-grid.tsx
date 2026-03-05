@@ -12,12 +12,9 @@ import {
   ArrowLeftRight,
   Heart,
   Gamepad2,
-  Percent,
-  ChevronLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
-import { Card } from '@/components/ui/card';
 
 type Service = {
   name: string;
@@ -80,26 +77,6 @@ export function ServiceGrid() {
             index={index} 
           />
         ))}
-      </div>
-
-      {/* Featured Offers Card */}
-      <div className="px-4 mt-1 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000">
-        <Card 
-          className="overflow-hidden border-none bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer rounded-[22px] border border-primary/10 shadow-sm active:scale-95"
-        >
-          <Link href="/baity-networks" className="p-3.5 flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
-                <Percent className="h-3.5 w-3.5 text-white" />
-              </div>
-              <div className="text-right">
-                <h3 className="text-xs font-black text-primary">عروض حصرية</h3>
-                <p className="text-[9px] text-muted-foreground font-bold">اطلع على أحدث العروض وفئات الخير المضافة</p>
-              </div>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-primary/50" />
-          </Link>
-        </Card>
       </div>
 
       {/* التعريف بالتدرج اللوني للأيقونات */}

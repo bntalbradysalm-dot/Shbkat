@@ -1,8 +1,9 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe, PhoneCall, Zap } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -19,6 +20,8 @@ import {
 import Link from "next/link";
 
 const availableServices = [
+  { id: 'yemen-mobile', name: 'يمن موبايل', icon: PhoneCall, href: '/yemen-mobile' },
+  { id: 'yemen-4g', name: 'يمن فورجي', icon: Zap, href: '/yemen-4g' },
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
@@ -39,8 +42,8 @@ export function BalanceCard() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const [leftAction, setLeftAction] = useState(availableServices[5]); // Default: المفضلة
-  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: الشبكات
+  const [leftAction, setLeftAction] = useState(availableServices[0]); // Default: يمن موبايل
+  const [rightAction, setRightAction] = useState(availableServices[1]); // Default: يمن فورجي
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [editingSide, setEditingSide] = useState<'left' | 'right' | null>(null);
 

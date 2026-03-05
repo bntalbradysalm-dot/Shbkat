@@ -28,10 +28,7 @@ import {
   Star,
   Trophy,
   Megaphone,
-  Globe,
-  PhoneCall,
-  Phone,
-  Signal
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
@@ -67,13 +64,6 @@ const services: Service[] = [
   { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { name: 'سجل العمليات', icon: History, href: '/transactions' },
   { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
-];
-
-const telecomShortcuts = [
-  { name: 'يمن موبايل', icon: PhoneCall, color: '#B32C4C', bg: 'bg-[#B32C4C]/10', href: '/yemen-mobile' },
-  { name: 'يو', icon: Signal, color: '#E6B000', bg: 'bg-[#FECC4F]/20', href: '/you-services' },
-  { name: 'يمن فورجي', icon: Zap, color: '#106BA2', bg: 'bg-[#106BA2]/10', href: '/yemen-4g' },
-  { name: 'الثابت', icon: Phone, color: '#F18312', bg: 'bg-[#F18312]/10', href: '/internet-landline' },
 ];
 
 const CARD_GRADIENTS = [
@@ -348,21 +338,6 @@ export function ServiceGrid() {
         </defs>
       </svg>
 
-      {/* Telecom Quick Shortcuts - UPDATED: Smaller, Icons, moved up */}
-      <div className="flex justify-around items-center px-6 mb-5 animate-in fade-in-0 slide-in-from-right-4 duration-700">
-        {telecomShortcuts.map((item, i) => {
-          const Icon = item.icon;
-          return (
-            <Link href={item.href} key={i} className="flex flex-col items-center gap-1.5 shrink-0 group">
-              <div className={cn("w-11 h-11 rounded-full flex items-center justify-center border-2 border-transparent shadow-sm group-hover:shadow-md transition-all active:scale-90", item.bg)}>
-                <Icon size={20} color={item.color} className="transition-transform group-hover:scale-110" strokeWidth={2.5} />
-              </div>
-              <span className="text-[9px] font-black text-foreground">{item.name}</span>
-            </Link>
-          );
-        })}
-      </div>
-      
       <div className="grid grid-cols-3 gap-y-6 gap-x-4 px-6">
         {services.map((service, index) => (
           <ServiceItem 

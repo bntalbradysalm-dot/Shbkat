@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   ChevronLeft, 
   Smartphone, 
-  ShieldCheck
+  Home
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -46,6 +46,14 @@ const telecomServices = [
     description: 'استعلام وسداد باقات يمن فورجي الجديدة',
     color: '#106BA2',
     accent: 'bg-[#106BA2]/5'
+  },
+  {
+    name: 'رصيد البيت',
+    logo: 'https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg',
+    href: '/house-balance',
+    description: 'سداد الإنترنت والهاتف الثابت (يمن بوست)',
+    color: '#4F46E5',
+    accent: 'bg-[#4F46E5]/5'
   },
   {
     name: 'الثابت والإنترنت ADSL',

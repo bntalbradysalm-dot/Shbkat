@@ -188,29 +188,31 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // 1. البيانات المتبقية
-                let displayData = 'GB 0.00';
-                const mbs = parseFloat(String(result.remainAmount || "0"));
-                if (!isNaN(mbs) && mbs > 0) {
-                    displayData = 'GB ' + (mbs / 1024).toFixed(2);
+                // --- استخراج حقيقي للبيانات من الرد ---
+                
+                // 1. البيانات المتبقية (من حقل remainAmount الحقيقي)
+                let displayData = '...';
+                if (result.remainAmount !== undefined && result.remainAmount !== null) {
+                    const mbs = parseFloat(String(result.remainAmount));
+                    if (!isNaN(mbs)) {
+                        displayData = 'GB ' + (mbs / 1024).toFixed(2);
+                    }
                 }
 
-                // 2. المبلغ المطلوب سداده
+                // 2. المبلغ المطلوب سداده (من حقل balance الحقيقي)
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // 3. قيمة الباقة
-                let displayPackagePrice = '0';
+                // 3. قيمة الباقة (من الوصف أو الحقل)
+                let displayPackagePrice = '...';
                 const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
                     displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
                 } else if (result.packagePrice) {
                     displayPackagePrice = parseFloat(String(result.packagePrice)).toLocaleString('en-US');
-                } else {
-                    displayPackagePrice = displayBalance;
                 }
 
-                // 4. تاريخ الانتهاء
+                // 4. تاريخ الانتهاء (من الوصف أو الحقل)
                 let displayExpiry = '...';
                 const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
@@ -229,9 +231,10 @@ export default function LandlinePage() {
                     resultDesc: result.resultDesc
                 });
 
+                // تعيين مبلغ السداد تلقائياً بناءً على المبلغ المطلوب
                 if (bal > 0) {
                     setAmount(String(bal));
-                } else if (parseFloat(displayPackagePrice.replace(/,/g, '')) > 0) {
+                } else if (displayPackagePrice !== '...') {
                     setAmount(displayPackagePrice.replace(/,/g, ''));
                 }
             } else {

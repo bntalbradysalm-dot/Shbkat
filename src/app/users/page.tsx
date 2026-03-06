@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, addDoc, writeBatch, query, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,7 @@ type User = {
   phoneNumber?: string;
   balance?: number;
   accountType?: 'user' | 'network-owner';
+  registrationDate?: string;
 };
 
 const filterOptions = [
@@ -92,7 +93,7 @@ export default function UsersPage() {
   const { toast } = useToast();
 
   const usersCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'users') : null),
+    () => (firestore ? query(collection(firestore, 'users'), orderBy('registrationDate', 'desc')) : null),
     [firestore]
   );
 

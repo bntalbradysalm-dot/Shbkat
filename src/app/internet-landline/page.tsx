@@ -56,6 +56,7 @@ type UserProfile = {
 type QueryResult = {
     resultCode: string;
     balance: string; // المبلغ المطلوب سداده
+    packagePrice: string; // قيمة الباقة
     dataRemaining: string; // remainAmount محول لـ GB
     expireDate: string; // مستخرج من الوصف
     mobileType?: string; // 0 prepaid, 1 postpaid
@@ -163,6 +164,8 @@ export default function LandlinePage() {
         setQueryResult(null);
         try {
             const transid = Date.now().toString().slice(-8);
+            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
+            
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -170,32 +173,52 @@ export default function LandlinePage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'post', 
-                    type: activeTab === 'internet' ? 'adsl' : 'line',
+                    type: serviceType,
                     transid 
                 })
             });
             const result = await response.json();
             
-            if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
+            if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام من المصدر.');
             
             const isSuccess = result.resultCode === "0" || result.resultCode === 0;
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
 
             if (isSuccess || isPending) {
-                // تحويل remainAmount من ميجابايت إلى جيجابايت
+                const desc = result.resultDesc || '';
+                
+                // 1. البيانات المتبقية (Remaining Data)
+                let displayData = '0.00 GB';
                 const mbs = parseFloat(String(result.remainAmount || "0"));
-                const displayData = !isNaN(mbs) ? (mbs / 1024).toFixed(2) + ' GB' : '0.00 GB';
+                if (!isNaN(mbs) && mbs > 0) {
+                    displayData = (mbs / 1024).toFixed(2) + ' GB';
+                } else {
+                    const dataMatch = desc.match(/(الرصيد المتبقي|المتبقي):\s*([\d.]+)/);
+                    if (dataMatch) {
+                        displayData = (parseFloat(dataMatch[2]) / 1024).toFixed(2) + ' GB';
+                    }
+                }
 
-                // جلب المبلغ المطلوب سداده
+                // 2. المبلغ المطلوب سداده (Amount Due)
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // استخراج تاريخ الانتهاء من الوصف (resultDesc)
-                const desc = (result.resultDesc || '').toLowerCase();
+                // 3. قيمة الباقة (Package Price)
+                let displayPackagePrice = '0';
+                const priceMatch = desc.match(/قيمة الباقة:\s*([\d.]+)/);
+                if (priceMatch) {
+                    displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
+                } else if (result.packagePrice) {
+                    displayPackagePrice = parseFloat(String(result.packagePrice)).toLocaleString('en-US');
+                } else {
+                    displayPackagePrice = displayBalance;
+                }
+
+                // 4. تاريخ الانتهاء (Expiry Date)
                 let displayExpiry = '...';
                 const dateMatch = desc.match(/(\d{4})[-/](\d{2})[-/](\d{2})/);
                 if (dateMatch) {
-                    displayExpiry = `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1]}`;
+                    displayExpiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
                 } else if (result.expireDate) {
                     displayExpiry = result.expireDate;
                 }
@@ -203,15 +226,17 @@ export default function LandlinePage() {
                 setQueryResult({
                     resultCode: String(result.resultCode),
                     balance: displayBalance,
+                    packagePrice: displayPackagePrice,
                     dataRemaining: displayData,
                     expireDate: displayExpiry,
                     mobileType: String(result.mobileType || ""),
                     resultDesc: result.resultDesc
                 });
 
-                // تعبئة حقل المبلغ تلقائياً بالمبلغ المطلوب إذا كان متوفراً
                 if (bal > 0) {
                     setAmount(String(bal));
+                } else if (parseFloat(displayPackagePrice.replace(/,/g, '')) > 0) {
+                    setAmount(displayPackagePrice.replace(/,/g, ''));
                 }
             } else {
                 throw new Error(result.resultDesc || result.message || `خطأ: ${result.resultCode}`);
@@ -257,7 +282,6 @@ export default function LandlinePage() {
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
 
-        // الرسوم الثابتة أو النسبة المعتمدة (هنا 5% كما في بقية الخدمات)
         const commission = Math.ceil(payAmount * 0.05);
         const totalToDeduct = payAmount + commission;
 
@@ -317,7 +341,6 @@ export default function LandlinePage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
-            {/* مؤشرات التحميل الشفافة */}
             {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
 
@@ -385,7 +408,7 @@ export default function LandlinePage() {
                             </TabsList>
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
-                                {queryResult && (
+                                {queryResult && activeTab === 'internet' && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
@@ -393,8 +416,8 @@ export default function LandlinePage() {
                                                 <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">المبلغ المطلوب</p>
-                                                <p className="text-sm font-black">{queryResult.balance} ر.ي</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
+                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
@@ -491,7 +514,7 @@ export default function LandlinePage() {
                             </TabsContent>
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
-                                {queryResult && (
+                                {queryResult && activeTab === 'landline' && (
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 text-white text-center">
                                             <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">المبلغ المطلوب سداده للهاتف</p>

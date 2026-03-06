@@ -171,6 +171,7 @@ export default function LandlinePage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'post', 
+                    type: activeTab === 'internet' ? 'adsl' : 'line',
                     transid 
                 })
             });
@@ -317,6 +318,7 @@ export default function LandlinePage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+            {/* مؤشرات التحميل الشفافة */}
             {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
 

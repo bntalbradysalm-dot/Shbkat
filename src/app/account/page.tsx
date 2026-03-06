@@ -29,7 +29,7 @@ import {
   Banknote,
   Code,
   UserRound,
-  TrendingUp
+  ShieldCheck
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -83,6 +83,7 @@ const userAppSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { id: 'share-app', title: 'شارك التطبيق', icon: Share2, action: 'share' },
     { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, action: 'help' },
+    { id: 'privacy-policy', title: 'سياسة الخصوصية', icon: ShieldCheck, href: '/privacy-policy' },
     { id: 'app-developer', title: 'مطور التطبيق', icon: Code, action: 'developer' },
 ];
 

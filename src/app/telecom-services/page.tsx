@@ -6,11 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   ChevronLeft, 
   Smartphone, 
-  Zap, 
-  Globe, 
-  Wifi, 
-  PhoneCall,
-  ArrowRightLeft,
   ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
@@ -68,7 +63,7 @@ export default function TelecomServicesPage() {
       <SimpleHeader title="رصيد وباقات" />
       
       <div className="flex-1 overflow-y-auto">
-        {/* Hero Section - Reduced height and padding */}
+        {/* Hero Section */}
         <div className="bg-mesh-gradient pt-6 pb-10 px-6 rounded-b-[40px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-3">
@@ -76,13 +71,13 @@ export default function TelecomServicesPage() {
                     <Smartphone className="h-8 w-8 text-white" />
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-xl font-black text-white tracking-tight">كبينة السداد الإلكتروني</h2>
-                    <p className="text-[9px] text-white/70 font-bold uppercase tracking-[0.2em]">سدد رصيدك وباقاتك في ثوانٍ</p>
+                    <h2 className="text-xl font-black text-white tracking-tight">تسديد شبكات</h2>
+                    <p className="text-[10px] text-white/70 font-bold uppercase tracking-[0.2em]">الاتصالات اليمنية</p>
                 </div>
             </div>
         </div>
 
-        {/* Services List - Changed -mt-6 to mt-6 to separate from header */}
+        {/* Services List */}
         <div className="px-4 mt-6 pb-10 space-y-3">
           {telecomServices.map((service, index) => (
             <Link href={service.href} key={service.name} className="block">
@@ -121,14 +116,6 @@ export default function TelecomServicesPage() {
               </Card>
             </Link>
           ))}
-        </div>
-
-        {/* Safe Badge */}
-        <div className="px-6 pb-8 text-center animate-in fade-in duration-1000 delay-500">
-            <div className="inline-flex items-center gap-2 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/10">
-                <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
-                <span className="text-[10px] font-black text-green-700 uppercase">عمليات آمنة ومضمونة 100%</span>
-            </div>
         </div>
       </div>
     </div>

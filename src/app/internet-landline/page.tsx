@@ -61,7 +61,6 @@ type QueryResult = {
     packagePrice: string; 
     dataRemaining: string; 
     expireDate: string; 
-    mobileType?: string; 
     resultDesc?: string;
 };
 
@@ -147,7 +146,6 @@ export default function LandlinePage() {
         }
     }, [showSuccess]);
 
-    // مسح نتائج الاستعلام عند تغيير الرقم بشكل جذري
     useEffect(() => {
         if (phone.length < 7) {
             setQueryResult(null);
@@ -157,17 +155,12 @@ export default function LandlinePage() {
     const handleSearch = async () => {
         if (!phone || phone.length < 7) return;
         
-        if (!phone.startsWith('0')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 0' });
-            return;
-        }
-
         setIsSearching(true);
         setQueryResult(null);
         try {
             const transid = Date.now().toString().slice(-8);
-            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
             
+            // الاستعلام لخدمات يمن بوست لا يتطلب معامل type في رابط الاستعلام بناءً على التوثيق (API 6)
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -175,7 +168,6 @@ export default function LandlinePage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'post', 
-                    type: serviceType,
                     transid 
                 })
             });
@@ -189,36 +181,32 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // 1. البيانات المتبقية (من حقل remainAmount الحقيقي أو استخراج من الوصف)
+                // 1. استخراج البيانات المتبقية وتحويلها لجيجابايت
                 let displayData = '...';
                 if (result.remainAmount !== undefined && result.remainAmount !== null) {
-                    const mbs = parseFloat(String(result.remainAmount));
-                    if (!isNaN(mbs)) displayData = 'GB ' + (mbs / 1024).toFixed(2);
-                } else {
-                    const dataMatch = desc.match(/(?:الرصيد المتبقي|المتبقي|رصيد):\s*([\d.]+)\s*(?:GB|MB|جيجا|ميحا)/i);
-                    if (dataMatch) displayData = dataMatch[1] + ' GB';
+                    const amt = parseFloat(String(result.remainAmount));
+                    if (!isNaN(amt)) {
+                        // الافتراض أن القيمة بالميجابايت كما هو معتاد في يمن بوست
+                        displayData = `GB ${(amt / 1024).toFixed(2)}`;
+                    }
                 }
 
-                // 2. المبلغ المطلوب سداده
+                // 2. المبلغ المطلوب سداده (من حقل balance المباشر)
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // 3. قيمة الباقة
+                // 3. قيمة الباقة (محاولة الاستخراج من الوصف)
                 let displayPackagePrice = '...';
                 const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
                     displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
-                } else if (result.packagePrice) {
-                    displayPackagePrice = parseFloat(String(result.packagePrice)).toLocaleString('en-US');
                 }
 
-                // 4. تاريخ الانتهاء
+                // 4. تاريخ الانتهاء (استخراج التاريخ بأي صيغة متوفرة)
                 let displayExpiry = '...';
                 const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
                     displayExpiry = dateMatch[0];
-                } else if (result.expireDate) {
-                    displayExpiry = result.expireDate;
                 }
 
                 setQueryResult({
@@ -227,21 +215,15 @@ export default function LandlinePage() {
                     packagePrice: displayPackagePrice,
                     dataRemaining: displayData,
                     expireDate: displayExpiry,
-                    mobileType: String(result.mobileType || ""),
                     resultDesc: result.resultDesc
                 });
 
-                // تعيين مبلغ السداد تلقائياً
-                if (bal > 0) {
-                    setAmount(String(bal));
-                } else if (displayPackagePrice !== '...') {
-                    setAmount(displayPackagePrice.replace(/,/g, ''));
-                }
+                if (bal > 0) setAmount(String(bal));
             } else {
-                throw new Error(result.resultDesc || result.message || `خطأ من المصدر: ${result.resultCode}`);
+                throw new Error(result.resultDesc || 'الرقم غير مسجل أو هناك خطأ في الاستعلام.');
             }
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'تنبيه الاستعلام', description: error.message });
+            toast({ variant: 'destructive', title: 'خطأ الاستعلام', description: error.message });
         } finally {
             setIsSearching(false);
         }
@@ -249,37 +231,25 @@ export default function LandlinePage() {
 
     const handleContactPick = async () => {
         if (!('contacts' in navigator && 'ContactsManager' in window)) {
-            toast({
-                variant: "destructive",
-                title: "غير مدعوم",
-                description: "متصفحك لا يدعم الوصول لجهات الاتصال.",
-            });
+            toast({ variant: "destructive", title: "غير مدعوم", description: "متصفحك لا يدعم الوصول لجهات الاتصال." });
             return;
         }
-
         try {
             const props = ['tel'];
             const opts = { multiple: false };
             const contacts = await (navigator as any).contacts.select(props, opts);
-            
             if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
-                let selectedNumber = contacts[0].tel[0];
-                selectedNumber = selectedNumber.replace(/[\s\-\(\)]/g, '');
+                let selectedNumber = contacts[0].tel[0].replace(/[\s\-\(\)]/g, '');
                 if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (!selectedNumber.startsWith('0')) selectedNumber = '0' + selectedNumber;
-                
-                const finalNum = selectedNumber.slice(0, 9);
-                setPhone(finalNum);
+                setPhone(selectedNumber.slice(0, 9));
             }
-        } catch (err) {
-            console.error("Contacts selection failed:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
-
         const commission = Math.ceil(payAmount * 0.05);
         const totalToDeduct = payAmount + commission;
 
@@ -307,28 +277,24 @@ export default function LandlinePage() {
             });
             const result = await response.json();
             
-            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
-            const isPending = result.resultCode === "-2" || result.resultCode === -2;
-
-            if (!response.ok || (!isSuccess && !isPending)) {
+            if (result.resultCode === "0" || result.resultCode === 0 || result.resultCode === "-2") {
+                const batch = writeBatch(firestore);
+                batch.update(userDocRef, { balance: increment(-totalToDeduct) });
+                batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
+                    userId: user.uid,
+                    transactionDate: new Date().toISOString(),
+                    amount: totalToDeduct,
+                    transactionType: `سداد ${typeLabel}`,
+                    notes: `إلى رقم: ${phone}. مبلغ: ${payAmount} + عمولة: ${commission}.`,
+                    recipientPhoneNumber: phone,
+                    transid: transid
+                });
+                await batch.commit();
+                setLastTxDetails({ type: `سداد ${typeLabel}`, phone, amount: totalToDeduct, transid });
+                setShowSuccess(true);
+            } else {
                 throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
             }
-            
-            const batch = writeBatch(firestore);
-            batch.update(userDocRef, { balance: increment(-totalToDeduct) });
-            batch.set(doc(firestoreCollection(firestore, 'users', user.uid, 'transactions')), {
-                userId: user.uid,
-                transactionDate: new Date().toISOString(),
-                amount: totalToDeduct,
-                transactionType: `سداد ${typeLabel}`,
-                notes: `إلى رقم: ${phone}. مبلغ السداد: ${payAmount} + عمولة: ${commission}.`,
-                recipientPhoneNumber: phone,
-                transid: transid
-            });
-            await batch.commit();
-            
-            setLastTxDetails({ type: `سداد ${typeLabel}`, phone: phone, amount: totalToDeduct, transid: transid });
-            setShowSuccess(true);
         } catch (error: any) {
             toast({ variant: "destructive", title: "فشل السداد", description: error.message });
         } finally {
@@ -349,21 +315,14 @@ export default function LandlinePage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="text-right">
                             <p className="text-xs font-bold opacity-80 mb-1">الرصيد المتوفر</p>
-                            <div className="flex items-baseline gap-1">
-                                <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'}</h2>
-                                <span className="text-[10px] font-bold opacity-70 text-white mr-1">ريال يمني</span>
-                            </div>
+                            <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString('en-US') || '0'} <span className="text-xs opacity-70">ريال</span></h2>
                         </div>
-                        <div className="p-3 bg-white/20 rounded-2xl">
-                            <Wallet className="h-6 w-6 text-white" />
-                        </div>
+                        <div className="p-3 bg-white/20 rounded-2xl"><Wallet className="h-6 w-6 text-white" /></div>
                     </CardContent>
                 </Card>
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
-                    <div className="flex justify-between items-center mb-2 px-1">
-                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الهاتف</Label>
-                    </div>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الهاتف</Label>
                     <div className="relative">
                         <Input
                             type="tel"
@@ -371,33 +330,18 @@ export default function LandlinePage() {
                             value={phone}
                             onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
-                            style={{ outlineColor: currentTheme.primary }}
                         />
-                        <button 
-                            onClick={handleContactPick}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors"
-                            style={{ color: currentTheme.primary }}
-                            title="جهات الاتصال"
-                        >
-                            <Users className="h-5 w-5" />
-                        </button>
+                        <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors" style={{ color: currentTheme.primary }}><Users className="h-5 w-5" /></button>
                     </div>
-                    {phone.length >= 7 && phone.startsWith('0') && (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                            <Button 
-                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" 
-                                onClick={handleSearch}
-                                disabled={isSearching}
-                                style={{ backgroundColor: currentTheme.primary }}
-                            >
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                                استعلام
-                            </Button>
-                        </div>
+                    {phone.length >= 7 && (
+                        <Button className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" onClick={handleSearch} disabled={isSearching} style={{ backgroundColor: currentTheme.primary }}>
+                            {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
+                            استعلام الآن
+                        </Button>
                     )}
                 </div>
 
-                {(phone.length >= 7) && (
+                {phone.length >= 7 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
@@ -405,107 +349,48 @@ export default function LandlinePage() {
                                 <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#F18312] data-[state=active]:text-white">الهاتف الثابت</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
+                            <TabsContent value="internet" className="pt-2 space-y-4">
                                 {queryResult && activeTab === 'internet' && (
                                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-[#302C81]/10 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
                                         <div className="flex justify-between items-center py-2 border-b border-dashed border-[#302C81]/10">
-                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-                                                <Database className="w-3.5 h-3.5 text-[#302C81]" /> الرصيد المتبقي:
-                                            </span>
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2"><Database className="w-3.5 h-3.5 text-[#302C81]" /> الرصيد المتبقي:</span>
                                             <span className="text-sm font-black text-[#302C81]">{queryResult.dataRemaining}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-dashed border-[#302C81]/10">
-                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-                                                <Tag className="w-3.5 h-3.5 text-[#302C81]" /> قيمة الباقة:
-                                            </span>
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2"><Tag className="w-3.5 h-3.5 text-[#302C81]" /> قيمة الباقة:</span>
                                             <span className="text-sm font-black text-[#302C81]">{queryResult.packagePrice} ر.ي</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2">
-                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-                                                <Calendar className="w-3.5 h-3.5 text-[#302C81]" /> تاريخ الانتهاء:
-                                            </span>
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-[#302C81]" /> تاريخ الانتهاء:</span>
                                             <span className="text-sm font-black text-[#302C81]">{queryResult.expireDate}</span>
                                         </div>
-                                        {queryResult.resultCode === "-2" && (
-                                            <div className="bg-orange-500/10 text-[10px] text-orange-600 font-bold p-3 rounded-xl flex items-center justify-center gap-2 mt-2">
-                                                <Info className="w-3 h-3" /> جاري معالجة الطلب في المزود...
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#302C81]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ المراد سداده</Label>
                                     <div className="relative max-w-[240px] mx-auto">
-                                        <Input 
-                                            type="number" 
-                                            placeholder="0.00" 
-                                            value={amount} 
-                                            onChange={(e) => setAmount(e.target.value)} 
-                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none placeholder:text-[#302C81]/10 text-[#302C81]" 
-                                        />
+                                        <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-[#302C81]" />
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#302C81]/30 font-black text-sm">ر.ي</div>
                                     </div>
-                                    <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#302C81]/20 text-white" 
-                                        onClick={() => setIsConfirmingPayment(true)} 
-                                        disabled={!amount}
-                                        style={{ backgroundColor: '#302C81' }}
-                                    >
-                                        تسديد الآن
-                                    </Button>
+                                    <Button className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg text-white" onClick={() => setIsConfirmingPayment(true)} disabled={!amount} style={{ backgroundColor: '#302C81' }}>تسديد الآن</Button>
                                 </div>
 
                                 <div className="mt-8 space-y-6 pb-10">
-                                    <div className="flex items-center justify-center px-2">
-                                        <h3 className="text-sm font-black text-foreground tracking-tight">فئات سداد الإنترنت المقترحة</h3>
-                                    </div>
-                                    
                                     <Accordion type="single" collapsible className="w-full space-y-4">
                                         {INTERNET_PACKAGES.map((category, idx) => (
                                             <AccordionItem key={idx} value={`item-${idx}`} className="border-none">
-                                                <AccordionTrigger 
-                                                    className="px-5 py-5 rounded-[24px] hover:no-underline shadow-md border-none data-[state=open]:rounded-b-none data-[state=open]:shadow-lg transition-all duration-300 text-right group text-white"
-                                                    style={INTERNET_THEME.gradient}
-                                                >
+                                                <AccordionTrigger className="px-5 py-5 rounded-[24px] hover:no-underline shadow-md text-white" style={INTERNET_THEME.gradient}>
                                                     <div className="flex items-center gap-4 flex-1">
-                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg group-data-[state=open]:scale-110 transition-transform border border-white/20">
-                                                            <Image 
-                                                                src="https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg" 
-                                                                alt="ADSL" 
-                                                                fill 
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col items-start">
-                                                            <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest leading-tight">باقات</span>
-                                                            <span className="text-sm font-black text-white leading-tight">{category.title}</span>
-                                                        </div>
+                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl border border-white/20"><Image src="https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg" alt="ADSL" fill className="object-cover"/></div>
+                                                        <div className="flex flex-col items-start"><span className="text-[10px] font-bold text-white/70 uppercase">باقات</span><span className="text-sm font-black text-white">{category.title}</span></div>
                                                     </div>
                                                 </AccordionTrigger>
-                                                <AccordionContent className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-x border-b border-[#302C81]/10 rounded-b-[24px] p-3 space-y-2.5 animate-in slide-in-from-top-2 duration-300">
+                                                <AccordionContent className="bg-white dark:bg-slate-900/50 border-x border-b border-[#302C81]/10 rounded-b-[24px] p-3 space-y-2.5 animate-in slide-in-from-top-2">
                                                     {category.items.map((pkg, pIdx) => (
-                                                        <div 
-                                                            key={pIdx}
-                                                            onClick={() => {
-                                                                setAmount(String(pkg.price));
-                                                                setIsConfirmingPayment(true);
-                                                            }}
-                                                            className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:bg-gradient-to-l hover:from-[#302C81]/5 hover:to-transparent transition-all cursor-pointer group/item border border-[#302C81]/5 hover:border-[#302C81]/20"
-                                                        >
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="h-9 w-9 rounded-xl bg-[#302C81]/5 flex items-center justify-center">
-                                                                    <Globe className="w-4 h-4 text-[#302C81] opacity-60" />
-                                                                </div>
-                                                                <div className="flex flex-col items-start">
-                                                                    <span className="text-sm font-black text-foreground">{pkg.name}</span>
-                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase">سداد مباشر</span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <p className="text-lg font-black text-[#302C81] tracking-tighter">{pkg.price.toLocaleString('en-US')}</p>
-                                                                <ArrowUpRight className="w-4 h-4 text-[#302C81]/30 group-hover/item:text-[#302C81] transition-colors" />
-                                                            </div>
+                                                        <div key={pIdx} onClick={() => { setAmount(String(pkg.price)); setIsConfirmingPayment(true); }} className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800 shadow-sm hover:bg-[#302C81]/5 transition-all cursor-pointer border border-[#302C81]/5">
+                                                            <div className="flex items-center gap-4"><Globe className="w-4 h-4 text-[#302C81]" /><span className="text-sm font-black">{pkg.name}</span></div>
+                                                            <div className="flex items-center gap-3"><p className="text-lg font-black text-[#302C81]">{pkg.price.toLocaleString()}</p><ArrowUpRight className="w-4 h-4 opacity-30" /></div>
                                                         </div>
                                                     ))}
                                                 </AccordionContent>
@@ -517,33 +402,18 @@ export default function LandlinePage() {
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && activeTab === 'landline' && (
-                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-[#F18312]/10 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
-                                        <div className="flex flex-col items-center justify-center p-4 text-center">
-                                            <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">المبلغ المطلوب سداده للهاتف</p>
-                                            <p className="text-2xl font-black text-[#F18312]">{queryResult.balance} ريال</p>
-                                        </div>
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-[#F18312]/10 text-center animate-in zoom-in-95">
+                                        <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">المبلغ المطلوب سداده للهاتف</p>
+                                        <p className="text-2xl font-black text-[#F18312]">{queryResult.balance} ريال</p>
                                     </div>
                                 )}
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#F18312]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل مبلغ سداد الفاتورة</Label>
                                     <div className="relative max-w-[240px] mx-auto">
-                                        <Input 
-                                            type="number" 
-                                            placeholder="0.00" 
-                                            value={amount} 
-                                            onChange={(e) => setAmount(e.target.value)} 
-                                            className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none placeholder:text-[#F18312]/10 text-[#F18312]" 
-                                        />
+                                        <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-[#F18312]" />
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F18312]/30 font-black text-sm">ر.ي</div>
                                     </div>
-                                    <Button 
-                                        className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#F18312]/20 text-white" 
-                                        onClick={() => setIsConfirmingPayment(true)} 
-                                        disabled={!amount}
-                                        style={{ backgroundColor: '#F18312' }}
-                                    >
-                                        تسديد الآن
-                                    </Button>
+                                    <Button className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg text-white" onClick={() => setIsConfirmingPayment(true)} disabled={!amount} style={{ backgroundColor: '#F18312' }}>تسديد الآن</Button>
                                 </div>
                             </TabsContent>
                         </Tabs>
@@ -556,22 +426,10 @@ export default function LandlinePage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-center font-black">تأكيد عملية السداد</AlertDialogTitle>
                         <div className="space-y-3 pt-4 text-right text-sm">
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">رقم الهاتف:</span>
-                                <span className="font-bold">{phone}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">المبلغ:</span>
-                                <span className="font-bold">{parseFloat(amount || '0').toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                <span className="text-muted-foreground">العمولة الإدارية (5%):</span>
-                                <span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2">
-                                <span className="font-black">إجمالي الخصم من المحفظة:</span>
-                                <span className="font-black text-lg" style={{ color: currentTheme.primary }}>{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString('en-US')} ريال</span>
-                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">المبلغ:</span><span className="font-bold">{parseFloat(amount || '0').toLocaleString()} ريال</span></div>
+                            <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">العمولة الإدارية (5%):</span><span className="font-bold text-orange-600">{Math.ceil(parseFloat(amount || '0') * 0.05).toLocaleString()} ريال</span></div>
+                            <div className="flex justify-between items-center py-3 bg-muted/50 rounded-xl px-2 mt-2"><span className="font-black">إجمالي الخصم النهائي:</span><span className="font-black text-lg" style={{ color: currentTheme.primary }}>{(parseFloat(amount || '0') + Math.ceil(parseFloat(amount || '0') * 0.05)).toLocaleString()} ريال</span></div>
                         </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
@@ -582,16 +440,16 @@ export default function LandlinePage() {
             </AlertDialog>
 
             {showSuccess && lastTxDetails && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in-0">
                     <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" autoPlay />
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                         <CardContent className="p-8 space-y-6">
-                            <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلب السداد بنجاح</p></div>
+                            <div><h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلب السداد بنجاح</p></div>
                             <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.transid}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span><span className="font-mono font-bold">{lastTxDetails.phone}</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.amount.toLocaleString()} ريال</span></div>
                                 <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
                             </div>
                             <Button className="w-full h-14 rounded-2xl font-bold text-lg text-white" style={{ backgroundColor: currentTheme.primary }} onClick={() => { setShowSuccess(false); handleSearch(); }}>إغلاق</Button>
@@ -599,7 +457,6 @@ export default function LandlinePage() {
                     </Card>
                 </div>
             )}
-
             <Toaster />
         </div>
     );

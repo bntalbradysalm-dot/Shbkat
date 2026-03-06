@@ -12,7 +12,8 @@ import {
   Lock, 
   AlertCircle, 
   MessageCircle,
-  FileCheck
+  FileCheck,
+  X
 } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {

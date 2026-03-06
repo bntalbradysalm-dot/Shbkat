@@ -27,7 +27,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/accordion";
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -375,6 +375,7 @@ export default function LandlinePage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+            {/* مؤشرات التحميل الشفافة */}
             {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
 

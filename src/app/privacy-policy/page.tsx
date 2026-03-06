@@ -157,12 +157,17 @@ export default function PrivacyPolicyPage() {
                 <CardContent className="p-8 space-y-4">
                     <MessageCircle className="h-10 w-10 mx-auto opacity-80" />
                     <div className="space-y-1">
-                        <h3 className="font-black text-lg">لديك استفسار؟</h3>
+                        <h3 className="font-black text-lg text-white">لديك استفسار؟</h3>
                         <p className="text-xs opacity-80 font-bold">للاستفسارات حول الخصوصية والشروط:</p>
                     </div>
-                    <div className="bg-white/20 backdrop-blur-md rounded-2xl py-3 px-6 inline-block border border-white/10">
-                        <p className="font-black text-base tracking-widest">770326828</p>
-                    </div>
+                    <a 
+                        href="https://api.whatsapp.com/send?phone=967770326828" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="bg-white/20 backdrop-blur-md rounded-2xl py-3 px-6 inline-block border border-white/10 active:scale-95 transition-transform"
+                    >
+                        <p className="font-black text-base tracking-widest text-white">770326828</p>
+                    </a>
                     <p className="text-[10px] opacity-60 font-bold">راسلنا على واتساب وسنكون سعداء بخدمتك</p>
                 </CardContent>
             </Card>

@@ -19,7 +19,9 @@ import {
   Phone as PhoneIcon,
   Loader2,
   Info,
-  Clock
+  Clock,
+  Database,
+  Tag
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -186,18 +188,18 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // 1. البيانات المتبقية (Remaining Data) - تحويل GB 0.00
+                // 1. البيانات المتبقية
                 let displayData = 'GB 0.00';
                 const mbs = parseFloat(String(result.remainAmount || "0"));
                 if (!isNaN(mbs) && mbs > 0) {
                     displayData = 'GB ' + (mbs / 1024).toFixed(2);
                 }
 
-                // 2. المبلغ المطلوب سداده (Amount Due)
+                // 2. المبلغ المطلوب سداده
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // 3. قيمة الباقة (Package Price)
+                // 3. قيمة الباقة
                 let displayPackagePrice = '0';
                 const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
@@ -208,9 +210,8 @@ export default function LandlinePage() {
                     displayPackagePrice = displayBalance;
                 }
 
-                // 4. تاريخ الانتهاء (Expiry Date) - تحسين البحث
+                // 4. تاريخ الانتهاء
                 let displayExpiry = '...';
-                // البحث عن تواريخ بتنسيق YYYY-MM-DD أو DD/MM/YYYY
                 const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
                     displayExpiry = dateMatch[0];
@@ -336,7 +337,6 @@ export default function LandlinePage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
-            {/* مؤشرات التحميل الشفافة */}
             {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
 
@@ -405,23 +405,27 @@ export default function LandlinePage() {
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && activeTab === 'internet' && (
-                                    <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
-                                                <p className="text-sm font-black">{queryResult.dataRemaining}</p>
-                                            </div>
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
-                                                <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
-                                            </div>
-                                            <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                            </div>
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-[#302C81]/10 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
+                                        <div className="flex justify-between items-center py-2 border-b border-dashed border-[#302C81]/10">
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                                                <Database className="w-3.5 h-3.5 text-[#302C81]" /> الرصيد المتبقي:
+                                            </span>
+                                            <span className="text-sm font-black text-[#302C81]">{queryResult.dataRemaining}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-dashed border-[#302C81]/10">
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                                                <Tag className="w-3.5 h-3.5 text-[#302C81]" /> قيمة الباقة:
+                                            </span>
+                                            <span className="text-sm font-black text-[#302C81]">{queryResult.packagePrice} ر.ي</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2">
+                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                                                <Calendar className="w-3.5 h-3.5 text-[#302C81]" /> تاريخ الانتهاء:
+                                            </span>
+                                            <span className="text-sm font-black text-[#302C81]">{queryResult.expireDate}</span>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
-                                            <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
+                                            <div className="bg-orange-500/10 text-[10px] text-orange-600 font-bold p-3 rounded-xl flex items-center justify-center gap-2 mt-2">
                                                 <Info className="w-3 h-3" /> جاري معالجة الطلب في المزود...
                                             </div>
                                         )}
@@ -511,10 +515,10 @@ export default function LandlinePage() {
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
                                 {queryResult && activeTab === 'landline' && (
-                                    <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] flex flex-col items-center justify-center p-4 text-white text-center">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">المبلغ المطلوب سداده للهاتف</p>
-                                            <p className="text-2xl font-black">{queryResult.balance} ريال</p>
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-[#F18312]/10 space-y-3 animate-in fade-in-0 slide-in-from-top-2">
+                                        <div className="flex flex-col items-center justify-center p-4 text-center">
+                                            <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">المبلغ المطلوب سداده للهاتف</p>
+                                            <p className="text-2xl font-black text-[#F18312]">{queryResult.balance} ريال</p>
                                         </div>
                                     </div>
                                 )}

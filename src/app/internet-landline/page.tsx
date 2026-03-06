@@ -186,11 +186,11 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // 1. البيانات المتبقية (Remaining Data)
-                let displayData = '0.00 GB';
+                // 1. البيانات المتبقية (Remaining Data) - تحويل GB 0.00
+                let displayData = 'GB 0.00';
                 const mbs = parseFloat(String(result.remainAmount || "0"));
                 if (!isNaN(mbs) && mbs > 0) {
-                    displayData = (mbs / 1024).toFixed(2) + ' GB';
+                    displayData = 'GB ' + (mbs / 1024).toFixed(2);
                 }
 
                 // 2. المبلغ المطلوب سداده (Amount Due)
@@ -199,7 +199,7 @@ export default function LandlinePage() {
 
                 // 3. قيمة الباقة (Package Price)
                 let displayPackagePrice = '0';
-                const priceMatch = desc.match(/(?:قيمة الباقة|الباقة):\s*([\d.]+)/);
+                const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
                     displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
                 } else if (result.packagePrice) {
@@ -208,15 +208,12 @@ export default function LandlinePage() {
                     displayPackagePrice = displayBalance;
                 }
 
-                // 4. تاريخ الانتهاء (Expiry Date)
+                // 4. تاريخ الانتهاء (Expiry Date) - تحسين البحث
                 let displayExpiry = '...';
-                const dateMatch = desc.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})|(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+                // البحث عن تواريخ بتنسيق YYYY-MM-DD أو DD/MM/YYYY
+                const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
-                    if (dateMatch[1]) {
-                        displayExpiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
-                    } else {
-                        displayExpiry = `${parseInt(dateMatch[4])}/${parseInt(dateMatch[5])}/${dateMatch[6]}`;
-                    }
+                    displayExpiry = dateMatch[0];
                 } else if (result.expireDate) {
                     displayExpiry = result.expireDate;
                 }
@@ -339,6 +336,7 @@ export default function LandlinePage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+            {/* مؤشرات التحميل الشفافة */}
             {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ السداد..." />}
 
@@ -410,16 +408,16 @@ export default function LandlinePage() {
                                     <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={INTERNET_THEME.gradient}>
                                         <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-3 text-center text-white min-h-[80px]">
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الرصيد المتبقي</p>
+                                                <p className="text-sm font-black">{queryResult.dataRemaining}</p>
                                             </div>
                                             <div className="p-3 border-l border-white/10 flex flex-col justify-center">
                                                 <p className="text-[10px] font-bold opacity-80 mb-1">قيمة الباقة</p>
                                                 <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الجيجابايت المتبقية</p>
-                                                <p className="text-sm font-black">{queryResult.dataRemaining}</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
+                                                <p className="text-sm font-black">{queryResult.expireDate}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (

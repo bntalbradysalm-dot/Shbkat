@@ -82,20 +82,20 @@ export default function TelecomServicesPage() {
             </div>
         </div>
 
-        {/* Services List */}
-        <div className="px-4 -mt-6 pb-10 space-y-4">
+        {/* Services List - Smaller sizing applied here */}
+        <div className="px-4 -mt-6 pb-10 space-y-3">
           {telecomServices.map((service, index) => (
             <Link href={service.href} key={service.name} className="block">
               <Card
                 className={cn(
-                    "cursor-pointer border-none shadow-lg rounded-[32px] overflow-hidden group hover:shadow-xl transition-all active:scale-[0.98] animate-in fade-in-0 slide-in-from-bottom-4 duration-500",
+                    "cursor-pointer border-none shadow-md rounded-[28px] overflow-hidden group hover:shadow-lg transition-all active:scale-[0.98] animate-in fade-in-0 slide-in-from-bottom-4 duration-500",
                     "bg-card"
                 )}
                 style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'backwards' }}
               >
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                    <div className={cn("p-1 rounded-[24px] shrink-0 border border-muted/50 shadow-inner", service.accent)}>
-                        <div className="relative h-16 w-16 overflow-hidden rounded-[20px] shadow-sm">
+                <CardContent className="p-3 flex items-center justify-between gap-3">
+                    <div className={cn("p-0.5 rounded-[18px] shrink-0 border border-muted/50 shadow-inner", service.accent)}>
+                        <div className="relative h-14 w-14 overflow-hidden rounded-[16px] shadow-sm">
                             <Image
                                 src={service.logo}
                                 alt={`${service.name} logo`}
@@ -106,16 +106,16 @@ export default function TelecomServicesPage() {
                     </div>
 
                     <div className="flex-1 text-right overflow-hidden">
-                        <h4 className="font-black text-lg text-foreground group-hover:text-primary transition-colors mb-0.5">
+                        <h4 className="font-black text-base text-foreground group-hover:text-primary transition-colors mb-0.5">
                             {service.name}
                         </h4>
-                        <p className="text-[11px] text-muted-foreground font-bold leading-relaxed line-clamp-1 opacity-80">
+                        <p className="text-[10px] text-muted-foreground font-bold leading-relaxed line-clamp-1 opacity-80">
                             {service.description}
                         </p>
                     </div>
 
-                    <div className="p-2.5 bg-muted/50 rounded-2xl group-hover:bg-primary/10 transition-colors">
-                        <ChevronLeft className="h-5 w-5 text-primary" />
+                    <div className="p-2 bg-muted/50 rounded-xl group-hover:bg-primary/10 transition-colors">
+                        <ChevronLeft className="h-4 w-4 text-primary" />
                     </div>
                 </CardContent>
               </Card>

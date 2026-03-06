@@ -554,28 +554,6 @@ export default function LandlinePage() {
                             </TabsContent>
 
                             <TabsContent value="landline" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
-                                {queryResult && (
-                                    <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={LANDLINE_THEME.gradient}>
-                                        <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-[#4A3B00]">
-                                            <div className="p-3 border-l border-white/10 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">المبلغ المستحق</p>
-                                                <p className="text-sm font-black">
-                                                    {queryResult.packagePrice}
-                                                </p>
-                                            </div>
-                                            <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">الحالة</p>
-                                                <p className="text-[10px] font-black">{queryResult.resultCode === "0" ? 'نشط' : 'معلق'}</p>
-                                            </div>
-                                        </div>
-                                        {queryResult.resultCode === "-2" && (
-                                            <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
-                                                <Info className="w-3 h-3" /> جاري معالجة طلب الثابت في المزود...
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
                                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[#F18312]/5 text-center">
                                     <Label className="text-sm font-black text-muted-foreground block mb-4">ادخل المبلغ</Label>
                                     <div className="relative max-w-[240px] mx-auto">

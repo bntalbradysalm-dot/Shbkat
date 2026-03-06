@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -11,7 +10,8 @@ import {
   Globe, 
   Wifi, 
   PhoneCall,
-  ArrowRightLeft
+  ArrowRightLeft,
+  ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';

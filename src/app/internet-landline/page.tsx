@@ -55,15 +55,14 @@ type UserProfile = {
 
 type QueryResult = {
     resultCode: string;
-    balance: string; // المبلغ المطلوب سداده
-    packagePrice: string; // قيمة الباقة
-    dataRemaining: string; // remainAmount محول لـ GB
-    expireDate: string; // مستخرج من الوصف
-    mobileType?: string; // 0 prepaid, 1 postpaid
+    balance: string; 
+    packagePrice: string; 
+    dataRemaining: string; 
+    expireDate: string; 
+    mobileType?: string; 
     resultDesc?: string;
 };
 
-// --- THEME CONSTANTS ---
 const INTERNET_THEME = {
     primary: '#302C81',
     gradient: {
@@ -156,7 +155,7 @@ export default function LandlinePage() {
         if (!phone || phone.length !== 8) return;
         
         if (!phone.startsWith('0')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف الأرضي أو الإنترنت يجب أن يتكون من 8 أرقام ويبدأ بـ 0' });
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 0' });
             return;
         }
 
@@ -179,7 +178,7 @@ export default function LandlinePage() {
             });
             const result = await response.json();
             
-            if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام من المصدر.');
+            if (!response.ok) throw new Error(result.resultDesc || result.message || 'فشل الاستعلام.');
             
             const isSuccess = result.resultCode === "0" || result.resultCode === 0;
             const isPending = result.resultCode === "-2" || result.resultCode === -2;
@@ -192,11 +191,6 @@ export default function LandlinePage() {
                 const mbs = parseFloat(String(result.remainAmount || "0"));
                 if (!isNaN(mbs) && mbs > 0) {
                     displayData = (mbs / 1024).toFixed(2) + ' GB';
-                } else {
-                    const dataMatch = desc.match(/(الرصيد المتبقي|المتبقي):\s*([\d.]+)/);
-                    if (dataMatch) {
-                        displayData = (parseFloat(dataMatch[2]) / 1024).toFixed(2) + ' GB';
-                    }
                 }
 
                 // 2. المبلغ المطلوب سداده (Amount Due)
@@ -205,7 +199,7 @@ export default function LandlinePage() {
 
                 // 3. قيمة الباقة (Package Price)
                 let displayPackagePrice = '0';
-                const priceMatch = desc.match(/قيمة الباقة:\s*([\d.]+)/);
+                const priceMatch = desc.match(/(?:قيمة الباقة|الباقة):\s*([\d.]+)/);
                 if (priceMatch) {
                     displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
                 } else if (result.packagePrice) {
@@ -216,9 +210,13 @@ export default function LandlinePage() {
 
                 // 4. تاريخ الانتهاء (Expiry Date)
                 let displayExpiry = '...';
-                const dateMatch = desc.match(/(\d{4})[-/](\d{2})[-/](\d{2})/);
+                const dateMatch = desc.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})|(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
                 if (dateMatch) {
-                    displayExpiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+                    if (dateMatch[1]) {
+                        displayExpiry = `${parseInt(dateMatch[3])}/${parseInt(dateMatch[2])}/${dateMatch[1]}`;
+                    } else {
+                        displayExpiry = `${parseInt(dateMatch[4])}/${parseInt(dateMatch[5])}/${dateMatch[6]}`;
+                    }
                 } else if (result.expireDate) {
                     displayExpiry = result.expireDate;
                 }
@@ -239,7 +237,7 @@ export default function LandlinePage() {
                     setAmount(displayPackagePrice.replace(/,/g, ''));
                 }
             } else {
-                throw new Error(result.resultDesc || result.message || `خطأ: ${result.resultCode}`);
+                throw new Error(result.resultDesc || result.message || `خطأ من المصدر: ${result.resultCode}`);
             }
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'تنبيه الاستعلام', description: error.message });
@@ -286,7 +284,7 @@ export default function LandlinePage() {
         const totalToDeduct = payAmount + commission;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية شاملة العمولة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
             return;
         }
 
@@ -403,8 +401,8 @@ export default function LandlinePage() {
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">
-                                <TabsTrigger value="internet" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#302C81] data-[state=active]:text-white transition-all">الإنترنت الأرضي</TabsTrigger>
-                                <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#F18312] data-[state=active]:text-white transition-all">الهاتف الثابت</TabsTrigger>
+                                <TabsTrigger value="internet" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#302C81] data-[state=active]:text-white">الإنترنت الأرضي</TabsTrigger>
+                                <TabsTrigger value="landline" className="rounded-xl font-bold text-sm data-[state=active]:bg-[#F18312] data-[state=active]:text-white">الهاتف الثابت</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="internet" className="pt-2 animate-in fade-in-0 duration-300 space-y-4">
@@ -420,13 +418,13 @@ export default function LandlinePage() {
                                                 <p className="text-sm font-black">{queryResult.packagePrice} ر.ي</p>
                                             </div>
                                             <div className="p-3 flex flex-col justify-center">
-                                                <p className="text-[10px] font-bold opacity-80 mb-1">البيانات المتبقية</p>
+                                                <p className="text-[10px] font-bold opacity-80 mb-1">الجيجابايت المتبقية</p>
                                                 <p className="text-sm font-black">{queryResult.dataRemaining}</p>
                                             </div>
                                         </div>
                                         {queryResult.resultCode === "-2" && (
                                             <div className="bg-orange-500/20 text-[10px] text-white font-bold p-2 text-center flex items-center justify-center gap-2">
-                                                <Info className="w-3 h-3" /> جاري معالجة طلب الإنترنت في المزود...
+                                                <Info className="w-3 h-3" /> جاري معالجة الطلب في المزود...
                                             </div>
                                         )}
                                     </div>
@@ -467,7 +465,7 @@ export default function LandlinePage() {
                                                     style={INTERNET_THEME.gradient}
                                                 >
                                                     <div className="flex items-center gap-4 flex-1">
-                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg shadow-[#302C81]/20 group-data-[state=open]:scale-110 transition-transform border border-white/20">
+                                                        <div className="h-10 w-10 relative overflow-hidden rounded-2xl shadow-lg group-data-[state=open]:scale-110 transition-transform border border-white/20">
                                                             <Image 
                                                                 src="https://i.postimg.cc/ZRHzd8jN/FB-IMG-1768999572493.jpg" 
                                                                 alt="ADSL" 

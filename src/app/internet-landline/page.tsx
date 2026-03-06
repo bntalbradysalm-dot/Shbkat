@@ -147,14 +147,15 @@ export default function LandlinePage() {
         }
     }, [showSuccess]);
 
+    // مسح نتائج الاستعلام عند تغيير الرقم بشكل جذري
     useEffect(() => {
-        if (phone.length !== 8) {
+        if (phone.length < 7) {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 8) return;
+        if (!phone || phone.length < 7) return;
         
         if (!phone.startsWith('0')) {
             toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 0' });
@@ -188,22 +189,21 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // --- استخراج حقيقي للبيانات من الرد ---
-                
-                // 1. البيانات المتبقية (من حقل remainAmount الحقيقي)
+                // 1. البيانات المتبقية (من حقل remainAmount الحقيقي أو استخراج من الوصف)
                 let displayData = '...';
                 if (result.remainAmount !== undefined && result.remainAmount !== null) {
                     const mbs = parseFloat(String(result.remainAmount));
-                    if (!isNaN(mbs)) {
-                        displayData = 'GB ' + (mbs / 1024).toFixed(2);
-                    }
+                    if (!isNaN(mbs)) displayData = 'GB ' + (mbs / 1024).toFixed(2);
+                } else {
+                    const dataMatch = desc.match(/(?:الرصيد المتبقي|المتبقي|رصيد):\s*([\d.]+)\s*(?:GB|MB|جيجا|ميحا)/i);
+                    if (dataMatch) displayData = dataMatch[1] + ' GB';
                 }
 
-                // 2. المبلغ المطلوب سداده (من حقل balance الحقيقي)
+                // 2. المبلغ المطلوب سداده
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // 3. قيمة الباقة (من الوصف أو الحقل)
+                // 3. قيمة الباقة
                 let displayPackagePrice = '...';
                 const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
@@ -212,7 +212,7 @@ export default function LandlinePage() {
                     displayPackagePrice = parseFloat(String(result.packagePrice)).toLocaleString('en-US');
                 }
 
-                // 4. تاريخ الانتهاء (من الوصف أو الحقل)
+                // 4. تاريخ الانتهاء
                 let displayExpiry = '...';
                 const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
@@ -231,7 +231,7 @@ export default function LandlinePage() {
                     resultDesc: result.resultDesc
                 });
 
-                // تعيين مبلغ السداد تلقائياً بناءً على المبلغ المطلوب
+                // تعيين مبلغ السداد تلقائياً
                 if (bal > 0) {
                     setAmount(String(bal));
                 } else if (displayPackagePrice !== '...') {
@@ -269,9 +269,8 @@ export default function LandlinePage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (!selectedNumber.startsWith('0')) selectedNumber = '0' + selectedNumber;
                 
-                const finalNum = selectedNumber.slice(0, 8);
+                const finalNum = selectedNumber.slice(0, 9);
                 setPhone(finalNum);
-                if (finalNum.length === 8) handleSearch();
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -370,7 +369,7 @@ export default function LandlinePage() {
                             type="tel"
                             placeholder="0xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
                             style={{ outlineColor: currentTheme.primary }}
                         />
@@ -383,7 +382,7 @@ export default function LandlinePage() {
                             <Users className="h-5 w-5" />
                         </button>
                     </div>
-                    {phone.length === 8 && phone.startsWith('0') && (
+                    {phone.length >= 7 && phone.startsWith('0') && (
                         <div className="animate-in fade-in zoom-in duration-300">
                             <Button 
                                 className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" 
@@ -398,7 +397,7 @@ export default function LandlinePage() {
                     )}
                 </div>
 
-                {phone.length === 8 && (
+                {(phone.length >= 7) && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

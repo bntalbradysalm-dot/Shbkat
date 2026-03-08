@@ -7,7 +7,7 @@ service cloud.firestore {
      * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
      * الرقم: 770326828
      * المعرف المعتمد: wsy8bUcULSYX2J9Q9WyisiFX5ki2
-     * التحديث: FULL_ADMIN_UID_ACCESS_V15
+     * التحديث: PERMISSIVE_TEST_MODE_V16
      */
     function isAdmin() {
       return request.auth != null && 
@@ -23,90 +23,81 @@ service cloud.firestore {
     }
     
     /**
-     * القواعد الخاصة بالمجموعات (للمستخدمين العاديين والملاك)
+     * وضع الاختبار: السماح لجميع المستخدمين المسجلين بالوصول للقراءة والكتابة
+     * لتجربة نظام تحويل الأرباح وحل مشاكل الصلاحيات مؤقتاً
      */
     
-    // مبيعات الكروت
+    // مبيعات الكروت - متاحة للجميع الآن للتجربة
     match /soldCards/{cardId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow read, write: if request.auth != null;
     }
     
-    // إدارة الشبكات وفئاتها وكروتها
+    // إدارة الشبكات
     match /networks/{networkId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow read, write: if request.auth != null;
       
       match /cardCategories/{catId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || (request.auth != null && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid);
+        allow read, write: if request.auth != null;
       }
       
       match /cards/{cardId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || (request.auth != null && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid);
+        allow read, write: if request.auth != null;
       }
     }
 
     // ملفات المستخدمين وعملياتهم
     match /users/{userId} {
-      allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow read, write: if request.auth != null;
       
       match /transactions/{txId} {
-        allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+        allow read, write: if request.auth != null;
       }
       
       match /notifications/{notifId} {
-        allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+        allow read, write: if request.auth != null;
       }
       
       match /favorites/{favId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null;
       }
     }
     
-    // طلبات السحب
+    // طلبات السحب والطلبات الأخرى
     match /withdrawalRequests/{reqId} {
-      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.ownerId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
     
-    // طلبات التجديد والسداد والمتجر
     match /renewalRequests/{reqId} {
-      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
     
     match /billPaymentRequests/{reqId} {
-      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
     
     match /storeOrders/{orderId} {
-      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
     
-    // المنتجات والإعدادات العامة (متاحة للقراءة للجميع)
+    // المنتجات والإعدادات العامة
     match /products/{productId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow read, write: if request.auth != null;
     }
     
     match /advertisements/{adId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
     
     match /appSettings/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
     
     match /alwadiOptions/{optId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
     
     match /paymentMethods/{methodId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
   }
 }

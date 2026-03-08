@@ -13,7 +13,7 @@ import {
   History, 
   Wallet,
   Hash,
-  Sparkles,
+  LayoutGrid,
   SatelliteDish
 } from 'lucide-react';
 import {
@@ -270,7 +270,7 @@ export default function AlwadiPage() {
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                         اختر فئة التجديد
                     </h3>
                     <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
@@ -340,7 +340,7 @@ export default function AlwadiPage() {
       </div>
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        <AlertDialogContent className="rounded-[40px] max-w-sm">
+        <AlertDialogContent className="rounded-[40px] max-sm">
             <AlertDialogHeader>
                 <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                 <div className="py-4 space-y-3 text-right text-sm">
@@ -353,7 +353,7 @@ export default function AlwadiPage() {
                         <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground flex items-center gap-2"><Sparkles className="w-3 h-3"/> الفئة المختارة:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3"/> الفئة المختارة:</span>
                         <span className="font-bold">{selectedOption?.title}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-2xl px-3 mt-2">

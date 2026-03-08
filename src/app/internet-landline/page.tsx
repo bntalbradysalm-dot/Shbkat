@@ -151,13 +151,8 @@ export default function LandlinePage() {
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length !== 8) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'يجب أن يتكون الرقم من 8 أرقام.' });
-            return;
-        }
-        
-        if (!phone.startsWith('05')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'يجب أن يبدأ الرقم بـ 05.' });
+        if (!phone || phone.length < 7) {
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'يرجى إدخال رقم صحيح.' });
             return;
         }
         
@@ -174,7 +169,6 @@ export default function LandlinePage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'post', 
-                    type: serviceType, // Required parameter
                     transid 
                 })
             });
@@ -271,7 +265,7 @@ export default function LandlinePage() {
                     amount: payAmount, 
                     action: 'bill',
                     service: 'post',
-                    type: serviceType, // Required parameter
+                    type: serviceType,
                     transid: transid,
                 })
             });
@@ -322,18 +316,18 @@ export default function LandlinePage() {
                 </Card>
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الهاتف (8 أرقام تبدأ بـ 05)</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الهاتف</Label>
                     <div className="relative">
                         <Input
                             type="tel"
-                            placeholder="05xxxxxx"
+                            placeholder="0xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
                         />
                         <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors" style={{ color: currentTheme.primary }}><Users className="h-5 w-5" /></button>
                     </div>
-                    {phone.length === 8 && phone.startsWith('05') && (
+                    {phone.length >= 7 && (
                         <div className="animate-in fade-in zoom-in duration-300">
                             <Button className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" onClick={handleSearch} disabled={isSearching} style={{ backgroundColor: currentTheme.primary }}>
                                 {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
@@ -343,7 +337,7 @@ export default function LandlinePage() {
                     )}
                 </div>
 
-                {phone.length === 8 && phone.startsWith('05') && (
+                {phone.length >= 7 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

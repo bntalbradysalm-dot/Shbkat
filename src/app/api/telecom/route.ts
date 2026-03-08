@@ -1,5 +1,3 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
@@ -68,7 +66,6 @@ export async function POST(request: Request) {
             case 'billoffer':
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                // If the client didn't provide a method, default to Renew
                 if (!apiRequestParams.method) {
                     apiRequestParams.method = 'Renew';
                 }
@@ -95,7 +92,10 @@ export async function POST(request: Request) {
         const response = await fetch(fullUrl, {
             method: 'GET',
             signal: controller.signal,
-            headers: { 'Accept': 'application/json, text/plain, */*' },
+            headers: { 
+                'Accept': 'application/json, text/plain, */*',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
             cache: 'no-store'
         });
         
@@ -122,9 +122,15 @@ export async function POST(request: Request) {
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول للسيرفر: ' + fetchError.message }), { status: 504 });
+        let friendlyMessage = fetchError.message;
+        if (fetchError.name === 'AbortError') {
+            friendlyMessage = 'انتهت مهلة الطلب (60 ثانية). السيرفر لا يستجيب.';
+        } else if (fetchError.message.includes('fetch failed')) {
+            friendlyMessage = 'فشل الاتصال بالسيرفر. قد يكون السيرفر متوقفاً أو هناك مشكلة في الشبكة.';
+        }
+        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول لمزود الخدمة: ' + friendlyMessage }), { status: 504 });
     }
   } catch (error: any) {
-    return new NextResponse(JSON.stringify({ message: `خطأ: ${error.message}` }), { status: 500 });
+    return new NextResponse(JSON.stringify({ message: `خطأ داخلي: ${error.message}` }), { status: 500 });
   }
 }

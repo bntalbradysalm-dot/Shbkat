@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // زيادة المهلة لـ 90 ثانية
 
     try {
         const response = await fetch(fullUrl, {
@@ -94,7 +94,13 @@ export async function POST(request: Request) {
             signal: controller.signal,
             headers: { 
                 'Accept': 'application/json, text/plain, */*',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
             },
             cache: 'no-store'
         });
@@ -124,11 +130,11 @@ export async function POST(request: Request) {
         clearTimeout(timeoutId);
         let friendlyMessage = fetchError.message;
         if (fetchError.name === 'AbortError') {
-            friendlyMessage = 'انتهت مهلة الطلب (60 ثانية). السيرفر لا يستجيب.';
+            friendlyMessage = 'انتهت مهلة الطلب. السيرفر بطيء جداً في الرد.';
         } else if (fetchError.message.includes('fetch failed')) {
-            friendlyMessage = 'فشل الاتصال بالسيرفر. قد يكون السيرفر متوقفاً أو هناك مشكلة في الشبكة.';
+            friendlyMessage = 'فشل الاتصال التقني بمزود الخدمة. قد يكون هناك حظر IP أو السيرفر متوقف حالياً.';
         }
-        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول لمزود الخدمة: ' + friendlyMessage }), { status: 504 });
+        return new NextResponse(JSON.stringify({ message: 'تنبيه: ' + friendlyMessage }), { status: 504 });
     }
   } catch (error: any) {
     return new NextResponse(JSON.stringify({ message: `خطأ داخلي: ${error.message}` }), { status: 500 });

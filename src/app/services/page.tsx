@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -107,6 +108,16 @@ const CustomLoader = () => (
   </div>
 );
 
+const CARD_GRADIENTS = [
+    "from-blue-400 via-blue-500 to-blue-600",
+    "from-emerald-400 via-emerald-500 to-emerald-600",
+    "from-rose-400 via-rose-500 to-rose-600",
+    "from-amber-400 via-amber-500 to-orange-600",
+    "from-violet-400 via-violet-500 to-indigo-600",
+    "from-fuchsia-400 via-fuchsia-500 to-pink-600",
+    "from-teal-400 via-teal-500 to-cyan-600",
+];
+
 export default function CombinedNetworksPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -130,7 +141,7 @@ export default function CombinedNetworksPage() {
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch local networks (currently hidden)
+  // Fetch local networks
   const localNetworksQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'networks') : null),
     [firestore]
@@ -161,9 +172,12 @@ export default function CombinedNetworksPage() {
     fetchApiNetworks();
   }, []);
 
-  // Combine All Networks (Local hidden temporarily)
+  // Combine All Networks
   const allNetworksCombined = useMemo(() => {
-    const local: any[] = []; 
+    const local = localNetworks ? localNetworks.map(n => ({
+        ...n,
+        isLocal: true
+    })) : [];
     const api = apiNetworks;
     const combined = [...local, ...api];
     
@@ -271,30 +285,63 @@ export default function CombinedNetworksPage() {
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             
-            const commission = Math.floor(selectedCategory.price * 0.10);
+            const commission = Math.ceil(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
             const ownerId = selectedNetwork.ownerId;
 
-            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            // 1. تحديث حالة الكرت
+            batch.update(cardToPurchaseDoc.ref, { 
+                status: 'sold', 
+                soldTo: user.uid, 
+                soldTimestamp: now 
+            });
+
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
+            // 3. سجل العملية للمشتري
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: selectedCategory.price,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
+                cardNumber: cardData.cardNumber,
+            });
+
+            // 4. تحويل الأرباح تلقائياً للمالك
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
                 const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
                 batch.set(ownerTxRef, {
                     userId: ownerId,
                     transactionDate: now,
                     amount: payoutAmount,
                     transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                    notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
                 });
             }
 
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: selectedCategory.price,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            // 5. سجل الكروت المباعة (الحالة: مكتملة للتحويل التلقائي)
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id,
+                ownerId: ownerId || 'admin',
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id,
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id,
                 cardNumber: cardData.cardNumber,
+                price: selectedCategory.price,
+                commissionAmount: commission,
+                payoutAmount: payoutAmount,
+                buyerId: user.uid,
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '',
+                soldTimestamp: now,
+                payoutStatus: 'completed' // نظام تلقائي
             });
 
             await batch.commit();
@@ -307,16 +354,16 @@ export default function CombinedNetworksPage() {
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل الطلب من المصدر الخارجي');
+                throw new Error(errorData.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
             }
             
             const result = await response.json();
             const cardData = result.data.order.card;
             
-            batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
             const transactionPayload: any = {
-                userId: user.uid, transactionDate: now, amount: selectedCategory.price,
+                userId: user.uid, transactionDate: now, amount: categoryPrice,
                 transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardID,
             };
@@ -334,7 +381,7 @@ export default function CombinedNetworksPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);
-        toast({ variant: "destructive", title: "فشل العملية", description: error.message || "حدث خطأ غير متوقع أثناء الشراء." });
+        toast({ variant: "destructive", title: "فشل العملية", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally { 
         setIsProcessing(false); 
     }
@@ -415,37 +462,73 @@ export default function CombinedNetworksPage() {
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-0 relative overflow-hidden">
-                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                
+                <DialogHeader className="pt-12 pb-8 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
-                    <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
-                        <Wifi className="h-8 w-8 text-white" />
+                    <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
+                        <Wifi className="h-7 w-7 text-white" />
                     </div>
-                    <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
-                    <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
+                    <h2 className="text-xl font-black text-white drop-shadow-md">{selectedNetwork.name}</h2>
+                    <p className="text-[10px] text-white/70 font-bold mt-1 bg-white/10 py-1 px-3 rounded-full border border-white/5 inline-block">{selectedNetwork.location}</p>
                 </DialogHeader>
               </div>
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (
                   <div className="space-y-3">
-                    {categories.map(cat => (
-                        <Card key={cat.id} className="rounded-2xl cursor-pointer bg-muted/30 border-none hover:bg-muted/50 transition-colors" onClick={() => setShowConfirmPurchase(cat)}>
-                            <CardContent className="p-4 flex justify-between items-center">
-                                <div className="text-right space-y-1">
-                                    <h4 className="font-black text-sm text-foreground">{cat.name}</h4>
-                                    <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
-                                        {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" /> {cat.capacity}</span>}
-                                        {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {cat.validity || cat.expirationDate}</span>}
+                    {categories.map((cat, idx) => {
+                        const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
+                        return (
+                            <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <Card 
+                                    className={cn(
+                                        "relative overflow-hidden rounded-[28px] border-none shadow-xl transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "bg-gradient-to-br p-[2px]",
+                                        gradient
+                                    )}
+                                    onClick={() => setShowConfirmPurchase(cat)}
+                                >
+                                    <div className="relative rounded-[26px] p-3.5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn(
+                                                "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                gradient
+                                            )}>
+                                                <Wifi className="h-5 w-5" />
+                                            </div>
+                                            <div className="text-right space-y-0.5">
+                                                <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
+                                                <div className="flex gap-2.5 mt-1">
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-primary">
+                                                        <Database className="h-2.5 w-2.5" />
+                                                        <span>{cat.capacity || '-'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground">
+                                                        <Clock className="h-2.5 w-2.5" />
+                                                        <span>{cat.validity || cat.expirationDate || '-'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-1.5">
+                                            <div className="flex flex-col items-end leading-tight">
+                                                <span className="text-xl font-black tracking-tighter text-primary">{cat.price.toLocaleString('en-US')}</span>
+                                                <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
+                                            </div>
+                                            <Button size="sm" className="h-7 rounded-lg text-[9px] font-black px-4 bg-primary shadow-md shadow-primary/20">شراء</Button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-left"><p className="font-black text-primary text-lg">{cat.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p></div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </Card>
+                            </div>
+                        );
+                    })}
                   </div>
                 )}
               </div>
-              <div className="p-4 border-t bg-white dark:bg-slate-900"><Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
+              <div className="p-4 border-t bg-white dark:bg-slate-900"><Button variant="outline" className="w-full h-11 rounded-2xl font-black text-sm" onClick={() => setSelectedNetwork(null)}>إغلاق</Button></div>
             </div>
           )}
         </DialogContent>
@@ -464,7 +547,7 @@ export default function CombinedNetworksPage() {
           </DialogHeader>
           <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString('en-US')} <span className="text-sm">ريال</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
             <Button className="w-full h-12 rounded-2xl font-black text-base shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing}>
@@ -504,7 +587,7 @@ export default function CombinedNetworksPage() {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>
@@ -517,6 +600,7 @@ export default function CombinedNetworksPage() {
         </div>
       )}
 
+      {/* SMS Dialog */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
@@ -533,7 +617,7 @@ export default function CombinedNetworksPage() {
                     <Label htmlFor="sms-phone" className="text-[10px] font-black text-muted-foreground pr-1 uppercase tracking-widest">رقم جوال الزبون</Label>
                     <Input 
                         id="sms-phone"
-                        placeholder="7xxxxxxxx" 
+                        placeholder="73xxxxxxx" 
                         type="tel" 
                         value={smsRecipient} 
                         onChange={e => setSmsRecipient(e.target.value.replace(/\D/g, '').slice(0, 9))} 
@@ -549,7 +633,6 @@ export default function CombinedNetworksPage() {
       </Dialog>
 
       {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
-      <Toaster />
     </>
   );
 }

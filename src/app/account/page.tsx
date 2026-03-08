@@ -29,6 +29,7 @@ import {
   Banknote,
   Code,
   UserRound,
+  ShieldCheck,
   TrendingUp
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,10 +65,10 @@ export const dynamic = 'force-dynamic';
 
 const managementLinks = [
   { title: 'إدارة المستخدمين', icon: Users, href: '/users' },
-  // { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' }, // Hidden temporarily
+  { title: 'إدارة الشبكات', icon: Wifi, href: '/networks-management' },
   { title: 'إدارة المتجر', icon: ShoppingBag, href: '/store-management' },
   { title: 'طلبات المتجر', icon: PackageCheck, href: '/store-orders' },
-  // { title: 'تحويل أرباح الكروت', icon: TrendingUp, href: '/card-sales-reports' }, // Hidden temporarily
+  { title: 'تحويل أرباح الكروت', icon: TrendingUp, href: '/card-sales-reports' },
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
@@ -83,6 +84,7 @@ const userAppSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
     { id: 'share-app', title: 'شارك التطبيق', icon: Share2, action: 'share' },
     { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, action: 'help' },
+    { id: 'privacy-policy', title: 'سياسة الخصوصية', icon: ShieldCheck, href: '/privacy-policy' },
     { id: 'app-developer', title: 'مطور التطبيق', icon: Code, action: 'developer' },
 ];
 
@@ -395,7 +397,7 @@ export default function AccountPage() {
             <div className="bg-mesh-gradient h-32 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
                     <Image 
-                        src="https://i.postimg.cc/V6YjZwsz/Photo-Room-20230331-185039.png" 
+                        src="https://i.postimg.cc/Yqy7ZM3F/20260302-161935.jpg" 
                         alt="Developer" 
                         width={100} 
                         height={100} 

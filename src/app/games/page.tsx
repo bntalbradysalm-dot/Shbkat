@@ -155,11 +155,9 @@ export default function GamesPage() {
         }
     };
 
-    if (isProcessing) return <ProcessingOverlay message="جاري معالجة طلبك..." />;
-
     if (showSuccess) {
         return (
-            <>
+            <div className="flex flex-col h-full">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
@@ -206,12 +204,14 @@ export default function GamesPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+            {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
+            
             <SimpleHeader title="شدات ببجي" />
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 

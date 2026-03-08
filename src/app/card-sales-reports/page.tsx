@@ -1,12 +1,13 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -17,6 +18,8 @@ import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type Network = {
@@ -52,13 +55,20 @@ const InfoRow = ({ icon: Icon, label, value, isMono = false, valueClassName }: {
 
 const NetworkDetails = ({ network }: { network: Network }) => {
     const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isTransferring, setIsTransferring] = useState<string | null>(null);
 
     const soldCardsQuery = useMemoFirebase(
-      () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id), orderBy('soldTimestamp', 'desc')) : null,
+      () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id)) : null,
       [firestore, network.id]
     );
-    const { data: soldCards, isLoading: isLoadingSold } = useCollection<SoldCard>(soldCardsQuery);
+    const { data: rawSoldCards, isLoading: isLoadingSold } = useCollection<SoldCard>(soldCardsQuery);
     
+    const soldCards = useMemo(() => {
+        if (!rawSoldCards) return [];
+        return [...rawSoldCards].sort((a, b) => new Date(b.soldTimestamp).getTime() - new Date(a.soldTimestamp).getTime());
+    }, [rawSoldCards]);
+
     const { totalSales, totalPayout, totalCommission } = useMemo(() => {
         if (!soldCards) return { totalSales: 0, totalPayout: 0, totalCommission: 0 };
         return soldCards.reduce((acc, card) => {
@@ -68,6 +78,59 @@ const NetworkDetails = ({ network }: { network: Network }) => {
             return acc;
         }, { totalSales: 0, totalPayout: 0, totalCommission: 0 });
     }, [soldCards]);
+
+    const handleTransferProfit = async (card: SoldCard) => {
+        if (!firestore || !card.ownerId) {
+            toast({ variant: "destructive", title: "خطأ", description: "معلومات المالك غير متوفرة لهذا الكرت." });
+            return; 
+        }
+        
+        if (typeof card.payoutAmount !== 'number' || card.payoutAmount <= 0) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ',
+                description: 'مبلغ الأرباح غير صالح.',
+            });
+            return;
+        }
+
+        setIsTransferring(card.id);
+
+        try {
+            const batch = writeBatch(firestore);
+            const now = new Date().toISOString();
+            const payoutAmount = Number(card.payoutAmount) || 0;
+
+            if (payoutAmount <= 0) { 
+                throw new Error("مبلغ التحويل غير صالح.");
+            }
+
+            // 1. تحديث حالة الطلب إلى مكتمل
+            batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
+
+            // 2. تحويل الرصيد للمالك
+            const ownerRef = doc(firestore, 'users', card.ownerId);
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
+
+            // 3. إضافة سجل عملية للمالك
+            const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: card.ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح مبيعات الكروت',
+                notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
+            });
+
+            await batch.commit();
+            toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح." });
+        } catch (e: any) {
+            console.error("Transfer error:", e);
+            toast({ variant: "destructive", title: "خطأ", description: e.message || "فشل تحويل الربح." });
+        } finally {
+            setIsTransferring(null);
+        }
+    };
 
     if (isLoadingSold) {
         return (
@@ -106,10 +169,26 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                             <InfoRow icon={TrendingUp} label="حصة المالك" value={card.payoutAmount} valueClassName="text-green-600" />
                             
                             <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
-                                <Badge className="bg-green-500 text-white border-none px-3 py-1 rounded-lg flex items-center gap-1.5">
-                                    <ShieldCheck className="w-3 h-3" />
-                                    <span className="text-[9px] font-black">تم التحويل تلقائياً (90%)</span>
-                                </Badge>
+                                {card.payoutStatus === 'completed' ? (
+                                    <Badge className="bg-green-500 text-white border-none px-3 py-1 rounded-lg flex items-center gap-1.5">
+                                        <ShieldCheck className="w-3 h-3" />
+                                        <span className="text-[9px] font-black">تم التحويل (90%)</span>
+                                    </Badge>
+                                ) : (
+                                    <>
+                                        <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
+                                            <span className="text-[9px] font-black">انتظار التحويل</span>
+                                        </Badge>
+                                        <Button 
+                                            size="sm" 
+                                            className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700"
+                                            onClick={() => handleTransferProfit(card)}
+                                            disabled={isTransferring === card.id}
+                                        >
+                                            {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </Card>
                     ))}
@@ -121,8 +200,15 @@ const NetworkDetails = ({ network }: { network: Network }) => {
 
 export default function CardSalesReportsPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const networksCollection = useMemoFirebase(() => firestore ? query(collection(firestore, 'networks'), orderBy('name')) : null, [firestore]);
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
+
+  const isAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
+
+  if (!isAdmin) {
+      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمالك التطبيق فقط.</div>;
+  }
 
   const renderContent = () => {
     if (isLoading) {
@@ -144,9 +230,13 @@ export default function CardSalesReportsPage() {
     return (
         <div className="space-y-6">
             <div className="text-center space-y-1">
-                <h2 className="text-xl font-black text-primary">تقارير مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">متابعة المبيعات والعمولات المحولة آلياً</p>
-                <p className="text-[10px] text-green-600 font-black bg-green-50 p-2 rounded-xl border border-green-100 inline-block">يتم تحويل 90% للمالك و10% للتطبيق تلقائياً عند كل عملية بيع</p>
+                <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
+                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل يتم تلقائياً للملاك)</p>
+                <div className="p-3 bg-green-50 border border-green-100 rounded-2xl mt-4">
+                    <p className="text-[10px] text-green-700 font-black leading-relaxed">
+                        ✅ نظام التحويل التلقائي: يتم إضافة 90% من قيمة الكرت إلى رصيد مالك الشبكة فور عملية الشراء. يمكنك مراجعة العمليات السابقة هنا.
+                    </p>
+                </div>
             </div>
             
             <Accordion type="single" collapsible className="w-full space-y-3">
@@ -175,7 +265,7 @@ export default function CardSalesReportsPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="تقارير المبيعات" />
+      <SimpleHeader title="أرباح الكروت" />
       <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
       <Toaster/>
     </div>

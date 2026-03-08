@@ -1,5 +1,3 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
@@ -68,7 +66,6 @@ export async function POST(request: Request) {
             case 'billoffer':
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
-                // If the client didn't provide a method, default to Renew
                 if (!apiRequestParams.method) {
                     apiRequestParams.method = 'Renew';
                 }
@@ -89,13 +86,22 @@ export async function POST(request: Request) {
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // زيادة المهلة لـ 90 ثانية
 
     try {
         const response = await fetch(fullUrl, {
             method: 'GET',
             signal: controller.signal,
-            headers: { 'Accept': 'application/json, text/plain, */*' },
+            headers: { 
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+            },
             cache: 'no-store'
         });
         
@@ -122,9 +128,15 @@ export async function POST(request: Request) {
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        return new NextResponse(JSON.stringify({ message: 'تعذر الوصول للسيرفر: ' + fetchError.message }), { status: 504 });
+        let friendlyMessage = fetchError.message;
+        if (fetchError.name === 'AbortError') {
+            friendlyMessage = 'انتهت مهلة الطلب. السيرفر بطيء جداً في الرد.';
+        } else if (fetchError.message.includes('fetch failed')) {
+            friendlyMessage = 'فشل الاتصال التقني بمزود الخدمة. قد يكون هناك حظر IP أو السيرفر متوقف حالياً.';
+        }
+        return new NextResponse(JSON.stringify({ message: 'تنبيه: ' + friendlyMessage }), { status: 504 });
     }
   } catch (error: any) {
-    return new NextResponse(JSON.stringify({ message: `خطأ: ${error.message}` }), { status: 500 });
+    return new NextResponse(JSON.stringify({ message: `خطأ داخلي: ${error.message}` }), { status: 500 });
   }
 }

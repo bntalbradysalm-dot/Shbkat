@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Suspense, useMemo, useRef } from 'react';
@@ -119,14 +120,7 @@ function NetworkPurchasePageComponent() {
     try {
         const cardsRef = collection(firestore, `networks/${networkId}/cards`);
         const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
-        const availableCardsSnapshot = await getDocs(q).catch(async (err) => {
-            const contextualError = new FirestorePermissionError({
-                path: `networks/${networkId}/cards`,
-                operation: 'list',
-            });
-            errorEmitter.emit('permission-error', contextualError);
-            throw err;
-        });
+        const availableCardsSnapshot = await getDocs(q);
   
         if (availableCardsSnapshot.empty) {
             throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
@@ -137,33 +131,21 @@ function NetworkPurchasePageComponent() {
         
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
-        const commission = Math.floor(categoryPrice * 0.10);
+        const commission = Math.ceil(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
         const ownerId = networkData.ownerId;
   
         // 1. تحديث حالة الكرت
-        batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+        batch.update(cardToPurchaseDoc.ref, { 
+            status: 'sold', 
+            soldTo: user.uid, 
+            soldTimestamp: now 
+        });
         
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. التحويل اللحظي للمالك (90%)
-        if (ownerId && ownerId !== 'admin') {
-            const ownerDocRef = doc(firestore, 'users', ownerId);
-            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-            // سجل المالك
-            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: ownerId,
-                transactionDate: now,
-                amount: payoutAmount,
-                transactionType: 'أرباح مبيعات الكروت',
-                notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${networkName}`
-            });
-        }
-
-        // 4. سجل عملية للمشتري
+        // 3. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -173,6 +155,21 @@ function NetworkPurchasePageComponent() {
             notes: `شبكة: ${networkName}`,
             cardNumber: cardToPurchaseData.cardNumber,
         });
+
+        // 4. تحويل الأرباح تلقائياً للمالك
+        if (ownerId && ownerId !== 'admin') {
+            const ownerDocRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح مبيعات الكروت',
+                notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${networkName}`
+            });
+        }
 
         // 5. سجل الكروت المباعة (مكتملة تلقائياً)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
@@ -191,27 +188,17 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'completed'
+            payoutStatus: 'completed' // نظام تلقائي
         });
         
-        await batch.commit().catch(async (err) => {
-            const contextualError = new FirestorePermissionError({
-                path: `batch_purchase/${networkId}`,
-                operation: 'write',
-                requestResourceData: { cardId: cardToPurchaseData.id }
-            });
-            errorEmitter.emit('permission-error', contextualError);
-            throw err;
-        });
+        await batch.commit();
 
         setPurchasedCard(cardToPurchaseData);
         audioRef.current?.play().catch(() => {});
   
     } catch (error: any) {
         console.error("Local network purchase failure:", error);
-        if (error.name !== 'FirebaseError') {
-            toast({ variant: "destructive", title: "فشل الشراء", description: error.message || "حدث خطأ غير متوقع." });
-        }
+        toast({ variant: "destructive", title: "فشل الشراء", description: error.message || "حدث خطأ غير متوقع." });
     } finally {
         setIsProcessing(false);
         setIsConfirming(false);
@@ -318,11 +305,7 @@ function NetworkPurchasePageComponent() {
         {purchasedCard && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                    <DialogHeader className="sr-only">
-                        <DialogTitle>تم الشراء بنجاح</DialogTitle>
-                        <DialogDescription>رقم الكرت الذي تم شراؤه للشبكة المحلية</DialogDescription>
-                    </DialogHeader>
+                <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                     <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">
                         <div>

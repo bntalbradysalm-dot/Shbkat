@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, doc, updateDoc, increment, addDoc, writeBatch } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, updateDoc, increment, addDoc, writeBatch, query, orderBy, setDoc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +41,11 @@ import {
   FileText,
   LayoutGrid,
   RefreshCw,
+  BarChart3,
+  Archive,
+  Box,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +65,11 @@ type User = {
   phoneNumber?: string;
   balance?: number;
   accountType?: 'user' | 'network-owner';
+  registrationDate?: string;
+};
+
+type AppSettings = {
+    boxBalance?: number;
 };
 
 const filterOptions = [
@@ -72,6 +81,8 @@ const filterOptions = [
 
 export default function UsersPage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [accountTypeFilter, setAccountTypeFilter] = useState<'all' | 'user' | 'with-balance' | 'network-owner'>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -85,57 +96,92 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Agent Balance States
+  // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
-  const [isFetchingAgentBalance, setIsFetchingAgentBalance] = useState(false);
+  const [baityBalance, setBaityBalance] = useState<string | null>(null);
+  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
-  const { toast } = useToast();
+  // Box Balance State
+  const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
+  const [newBoxValue, setNewBoxValue] = useState('');
 
   const usersCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'users') : null),
+    () => (firestore ? query(collection(firestore, 'users'), orderBy('registrationDate', 'desc')) : null),
     [firestore]
   );
+  const { data: users, isLoading } = useCollection<User>(usersCollection);
 
-  const { data: users, isLoading, error } = useCollection<User>(usersCollection);
+  const settingsDocRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
+    [firestore]
+  );
+  const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
+
+  const boxBalance = appSettings?.boxBalance ?? 0;
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
-    return users.reduce((acc, user) => acc + (user.balance ?? 0), 0);
+    return users.reduce((acc, user) => {
+      if (user.phoneNumber === '770326828') return acc;
+      return acc + (user.balance ?? 0);
+    }, 0);
   }, [users]);
 
-  // Fetch Agent Balance logic
-  const fetchAgentBalance = useCallback(async () => {
-    setIsFetchingAgentBalance(true);
+  const fetchAllBalances = useCallback(async () => {
+    setIsFetchingBalances(true);
     try {
       const transid = Date.now().toString().slice(-8);
-      const response = await fetch('/api/telecom', {
+      
+      const telecomPromise = fetch('/api/telecom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             action: 'balance',
             transid: transid,
-            mobile: '000000000' // Using dummy mobile as per documentation "any number"
+            mobile: '000000000' 
         })
-      });
-      const result = await response.json();
+      }).then(res => res.json());
+
+      const baityPromise = fetch('/api/baitynet/balance').then(res => res.json());
+
+      const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (response.ok && (result.resultCode === "0" || result.resultCode === 0)) {
-        setAgentBalance(result.balance);
+      if (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) {
+        setAgentBalance(telecomResult.balance);
       } else {
         setAgentBalance('خطأ');
-        console.error("Agent Balance API Error:", result);
       }
+
+      if (baityResult.status === 200 && baityResult.data) {
+        setBaityBalance(String(baityResult.data.balance || '0'));
+      } else {
+        setBaityBalance('خطأ');
+      }
+
     } catch (e) {
       setAgentBalance('خطأ');
-      console.error("Agent Balance Fetch Failed:", e);
+      setBaityBalance('خطأ');
+      console.error("Agent Balances Fetch Failed:", e);
     } finally {
-      setIsFetchingAgentBalance(false);
+      setIsFetchingBalances(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAgentBalance();
-  }, [fetchAgentBalance]);
+    fetchAllBalances();
+  }, [fetchAllBalances]);
+
+  const combinedProvidersBalance = useMemo(() => {
+    const agent = parseFloat(agentBalance || '0');
+    const baity = parseFloat(baityBalance || '0');
+    const box = boxBalance;
+    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
+    return total;
+  }, [agentBalance, baityBalance, boxBalance]);
+
+  const netProfit = useMemo(() => {
+    return combinedProvidersBalance - totalUsersBalance;
+  }, [combinedProvidersBalance, totalUsersBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -182,7 +228,7 @@ export default function UsersPage() {
             userId: selectedUser.id,
             transactionDate: new Date().toISOString(),
             amount: amount,
-            transactionType: 'إيداع يدوي',
+            transactionType: 'إيداع رصيد',
             notes: 'إيداع من الإدارة',
         });
         await batch.commit();
@@ -242,6 +288,20 @@ export default function UsersPage() {
     }
   };
 
+  const handleSaveBoxBalance = async () => {
+    if (!firestore || !settingsDocRef) return;
+    const val = parseFloat(newBoxValue);
+    if (isNaN(val)) return;
+
+    try {
+        await setDoc(settingsDocRef, { boxBalance: val }, { merge: true });
+        toast({ title: "تم التحديث", description: "تم تحديث مبلغ الصندوق بنجاح." });
+        setIsBoxEditingOpen(false);
+    } catch (e) {
+        toast({ variant: "destructive", title: "فشل التحديث" });
+    }
+  };
+
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -259,28 +319,88 @@ export default function UsersPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           
           <div className="space-y-4">
-            {/* Agent Balance Card - Smaller & Compact */}
-            <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-5">
-                <CardTitle className="text-[9px] font-black opacity-80 uppercase tracking-widest">رصيد الوكيل (المزود)</CardTitle>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 rounded-full hover:bg-white/10 text-white"
-                    onClick={fetchAgentBalance}
-                    disabled={isFetchingAgentBalance}
-                >
-                    <RefreshCw className={cn("h-3.5 w-3.5", isFetchingAgentBalance && "animate-spin")} />
-                </Button>
-              </CardHeader>
-              <CardContent className="px-5 pb-4">
-                <div className="flex items-baseline gap-1">
-                    <h2 className="text-2xl font-black text-white">
-                        {isFetchingAgentBalance ? <Skeleton className="h-7 w-24 bg-white/20 rounded-lg" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
-                    </h2>
-                    <span className="text-[9px] font-bold opacity-70">ريال يمني</span>
+            <div className="grid grid-cols-3 gap-2">
+                <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد اشحن لي</CardTitle>
+                        <RefreshCw 
+                            className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
+                            onClick={fetchAllBalances}
+                        />
+                    </CardHeader>
+                    <CardContent className="px-3 pb-4">
+                        <div className="flex items-baseline gap-0.5">
+                            <h2 className="text-lg font-black text-white truncate">
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                            </h2>
+                            <span className="text-[7px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد بيتي</CardTitle>
+                        <RefreshCw 
+                            className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
+                            onClick={fetchAllBalances}
+                        />
+                    </CardHeader>
+                    <CardContent className="px-3 pb-4">
+                        <div className="flex items-baseline gap-0.5">
+                            <h2 className="text-lg font-black text-white truncate">
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(baityBalance || '0').toLocaleString('en-US'))}
+                            </h2>
+                            <span className="text-[7px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-rose-500 to-red-700 text-white rounded-3xl">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">الصندوق</CardTitle>
+                        <Edit 
+                            className="h-2.5 w-2.5 opacity-50 cursor-pointer" 
+                            onClick={() => {
+                                setNewBoxValue(String(boxBalance));
+                                setIsBoxEditingOpen(true);
+                            }}
+                        />
+                    </CardHeader>
+                    <CardContent className="px-3 pb-4">
+                        <div className="flex items-baseline gap-0.5">
+                            <h2 className="text-lg font-black text-white truncate">
+                                {boxBalance.toLocaleString('en-US')}
+                            </h2>
+                            <span className="text-[7px] font-bold opacity-70">ر.ي</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+                <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <BarChart3 className="h-3 w-3 text-primary opacity-70" />
+                        <span className="text-[9px] font-black text-primary/70 uppercase tracking-tight">رصيد الوكلاء المجمع</span>
+                    </div>
+                    <div className="text-sm font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-4 w-16" /> : combinedProvidersBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })} 
+                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    </div>
                 </div>
-              </CardContent>
+                <div className="space-y-1 text-right px-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
+                        <span className={cn("text-[9px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
+                            {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
+                        </span>
+                    </div>
+                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                        {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 2 })} 
+                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    </div>
+                </div>
             </Card>
 
             <div className="grid grid-cols-2 gap-4">
@@ -421,7 +541,7 @@ export default function UsersPage() {
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تعديل بيانات المستخدم</DialogTitle>
             </DialogHeader>
@@ -442,7 +562,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isTopUpDialogOpen} onOpenChange={setIsTopUpDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تغذية رصيد (صامتة)</DialogTitle>
                 <DialogDescription className="text-center">سيتم إضافة المبلغ للرصيد مع إشعار داخلي فقط.</DialogDescription>
@@ -474,7 +594,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent className="rounded-[32px] max-w-sm">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">سحب نقدي من الرصيد</DialogTitle>
                 <DialogDescription className="text-center">سيتم خصم المبلغ من رصيد المستخدم حالاً.</DialogDescription>
@@ -486,6 +606,22 @@ export default function UsersPage() {
             </div>
             <DialogFooter>
                 <Button onClick={handleWithdraw} className="w-full h-12 rounded-2xl font-black bg-destructive hover:bg-destructive/90">تأكيد السحب النقدي</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBoxEditingOpen} onOpenChange={setIsBoxEditingOpen}>
+        <DialogContent className="rounded-[32px] max-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">تعديل مبلغ الصندوق</DialogTitle>
+                <DialogDescription className="text-center">أدخل المبلغ الحالي المتوفر في الصندوق يدوياً.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">المبلغ الحالي</Label>
+                <Input type="number" value={newBoxValue} onChange={e => setNewBoxValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-red-200 focus-visible:ring-red-500" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleSaveBoxBalance} className="w-full h-12 rounded-2xl font-black bg-red-600 hover:bg-red-700">تحديث المبلغ</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

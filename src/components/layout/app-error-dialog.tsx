@@ -46,7 +46,7 @@ export function AppErrorDialog() {
           {/* نص الخطأ في المنتصف */}
           <div className="p-8 pt-6 w-full text-center space-y-4">
             <div className="bg-muted/50 p-5 rounded-[28px] border-2 border-dashed border-destructive/10">
-                <p className="text-sm font-bold text-foreground/80 leading-relaxed">
+                <p className="text-sm font-bold text-foreground/80 leading-relaxed whitespace-pre-wrap">
                     {errorMessage}
                 </p>
             </div>

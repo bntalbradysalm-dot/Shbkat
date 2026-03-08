@@ -4,13 +4,100 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * تم فتح جميع الصلاحيات (القراءة والكتابة) لكل المستخدمين المسجلين.
-     * هذا يضمن أن الإدارة والمستخدمين يمكنهم الوصول لكافة المجموعات (soldCards, transactions, etc.) دون قيود أمنية.
-     * تم تحديث القواعد لحل مشكلة Permission Denied في لوحة التحكم.
-     * تم إضافة هذا التعليق لضمان تحديث القواعد: FORCE_UPDATE_FULL_ACCESS_V10
+     * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
+     * الرقم: 770326828
+     * المعرف المعتمد: wsy8bUcULSYX2J9Q9WyisiFX5ki2
+     * التحديث: PERMISSIVE_TEST_MODE_V16
+     */
+    function isAdmin() {
+      return request.auth != null && 
+        (request.auth.token.email == '770326828@shabakat.com' || 
+         request.auth.uid == 'wsy8bUcULSYX2J9Q9WyisiFX5ki2');
+    }
+
+    /**
+     * السماح بالوصول الكامل للمدير على كل شيء في النظام
      */
     match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    /**
+     * وضع الاختبار: السماح لجميع المستخدمين المسجلين بالوصول للقراءة والكتابة
+     * لتجربة نظام تحويل الأرباح وحل مشاكل الصلاحيات مؤقتاً
+     */
+    
+    // مبيعات الكروت - متاحة للجميع الآن للتجربة
+    match /soldCards/{cardId} {
       allow read, write: if request.auth != null;
+    }
+    
+    // إدارة الشبكات
+    match /networks/{networkId} {
+      allow read, write: if request.auth != null;
+      
+      match /cardCategories/{catId} {
+        allow read, write: if request.auth != null;
+      }
+      
+      match /cards/{cardId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // ملفات المستخدمين وعملياتهم
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+      
+      match /transactions/{txId} {
+        allow read, write: if request.auth != null;
+      }
+      
+      match /notifications/{notifId} {
+        allow read, write: if request.auth != null;
+      }
+      
+      match /favorites/{favId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    
+    // طلبات السحب والطلبات الأخرى
+    match /withdrawalRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /renewalRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /billPaymentRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /storeOrders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // المنتجات والإعدادات العامة
+    match /products/{productId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /advertisements/{adId} {
+      allow read, write: if true;
+    }
+    
+    match /appSettings/{settingId} {
+      allow read, write: if true;
+    }
+    
+    match /alwadiOptions/{optId} {
+      allow read, write: if true;
+    }
+    
+    match /paymentMethods/{methodId} {
+      allow read, write: if true;
     }
   }
 }

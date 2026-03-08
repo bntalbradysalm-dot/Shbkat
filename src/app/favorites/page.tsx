@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -61,6 +62,30 @@ type UserProfile = {
   phoneNumber?: string;
 };
 
+const CARD_GRADIENTS = [
+    "from-blue-400 via-blue-500 to-blue-600",
+    "from-emerald-400 via-emerald-500 to-emerald-600",
+    "from-rose-400 via-rose-500 to-rose-600",
+    "from-amber-400 via-amber-500 to-orange-600",
+    "from-violet-400 via-violet-500 to-indigo-600",
+    "from-fuchsia-400 via-fuchsia-500 to-pink-600",
+];
+
+const CustomLoader = () => (
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+    <div className="relative w-12 h-12">
+      <svg
+        viewBox="0 0 50 50"
+        className="absolute inset-0 w-full h-full animate-spin"
+        style={{ animationDuration: '1.2s' }}
+      >
+        <path d="M15 25 A10 10 0 0 0 35 25" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round" />
+        <path d="M40 15 A15 15 0 0 1 40 35" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round" className="opacity-30" />
+      </svg>
+    </div>
+  </div>
+);
+
 export default function FavoritesPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -103,11 +128,9 @@ export default function FavoritesPage() {
 
   const filteredFavorites = useMemo(() => {
     if (!favorites) return [];
-    // Hide local favorites temporarily
     return favorites.filter(fav => 
-      fav.isLocal !== true &&
-      (fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fav.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fav.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [favorites, searchTerm]);
 
@@ -127,11 +150,11 @@ export default function FavoritesPage() {
   const handleNetworkClick = async (fav: Favorite) => {
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
-    let ownerId = undefined;
+    let ownerId = 'admin';
     if (isLocal && firestore) {
-        const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
-        if (!netSnap.empty) {
-            ownerId = netSnap.docs[0].data().ownerId;
+        const netDoc = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
+        if (!netDoc.empty) {
+            ownerId = netDoc.docs[0].data().ownerId || 'admin';
         }
     }
 
@@ -210,35 +233,64 @@ export default function FavoritesPage() {
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
             const availableCardsSnapshot = await getDocs(q);
 
-            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
+            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
             const ownerId = selectedNetwork.ownerId;
             
-            const commission = Math.floor(categoryPrice * 0.10);
+            const commission = Math.ceil(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
+            // 3. سجل العملية للمشتري
+            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
+                cardNumber: cardData.cardNumber,
+            });
+
+            // 4. تحويل الأرباح تلقائياً للمالك
             if (ownerId && ownerId !== 'admin') {
                 const ownerDocRef = doc(firestore, 'users', ownerId);
                 batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
                 const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
                 batch.set(ownerTxRef, {
                     userId: ownerId,
                     transactionDate: now,
                     amount: payoutAmount,
                     transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                    notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
                 });
             }
 
-            batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+            // 5. سجل مبيعات الكروت (مكتملة تلقائياً)
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id,
+                ownerId: ownerId || 'admin',
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id,
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id,
                 cardNumber: cardData.cardNumber,
+                price: categoryPrice,
+                commissionAmount: commission,
+                payoutAmount: payoutAmount,
+                buyerId: user.uid,
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '',
+                soldTimestamp: now,
+                payoutStatus: 'completed' // نظام تلقائي
             });
 
             await batch.commit();
@@ -252,7 +304,7 @@ export default function FavoritesPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'فشل تنفيذ الطلب من المصدر');
+                throw new Error(errorData.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828');
             }
 
             const result = await response.json();
@@ -279,7 +331,7 @@ export default function FavoritesPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || "حدث خطأ غير متوقع." });
+        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally {
         setIsProcessing(false);
     }
@@ -295,7 +347,7 @@ export default function FavoritesPage() {
 
   const handleSendSms = () => {
     if (!purchasedCard || !selectedNetwork || !smsRecipient) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخل رقم الزبون.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم الزبون.' });
         return;
     }
     const cardInfo = purchasedCard.cardID || purchasedCard.cardNumber;
@@ -357,7 +409,7 @@ export default function FavoritesPage() {
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
                                     className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
                                 >
-                                    <Heart className={cn("h-6 w-6 text-white fill-white")} />
+                                    <Heart className={cn("h-6 w-6 text-white", favoriteNetworkIds.has(fav.targetId) && "fill-white")} />
                                 </button>
                             </CardContent>
                         </Card>
@@ -372,54 +424,81 @@ export default function FavoritesPage() {
           {selectedNetwork && (
             <div className="flex flex-col max-h-[85vh]">
               <div className="bg-mesh-gradient p-0 relative overflow-hidden">
-                <DialogHeader className="pt-14 pb-10 px-8 text-white text-center relative z-10">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                
+                <DialogHeader className="pt-12 pb-8 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
-                    <div className="bg-white/20 p-4 rounded-full w-16 h-16 mx-auto mb-3 backdrop-blur-md border border-white/20">
-                        <Wifi className="h-8 w-8 text-white" />
+                    <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
+                        <Wifi className="h-7 w-7 text-white" />
                     </div>
-                    <h2 className="text-xl font-black text-white">{selectedNetwork.name}</h2>
-                    <p className="text-xs text-white/70 font-bold mt-1">{selectedNetwork.location}</p>
+                    <h2 className="text-xl font-black text-white drop-shadow-md">{selectedNetwork.name}</h2>
+                    <p className="text-[10px] text-white/70 font-bold mt-1 bg-white/10 py-1 px-3 rounded-full border border-white/5 inline-block">{selectedNetwork.location}</p>
                 </DialogHeader>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-                  </div>
+                  <div className="flex justify-center py-10"><CustomLoader /></div>
                 ) : categoryError ? (
                   <div className="text-center py-10 space-y-2"><AlertCircle className="h-10 w-10 mx-auto text-destructive" /><p className="text-sm font-bold">{categoryError}</p></div>
                 ) : categories.length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground">لا توجد فئات متاحة حالياً.</p>
                 ) : (
                   <div className="space-y-3">
-                    {categories.map((cat) => (
-                      <Card 
-                        key={cat.id} 
-                        className="rounded-2xl border-none shadow-sm bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => setShowConfirmPurchase(cat)}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="text-right space-y-1">
-                            <h4 className="font-bold text-sm text-foreground">{cat.name}</h4>
-                            <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground">
-                                {cat.capacity && <span className="flex items-center gap-1"><Database className="h-3 w-3" />{cat.capacity}</span>}
-                                {(cat.validity || cat.expirationDate) && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cat.validity || cat.expirationDate}</span>}
+                    {categories.map((cat, idx) => {
+                        const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
+                        return (
+                            <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>
+                                <Card 
+                                    className={cn(
+                                        "relative overflow-hidden rounded-[28px] border-none shadow-lg transition-all duration-300 group cursor-pointer active:scale-[0.97]",
+                                        "bg-gradient-to-br p-[2px]",
+                                        gradient
+                                    )}
+                                    onClick={() => setShowConfirmPurchase(cat)}
+                                >
+                                    <div className="relative rounded-[26px] p-3.5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn(
+                                                "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                gradient
+                                            )}>
+                                                <Wifi className="h-5 w-5" />
+                                            </div>
+                                            <div className="text-right space-y-0.5">
+                                                <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
+                                                <div className="flex gap-2.5 mt-1">
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-primary">
+                                                        <Database className="h-2.5 w-2.5" />
+                                                        <span>{cat.capacity || '-'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground">
+                                                        <Clock className="h-2.5 w-2.5" />
+                                                        <span>{cat.validity || cat.expirationDate || '-'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-1.5">
+                                            <div className="flex flex-col items-end leading-tight">
+                                                <span className="text-xl font-black tracking-tighter text-primary">{cat.price.toLocaleString('en-US')}</span>
+                                                <span className="text-[7px] font-black text-muted-foreground uppercase opacity-60">ريال</span>
+                                            </div>
+                                            <Button size="sm" className="h-7 rounded-lg text-[9px] font-black px-4 bg-primary shadow-md shadow-primary/20">شراء</Button>
+                                        </div>
+                                    </div>
+                                </Card>
                             </div>
-                          </div>
-                          <div className="text-left">
-                            <p className="font-black text-primary text-base">{cat.price.toLocaleString()} ريال</p>
-                            <Button size="sm" className="h-7 rounded-lg text-[10px] px-4 mt-1">شراء</Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        );
+                    })}
                   </div>
                 )}
               </div>
               <div className="p-4 bg-white dark:bg-slate-900 border-t">
-                <Button variant="outline" className="w-full rounded-2xl h-12 font-bold" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
+                <Button variant="outline" className="w-full h-11 rounded-2xl font-black text-sm" onClick={() => setSelectedNetwork(null)}>إغلاق</Button>
               </div>
             </div>
           )}
@@ -437,7 +516,7 @@ export default function FavoritesPage() {
           </DialogHeader>
           <div className="py-6 bg-muted/30 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 mt-4">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">سيتم خصم المبلغ من رصيدك</p>
-            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString()} <span className="text-sm">ريال</span></p>
+            <p className="text-3xl font-black text-primary">{showConfirmPurchase?.price.toLocaleString('en-US')} <span className="text-sm">ريال</span></p>
           </div>
           <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
             <Button className="w-full h-12 rounded-2xl font-bold" onClick={handlePurchase} disabled={isProcessing}>
@@ -452,14 +531,14 @@ export default function FavoritesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
-                <div className="bg-green-500 p-8 flex justify-center">
-                    <div className="bg-white/20 p-4 rounded-full animate-bounce">
-                        <CheckCircle className="h-16 w-16 text-white" />
-                    </div>
-                </div>
                 <CardContent className="p-8 space-y-6">
                     <div>
-                        <h2 className="text-2xl font-black text-green-600">تم الشراء بنجاح!</h2>
+                        <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">
+                            <div className="bg-white/20 p-4 rounded-full animate-bounce">
+                                <CheckCircle className="h-16 w-16 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-black text-green-600 mt-4">تم الشراء بنجاح!</h2>
                         <p className="text-sm text-muted-foreground mt-1">احتفظ برقم الكرت جيداً</p>
                     </div>
                     

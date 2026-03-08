@@ -52,7 +52,7 @@ export async function POST(
       const errorText = await response.text();
       console.error(`Order creation failed (${response.status}):`, errorText.substring(0, 200));
       return new NextResponse(
-        JSON.stringify({ message: `فشل إنشاء الطلب من المصدر: ${response.status}` }),
+        JSON.stringify({ message: 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' }),
         { status: response.status, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -63,7 +63,7 @@ export async function POST(
         // التحقق من حالة الطلب الداخلية بناءً على توثيق بيتي
         if (data.status !== 200) {
             return new NextResponse(
-                JSON.stringify({ message: data.message?.ar || data.message?.en || 'فشل تنفيذ الطلب من قبل المزود.' }),
+                JSON.stringify({ message: 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' }),
                 { status: 400, headers: { 'Content-Type': 'application/json' } }
             );
         }
@@ -73,7 +73,7 @@ export async function POST(
         const text = await response.text();
         console.error("Order API returned HTML:", text.substring(0, 300));
         return new NextResponse(
-            JSON.stringify({ message: 'فشل في إتمام الشراء: استجابة غير صالحة من المصدر.' }),
+            JSON.stringify({ message: 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' }),
             { status: 502, headers: { 'Content-Type': 'application/json' } }
         );
     }
@@ -81,7 +81,7 @@ export async function POST(
   } catch (error: any) {
     console.error('Order route exception on Vercel:', error);
     return new NextResponse(
-        JSON.stringify({ message: 'حدث خطأ تقني أثناء معالجة الطلب.' }),
+        JSON.stringify({ message: 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

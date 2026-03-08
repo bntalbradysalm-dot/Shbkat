@@ -4,22 +4,44 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * تم تحديث القواعد للسماح بالوصول الكامل (قراءة وكتابة) لكل المستخدمين المسجلين.
-     * هذا يضمن أن الإدارة والمستخدمين يمكنهم الوصول لكافة المجموعات (soldCards, transactions, etc.) دون قيود أمنية حالياً.
-     * تم تحديث القواعد لحل مشكلة Permission Denied التي ظهرت عند محاولة جلب مبيعات الكروت.
-     * التحديث الأخير لضمان إعادة النشر: FORCE_REDEPLOY_V11_FULL_ACCESS
+     * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام (770326828)
+     */
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == '770326828@shabakat.com';
+    }
+
+    /**
+     * السماح بالوصول الكامل لكل شيء للمدير
+     * والسماح بالوصول العام (قراءة وكتابة) للمستخدمين المسجلين للمجموعات الأخرى حالياً
+     * التحديث الأخير: ADMIN_EXPLICIT_ACCESS_V12
      */
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
     
-    // قواعد صريحة إضافية للمجموعات الحساسة لضمان عدم حدوث تعارض
+    // تأكيد الصلاحيات للمجموعات الحساسة الخاصة بالإدارة
     match /soldCards/{cardId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin() || request.auth != null;
     }
     
     match /withdrawalRequests/{reqId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin() || request.auth != null;
+    }
+
+    match /networks/{networkId} {
+      allow read, write: if isAdmin() || request.auth != null;
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      
+      match /transactions/{txId} {
+        allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      }
+      
+      match /notifications/{notifId} {
+        allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      }
     }
   }
 }

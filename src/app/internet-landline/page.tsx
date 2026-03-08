@@ -18,8 +18,6 @@ import {
   Users,
   Phone as PhoneIcon,
   Loader2,
-  Info,
-  Clock,
   Database,
   Tag
 } from 'lucide-react';
@@ -147,20 +145,28 @@ export default function LandlinePage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length < 7) {
+        if (phone.length !== 8 || !phone.startsWith('05')) {
             setQueryResult(null);
         }
     }, [phone]);
 
     const handleSearch = async () => {
-        if (!phone || phone.length < 7) return;
+        if (!phone || phone.length !== 8) {
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'يجب أن يتكون الرقم من 8 أرقام.' });
+            return;
+        }
+        
+        if (!phone.startsWith('05')) {
+            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'يجب أن يبدأ الرقم بـ 05.' });
+            return;
+        }
         
         setIsSearching(true);
         setQueryResult(null);
         try {
             const transid = Date.now().toString().slice(-8);
+            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
             
-            // الاستعلام لخدمات يمن بوست لا يتطلب معامل type في رابط الاستعلام بناءً على التوثيق (API 6)
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -168,6 +174,7 @@ export default function LandlinePage() {
                     mobile: phone, 
                     action: 'query', 
                     service: 'post', 
+                    type: serviceType, // Required parameter
                     transid 
                 })
             });
@@ -181,28 +188,23 @@ export default function LandlinePage() {
             if (isSuccess || isPending) {
                 const desc = result.resultDesc || '';
                 
-                // 1. استخراج البيانات المتبقية وتحويلها لجيجابايت
                 let displayData = '...';
                 if (result.remainAmount !== undefined && result.remainAmount !== null) {
                     const amt = parseFloat(String(result.remainAmount));
                     if (!isNaN(amt)) {
-                        // الافتراض أن القيمة بالميجابايت كما هو معتاد في يمن بوست
                         displayData = `GB ${(amt / 1024).toFixed(2)}`;
                     }
                 }
 
-                // 2. المبلغ المطلوب سداده (من حقل balance المباشر)
                 const bal = parseFloat(String(result.balance || "0"));
                 const displayBalance = !isNaN(bal) ? bal.toLocaleString('en-US') : "0";
 
-                // 3. قيمة الباقة (محاولة الاستخراج من الوصف)
                 let displayPackagePrice = '...';
                 const priceMatch = desc.match(/(?:قيمة الباقة|الباقة|السعر):\s*([\d.]+)/);
                 if (priceMatch) {
                     displayPackagePrice = parseFloat(priceMatch[1]).toLocaleString('en-US');
                 }
 
-                // 4. تاريخ الانتهاء (استخراج التاريخ بأي صيغة متوفرة)
                 let displayExpiry = '...';
                 const dateMatch = desc.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
                 if (dateMatch) {
@@ -239,11 +241,9 @@ export default function LandlinePage() {
             const opts = { multiple: false };
             const contacts = await (navigator as any).contacts.select(props, opts);
             if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
-                let selectedNumber = contacts[0].tel[0].replace(/[\s\-\(\)]/g, '');
-                if (selectedNumber.startsWith('+967')) selectedNumber = selectedNumber.substring(4);
-                if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
-                if (!selectedNumber.startsWith('0')) selectedNumber = '0' + selectedNumber;
-                setPhone(selectedNumber.slice(0, 9));
+                let num = contacts[0].tel[0].replace(/\D/g, '').slice(-8);
+                if (!num.startsWith('05')) num = '05' + num.slice(-6);
+                setPhone(num.slice(0, 8));
             }
         } catch (err) { console.error(err); }
     };
@@ -271,7 +271,7 @@ export default function LandlinePage() {
                     amount: payAmount, 
                     action: 'bill',
                     service: 'post',
-                    type: serviceType,
+                    type: serviceType, // Required parameter
                     transid: transid,
                 })
             });
@@ -322,26 +322,28 @@ export default function LandlinePage() {
                 </Card>
 
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-primary/5">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الهاتف</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الهاتف (8 أرقام تبدأ بـ 05)</Label>
                     <div className="relative">
                         <Input
                             type="tel"
-                            placeholder="0xxxxxxx"
+                            placeholder="05xxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
                         />
                         <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors" style={{ color: currentTheme.primary }}><Users className="h-5 w-5" /></button>
                     </div>
-                    {phone.length >= 7 && (
-                        <Button className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" onClick={handleSearch} disabled={isSearching} style={{ backgroundColor: currentTheme.primary }}>
-                            {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                            استعلام الآن
-                        </Button>
+                    {phone.length === 8 && phone.startsWith('05') && (
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" onClick={handleSearch} disabled={isSearching} style={{ backgroundColor: currentTheme.primary }}>
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
+                                استعلام الآن
+                            </Button>
+                        </div>
                     )}
                 </div>
 
-                {phone.length >= 7 && (
+                {phone.length === 8 && phone.startsWith('05') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

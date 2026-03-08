@@ -140,7 +140,7 @@ export default function CombinedNetworksPage() {
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fetch local networks (currently hidden)
+  // Fetch local networks
   const localNetworksQuery = useMemoFirebase(
     () => (firestore ? collection(firestore, 'networks') : null),
     [firestore]
@@ -171,9 +171,12 @@ export default function CombinedNetworksPage() {
     fetchApiNetworks();
   }, []);
 
-  // Combine All Networks (Local hidden temporarily)
+  // Combine All Networks
   const allNetworksCombined = useMemo(() => {
-    const local: any[] = []; 
+    const local = localNetworks ? localNetworks.map(n => ({
+        ...n,
+        isLocal: true
+    })) : [];
     const api = apiNetworks;
     const combined = [...local, ...api];
     

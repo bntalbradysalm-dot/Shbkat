@@ -127,11 +127,9 @@ export default function FavoritesPage() {
 
   const filteredFavorites = useMemo(() => {
     if (!favorites) return [];
-    // Hide local favorites temporarily
     return favorites.filter(fav => 
-      fav.isLocal !== true &&
-      (fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fav.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      fav.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fav.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [favorites, searchTerm]);
 
@@ -303,7 +301,7 @@ export default function FavoritesPage() {
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase failed:", error);
-        toast({ variant: "destructive", title: "فشلت عملية الشراء", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
+        toast({ variant: "destructive", title: "فشل عملية الشراء", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });
     } finally {
         setIsProcessing(false);
     }
@@ -381,7 +379,7 @@ export default function FavoritesPage() {
                                     onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
                                     className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
                                 >
-                                    <Heart className={cn("h-6 w-6 text-white fill-white")} />
+                                    <Heart className={cn("h-6 w-6 text-white", favoriteNetworkIds.has(fav.targetId) && "fill-white")} />
                                 </button>
                             </CardContent>
                         </Card>

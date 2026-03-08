@@ -41,6 +41,7 @@ import {
   FileText,
   LayoutGrid,
   RefreshCw,
+  BarChart3,
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -156,6 +157,13 @@ export default function UsersPage() {
   useEffect(() => {
     fetchAllBalances();
   }, [fetchAllBalances]);
+
+  // إجمالي أرصدة الوكلاء (اشحن لي + بيتي)
+  const combinedProvidersBalance = useMemo(() => {
+    const agent = parseFloat(agentBalance || '0');
+    const baity = parseFloat(baityBalance || '0');
+    return isNaN(agent + baity) ? 0 : agent + baity;
+  }, [agentBalance, baityBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -300,7 +308,7 @@ export default function UsersPage() {
                     </CardContent>
                 </Card>
 
-                {/* Baity Balance - Updated to light green gradient */}
+                {/* Baity Balance */}
                 <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
                         <CardTitle className="text-[8px] font-black opacity-80 uppercase tracking-widest">رصيد بيتي</CardTitle>
@@ -319,6 +327,20 @@ export default function UsersPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Total Providers Balance Bar */}
+            <Card className="border-none shadow-sm bg-primary/5 rounded-2xl px-4 py-2 flex justify-between items-center animate-in fade-in slide-in-from-top-1 duration-500">
+                <div className="flex items-center gap-2">
+                    <div className="p-1 bg-primary/10 rounded-lg">
+                        <BarChart3 className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest">إجمالي رصيد الوكلاء المجمع</span>
+                </div>
+                <div className="text-sm font-black text-primary">
+                    {isFetchingBalances ? <Skeleton className="h-4 w-20" /> : combinedProvidersBalance.toLocaleString('en-US')} 
+                    <span className="text-[9px] mr-1 opacity-70 font-bold">ريال</span>
+                </div>
+            </Card>
 
             <div className="grid grid-cols-2 gap-4">
                 <Card className="relative overflow-hidden border-none shadow-sm bg-primary/5">

@@ -44,6 +44,8 @@ import {
   BarChart3,
   Archive,
   Box,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -176,6 +178,10 @@ export default function UsersPage() {
     const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
     return total;
   }, [agentBalance, baityBalance, boxBalance]);
+
+  const netProfit = useMemo(() => {
+    return combinedProvidersBalance - totalUsersBalance;
+  }, [combinedProvidersBalance, totalUsersBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -372,16 +378,28 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-primary/5 rounded-2xl px-4 py-2 flex justify-between items-center animate-in fade-in slide-in-from-top-1 duration-500">
-                <div className="flex items-center gap-2">
-                    <div className="p-1 bg-primary/10 rounded-lg">
-                        <BarChart3 className="h-3 w-3 text-primary" />
+            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+                <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <BarChart3 className="h-3 w-3 text-primary opacity-70" />
+                        <span className="text-[9px] font-black text-primary/70 uppercase tracking-tight">رصيد الوكلاء المجمع</span>
                     </div>
-                    <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest">إجمالي رصيد الوكلاء المجمع</span>
+                    <div className="text-sm font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-4 w-16" /> : combinedProvidersBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })} 
+                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    </div>
                 </div>
-                <div className="text-sm font-black text-primary">
-                    {isFetchingBalances ? <Skeleton className="h-4 w-20" /> : combinedProvidersBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })} 
-                    <span className="text-[9px] mr-1 opacity-70 font-bold">ريال</span>
+                <div className="space-y-1 text-right px-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
+                        <span className={cn("text-[9px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
+                            {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
+                        </span>
+                    </div>
+                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                        {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 2 })} 
+                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    </div>
                 </div>
             </Card>
 

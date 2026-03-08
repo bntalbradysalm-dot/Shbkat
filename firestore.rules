@@ -4,34 +4,51 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام (770326828)
+     * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
+     * الرقم: 770326828
+     * المعرف المعتمد: wsy8bUcULSYX2J9Q9WyisiFX5ki2
+     * التحديث: FULL_ADMIN_UID_ACCESS_V15
      */
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == '770326828@shabakat.com';
+      return request.auth != null && 
+        (request.auth.token.email == '770326828@shabakat.com' || 
+         request.auth.uid == 'wsy8bUcULSYX2J9Q9WyisiFX5ki2');
     }
 
     /**
-     * السماح بالوصول الكامل لكل شيء للمدير
-     * والسماح بالوصول العام (قراءة وكتابة) للمستخدمين المسجلين للمجموعات الأخرى حالياً
-     * التحديث الأخير: ADMIN_EXPLICIT_ACCESS_V12
+     * السماح بالوصول الكامل للمدير على كل شيء في النظام
      */
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
     
-    // تأكيد الصلاحيات للمجموعات الحساسة الخاصة بالإدارة
+    /**
+     * القواعد الخاصة بالمجموعات (للمستخدمين العاديين والملاك)
+     */
+    
+    // مبيعات الكروت
     match /soldCards/{cardId} {
-      allow read, write: if isAdmin() || request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
     
-    match /withdrawalRequests/{reqId} {
-      allow read, write: if isAdmin() || request.auth != null;
+    // إدارة الشبكات وفئاتها وكروتها
+    match /networks/{networkId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+      
+      match /cardCategories/{catId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin() || (request.auth != null && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid);
+      }
+      
+      match /cards/{cardId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin() || (request.auth != null && get(/databases/$(database)/documents/networks/$(networkId)).data.ownerId == request.auth.uid);
+      }
     }
 
-    match /networks/{networkId} {
-      allow read, write: if isAdmin() || request.auth != null;
-    }
-    
+    // ملفات المستخدمين وعملياتهم
     match /users/{userId} {
       allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
       
@@ -42,6 +59,54 @@ service cloud.firestore {
       match /notifications/{notifId} {
         allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
       }
+      
+      match /favorites/{favId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // طلبات السحب
+    match /withdrawalRequests/{reqId} {
+      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.ownerId == request.auth.uid);
+    }
+    
+    // طلبات التجديد والسداد والمتجر
+    match /renewalRequests/{reqId} {
+      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+    }
+    
+    match /billPaymentRequests/{reqId} {
+      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+    }
+    
+    match /storeOrders/{orderId} {
+      allow read, write: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+    }
+    
+    // المنتجات والإعدادات العامة (متاحة للقراءة للجميع)
+    match /products/{productId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    match /advertisements/{adId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /appSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /alwadiOptions/{optId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /paymentMethods/{methodId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

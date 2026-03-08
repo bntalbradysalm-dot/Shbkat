@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -286,28 +287,46 @@ export default function CombinedNetworksPage() {
             
             const commission = Math.floor(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
-            const ownerId = selectedNetwork.ownerId;
+            const ownerId = selectedNetwork.ownerId || 'admin';
 
-            batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            // 1. تحديث حالة الكرت
+            batch.update(cardToPurchaseDoc.ref, { 
+                status: 'sold', 
+                soldTo: user.uid, 
+                soldTimestamp: now 
+            });
+
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
             
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-
+            // 3. سجل العملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: selectedCategory.price,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: selectedCategory.price,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
+            });
+
+            // 4. سجل الكروت المباعة للإدارة (للتحويل اليدوي)
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id,
+                ownerId: ownerId,
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id,
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id,
+                cardNumber: cardData.cardNumber,
+                price: selectedCategory.price,
+                commissionAmount: commission,
+                payoutAmount: payoutAmount,
+                buyerId: user.uid,
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '',
+                soldTimestamp: now,
+                payoutStatus: 'pending' 
             });
 
             await batch.commit();
@@ -326,7 +345,7 @@ export default function CombinedNetworksPage() {
             const result = await response.json();
             const cardData = result.data.order.card;
             
-            batch.update(userDocRef, { balance: increment(-selectedCategory.price) });
+            batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
             const transactionPayload: any = {
                 userId: user.uid, transactionDate: now, amount: categoryPrice,
@@ -553,7 +572,7 @@ export default function CombinedNetworksPage() {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black" onClick={handleCopy}>
+                        <Button className="rounded-2xl h-12 font-bold" onClick={handleCopy}>
                             <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
                         </Button>
                         <Button variant="outline" className="rounded-2xl h-12 font-black" onClick={() => setIsSmsDialogOpen(true)}>

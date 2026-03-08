@@ -133,17 +133,19 @@ function NetworkPurchasePageComponent() {
         const now = new Date().toISOString();
         const commission = Math.floor(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
-        const ownerId = networkData.ownerId;
+        const ownerId = networkData.ownerId || 'admin';
   
         // 1. تحديث حالة الكرت
-        batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+        batch.update(cardToPurchaseDoc.ref, { 
+            status: 'sold', 
+            soldTo: user.uid, 
+            soldTimestamp: now 
+        });
         
         // 2. خصم الرصيد من المشتري
         batch.update(userDocRef, { balance: increment(-categoryPrice) });
         
-        // 3. (تمت الإزالة) التحويل اللحظي للمالك - الآن يتم يدوياً من قبل المدير
-
-        // 4. سجل عملية للمشتري
+        // 3. سجل عملية للمشتري
         const buyerTransactionRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(buyerTransactionRef, {
             userId: user.uid,
@@ -154,11 +156,11 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 5. سجل الكروت المباعة (الحالة: معلقة للتحويل اليدوي)
+        // 4. سجل الكروت المباعة (الحالة: معلقة للتحويل اليدوي من قبل المدير)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
-            ownerId: ownerId || 'admin',
+            ownerId: ownerId,
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
@@ -171,7 +173,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'pending' // معلقة للموافقة اليدوية من المدير
+            payoutStatus: 'pending' 
         });
         
         await batch.commit();

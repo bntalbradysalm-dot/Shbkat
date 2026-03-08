@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -149,11 +150,11 @@ export default function FavoritesPage() {
   const handleNetworkClick = async (fav: Favorite) => {
     const isLocal = fav.isLocal ?? isNaN(Number(fav.targetId));
     
-    let ownerId = undefined;
+    let ownerId = 'admin';
     if (isLocal && firestore) {
-        const netSnap = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
-        if (!netSnap.empty) {
-            ownerId = netSnap.docs[0].data().ownerId;
+        const netDoc = await getDocs(query(collection(firestore, 'networks'), where('__name__', '==', fav.targetId)));
+        if (!netDoc.empty) {
+            ownerId = netDoc.docs[0].data().ownerId || 'admin';
         }
     }
 
@@ -232,35 +233,49 @@ export default function FavoritesPage() {
             const q = query(cardsRef, where('categoryId', '==', selectedCategory.id), where('status', '==', 'available'), firestoreLimit(1));
             const availableCardsSnapshot = await getDocs(q);
 
-            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة في هذه الفئة حالياً.');
+            if (availableCardsSnapshot.empty) throw new Error('لا توجد كروت متاحة حالياً في هذه الفئة.');
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId;
+            const ownerId = selectedNetwork.ownerId || 'admin';
             
             const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
+            // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
+            
+            // 2. خصم الرصيد
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `أرباح بيع كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-
+            // 3. سجل العملية للمشتري
             batch.set(doc(collection(firestore, `users/${user.uid}/transactions`)), {
-                userId: user.uid, transactionDate: now, amount: categoryPrice,
-                transactionType: `شراء كرت ${selectedCategory.name}`, notes: `شبكة: ${selectedNetwork.name}`,
+                userId: user.uid, 
+                transactionDate: now, 
+                amount: categoryPrice,
+                transactionType: `شراء كرت ${selectedCategory.name}`, 
+                notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
+            });
+
+            // 4. سجل مبيعات الكروت للإدارة
+            const soldCardRef = doc(collection(firestore, 'soldCards'));
+            batch.set(soldCardRef, {
+                networkId: selectedNetwork.id,
+                ownerId: ownerId,
+                networkName: selectedNetwork.name,
+                categoryId: selectedCategory.id,
+                categoryName: selectedCategory.name,
+                cardId: cardToPurchaseDoc.id,
+                cardNumber: cardData.cardNumber,
+                price: categoryPrice,
+                commissionAmount: commission,
+                payoutAmount: payoutAmount,
+                buyerId: user.uid,
+                buyerName: userProfile.displayName || 'مشترك',
+                buyerPhoneNumber: userProfile.phoneNumber || '',
+                soldTimestamp: now,
+                payoutStatus: 'pending' 
             });
 
             await batch.commit();

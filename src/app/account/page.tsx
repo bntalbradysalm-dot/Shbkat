@@ -72,7 +72,7 @@ const managementLinks = [
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
-  { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
+  { title: 'إدارة منظومة الوادي', icon: SatelliteDish, heart: '/alwadi-management' },
   { title: 'تقارير منظومة الوادي', icon: BarChart3, href: '/alwadi-reports' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },
@@ -397,7 +397,7 @@ export default function AccountPage() {
             <div className="bg-mesh-gradient h-32 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
                     <Image 
-                        src="https://i.postimg.cc/Yqy7ZM3F/20260302-161935.jpg" 
+                        src="https://i.postimg.cc/KzfKWV1H/20260308-181726.jpg" 
                         alt="Developer" 
                         width={100} 
                         height={100} 

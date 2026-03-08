@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -126,6 +125,9 @@ export default function FavoritesPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
+  // Define favoriteNetworkIds to fix the ReferenceError
+  const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
+
   const filteredFavorites = useMemo(() => {
     if (!favorites) return [];
     return favorites.filter(fav => 
@@ -237,15 +239,15 @@ export default function FavoritesPage() {
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId;
+            const ownerId = selectedNetwork.ownerId || 'admin';
             
-            const commission = Math.ceil(categoryPrice * 0.10);
+            const commission = Math.floor(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
             
-            // 2. خصم الرصيد من المشتري
+            // 2. خصم الرصيد
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
             // 3. سجل العملية للمشتري
@@ -258,26 +260,11 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 4. تحويل الأرباح تلقائياً للمالك
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
-
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-
-            // 5. سجل مبيعات الكروت (مكتملة تلقائياً)
+            // 4. سجل مبيعات الكروت للإدارة
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id,
-                ownerId: ownerId || 'admin',
+                ownerId: ownerId,
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id,
                 categoryName: selectedCategory.name,
@@ -290,7 +277,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '',
                 soldTimestamp: now,
-                payoutStatus: 'completed' // نظام تلقائي
+                payoutStatus: 'pending' 
             });
 
             await batch.commit();
@@ -406,7 +393,7 @@ export default function FavoritesPage() {
                                 </div>
                                 
                                 <button 
-                                    onClick={(e) => handleRemoveFavorite(e, fav.id, fav.name)}
+                                    onClick={(e) => handleFavoriteClick(e, fav)}
                                     className="p-2.5 hover:scale-110 transition-transform bg-white/10 rounded-full shrink-0"
                                 >
                                     <Heart className={cn("h-6 w-6 text-white", favoriteNetworkIds.has(fav.targetId) && "fill-white")} />

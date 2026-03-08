@@ -131,9 +131,9 @@ function NetworkPurchasePageComponent() {
         
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
-        const commission = Math.floor(categoryPrice * 0.10);
+        const commission = Math.ceil(categoryPrice * 0.10);
         const payoutAmount = categoryPrice - commission;
-        const ownerId = networkData.ownerId || 'admin';
+        const ownerId = networkData.ownerId;
   
         // 1. تحديث حالة الكرت
         batch.update(cardToPurchaseDoc.ref, { 
@@ -156,11 +156,26 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 4. سجل الكروت المباعة (الحالة: معلقة للتحويل اليدوي من قبل المدير)
+        // 4. تحويل الأرباح تلقائياً للمالك
+        if (ownerId && ownerId !== 'admin') {
+            const ownerDocRef = doc(firestore, 'users', ownerId);
+            batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+            const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+            batch.set(ownerTxRef, {
+                userId: ownerId,
+                transactionDate: now,
+                amount: payoutAmount,
+                transactionType: 'أرباح مبيعات الكروت',
+                notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${networkName}`
+            });
+        }
+
+        // 5. سجل الكروت المباعة (مكتملة تلقائياً)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
             networkId: networkId,
-            ownerId: ownerId,
+            ownerId: ownerId || 'admin',
             networkName: networkName,
             categoryId: selectedCategory.id,
             categoryName: selectedCategory.name,
@@ -173,7 +188,7 @@ function NetworkPurchasePageComponent() {
             buyerName: userProfile.displayName || 'مشترك',
             buyerPhoneNumber: userProfile.phoneNumber || '',
             soldTimestamp: now,
-            payoutStatus: 'pending' 
+            payoutStatus: 'completed' // نظام تلقائي
         });
         
         await batch.commit();
@@ -290,7 +305,7 @@ function NetworkPurchasePageComponent() {
         {purchasedCard && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+                <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                     <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">
                         <div>

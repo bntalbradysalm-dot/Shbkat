@@ -237,15 +237,15 @@ export default function FavoritesPage() {
 
             const cardToPurchaseDoc = availableCardsSnapshot.docs[0];
             const cardData = cardToPurchaseDoc.data();
-            const ownerId = selectedNetwork.ownerId || 'admin';
+            const ownerId = selectedNetwork.ownerId;
             
-            const commission = Math.floor(categoryPrice * 0.10);
+            const commission = Math.ceil(categoryPrice * 0.10);
             const payoutAmount = categoryPrice - commission;
 
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
             
-            // 2. خصم الرصيد
+            // 2. خصم الرصيد من المشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
             // 3. سجل العملية للمشتري
@@ -258,11 +258,26 @@ export default function FavoritesPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 4. سجل مبيعات الكروت للإدارة
+            // 4. تحويل الأرباح تلقائياً للمالك
+            if (ownerId && ownerId !== 'admin') {
+                const ownerDocRef = doc(firestore, 'users', ownerId);
+                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+
+                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
+                batch.set(ownerTxRef, {
+                    userId: ownerId,
+                    transactionDate: now,
+                    amount: payoutAmount,
+                    transactionType: 'أرباح مبيعات الكروت',
+                    notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
+                });
+            }
+
+            // 5. سجل مبيعات الكروت (مكتملة تلقائياً)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id,
-                ownerId: ownerId,
+                ownerId: ownerId || 'admin',
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id,
                 categoryName: selectedCategory.name,
@@ -275,7 +290,7 @@ export default function FavoritesPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '',
                 soldTimestamp: now,
-                payoutStatus: 'pending' 
+                payoutStatus: 'completed' // نظام تلقائي
             });
 
             await batch.commit();

@@ -59,11 +59,16 @@ const NetworkDetails = ({ network }: { network: Network }) => {
     const [isTransferring, setIsTransferring] = useState<string | null>(null);
 
     const soldCardsQuery = useMemoFirebase(
-      () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id), orderBy('soldTimestamp', 'desc')) : null,
+      () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id)) : null,
       [firestore, network.id]
     );
-    const { data: soldCards, isLoading: isLoadingSold } = useCollection<SoldCard>(soldCardsQuery);
+    const { data: rawSoldCards, isLoading: isLoadingSold } = useCollection<SoldCard>(soldCardsQuery);
     
+    const soldCards = useMemo(() => {
+        if (!rawSoldCards) return [];
+        return [...rawSoldCards].sort((a, b) => new Date(b.soldTimestamp).getTime() - new Date(a.soldTimestamp).getTime());
+    }, [rawSoldCards]);
+
     const { totalSales, totalPayout, totalCommission } = useMemo(() => {
         if (!soldCards) return { totalSales: 0, totalPayout: 0, totalCommission: 0 };
         return soldCards.reduce((acc, card) => {
@@ -75,34 +80,53 @@ const NetworkDetails = ({ network }: { network: Network }) => {
     }, [soldCards]);
 
     const handleTransferProfit = async (card: SoldCard) => {
-        if (!firestore || !card.ownerId) return;
+        if (!firestore || !card.ownerId) {
+            toast({ variant: "destructive", title: "خطأ", description: "معلومات المالك غير متوفرة لهذا الكرت." });
+            return; 
+        }
+        
+        if (typeof card.payoutAmount !== 'number' || card.payoutAmount <= 0) {
+            toast({
+                variant: 'destructive',
+                title: 'خطأ',
+                description: 'مبلغ الأرباح غير صالح.',
+            });
+            return;
+        }
+
         setIsTransferring(card.id);
 
         try {
             const batch = writeBatch(firestore);
             const now = new Date().toISOString();
+            const payoutAmount = Number(card.payoutAmount) || 0;
+
+            if (payoutAmount <= 0) { 
+                throw new Error("مبلغ التحويل غير صالح.");
+            }
 
             // 1. تحديث حالة الطلب إلى مكتمل
             batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
 
             // 2. تحويل الرصيد للمالك
             const ownerRef = doc(firestore, 'users', card.ownerId);
-            batch.update(ownerRef, { balance: increment(card.payoutAmount) });
+            batch.update(ownerRef, { balance: increment(payoutAmount) });
 
             // 3. إضافة سجل عملية للمالك
             const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
             batch.set(ownerTxRef, {
                 userId: card.ownerId,
                 transactionDate: now,
-                amount: card.payoutAmount,
+                amount: payoutAmount,
                 transactionType: 'أرباح مبيعات الكروت',
                 notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
             });
 
             await batch.commit();
             toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح." });
-        } catch (e) {
-            toast({ variant: "destructive", title: "خطأ", description: "فشل تحويل الربح." });
+        } catch (e: any) {
+            console.error("Transfer error:", e);
+            toast({ variant: "destructive", title: "خطأ", description: e.message || "فشل تحويل الربح." });
         } finally {
             setIsTransferring(null);
         }
@@ -180,7 +204,7 @@ export default function CardSalesReportsPage() {
   const networksCollection = useMemoFirebase(() => firestore ? query(collection(firestore, 'networks'), orderBy('name')) : null, [firestore]);
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
 
-  const isAdmin = user?.email === '770326828@shabakat.com';
+  const isAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
   if (!isAdmin) {
       return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمالك التطبيق فقط.</div>;
@@ -206,11 +230,11 @@ export default function CardSalesReportsPage() {
     return (
         <div className="space-y-6">
             <div className="text-center space-y-1">
-                <h2 className="text-xl font-black text-primary">تحويل أرباح الملاك</h2>
-                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات وتحويل المستحقات يدوياً</p>
-                <div className="p-3 bg-orange-50 border border-orange-100 rounded-2xl mt-4">
-                    <p className="text-[10px] text-orange-700 font-black leading-relaxed">
-                        ⚠️ نظام التحويل اليدوي: قم بمراجعة كل عملية بيع والضغط على "تحويل الربح" ليتم إضافة 90% من قيمة الكرت إلى رصيد مالك الشبكة فوراً.
+                <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
+                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل يتم تلقائياً للملاك)</p>
+                <div className="p-3 bg-green-50 border border-green-100 rounded-2xl mt-4">
+                    <p className="text-[10px] text-green-700 font-black leading-relaxed">
+                        ✅ نظام التحويل التلقائي: يتم إضافة 90% من قيمة الكرت إلى رصيد مالك الشبكة فور عملية الشراء. يمكنك مراجعة العمليات السابقة هنا.
                     </p>
                 </div>
             </div>
@@ -241,7 +265,7 @@ export default function CardSalesReportsPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <SimpleHeader title="تحويل الأرباح" />
+      <SimpleHeader title="أرباح الكروت" />
       <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
       <Toaster/>
     </div>

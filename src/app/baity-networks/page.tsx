@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -148,13 +149,6 @@ export default function BaityNetworksPage() {
   );
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  const favoritesQuery = useMemoFirebase(
-    () => user && firestore ? query(collection(firestore, 'users', user.uid, 'favorites'), where('isLocal', '==', false)) : null,
-    [firestore, user]
-  );
-  const { data: favorites } = useCollection<Favorite>(favoritesQuery);
-  const favoriteNetworkIds = useMemo(() => new Set(favorites?.map(f => f.targetId)), [favorites]);
-
   const filteredNetworks = useMemo(() => {
     return networks.filter(net => net.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [networks, searchTerm]);
@@ -219,7 +213,9 @@ export default function BaityNetworksPage() {
         await batch.commit();
         
         setPurchasedCard(cardData);
+        // إغلاق المنبثقات السابقة عند النجاح
         setShowConfirmPurchase(null);
+        setSelectedNetwork(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         toast({ variant: "destructive", title: "خطأ", description: error.message || 'فشل الشراء\nيرجى التواصل مع الادارة 770326828' });

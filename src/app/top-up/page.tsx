@@ -229,7 +229,7 @@ export default function TopUpPage() {
 
                 {/* الوكيل الرسمي Section */}
                 <div className="px-4 pb-10 space-y-4">
-                    <h2 className="text-lg font-black text-primary border-t pt-6">4. غذي حسابك عبر الوكيل الرسمي</h2>
+                    <h2 className="text-lg font-black text-primary border-t pt-6 text-center">غذي حسابك عبر الوكيل الرسمي</h2>
                     <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
                         <CardContent className="p-6 space-y-6">
                             <div className="flex flex-col items-center text-center gap-2">
@@ -253,7 +253,7 @@ export default function TopUpPage() {
                                 </Button>
                                 <div className="bg-black/10 rounded-2xl p-4 text-center">
                                     <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">ساعات العمل</p>
-                                    <p className="text-xs font-black leading-relaxed text-white">
+                                    <p className="text-sm font-black leading-relaxed text-white">
                                         الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
                                         الفترة المسائية: 4:00 عصراً - 9:00 مساءً
                                     </p>

@@ -7,7 +7,7 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, MessageCircle, Wallet, Banknote, User as UserIcon } from 'lucide-react';
+import { Copy, MessageCircle, Wallet, Banknote, User as UserIcon, MapPin, Building2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
@@ -156,7 +156,7 @@ export default function TopUpPage() {
     return (
         <div className="flex flex-col h-full bg-background">
             <SimpleHeader title="إيداع رصيد" />
-            <div className="flex-1 overflow-y-auto space-y-6">
+            <div className="flex-1 overflow-y-auto space-y-6 pb-20">
                 <div className="pt-4">
                     <div className="px-4">
                         <h2 className="text-lg font-bold">1. اختر طريقة التحويل</h2>
@@ -195,7 +195,7 @@ export default function TopUpPage() {
                     </div>
                 )}
                 
-                <div className="px-4 pb-10 space-y-4">
+                <div className="px-4 space-y-4">
                     <h2 className="text-lg font-bold">3. تأكيد عملية الإيداع</h2>
                     <Card className="shadow-md">
                         <CardContent className="p-4 space-y-4">
@@ -222,6 +222,48 @@ export default function TopUpPage() {
                                 <p className="text-xs text-center text-muted-foreground leading-relaxed">
                                     بعد الضغط على الزر، سيتم فتح محادثة الواتساب مع الإدارة. يرجى إرسال الرسالة التلقائية ثم إرفاق صورة الإيصال ليتم إضافة الرصيد لحسابك.
                                 </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* الوكيل الرسمي Section */}
+                <div className="px-4 pb-10 space-y-4">
+                    <h2 className="text-lg font-black text-primary border-t pt-6 text-center">غذي حسابك عبر الوكيل الرسمي</h2>
+                    <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
+                        <CardContent className="p-6 space-y-6">
+                            <div className="flex flex-col items-center text-center gap-2">
+                                <div className="relative w-24 h-24 mb-2 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg bg-white/10 backdrop-blur-md">
+                                    <Image 
+                                        src="https://i.postimg.cc/fLVNsBZx/967-770-326-828-20260218-132606.jpg"
+                                        alt="Official Agent Logo"
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint="company logo"
+                                    />
+                                </div>
+                                <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
+                                <div className="flex items-center gap-2 opacity-80">
+                                    <MapPin className="h-4 w-4 text-white" />
+                                    <p className="text-xs font-bold text-white">حضرموت - شبام - بجانب سوبر ماركت البر</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <Button 
+                                    className="w-full h-14 rounded-2xl bg-white text-primary hover:bg-white/90 font-black text-base shadow-lg"
+                                    onClick={() => window.open('https://maps.app.goo.gl/Qs6cNBxMutA6SsvH6', '_blank')}
+                                >
+                                    <ExternalLink className="ml-2 h-5 w-5" />
+                                    عرض الموقع على الخريطة
+                                </Button>
+                                <div className="bg-black/10 rounded-2xl p-4 text-center">
+                                    <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1 text-white">ساعات العمل</p>
+                                    <p className="text-base font-black leading-relaxed text-white">
+                                        الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
+                                        الفترة المسائية: 4:00 عصراً - 9:00 مساءً
+                                    </p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

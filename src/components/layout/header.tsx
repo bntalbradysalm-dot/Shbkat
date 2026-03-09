@@ -31,18 +31,17 @@ const Header = () => {
     const day = now.getDate();
     const hour = now.getHours();
 
-    // Ramadan Logic: Feb 19 to March 17
-    const isRamadan = (month === 2 && day >= 19) || (month === 3 && day <= 17);
-    // Eid Logic: March 18 to March 21
-    const isEid = (month === 3 && day >= 18 && day <= 21);
-
-    if (isRamadan) {
-      setGreeting('رمضان مبارك');
-    } else if (isEid) {
+    // تحديث منطق التحية بناءً على طلب المستخدم
+    if (month === 3 && day <= 18) {
+      // من الآن وحتى 18 مارس (قبل 19 مارس)
+      setGreeting('خواتيم مباركة');
+    } else if (month === 3 && day >= 19 && day <= 23) {
+      // من 19 مارس وحتى 23 مارس
       setGreeting('عيد سعيد');
     } else {
-      if (hour < 12) setGreeting('صباح الخير');
-      else setGreeting('مساء الخير');
+      // باقي الأيام تحية حسب الوقت
+      if (hour < 12) setGreeting('صباحك جميل');
+      else setGreeting('مساءك جميل');
     }
   }, []);
 

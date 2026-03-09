@@ -287,7 +287,7 @@ export default function CombinedNetworksPage() {
             
             const commission = Math.ceil(selectedCategory.price * 0.10);
             const payoutAmount = selectedCategory.price - commission;
-            const ownerId = selectedNetwork.ownerId;
+            const ownerId = selectedNetwork.ownerId || 'admin';
 
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { 
@@ -324,11 +324,11 @@ export default function CombinedNetworksPage() {
                 });
             }
 
-            // 5. سجل الكروت المباعة (الحالة: مكتملة للتحويل التلقائي)
+            // 5. سجل الكروت المباعة للإدارة (الحالة: مكتملة للتحويل التلقائي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id,
-                ownerId: ownerId || 'admin',
+                ownerId: ownerId,
                 networkName: selectedNetwork.name,
                 categoryId: selectedCategory.id,
                 categoryName: selectedCategory.name,
@@ -341,7 +341,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '',
                 soldTimestamp: now,
-                payoutStatus: 'completed' // نظام تلقائي
+                payoutStatus: 'completed' 
             });
 
             await batch.commit();
@@ -377,7 +377,9 @@ export default function CombinedNetworksPage() {
             setPurchasedCard(cardData);
         }
         
+        // إغلاق المنبثقات السابقة عند النجاح
         setShowConfirmPurchase(null);
+        setSelectedNetwork(null);
         audioRef.current?.play().catch(() => {});
     } catch (error: any) {
         console.error("Purchase execution error:", error);

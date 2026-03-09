@@ -236,10 +236,10 @@ export default function TopUpPage() {
                                 <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md mb-2">
                                     <Building2 className="h-8 w-8 text-white" />
                                 </div>
-                                <h3 className="text-xl font-black">مكتب ستار ميديا للاعلان والتسويق</h3>
+                                <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
                                 <div className="flex items-center gap-2 opacity-80">
                                     <MapPin className="h-4 w-4" />
-                                    <p className="text-xs font-bold">حضرموت - شبام - بجانب سوبر ماركت البر</p>
+                                    <p className="text-xs font-bold text-white">حضرموت - شبام - بجانب سوبر ماركت البر</p>
                                 </div>
                             </div>
 
@@ -253,7 +253,10 @@ export default function TopUpPage() {
                                 </Button>
                                 <div className="bg-black/10 rounded-2xl p-4 text-center">
                                     <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">ساعات العمل</p>
-                                    <p className="text-sm font-black">من السبت إلى الخميس: 8 صباحاً - 9 مساءً</p>
+                                    <p className="text-xs font-black leading-relaxed text-white">
+                                        الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
+                                        الفترة المسائية: 4:00 عصراً - 9:00 مساءً
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>

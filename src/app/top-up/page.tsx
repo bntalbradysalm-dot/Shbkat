@@ -233,12 +233,18 @@ export default function TopUpPage() {
                     <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
                         <CardContent className="p-6 space-y-6">
                             <div className="flex flex-col items-center text-center gap-2">
-                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md mb-2">
-                                    <Building2 className="h-8 w-8 text-white" />
+                                <div className="relative w-24 h-24 mb-2 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg bg-white/10 backdrop-blur-md">
+                                    <Image 
+                                        src="https://i.postimg.cc/fLVNsBZx/967-770-326-828-20260218-132606.jpg"
+                                        alt="Official Agent Logo"
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint="company logo"
+                                    />
                                 </div>
                                 <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
                                 <div className="flex items-center gap-2 opacity-80">
-                                    <MapPin className="h-4 w-4" />
+                                    <MapPin className="h-4 w-4 text-white" />
                                     <p className="text-xs font-bold text-white">حضرموت - شبام - بجانب سوبر ماركت البر</p>
                                 </div>
                             </div>
@@ -252,8 +258,8 @@ export default function TopUpPage() {
                                     عرض الموقع على الخريطة
                                 </Button>
                                 <div className="bg-black/10 rounded-2xl p-4 text-center">
-                                    <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">ساعات العمل</p>
-                                    <p className="text-sm font-black leading-relaxed text-white">
+                                    <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1 text-white">ساعات العمل</p>
+                                    <p className="text-base font-black leading-relaxed text-white">
                                         الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
                                         الفترة المسائية: 4:00 عصراً - 9:00 مساءً
                                     </p>

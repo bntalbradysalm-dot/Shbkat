@@ -12,6 +12,7 @@ import {
   ArrowLeftRight,
   Heart,
   Gamepad2,
+  Ship,
 } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
@@ -26,6 +27,7 @@ const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { name: 'بندر عدن', icon: Ship, href: '/aden-port' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
@@ -68,7 +70,7 @@ export function ServiceGrid() {
   return (
     <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-5">
       
-      {/* 9 Services Grid (3x3) - Compact Height */}
+      {/* 10 Services Grid (3x3+1) */}
       <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem 

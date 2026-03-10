@@ -12,12 +12,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'رقم المشترك مطلوب' }, { status: 400 });
     }
 
-    // إضافة بيانات تجريبية للرقم 592 بناءً على طلب المستخدم للمعاينة
+    // بيانات تجريبية للمعاينة بناءً على طلب المستخدم
+    if (number === '29825') {
+      return NextResponse.json({
+        success: true,
+        subscriber: 'فهد عبيد حم', 
+        subscriber_id: 94588 
+      });
+    }
+
+    // إبقاء الرقم 592 كخيار تجريبي إضافي
     if (number === '592') {
       return NextResponse.json({
         success: true,
-        subscriber: 'محمد راضي ربيع باشادي', // الاسم المطلوب للمعاينة
-        subscriber_id: 94588 // معرف تجريبي للمعاينة (تم تحديثه بناءً على طلب المستخدم)
+        subscriber: 'محمد راضي ربيع باشادي',
+        subscriber_id: 94588
       });
     }
 
@@ -48,8 +57,8 @@ export async function POST(req: Request) {
       const subscriberData = data.result[0];
       return NextResponse.json({
         success: true,
-        subscriber: subscriberData.name, // الاسم الرباعي من المنظومة
-        subscriber_id: subscriberData.id // المعرف الرقمي المطلوب لعملية التجديد
+        subscriber: subscriberData.name, 
+        subscriber_id: subscriberData.id 
       });
     }
 

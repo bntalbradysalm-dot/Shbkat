@@ -22,11 +22,11 @@ export async function POST(req: Request) {
         jsonrpc: "2.0",
         method: "call",
         params: {
-          model: "renewal.proces",
+          model: "subscriber", // التحديث للموديل الصحيح للمشتركين
           method: "search_read",
-          args: [[["subscriber", "ilike", number]]],
+          args: [[["number", "=", number]]], // البحث برقم المشترك الفعلي
           kwargs: {
-            fields: ["subscriber"]
+            fields: ["name", "number"]
           }
         },
         id: 1
@@ -36,10 +36,11 @@ export async function POST(req: Request) {
     const data = await response.json();
 
     if (data.result && data.result.length > 0) {
+      const subscriberData = data.result[0];
       return NextResponse.json({
         success: true,
-        subscriber: data.result[0].subscriber[1], // display_name
-        subscriber_id: data.result[0].subscriber[0] // id
+        subscriber: subscriberData.name, // الاسم الرباعي
+        subscriber_id: subscriberData.id // المعرف الرقمي المطلوب لعملية التجديد
       });
     }
 

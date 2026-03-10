@@ -103,7 +103,7 @@ export default function AdenPortPage() {
       if (data.success) {
         setSubscriberInfo({ id: data.subscriber_id, name: data.subscriber });
       } else {
-        toast({ variant: 'destructive', title: 'غير موجود', description: data.message || 'المشترك غير موجود' });
+        toast({ variant: 'destructive', title: 'غير موجود', description: data.message || 'المشترك غير موجود في قاعدة البيانات' });
       }
     } catch (e) {
       toast({ variant: 'destructive', title: 'خطأ', description: 'فشل الاتصال بالخدمة' });
@@ -165,7 +165,7 @@ export default function AdenPortPage() {
             <CardContent className="p-8 space-y-6">
               <div>
                 <h2 className="text-2xl font-black text-green-600">تم التجديد بنجاح</h2>
-                <p className="text-sm text-muted-foreground mt-1">بندر عدن - منظومة الوادي</p>
+                <p className="text-sm text-muted-foreground mt-1">بندر عدن - نظام التجديد المباشر</p>
               </div>
 
               <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -229,7 +229,7 @@ export default function AdenPortPage() {
                 type="tel"
                 placeholder="مثال: 29825"
                 value={subscriberNumber}
-                onChange={(e) => setSubscriberNumber(e.target.value)}
+                onChange={(e) => setSubscriberNumber(e.target.value.replace(/\D/g, ''))}
                 className="text-center font-black text-xl h-14 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary"
               />
               <Hash className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
@@ -255,7 +255,7 @@ export default function AdenPortPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 text-center">
-                <p className="text-[10px] font-bold text-muted-foreground mb-1">اسم المشترك الرباعي</p>
+                <p className="text-[10px] font-bold text-muted-foreground mb-1">الاسم الرباعي</p>
                 <h3 className="text-lg font-black text-foreground">{subscriberInfo.name}</h3>
                 <p className="text-xs font-mono font-bold text-primary mt-1">ID: {subscriberInfo.id}</p>
               </CardContent>

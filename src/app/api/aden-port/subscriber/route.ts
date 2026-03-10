@@ -12,6 +12,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'رقم المشترك مطلوب' }, { status: 400 });
     }
 
+    // إضافة بيانات تجريبية للرقم 592 بناءً على طلب المستخدم للمعاينة
+    if (number === '592') {
+      return NextResponse.json({
+        success: true,
+        subscriber: 'محمد راضي ربيع باشادي', // الاسم المطلوب للمعاينة
+        subscriber_id: 99999 // معرف تجريبي للمعاينة
+      });
+    }
+
     const response = await fetch(ODOO_URL, {
       method: "POST",
       headers: {
@@ -39,7 +48,7 @@ export async function POST(req: Request) {
       const subscriberData = data.result[0];
       return NextResponse.json({
         success: true,
-        subscriber: subscriberData.name, // الاسم الرباعي
+        subscriber: subscriberData.name, // الاسم الرباعي من المنظومة
         subscriber_id: subscriberData.id // المعرف الرقمي المطلوب لعملية التجديد
       });
     }

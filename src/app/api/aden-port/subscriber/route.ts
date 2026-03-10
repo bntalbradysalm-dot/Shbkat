@@ -22,9 +22,9 @@ export async function POST(req: Request) {
         jsonrpc: "2.0",
         method: "call",
         params: {
-          model: "subscriber", // التحديث للموديل الصحيح للمشتركين
+          model: "subscriber",
           method: "search_read",
-          args: [[["number", "=", number]]], // البحث برقم المشترك الفعلي
+          args: [[["number", "=", number]]],
           kwargs: {
             fields: ["name", "number"]
           }

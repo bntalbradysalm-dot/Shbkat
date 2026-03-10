@@ -67,7 +67,8 @@ export async function POST(req: Request) {
       transactionDate: now,
       amount: price,
       transactionType: 'تجديد بندر عدن',
-      notes: `تجديد باقة ${packageName} للمشترك: ${subscriberName}`
+      notes: `تجديد باقة ${packageName} للمشترك: ${subscriberName}`,
+      subscriberName: subscriberName
     });
 
     const notifRef = doc(collection(firestore, 'users', userId, 'notifications'));

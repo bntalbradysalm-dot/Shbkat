@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         subscriber: 'محمد راضي ربيع باشادي', // الاسم المطلوب للمعاينة
-        subscriber_id: 99999 // معرف تجريبي للمعاينة
+        subscriber_id: 94588 // معرف تجريبي للمعاينة (تم تحديثه بناءً على طلب المستخدم)
       });
     }
 

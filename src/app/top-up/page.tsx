@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,15 +69,10 @@ const QutaibiDirectForm = ({ onToggleTransactions }: { onToggleTransactions: () 
                     <div className="bg-white rounded-full p-1.5 w-11 h-11 flex items-center justify-center shadow-lg">
                         <div className="relative w-8 h-8">
                             <Image 
-                                src="https://i.postimg.cc/Njmxshcy/qutaibi-icon.png" 
-                                alt="Q" 
+                                src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
+                                alt="Qutaibi" 
                                 fill 
                                 className="object-contain"
-                                onError={(e) => {
-                                    // Fallback if icon fails
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = "https://placehold.co/40x40/A3D133/white?text=Q";
-                                }}
                             />
                         </div>
                     </div>
@@ -134,6 +130,7 @@ export default function TopUpPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const { user } = useUser();
+    const router = useRouter();
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
     const [amount, setAmount] = useState('');

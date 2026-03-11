@@ -106,7 +106,7 @@ const CustomLoader = () => (
   <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
     <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white p-1">
         <Image 
-            src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
+            src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" 
             alt="Star Mobile Logo" 
             fill
             className="object-cover"
@@ -393,7 +393,7 @@ export default function AccountPage() {
 
     {/* Developer Dialog */}
     <Dialog open={isDevDialogOpen} onOpenChange={setIsDevDialogOpen}>
-        <DialogContent className="rounded-[40px] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="rounded-[40px] max-sm overflow-hidden p-0 border-none shadow-2xl">
             <div className="bg-mesh-gradient h-32 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
                     <Image 

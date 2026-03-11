@@ -74,7 +74,7 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-white/20 rounded-[40px] blur-2xl animate-pulse" />
                 <div className="relative w-full h-full overflow-hidden rounded-[36px] border-4 border-white/30 shadow-2xl bg-white p-1">
                     <Image 
-                        src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
+                        src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" 
                         alt="Star Mobile Logo" 
                         fill
                         className="object-cover"

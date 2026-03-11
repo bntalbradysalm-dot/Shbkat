@@ -99,7 +99,7 @@ const Header = () => {
     <header className="flex items-center justify-between p-4 bg-transparent text-foreground relative h-24">
       <div className="flex items-center gap-3 flex-1 px-2">
         <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-border/50 shadow-sm shrink-0">
-          <Image src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" alt="Logo" fill className="object-cover" />
+          <Image src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" alt="Logo" fill className="object-cover" />
         </div>
         <div className="flex flex-col items-start justify-center">
           {isUserLoading ? (

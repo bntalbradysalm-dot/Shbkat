@@ -1,10 +1,12 @@
 
 import { NextResponse } from 'next/server';
 import { initializeServerFirebase } from '@/firebase/server-init';
-import { doc, getDoc, updateDoc, increment, collection, addDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, increment, collection, writeBatch } from 'firebase/firestore';
 
-const ODOO_URL = 'https://api.alwaadi.net/jsonrpc';
-const ODOO_API_KEY = 'e3dc910be14a0f1ea325d6a0794a0e586227afae';
+const ODOO_BASE = 'https://api.alwaadi.net';
+const ODOO_DB = 'admin';
+const ODOO_USER = '770326M';
+const ODOO_PASS = '84a167f4e26e831ba4bea62ce3c65b1f54cf3656';
 
 export async function POST(req: Request) {
   try {
@@ -27,13 +29,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'رصيدك غير كافٍ لإتمام العملية' }, { status: 400 });
     }
 
-    // 1. تنفيذ التجديد في Odoo
-    const odooResponse = await fetch(ODOO_URL, {
+    // 1. تسجيل الدخول للحصول على الجلسة
+    const loginResponse = await fetch(`${ODOO_BASE}/web/session/authenticate`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${ODOO_API_KEY}`
-      },
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        params: {
+          db: ODOO_DB,
+          login: ODOO_USER,
+          password: ODOO_PASS
+        }
+      })
+    });
+
+    const sessionData = await loginResponse.json();
+    if (!sessionData.result) {
+        return NextResponse.json({ error: 'فشل التوثيق مع المنظومة' }, { status: 401 });
+    }
+
+    // 2. تنفيذ التجديد في Odoo عبر dataset/call_kw
+    const odooResponse = await fetch(`${ODOO_BASE}/web/dataset/call_kw`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0",
         method: "call",
@@ -55,7 +73,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: odooData.error.message || 'فشل التجديد في المنظومة' }, { status: 400 });
     }
 
-    // 2. تحديث الرصيد وتسجيل العملية في Firebase
+    // 3. تحديث الرصيد وتسجيل العملية في Firebase
     const batch = writeBatch(firestore);
     const now = new Date().toISOString();
 

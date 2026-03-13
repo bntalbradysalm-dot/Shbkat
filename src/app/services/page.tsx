@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -71,6 +70,7 @@ type CombinedNetwork = {
     phoneNumber?: string;
     ownerId?: string;
     isLocal: boolean;
+    logo?: string;
 };
 
 type CardCategory = {
@@ -161,6 +161,7 @@ export default function CombinedNetworksPage() {
             name: n.name,
             location: n.desc || 'شبكة API',
             isLocal: false,
+            logo: n.logo,
           })));
         }
       } catch (err) {
@@ -252,7 +253,13 @@ export default function CombinedNetworksPage() {
       if (fav) deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'favorites', fav.id));
     } else {
       addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'favorites'), {
-        userId: user.uid, targetId: network.id, name: network.name, location: network.location, favoriteType: 'Network', isLocal: network.isLocal
+        userId: user.uid, 
+        targetId: network.id, 
+        name: network.name, 
+        location: network.location, 
+        favoriteType: 'Network', 
+        isLocal: network.isLocal,
+        logo: network.logo || ''
       });
     }
   };
@@ -440,8 +447,14 @@ export default function CombinedNetworksPage() {
                         onClick={() => handleNetworkClick(net)}
                     >
                         <CardContent className="p-4 flex items-center justify-between gap-2">
-                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                                <Wifi className="h-6 w-6 text-white" />
+                            <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 w-12 h-12 flex items-center justify-center overflow-hidden">
+                                {net.logo ? (
+                                    <div className="relative w-full h-full">
+                                        <Image src={net.logo} alt={net.name} fill className="object-contain" unoptimized />
+                                    </div>
+                                ) : (
+                                    <Wifi className="h-6 w-6 text-white" />
+                                )}
                             </div>
                             
                             <div className="flex-1 text-right mx-2 space-y-0.5 overflow-hidden">
@@ -470,8 +483,14 @@ export default function CombinedNetworksPage() {
                 <DialogHeader className="pt-12 pb-8 px-8 text-white text-center relative z-10">
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">استعراض فئات الكروت المتاحة للشبكة المختارة</DialogDescription>
-                    <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
-                        <Wifi className="h-7 w-7 text-white" />
+                    <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl overflow-hidden">
+                        {selectedNetwork.logo ? (
+                            <div className="relative w-full h-full">
+                                <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
+                            </div>
+                        ) : (
+                            <Wifi className="h-7 w-7 text-white" />
+                        )}
                     </div>
                     <h2 className="text-xl font-black text-white drop-shadow-md">{selectedNetwork.name}</h2>
                     <p className="text-[10px] text-white/70 font-bold mt-1 bg-white/10 py-1 px-3 rounded-full border border-white/5 inline-block">{selectedNetwork.location}</p>
@@ -495,10 +514,16 @@ export default function CombinedNetworksPage() {
                                     <div className="relative rounded-[26px] p-3.5 flex items-center justify-between gap-4 h-full transition-colors bg-white/95 dark:bg-slate-900/95 hover:bg-primary/[0.02]">
                                         <div className="flex items-center gap-3">
                                             <div className={cn(
-                                                "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white",
+                                                "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white overflow-hidden",
                                                 gradient
                                             )}>
-                                                <Wifi className="h-5 w-5" />
+                                                {selectedNetwork.logo ? (
+                                                    <div className="relative w-full h-full p-1.5 bg-white/10">
+                                                        <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
+                                                    </div>
+                                                ) : (
+                                                    <Wifi className="h-5 w-5" />
+                                                )}
                                             </div>
                                             <div className="text-right space-y-0.5">
                                                 <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>

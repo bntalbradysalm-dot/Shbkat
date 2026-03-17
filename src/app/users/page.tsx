@@ -333,12 +333,11 @@ export default function UsersPage() {
 
   // Debt Functions
   const handleAddDebt = () => {
-    if (!newDebtName || !newDebtAmount || !debtsCollection) return;
+    if (!newDebtName || !newDebtAmount || !firestore) return;
     const amount = parseFloat(newDebtAmount);
     if (isNaN(amount)) return;
 
-    // Use addDocumentNonBlocking properly
-    const debtsRef = collection(firestore!, 'debts');
+    const debtsRef = collection(firestore, 'debts');
     addDocumentNonBlocking(debtsRef, {
         customerName: newDebtName,
         amount: amount,

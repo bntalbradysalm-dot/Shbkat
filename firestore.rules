@@ -7,7 +7,6 @@ service cloud.firestore {
      * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
      * الرقم: 770326828
      * المعرف المعتمد: wsy8bUcULSYX2J9Q9WyisiFX5ki2
-     * التحديث: PERMISSIVE_ADMIN_V18
      */
     function isAdmin() {
       return request.auth != null && 
@@ -23,7 +22,7 @@ service cloud.firestore {
     }
     
     /**
-     * الديون - مسموح للمدير فقط بالوصول إليها بشكل صريح
+     * الديون - مسموح للمدير فقط بالوصول إليها بشكل صريح وقوي
      */
     match /debts/{debtId} {
       allow read, write: if isAdmin();

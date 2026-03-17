@@ -82,7 +82,7 @@
     "Debt": {
       "title": "Debt",
       "type": "object",
-      "description": "Customer debts tracking.",
+      "description": "Customer debts tracking for external (non-app) customers.",
       "properties": {
         "id": { "type": "string" },
         "customerName": { "type": "string" },
@@ -134,7 +134,7 @@
     },
     "/debts/{debtId}": {
       "schema": { "$ref": "#/backend/entities/Debt" },
-      "description": "External customer debts."
+      "description": "External customer debts tracking."
     },
     "/withdrawalRequests/{reqId}": {
       "description": "Network owner payout requests."

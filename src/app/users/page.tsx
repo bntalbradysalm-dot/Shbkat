@@ -46,7 +46,8 @@ import {
   TrendingDown,
   Save,
   X,
-  UserPlus
+  UserPlus,
+  CircleDollarSign
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -375,7 +376,7 @@ export default function UsersPage() {
             <div className="grid grid-cols-3 gap-2">
                 <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
-                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد اشحن لي</CardTitle>
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد الوكلاء</CardTitle>
                         <RefreshCw 
                             className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
                             onClick={fetchAllBalances}
@@ -384,25 +385,25 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(agentBalance || '0') + parseFloat(baityBalance || '0')).toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl">
+                <Card 
+                    className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-3xl cursor-pointer"
+                    onClick={() => setIsDebtsDialogOpen(true)}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
-                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد بيتي</CardTitle>
-                        <RefreshCw 
-                            className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
-                            onClick={fetchAllBalances}
-                        />
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">الديون</CardTitle>
+                        <PlusCircle className="h-2.5 w-2.5 opacity-50" />
                     </CardHeader>
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(baityBalance || '0').toLocaleString('en-US'))}
+                                {totalDebts.toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -431,27 +432,14 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1 mb-1">
                         <BarChart3 className="h-2.5 w-2.5 text-primary opacity-70" />
-                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">المجمع</span>
+                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">الرصيد المجمع</span>
                     </div>
                     <div className="text-[10px] font-black text-primary truncate">
-                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance - totalDebts).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
-                    </div>
-                </div>
-
-                <div 
-                    className="space-y-1 text-right border-l border-muted-foreground/10 px-1 cursor-pointer hover:bg-orange-500/5 transition-colors rounded-lg"
-                    onClick={() => setIsDebtsDialogOpen(true)}
-                >
-                    <div className="flex items-center gap-1 mb-1">
-                        <Banknote className="h-2.5 w-2.5 text-orange-600 opacity-70" />
-                        <span className="text-[7px] font-black text-orange-600/70 uppercase tracking-tight">الديون</span>
-                    </div>
-                    <div className="text-[10px] font-black text-orange-600 truncate">
-                        {totalDebts.toLocaleString('en-US')}
+                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
                 
@@ -459,7 +447,7 @@ export default function UsersPage() {
                     <div className="flex items-center gap-1 mb-1">
                         {netProfit >= 0 ? <TrendingUp className="h-2.5 w-2.5 text-green-600" /> : <TrendingDown className="h-2.5 w-2.5 text-red-600" />}
                         <span className={cn("text-[7px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
-                            {netProfit >= 0 ? 'الأرباح' : 'العجز'}
+                            {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
                         </span>
                     </div>
                     <div className={cn("text-[10px] font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
@@ -694,9 +682,10 @@ export default function UsersPage() {
       {/* Debts Management Dialog */}
       <Dialog open={isDebtsDialogOpen} onOpenChange={setIsDebtsDialogOpen}>
         <DialogContent className="rounded-[40px] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
-            <div className="bg-mesh-gradient h-24 flex items-center justify-center">
-                <h2 className="text-xl font-black text-white">إدارة الديون الخارجية</h2>
-            </div>
+            <DialogHeader className="bg-mesh-gradient h-24 flex items-center justify-center p-0">
+                <DialogTitle className="text-xl font-black text-white">إدارة الديون الخارجية</DialogTitle>
+                <DialogDescription className="sr-only">إضافة ومتابعة ديون العملاء الخارجيين</DialogDescription>
+            </DialogHeader>
             <div className="p-6 space-y-6">
                 <div className="space-y-4">
                     <div className="space-y-1.5">
@@ -755,14 +744,14 @@ export default function UsersPage() {
                     </div>
                 </div>
                 
-                <Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setIsDebtsDialogOpen(false)}>إغلاق</Button>
+                <div className="pt-2">
+                    <DialogClose asChild>
+                        <Button variant="outline" className="w-full h-12 rounded-2xl font-black">إغلاق</Button>
+                    </DialogClose>
+                </div>
             </div>
         </DialogContent>
       </Dialog>
     </>
   );
 }
-
-const CircleDollarSign = ({ className }: { className?: string }) => (
-    <svg className={cn("lucide lucide-circle-dollar-sign", className)} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
-);

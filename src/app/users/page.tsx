@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,8 @@ import {
   TrendingUp,
   TrendingDown,
   Save,
-  X
+  X,
+  UserPlus
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +73,13 @@ type AppSettings = {
     boxBalance?: number;
 };
 
+type Debt = {
+    id: string;
+    personName: string;
+    amount: number;
+    timestamp: string;
+};
+
 const filterOptions = [
     { label: 'الكل', value: 'all', icon: LayoutGrid },
     { label: 'لديه رصيد', value: 'with-balance', icon: Wallet },
@@ -96,6 +104,11 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
+  // Debts State
+  const [isDebtsDialogOpen, setIsDebtsDialogOpen] = useState(false);
+  const [newDebtName, setNewDebtName] = useState('');
+  const [newDebtAmount, setNewDebtAmount] = useState('');
+
   // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
@@ -110,6 +123,12 @@ export default function UsersPage() {
     [firestore]
   );
   const { data: users, isLoading } = useCollection<User>(usersCollection);
+
+  const debtsCollection = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'debts') : null),
+    [firestore]
+  );
+  const { data: debts, isLoading: isLoadingDebts } = useCollection<Debt>(debtsCollection);
 
   const settingsDocRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
@@ -126,6 +145,11 @@ export default function UsersPage() {
       return acc + (user.balance ?? 0);
     }, 0);
   }, [users]);
+
+  const totalDebts = useMemo(() => {
+    if (!debts) return 0;
+    return debts.reduce((acc, debt) => acc + (debt.amount || 0), 0);
+  }, [debts]);
 
   const fetchAllBalances = useCallback(async () => {
     setIsFetchingBalances(true);
@@ -175,9 +199,10 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
-    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
+    const debtsVal = totalDebts;
+    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box + debtsVal;
     return total;
-  }, [agentBalance, baityBalance, boxBalance]);
+  }, [agentBalance, baityBalance, boxBalance, totalDebts]);
 
   const netProfit = useMemo(() => {
     return combinedProvidersBalance - totalUsersBalance;
@@ -304,6 +329,32 @@ export default function UsersPage() {
     }
   };
 
+  // Debts Handlers
+  const handleAddDebt = async () => {
+    if (!firestore || !newDebtName || !newDebtAmount) return;
+    const amt = parseFloat(newDebtAmount);
+    if (isNaN(amt) || amt <= 0) return;
+
+    try {
+        await addDocumentNonBlocking(collection(firestore, 'debts'), {
+            personName: newDebtName,
+            amount: amt,
+            timestamp: new Date().toISOString()
+        });
+        toast({ title: "تمت الإضافة", description: "تم تسجيل الدين بنجاح." });
+        setNewDebtName('');
+        setNewDebtAmount('');
+    } catch (e) {
+        toast({ variant: "destructive", title: "فشل الإضافة" });
+    }
+  };
+
+  const handleDeleteDebt = (id: string) => {
+    if (!firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, 'debts', id));
+    toast({ title: "تم الحذف", description: "تم حذف سجل الدين." });
+  };
+
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -380,28 +431,39 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <BarChart3 className="h-3 w-3 text-primary opacity-70" />
-                        <span className="text-[8px] font-black text-primary/70 uppercase tracking-tight">الرصيد المجمع</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <BarChart3 className="h-2.5 w-2.5 text-primary opacity-70" />
+                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">المجمع</span>
                     </div>
-                    <div className="text-xs font-black text-primary truncate">
-                        {isFetchingBalances ? <Skeleton className="h-3 w-12" /> : combinedProvidersBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })} 
-                        <span className="text-[7px] mr-0.5 opacity-70">ر.ي</span>
+                    <div className="text-[10px] font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance - totalDebts).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
+                    </div>
+                </div>
+
+                <div 
+                    className="space-y-1 text-right border-l border-muted-foreground/10 px-1 cursor-pointer hover:bg-orange-500/5 transition-colors rounded-lg"
+                    onClick={() => setIsDebtsDialogOpen(true)}
+                >
+                    <div className="flex items-center gap-1 mb-1">
+                        <Banknote className="h-2.5 w-2.5 text-orange-600 opacity-70" />
+                        <span className="text-[7px] font-black text-orange-600/70 uppercase tracking-tight">الديون</span>
+                    </div>
+                    <div className="text-[10px] font-black text-orange-600 truncate">
+                        {totalDebts.toLocaleString('en-US')}
                     </div>
                 </div>
                 
                 <div className="space-y-1 text-right px-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
-                        <span className={cn("text-[8px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
-                            {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
+                    <div className="flex items-center gap-1 mb-1">
+                        {netProfit >= 0 ? <TrendingUp className="h-2.5 w-2.5 text-green-600" /> : <TrendingDown className="h-2.5 w-2.5 text-red-600" />}
+                        <span className={cn("text-[7px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
+                            {netProfit >= 0 ? 'الأرباح' : 'العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-xs font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                    <div className={cn("text-[10px] font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
                         {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
-                        <span className="text-[7px] mr-0.5 opacity-70">ر.ي</span>
                     </div>
                 </div>
             </Card>
@@ -628,6 +690,79 @@ export default function UsersPage() {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Debts Management Dialog */}
+      <Dialog open={isDebtsDialogOpen} onOpenChange={setIsDebtsDialogOpen}>
+        <DialogContent className="rounded-[40px] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
+            <div className="bg-mesh-gradient h-24 flex items-center justify-center">
+                <h2 className="text-xl font-black text-white">إدارة الديون الخارجية</h2>
+            </div>
+            <div className="p-6 space-y-6">
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black text-muted-foreground pr-1">اسم الشخص</Label>
+                        <div className="relative">
+                            <Input 
+                                value={newDebtName}
+                                onChange={e => setNewDebtName(e.target.value)}
+                                placeholder="اسم العميل المستلف" 
+                                className="h-12 rounded-2xl pr-10"
+                            />
+                            <UserPlus className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black text-muted-foreground pr-1">المبلغ المستحق</Label>
+                        <div className="relative">
+                            <Input 
+                                type="number"
+                                value={newDebtAmount}
+                                onChange={e => setNewDebtAmount(e.target.value)}
+                                placeholder="0.00" 
+                                className="h-12 rounded-2xl pr-10 text-right font-black"
+                            />
+                            <CircleDollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+                        </div>
+                    </div>
+                    <Button onClick={handleAddDebt} className="w-full h-12 rounded-2xl font-black shadow-lg">إضافة سجل دين</Button>
+                </div>
+
+                <div className="border-t pt-4">
+                    <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">قائمة الديون المسجلة</h3>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
+                        {isLoadingDebts ? (
+                            <Skeleton className="h-12 w-full rounded-2xl" />
+                        ) : !debts || debts.length === 0 ? (
+                            <p className="text-center text-xs text-muted-foreground py-10 italic">لا توجد ديون مسجلة حالياً</p>
+                        ) : (
+                            debts.map(debt => (
+                                <div key={debt.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl border border-border/50">
+                                    <div className="text-right">
+                                        <p className="font-bold text-sm">{debt.personName}</p>
+                                        <p className="text-[10px] font-black text-primary">{debt.amount.toLocaleString()} ر.ي</p>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-xl"
+                                        onClick={() => handleDeleteDebt(debt.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+                
+                <Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setIsDebtsDialogOpen(false)}>إغلاق</Button>
+            </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
+const CircleDollarSign = ({ className }: { className?: string }) => (
+    <svg className={cn("lucide lucide-circle-dollar-sign", className)} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+);

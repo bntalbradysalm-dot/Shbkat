@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -30,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -310,7 +310,7 @@ export function ServiceGrid() {
                             toast({ title: "تم النسخ" });
                         }}
                     >
-                        <Copy className="ml-2 h-4 w-4" /> نسخ الكرت
+                        <CopyIcon className="ml-2 h-4 w-4" /> نسخ الكرت
                     </Button>
                     <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => setPurchasedCard(null)}>إغلاق</Button>
                 </CardContent>
@@ -323,7 +323,7 @@ export function ServiceGrid() {
   );
 }
 
-function Copy({ className }: { className?: string }) {
+function CopyIcon({ className }: { className?: string }) {
     return (
         <svg className={cn("h-4 w-4", className)} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>

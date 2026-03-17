@@ -90,18 +90,6 @@
         "transactionDate": { "type": "string", "format": "date-time" },
         "notes": { "type": "string" }
       }
-    },
-    "Debt": {
-      "title": "Debt",
-      "type": "object",
-      "description": "Represents an external debt for tracking purposes.",
-      "properties": {
-        "id": { "type": "string" },
-        "personName": { "type": "string" },
-        "amount": { "type": "number" },
-        "timestamp": { "type": "string", "format": "date-time" }
-      },
-      "required": ["personName", "amount"]
     }
   },
   "auth": {
@@ -131,10 +119,6 @@
     "/soldCards/{cardId}": {
       "schema": { "$ref": "#/backend/entities/SoldCard" },
       "description": "History of sold network cards."
-    },
-    "/debts/{debtId}": {
-      "schema": { "$ref": "#/backend/entities/Debt" },
-      "description": "External user debts records."
     },
     "/withdrawalRequests/{reqId}": {
       "description": "Network owner payout requests."

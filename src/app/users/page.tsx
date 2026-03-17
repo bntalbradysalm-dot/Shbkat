@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   User as UserIcon,
@@ -45,14 +44,12 @@ import {
   TrendingUp,
   TrendingDown,
   Save,
-  X,
-  UserPlus,
-  CircleDollarSign
+  X
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -72,13 +69,6 @@ type User = {
 
 type AppSettings = {
     boxBalance?: number;
-};
-
-type Debt = {
-    id: string;
-    personName: string;
-    amount: number;
-    timestamp: string;
 };
 
 const filterOptions = [
@@ -105,11 +95,6 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Debts State
-  const [isDebtsDialogOpen, setIsDebtsDialogOpen] = useState(false);
-  const [newDebtName, setNewDebtName] = useState('');
-  const [newDebtAmount, setNewDebtAmount] = useState('');
-
   // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
@@ -124,12 +109,6 @@ export default function UsersPage() {
     [firestore]
   );
   const { data: users, isLoading } = useCollection<User>(usersCollection);
-
-  const debtsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'debts') : null),
-    [firestore]
-  );
-  const { data: debts, isLoading: isLoadingDebts } = useCollection<Debt>(debtsCollection);
 
   const settingsDocRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
@@ -146,11 +125,6 @@ export default function UsersPage() {
       return acc + (user.balance ?? 0);
     }, 0);
   }, [users]);
-
-  const totalDebts = useMemo(() => {
-    if (!debts) return 0;
-    return debts.reduce((acc, debt) => acc + (debt.amount || 0), 0);
-  }, [debts]);
 
   const fetchAllBalances = useCallback(async () => {
     setIsFetchingBalances(true);
@@ -200,10 +174,9 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
-    const debtsVal = totalDebts;
-    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box + debtsVal;
+    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
     return total;
-  }, [agentBalance, baityBalance, boxBalance, totalDebts]);
+  }, [agentBalance, baityBalance, boxBalance]);
 
   const netProfit = useMemo(() => {
     return combinedProvidersBalance - totalUsersBalance;
@@ -330,32 +303,6 @@ export default function UsersPage() {
     }
   };
 
-  // Debts Handlers
-  const handleAddDebt = async () => {
-    if (!firestore || !newDebtName || !newDebtAmount) return;
-    const amt = parseFloat(newDebtAmount);
-    if (isNaN(amt) || amt <= 0) return;
-
-    try {
-        await addDocumentNonBlocking(collection(firestore, 'debts'), {
-            personName: newDebtName,
-            amount: amt,
-            timestamp: new Date().toISOString()
-        });
-        toast({ title: "تمت الإضافة", description: "تم تسجيل الدين بنجاح." });
-        setNewDebtName('');
-        setNewDebtAmount('');
-    } catch (e) {
-        toast({ variant: "destructive", title: "فشل الإضافة" });
-    }
-  };
-
-  const handleDeleteDebt = (id: string) => {
-    if (!firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, 'debts', id));
-    toast({ title: "تم الحذف", description: "تم حذف سجل الدين." });
-  };
-
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -376,7 +323,7 @@ export default function UsersPage() {
             <div className="grid grid-cols-3 gap-2">
                 <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
-                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد الوكلاء</CardTitle>
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد شحنلي</CardTitle>
                         <RefreshCw 
                             className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
                             onClick={fetchAllBalances}
@@ -385,25 +332,25 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(agentBalance || '0') + parseFloat(baityBalance || '0')).toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(agentBalance || '0').toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card 
-                    className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-3xl cursor-pointer"
-                    onClick={() => setIsDebtsDialogOpen(true)}
-                >
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
-                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">الديون</CardTitle>
-                        <PlusCircle className="h-2.5 w-2.5 opacity-50" />
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد بيتي</CardTitle>
+                        <RefreshCw 
+                            className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
+                            onClick={fetchAllBalances}
+                        />
                     </CardHeader>
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {totalDebts.toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(baityBalance || '0').toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -676,80 +623,6 @@ export default function UsersPage() {
             <DialogFooter>
                 <Button onClick={handleSaveBoxBalance} className="w-full h-12 rounded-2xl font-black bg-red-600 hover:bg-red-700">تحديث المبلغ</Button>
             </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Debts Management Dialog */}
-      <Dialog open={isDebtsDialogOpen} onOpenChange={setIsDebtsDialogOpen}>
-        <DialogContent className="rounded-[40px] max-w-sm overflow-hidden p-0 border-none shadow-2xl">
-            <DialogHeader className="bg-mesh-gradient h-24 flex items-center justify-center p-0">
-                <DialogTitle className="text-xl font-black text-white">إدارة الديون الخارجية</DialogTitle>
-                <DialogDescription className="sr-only">إضافة ومتابعة ديون العملاء الخارجيين</DialogDescription>
-            </DialogHeader>
-            <div className="p-6 space-y-6">
-                <div className="space-y-4">
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black text-muted-foreground pr-1">اسم الشخص</Label>
-                        <div className="relative">
-                            <Input 
-                                value={newDebtName}
-                                onChange={e => setNewDebtName(e.target.value)}
-                                placeholder="اسم العميل المستلف" 
-                                className="h-12 rounded-2xl pr-10"
-                            />
-                            <UserPlus className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
-                        </div>
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black text-muted-foreground pr-1">المبلغ المستحق</Label>
-                        <div className="relative">
-                            <Input 
-                                type="number"
-                                value={newDebtAmount}
-                                onChange={e => setNewDebtAmount(e.target.value)}
-                                placeholder="0.00" 
-                                className="h-12 rounded-2xl pr-10 text-right font-black"
-                            />
-                            <CircleDollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
-                        </div>
-                    </div>
-                    <Button onClick={handleAddDebt} className="w-full h-12 rounded-2xl font-black shadow-lg">إضافة سجل دين</Button>
-                </div>
-
-                <div className="border-t pt-4">
-                    <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">قائمة الديون المسجلة</h3>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                        {isLoadingDebts ? (
-                            <Skeleton className="h-12 w-full rounded-2xl" />
-                        ) : !debts || debts.length === 0 ? (
-                            <p className="text-center text-xs text-muted-foreground py-10 italic">لا توجد ديون مسجلة حالياً</p>
-                        ) : (
-                            debts.map(debt => (
-                                <div key={debt.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-2xl border border-border/50">
-                                    <div className="text-right">
-                                        <p className="font-bold text-sm">{debt.personName}</p>
-                                        <p className="text-[10px] font-black text-primary">{debt.amount.toLocaleString()} ر.ي</p>
-                                    </div>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-xl"
-                                        onClick={() => handleDeleteDebt(debt.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-                
-                <div className="pt-2">
-                    <DialogClose asChild>
-                        <Button variant="outline" className="w-full h-12 rounded-2xl font-black">إغلاق</Button>
-                    </DialogClose>
-                </div>
-            </div>
         </DialogContent>
       </Dialog>
     </>

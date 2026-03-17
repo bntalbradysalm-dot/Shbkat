@@ -15,13 +15,6 @@ service cloud.firestore {
     }
 
     /**
-     * الديون - للمدير فقط بشكل صريح وقوي لضمان عدم ظهور أخطاء صلاحيات
-     */
-    match /debts/{debtId} {
-      allow read, write: if isAdmin();
-    }
-
-    /**
      * السماح بالوصول الكامل للمدير على كل شيء في النظام
      */
     match /{document=**} {

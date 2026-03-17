@@ -130,7 +130,7 @@ export default function UsersPage() {
   const { data: users, isLoading } = useCollection<User>(usersCollection);
 
   const debtsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'debts') : null),
+    () => (firestore ? query(collection(firestore, 'debts'), orderBy('timestamp', 'desc')) : null),
     [firestore]
   );
   const { data: debts, isLoading: isLoadingDebts } = useCollection<Debt>(debtsCollection);
@@ -337,7 +337,9 @@ export default function UsersPage() {
     const amount = parseFloat(newDebtAmount);
     if (isNaN(amount)) return;
 
-    addDocumentNonBlocking(debtsCollection, {
+    // Use addDocumentNonBlocking properly
+    const debtsRef = collection(firestore!, 'debts');
+    addDocumentNonBlocking(debtsRef, {
         customerName: newDebtName,
         amount: amount,
         timestamp: new Date().toISOString()

@@ -86,6 +86,20 @@ const ServiceItem = ({
   );
 };
 
+const LanternIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg" 
+    className={cn("w-12 h-12", className)}
+  >
+    <path d="M12 2V4M12 20V22M12 4C9.23858 4 7 6.23858 7 9V15C7 17.7614 9.23858 20 12 20C14.7614 20 17 17.7614 17 15V9C17 6.23858 14.7614 4 12 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M7 9H17M7 15H17M10 4V20M14 4V20" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
+    <path d="M9 22H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="12" cy="12" r="2" fill="currentColor" className="animate-pulse" />
+  </svg>
+);
+
 export function ServiceGrid() {
   const [isEidOfferOpen, setIsEidOfferOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -102,13 +116,12 @@ export function ServiceGrid() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  // عرض خاص لباقة العيد
   const EID_OFFER = {
     name: 'باقة العيد (حصري)',
     price: 2000,
     data: '55 GB',
     validity: '30 يوم',
-    classId: 'eid_55gb_2000', // هذا معرف افتراضي سيتم استبداله عند الربط الفعلي
+    classId: 'eid_55gb_2000',
     networkName: 'شبكة الخير فورجي'
   };
 
@@ -126,13 +139,11 @@ export function ServiceGrid() {
 
     setIsProcessing(true);
     try {
-        // في الواقع، سنحتاج للبحث عن معرف الفئة الحقيقي لشبكة الخير
-        // هنا سنقوم بمحاكاة الطلب الناجح بناءً على طلب المستخدم
         const response = await fetch(`/services/networks-api/order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                classId: 345 // افترضنا أن هذا هو معرف باقة 55 جيجا لشبكة الخير
+                classId: 345 
             })
         });
 
@@ -147,10 +158,8 @@ export function ServiceGrid() {
         const batch = writeBatch(firestore);
         const now = new Date().toISOString();
 
-        // خصم الرصيد
         batch.update(userDocRef, { balance: increment(-EID_OFFER.price) });
 
-        // سجل العملية
         const txRef = doc(collection(firestore, `users/${user.uid}/transactions`));
         batch.set(txRef, {
             userId: user.uid,
@@ -181,7 +190,6 @@ export function ServiceGrid() {
   return (
     <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-5">
       
-      {/* 9 Services Grid (3x3) */}
       <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (
           <ServiceItem 
@@ -192,25 +200,23 @@ export function ServiceGrid() {
         ))}
       </div>
 
-      {/* شريط عرض شبكة الخير فورجي */}
       <div className="px-4 animate-in slide-in-from-bottom-2 duration-700">
         <button 
             onClick={() => setIsEidOfferOpen(true)}
-            className="w-full h-10 bg-gradient-to-r from-[#FECC4F] via-[#FFD97D] to-[#FECC4F] rounded-2xl flex items-center justify-between px-4 shadow-md border border-[#E6B000]/30 hover:brightness-105 transition-all group overflow-hidden relative"
+            className="w-full h-10 bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#1e40af] rounded-2xl flex items-center justify-between px-4 shadow-md border border-white/10 hover:brightness-105 transition-all group overflow-hidden relative"
         >
-            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+            <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
             <div className="flex items-center gap-2">
-                <Gift className="h-4 w-4 text-[#4A3B00] animate-bounce" />
-                <span className="text-[11px] font-black text-[#4A3B00]">عرض شبكة الخير فورجي</span>
+                <Gift className="h-4 w-4 text-white animate-bounce" />
+                <span className="text-[11px] font-black text-white">عرض شبكة الخير فورجي</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-[#4A3B00] bg-white/40 px-2 py-0.5 rounded-full">باقة العيد 🎁</span>
-                <Zap className="h-3 w-3 text-[#4A3B00] fill-[#4A3B00]" />
+                <span className="text-[10px] font-bold text-white bg-white/20 px-2 py-0.5 rounded-full">باقة العيد 🎁</span>
+                <Zap className="h-3 w-3 text-white fill-white" />
             </div>
         </button>
       </div>
 
-      {/* التعريف بالتدرج اللوني للأيقونات */}
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -220,20 +226,22 @@ export function ServiceGrid() {
         </defs>
       </svg>
 
-      {/* منبثق باقة العيد */}
       <Dialog open={isEidOfferOpen} onOpenChange={setIsEidOfferOpen}>
         <DialogContent className="max-w-[90vw] sm:max-w-sm rounded-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-slate-950">
             <div className="relative overflow-hidden">
-                {/* أجواء عيدية - زخارف خلفية */}
-                <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-[#FECC4F]/20 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
                 <div className="absolute bottom-[-20px] left-[-20px] w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" />
                 
-                <div className="bg-gradient-to-br from-[#FECC4F] to-[#E6B000] p-10 text-center relative z-10 border-b-4 border-white/20">
-                    <div className="bg-white/30 backdrop-blur-md w-20 h-20 rounded-[32px] flex items-center justify-center mx-auto mb-4 border border-white/40 shadow-xl animate-in zoom-in-50 duration-500">
-                        <Sparkles className="h-10 w-10 text-[#4A3B00]" />
+                <div className="bg-gradient-to-br from-[#1e40af] to-[#1e3a8a] p-10 text-center relative z-10 border-b-4 border-white/20">
+                    <div className="absolute top-2 left-6 animate-swing">
+                        <LanternIcon className="text-[#FECC4F]/80" />
                     </div>
-                    <h2 className="text-3xl font-black text-[#4A3B00] drop-shadow-sm mb-1">باقة العيد</h2>
-                    <p className="text-[11px] font-bold text-[#4A3B00]/70 uppercase tracking-[0.2em]">كل عام وأنتم بخير</p>
+                    <div className="absolute top-2 right-6 animate-swing" style={{ animationDelay: '0.5s' }}>
+                        <LanternIcon className="text-[#FECC4F]/80" />
+                    </div>
+
+                    <h2 className="text-3xl font-black text-white drop-shadow-md mb-1 mt-4">باقة العيد</h2>
+                    <p className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">كل عام وأنتم بخير</p>
                 </div>
 
                 <div className="p-8 space-y-6 relative z-10">
@@ -264,7 +272,6 @@ export function ServiceGrid() {
         </DialogContent>
       </Dialog>
 
-      {/* منبثق التأكيد */}
       <Dialog open={isConfirming} onOpenChange={setIsConfirming}>
         <DialogContent className="max-w-[85vw] sm:max-w-xs rounded-[32px] p-6 text-center z-[10000]">
             <DialogHeader>
@@ -287,7 +294,6 @@ export function ServiceGrid() {
         </DialogContent>
       </Dialog>
 
-      {/* منبثق النجاح */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />

@@ -54,7 +54,7 @@ import {
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -638,7 +638,7 @@ export default function UsersPage() {
                         </div>
                         <div className="grid grid-cols-1 gap-3">
                             <Input 
-                                placeholder="اسم العميل" 
+                                placeholder="اسم العميل (اكتبه يدوياً)" 
                                 value={newDebtName} 
                                 onChange={e => setNewDebtName(e.target.value)}
                                 className="h-11 rounded-xl border-orange-200 focus-visible:ring-orange-500"

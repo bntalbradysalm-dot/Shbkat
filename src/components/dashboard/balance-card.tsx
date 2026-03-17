@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe, PhoneCall, Zap, Ship } from "lucide-react";
+import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe, PhoneCall, Zap } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -29,7 +28,6 @@ const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-  { id: 'aden-port', name: 'بندر عدن', icon: Ship, href: '/aden-port' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },

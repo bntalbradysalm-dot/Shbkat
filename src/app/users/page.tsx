@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, doc, updateDoc, increment, addDoc, writeBatch, query, orderBy, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import {
@@ -43,11 +42,8 @@ import {
   LayoutGrid,
   RefreshCw,
   BarChart3,
-  Archive,
-  Box,
   TrendingUp,
   TrendingDown,
-  UserPlus,
   Save,
   X
 } from 'lucide-react';
@@ -70,13 +66,6 @@ type User = {
   balance?: number;
   accountType?: 'user' | 'network-owner';
   registrationDate?: string;
-};
-
-type Debt = {
-    id: string;
-    customerName: string;
-    amount: number;
-    timestamp: string;
 };
 
 type AppSettings = {
@@ -107,13 +96,6 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Debt Management States
-  const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false);
-  const [newDebtName, setNewDebtName] = useState('');
-  const [newDebtAmount, setNewDebtAmount] = useState('');
-  const [editingDebtId, setEditingDebtId] = useState<string | null>(null);
-  const [editingDebtAmount, setEditingDebtAmount] = useState('');
-
   // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
@@ -128,12 +110,6 @@ export default function UsersPage() {
     [firestore]
   );
   const { data: users, isLoading } = useCollection<User>(usersCollection);
-
-  const debtsCollection = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'debts'), orderBy('timestamp', 'desc')) : null),
-    [firestore]
-  );
-  const { data: debts, isLoading: isLoadingDebts } = useCollection<Debt>(debtsCollection);
 
   const settingsDocRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'appSettings', 'global') : null),
@@ -150,11 +126,6 @@ export default function UsersPage() {
       return acc + (user.balance ?? 0);
     }, 0);
   }, [users]);
-
-  const totalDebts = useMemo(() => {
-    if (!debts) return 0;
-    return debts.reduce((acc, d) => acc + (d.amount || 0), 0);
-  }, [debts]);
 
   const fetchAllBalances = useCallback(async () => {
     setIsFetchingBalances(true);
@@ -209,8 +180,8 @@ export default function UsersPage() {
   }, [agentBalance, baityBalance, boxBalance]);
 
   const netProfit = useMemo(() => {
-    return (combinedProvidersBalance + totalDebts) - totalUsersBalance;
-  }, [combinedProvidersBalance, totalUsersBalance, totalDebts]);
+    return combinedProvidersBalance - totalUsersBalance;
+  }, [combinedProvidersBalance, totalUsersBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -229,11 +200,13 @@ export default function UsersPage() {
   
     try {
       await updateDoc(userDocRef, { balance: increment(amount) });
-      await addDoc(userNotificationsRef, {
+      const batch = writeBatch(firestore);
+      batch.set(doc(userNotificationsRef), {
         title: 'تمت تغذية حسابك',
         body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك.`,
         timestamp: new Date().toISOString()
       });
+      await batch.commit();
       toast({ title: "نجاح", description: `تمت إضافة الرصيد بنجاح.` });
       setIsTopUpDialogOpen(false);
       setTopUpAmount('');
@@ -331,41 +304,6 @@ export default function UsersPage() {
     }
   };
 
-  // Debt Functions
-  const handleAddDebt = () => {
-    if (!newDebtName || !newDebtAmount || !firestore) return;
-    const amount = parseFloat(newDebtAmount);
-    if (isNaN(amount)) return;
-
-    const debtsRef = collection(firestore, 'debts');
-    addDocumentNonBlocking(debtsRef, {
-        customerName: newDebtName,
-        amount: amount,
-        timestamp: new Date().toISOString()
-    });
-    setNewDebtName('');
-    setNewDebtAmount('');
-    toast({ title: "تمت الإضافة", description: "تم تسجيل الدين بنجاح." });
-  };
-
-  const handleUpdateDebt = (id: string) => {
-    if (!firestore) return;
-    const amount = parseFloat(editingDebtAmount);
-    if (isNaN(amount)) return;
-
-    const docRef = doc(firestore, 'debts', id);
-    updateDocumentNonBlocking(docRef, { amount: amount });
-    setEditingDebtId(null);
-    toast({ title: "تم التحديث", description: "تم تحديث مبلغ الدين." });
-  };
-
-  const handleDeleteDebt = (id: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'debts', id);
-    deleteDocumentNonBlocking(docRef);
-    toast({ title: "تم الحذف", description: "تم حذف سجل الدين.", variant: "destructive" });
-  };
-
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -442,7 +380,7 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1.5 mb-1">
                         <BarChart3 className="h-3 w-3 text-primary opacity-70" />
@@ -454,20 +392,6 @@ export default function UsersPage() {
                     </div>
                 </div>
                 
-                <div 
-                    className="space-y-1 text-right border-l border-muted-foreground/10 px-1 cursor-pointer hover:bg-primary/5 transition-colors rounded-lg"
-                    onClick={() => setIsDebtDialogOpen(true)}
-                >
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <Banknote className="h-3 w-3 text-orange-600 opacity-70" />
-                        <span className="text-[8px] font-black text-orange-600/70 uppercase tracking-tight">إجمالي الديون</span>
-                    </div>
-                    <div className="text-xs font-black text-orange-600 truncate">
-                        {totalDebts.toLocaleString('en-US')} 
-                        <span className="text-[7px] mr-0.5 opacity-70">ر.ي</span>
-                    </div>
-                </div>
-
                 <div className="space-y-1 text-right px-1">
                     <div className="flex items-center gap-1.5 mb-1">
                         {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
@@ -617,146 +541,6 @@ export default function UsersPage() {
         </div>
       </div>
       <Toaster />
-
-      {/* Debt Management Dialog */}
-      <Dialog open={isDebtDialogOpen} onOpenChange={setIsDebtDialogOpen}>
-        <DialogContent className="rounded-[32px] max-sm max-h-[85vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-6 bg-orange-500 text-white">
-                <DialogTitle className="text-center font-black text-xl flex items-center justify-center gap-2">
-                    <Banknote className="h-6 w-6" />
-                    إدارة ديون العملاء
-                </DialogTitle>
-                <DialogDescription className="text-center text-orange-50/80 font-bold mt-1">تتبع الديون الخارجية لدمجها في الأرباح</DialogDescription>
-            </DialogHeader>
-            
-            <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                {/* Add New Debt Form */}
-                <Card className="border-orange-100 bg-orange-50/30 rounded-2xl">
-                    <CardContent className="p-4 space-y-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <UserPlus className="h-4 w-4 text-orange-600" />
-                            <span className="text-xs font-black text-orange-600 uppercase">إضافة دين جديد</span>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3">
-                            <Input 
-                                placeholder="اسم العميل (اكتبه يدوياً)" 
-                                value={newDebtName} 
-                                onChange={e => setNewDebtName(e.target.value)}
-                                className="h-11 rounded-xl border-orange-200 focus-visible:ring-orange-500"
-                            />
-                            <div className="flex gap-2">
-                                <Input 
-                                    type="number" 
-                                    placeholder="المبلغ" 
-                                    value={newDebtAmount} 
-                                    onChange={e => setNewDebtAmount(e.target.value)}
-                                    className="h-11 rounded-xl border-orange-200 focus-visible:ring-orange-500"
-                                />
-                                <Button 
-                                    onClick={handleAddDebt} 
-                                    className="h-11 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 shadow-md"
-                                    disabled={!newDebtName || !newDebtAmount}
-                                >
-                                    حفظ
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Debts List */}
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center px-1">
-                        <span className="text-xs font-black text-muted-foreground uppercase">قائمة الديون المسجلة</span>
-                        <Badge className="bg-orange-100 text-orange-700 border-none">{totalDebts.toLocaleString()} ر.ي</Badge>
-                    </div>
-                    
-                    {isLoadingDebts ? (
-                        <Skeleton className="h-20 w-full rounded-2xl" />
-                    ) : !debts || debts.length === 0 ? (
-                        <div className="text-center py-10 opacity-30 bg-muted/20 rounded-2xl border-2 border-dashed">
-                            <Banknote className="h-10 w-10 mx-auto mb-2" />
-                            <p className="text-xs font-bold">لا توجد ديون مسجلة حالياً</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {debts.map((debt) => (
-                                <Card key={debt.id} className="rounded-2xl border-none shadow-sm bg-card hover:bg-muted/10 transition-colors">
-                                    <CardContent className="p-4 flex items-center justify-between">
-                                        <div className="text-right">
-                                            <p className="font-bold text-sm text-foreground">{debt.customerName}</p>
-                                            <p className="text-[10px] text-muted-foreground font-bold">{format(parseISO(debt.timestamp), 'd MMMM yyyy', { locale: ar })}</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            {editingDebtId === debt.id ? (
-                                                <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95">
-                                                    <Input 
-                                                        type="number" 
-                                                        value={editingDebtAmount} 
-                                                        onChange={e => setEditingDebtAmount(e.target.value)}
-                                                        className="h-8 w-24 rounded-lg text-xs"
-                                                        autoFocus
-                                                    />
-                                                    <Button size="icon" className="h-8 w-8 bg-green-600" onClick={() => handleUpdateDebt(debt.id)}>
-                                                        <Save className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingDebtId(null)}>
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="text-left mr-4">
-                                                        <p className="font-black text-sm text-orange-600">{debt.amount.toLocaleString()} ر.ي</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary"
-                                                            onClick={() => {
-                                                                setEditingDebtId(debt.id);
-                                                                setEditingDebtAmount(String(debt.amount));
-                                                            }}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent className="rounded-3xl">
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle className="text-center font-black">حذف الدين؟</AlertDialogTitle>
-                                                                    <AlertDialogDescription className="text-center">هل أنت متأكد من حذف سجل الدين الخاص بـ {debt.customerName}؟</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter className="grid grid-cols-2 gap-2 mt-4 sm:space-x-0">
-                                                                    <AlertDialogCancel className="rounded-xl">تراجع</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => handleDeleteDebt(debt.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl font-bold">تأكيد الحذف</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-            
-            <div className="p-6 bg-muted/30 border-t">
-                <DialogClose asChild>
-                    <Button variant="outline" className="w-full h-12 rounded-2xl font-black">إغلاق النافذة</Button>
-                </DialogClose>
-            </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

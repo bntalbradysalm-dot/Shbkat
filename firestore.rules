@@ -22,13 +22,6 @@ service cloud.firestore {
     }
     
     /**
-     * الديون - مسموح للمدير فقط بالوصول إليها بشكل صريح وقوي
-     */
-    match /debts/{debtId} {
-      allow read, write: if isAdmin();
-    }
-    
-    /**
      * مبيعات الكروت - متاحة للجميع الآن للتجربة
      */
     match /soldCards/{cardId} {

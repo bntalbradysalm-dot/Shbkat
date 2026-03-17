@@ -79,18 +79,6 @@
         "soldTimestamp": { "type": "string", "format": "date-time" }
       }
     },
-    "Debt": {
-      "title": "Debt",
-      "type": "object",
-      "description": "Customer debts tracking for external (non-app) customers.",
-      "properties": {
-        "id": { "type": "string" },
-        "customerName": { "type": "string" },
-        "amount": { "type": "number" },
-        "timestamp": { "type": "string", "format": "date-time" }
-      },
-      "required": ["customerName", "amount", "timestamp"]
-    },
     "Transaction": {
       "title": "Transaction",
       "type": "object",
@@ -131,10 +119,6 @@
     "/soldCards/{cardId}": {
       "schema": { "$ref": "#/backend/entities/SoldCard" },
       "description": "History of sold network cards."
-    },
-    "/debts/{debtId}": {
-      "schema": { "$ref": "#/backend/entities/Debt" },
-      "description": "External customer debts tracking."
     },
     "/withdrawalRequests/{reqId}": {
       "description": "Network owner payout requests."

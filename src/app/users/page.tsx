@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, doc, updateDoc, increment, addDoc, writeBatch, query, orderBy, setDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,8 +26,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   User as UserIcon,
@@ -42,10 +41,10 @@ import {
   LayoutGrid,
   RefreshCw,
   BarChart3,
-  Archive,
-  Box,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Save,
+  X
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -200,11 +199,13 @@ export default function UsersPage() {
   
     try {
       await updateDoc(userDocRef, { balance: increment(amount) });
-      await addDoc(userNotificationsRef, {
+      const batch = writeBatch(firestore);
+      batch.set(doc(userNotificationsRef), {
         title: 'تمت تغذية حسابك',
         body: `تمت إضافة مبلغ ${amount.toLocaleString('en-US')} ريال إلى رصيدك.`,
         timestamp: new Date().toISOString()
       });
+      await batch.commit();
       toast({ title: "نجاح", description: `تمت إضافة الرصيد بنجاح.` });
       setIsTopUpDialogOpen(false);
       setTopUpAmount('');
@@ -322,7 +323,7 @@ export default function UsersPage() {
             <div className="grid grid-cols-3 gap-2">
                 <Card className="relative overflow-hidden border-none shadow-lg bg-mesh-gradient text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
-                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد اشحن لي</CardTitle>
+                        <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد شحنلي</CardTitle>
                         <RefreshCw 
                             className={cn("h-2.5 w-2.5 opacity-50 cursor-pointer", isFetchingBalances && "animate-spin")} 
                             onClick={fetchAllBalances}
@@ -331,14 +332,14 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(agentBalance || '0').toLocaleString('en-US'))}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(agentBalance || '0').toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-3xl">
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
                         <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد بيتي</CardTitle>
                         <RefreshCw 
@@ -349,7 +350,7 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : (parseFloat(baityBalance || '0').toLocaleString('en-US'))}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(baityBalance || '0').toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -380,25 +381,24 @@ export default function UsersPage() {
 
             <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <BarChart3 className="h-3 w-3 text-primary opacity-70" />
-                        <span className="text-[9px] font-black text-primary/70 uppercase tracking-tight">رصيد الوكلاء المجمع</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <BarChart3 className="h-2.5 w-2.5 text-primary opacity-70" />
+                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">الرصيد المجمع</span>
                     </div>
-                    <div className="text-sm font-black text-primary truncate">
-                        {isFetchingBalances ? <Skeleton className="h-4 w-16" /> : combinedProvidersBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })} 
-                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    <div className="text-[10px] font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
+                
                 <div className="space-y-1 text-right px-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
-                        <span className={cn("text-[9px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
+                    <div className="flex items-center gap-1 mb-1">
+                        {netProfit >= 0 ? <TrendingUp className="h-2.5 w-2.5 text-green-600" /> : <TrendingDown className="h-2.5 w-2.5 text-red-600" />}
+                        <span className={cn("text-[7px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
                             {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
-                        {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 2 })} 
-                        <span className="text-[8px] mr-0.5 opacity-70">ر.ي</span>
+                    <div className={cn("text-[10px] font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                        {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
             </Card>

@@ -1,11 +1,10 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Smartphone, ArrowLeftRight, SatelliteDish, Wifi, History, Wallet, MessageCircleQuestion, Heart, Gamepad2, Globe, PhoneCall, Zap } from "lucide-react";
 import React, { useState, useEffect } from 'react';
-import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -108,7 +107,7 @@ export function BalanceCard() {
           onTouchEnd={clearTimer}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/20 hover:bg-white/30 transition-colors rounded-xl text-white text-[10px] font-bold border border-white/10 backdrop-blur-sm"
         >
-          <Icon size={12} />
+          {typeof Icon === 'function' ? <Icon size={12} /> : <Icon size={12} />}
           <span>{service.name}</span>
         </button>
       </Link>
@@ -156,12 +155,12 @@ export function BalanceCard() {
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="rounded-[32px] max-sm">
           <DialogHeader>
-            <DialogTitle className="text-center">اختيار اختصار مفضل</DialogTitle>
+            <DialogTitle className="text-center font-black">اختيار اختصار مفضل</DialogTitle>
             <DialogDescription className="text-center">
               اختر الخدمة التي تريد وضعها في {editingSide === 'left' ? 'الجهة اليمنى' : 'الجهة اليسرى'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-4">
+          <div className="grid grid-cols-2 gap-3 py-4 overflow-y-auto max-h-[60vh] no-scrollbar">
             {availableServices.map((service) => {
               const ServiceIcon = service.icon;
               return (
@@ -171,8 +170,8 @@ export function BalanceCard() {
                   className="flex flex-col h-24 gap-2 rounded-2xl border-primary/10 hover:bg-primary/5 hover:border-primary/30"
                   onClick={() => selectService(service)}
                 >
-                  <ServiceIcon size={12} />
-                  <span className="text-xs font-bold">{service.name}</span>
+                  {typeof ServiceIcon === 'function' ? <ServiceIcon size={16} /> : <ServiceIcon size={16} />}
+                  <span className="text-[10px] font-bold">{service.name}</span>
                 </Button>
               );
             })}

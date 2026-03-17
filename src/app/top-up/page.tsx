@@ -7,13 +7,27 @@ import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, MessageCircle, Wallet, Banknote, User as UserIcon, MapPin, Building2, ExternalLink } from 'lucide-react';
+import { 
+    Copy, 
+    MessageCircle, 
+    Wallet, 
+    Banknote, 
+    User as UserIcon, 
+    MapPin, 
+    ExternalLink, 
+    HelpCircle, 
+    PhoneCall, 
+    QrCode, 
+    ChevronDown,
+    CircleDollarSign
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,10 +55,82 @@ const getLogoSrc = (url?: string) => {
     return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
 };
 
+// مكون واجهة القطيبي المباشرة
+const QutaibiDirectForm = ({ onToggleTransactions }: { onToggleTransactions: () => void }) => {
+    return (
+        <div className="bg-[#A3D133] rounded-[40px] p-6 text-white space-y-5 shadow-2xl animate-in zoom-in-95 duration-500 max-w-sm mx-auto border-t-4 border-white/10">
+            {/* Header */}
+            <div className="flex justify-between items-center px-1">
+                <div className="bg-white/20 p-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-white/30 transition-colors">
+                    <HelpCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex items-center gap-3">
+                    <h3 className="font-black text-base text-white drop-shadow-md">بنك القطيبي (ريال جديد)</h3>
+                    <div className="bg-white rounded-full p-1.5 w-11 h-11 flex items-center justify-center shadow-lg">
+                        <div className="relative w-8 h-8">
+                            <Image 
+                                src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
+                                alt="Qutaibi" 
+                                fill 
+                                className="object-contain"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Inputs Section */}
+            <div className="space-y-4 pt-2">
+                <div className="relative group">
+                    <Input 
+                        className="h-14 bg-[#E6F4D7] border-2 border-black/80 rounded-2xl text-right font-black text-lg text-black pr-12 focus-visible:ring-black placeholder:text-black/30 shadow-inner" 
+                        placeholder="رقم الحساب" 
+                    />
+                    <PhoneCall className="absolute right-4 top-1/2 -translate-y-1/2 text-black w-5 h-5 opacity-70" />
+                </div>
+                <div className="relative group">
+                    <Input 
+                        className="h-14 bg-[#E6F4D7] border-2 border-black/80 rounded-2xl text-right font-black text-lg text-black pr-12 focus-visible:ring-black placeholder:text-black/30 shadow-inner" 
+                        placeholder="كود الشراء" 
+                    />
+                    <QrCode className="absolute right-4 top-1/2 -translate-y-1/2 text-black w-5 h-5 opacity-70" />
+                </div>
+                <div className="relative group">
+                    <Input 
+                        className="h-14 bg-[#E6F4D7] border-2 border-black/80 rounded-2xl text-right font-black text-lg text-black pr-12 focus-visible:ring-black placeholder:text-black/30 shadow-inner" 
+                        placeholder="المبلغ" 
+                        type="number"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-black font-black text-2xl opacity-70">$</div>
+                </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="pt-2">
+                <Button className="w-full h-14 bg-[#8EBC24] hover:bg-[#7DA81F] text-white font-black text-lg rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)] border-b-4 border-black/30 active:translate-y-1 active:border-b-0 transition-all">
+                    طلب رمز التأكيد
+                </Button>
+            </div>
+
+            {/* Footer Links */}
+            <div 
+                className="flex justify-between items-center px-4 pt-3 cursor-pointer group"
+                onClick={onToggleTransactions}
+            >
+                <div className="bg-black/10 p-1 rounded-full group-hover:bg-black/20 transition-colors">
+                    <ChevronDown className="w-5 h-5 text-black" />
+                </div>
+                <span className="font-black text-white text-base drop-shadow-sm group-hover:underline">عرض العمليات</span>
+            </div>
+        </div>
+    );
+};
+
 export default function TopUpPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const { user } = useUser();
+    const router = useRouter();
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
     const [amount, setAmount] = useState('');
@@ -103,6 +189,9 @@ export default function TopUpPage() {
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
+
+    // التحقق إذا كان بنك القطيبي مختاراً
+    const isQutaibiSelected = selectedMethod?.name.includes('القطيبي');
 
     const renderPaymentMethods = () => {
         if (isLoadingMethods) {
@@ -167,7 +256,7 @@ export default function TopUpPage() {
                     </div>
                 </div>
 
-                {selectedMethod && (
+                {selectedMethod && !isQutaibiSelected && (
                     <div className="animate-in fade-in-0 duration-300 px-4">
                         <h2 className="text-lg font-bold">2. بيانات الحساب المختارة</h2>
                         <Card className="mt-4 border-primary/20">
@@ -194,38 +283,47 @@ export default function TopUpPage() {
                         </Card>
                     </div>
                 )}
+
+                {selectedMethod && isQutaibiSelected && (
+                    <div className="px-4">
+                        <h2 className="text-lg font-bold mb-4">2. تعبئة بيانات الشحن المباشر</h2>
+                        <QutaibiDirectForm onToggleTransactions={() => router.push('/transactions')} />
+                    </div>
+                )}
                 
-                <div className="px-4 space-y-4">
-                    <h2 className="text-lg font-bold">3. تأكيد عملية الإيداع</h2>
-                    <Card className="shadow-md">
-                        <CardContent className="p-4 space-y-4">
-                            <div className='space-y-2'>
-                                <Label htmlFor="amount" className="flex items-center gap-2 text-muted-foreground">
-                                    <Wallet className="h-4 w-4 text-primary" />
-                                    المبلغ الذي قمت بتحويله (بالريال)
-                                </Label>
-                                <Input
-                                    id="amount"
-                                    type="number"
-                                    inputMode='numeric'
-                                    placeholder="0.00"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    className="text-right h-12 text-xl font-bold border-2 focus-visible:ring-primary"
-                                />
-                            </div>
-                            <Button className="w-full h-14 text-lg font-bold shadow-lg" onClick={handleSendRequest} disabled={!amount || !selectedMethod}>
-                                <MessageCircle className="ml-2 h-6 w-6" />
-                                إرسال الإيصال عبر واتساب
-                            </Button>
-                            <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                                <p className="text-xs text-center text-muted-foreground leading-relaxed">
-                                    بعد الضغط على الزر، سيتم فتح محادثة الواتساب مع الإدارة. يرجى إرسال الرسالة التلقائية ثم إرفاق صورة الإيصال ليتم إضافة الرصيد لحسابك.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                {selectedMethod && !isQutaibiSelected && (
+                    <div className="px-4 space-y-4">
+                        <h2 className="text-lg font-bold">3. تأكيد عملية الإيداع</h2>
+                        <Card className="shadow-md">
+                            <CardContent className="p-4 space-y-4">
+                                <div className='space-y-2'>
+                                    <Label htmlFor="amount" className="flex items-center gap-2 text-muted-foreground">
+                                        <Wallet className="h-4 w-4 text-primary" />
+                                        المبلغ الذي قمت بتحويله (بالريال)
+                                    </Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        inputMode='numeric'
+                                        placeholder="0.00"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        className="text-right h-12 text-xl font-bold border-2 focus-visible:ring-primary"
+                                    />
+                                </div>
+                                <Button className="w-full h-14 text-lg font-bold shadow-lg" onClick={handleSendRequest} disabled={!amount || !selectedMethod}>
+                                    <MessageCircle className="ml-2 h-6 w-6" />
+                                    إرسال الإيصال عبر واتساب
+                                </Button>
+                                <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+                                    <p className="text-xs text-center text-muted-foreground leading-relaxed">
+                                        بعد الضغط على الزر، سيتم فتح محادثة الواتساب مع الإدارة. يرجى إرسال الرسالة التلقائية ثم إرفاق صورة الإيصال ليتم إضافة الرصيد لحسابك.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
                 {/* الوكيل الرسمي Section */}
                 <div className="px-4 pb-10 space-y-4">

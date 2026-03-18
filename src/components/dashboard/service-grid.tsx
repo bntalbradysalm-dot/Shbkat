@@ -121,7 +121,7 @@ export function ServiceGrid() {
     price: 2000,
     data: '55 GB',
     validity: '30 يوم',
-    classId: 'eid_55gb_2000',
+    classId: 346, // تحديث المعرف هنا لجلب كرت الخير فورجي 2000 ريال (55 قيقا)
     networkName: 'شبكة الخير فورجي'
   };
 
@@ -143,7 +143,7 @@ export function ServiceGrid() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                classId: 345 
+                classId: EID_OFFER.classId // استخدام المعرف الصحيح من كائن العرض
             })
         });
 
@@ -248,12 +248,12 @@ export function ServiceGrid() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-muted/50 p-4 rounded-[28px] text-center border border-border/50">
                             <Database className="h-5 w-5 mx-auto mb-2 text-primary" />
-                            <p className="text-xl font-black text-foreground">55 قيقا</p>
+                            <p className="text-xl font-black text-foreground">{EID_OFFER.data}</p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase">سعة البيانات</p>
                         </div>
                         <div className="bg-muted/50 p-4 rounded-[28px] text-center border border-border/50">
                             <Clock className="h-5 w-5 mx-auto mb-2 text-primary" />
-                            <p className="text-xl font-black text-foreground">30 يوم</p>
+                            <p className="text-xl font-black text-foreground">{EID_OFFER.validity}</p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase">المدة</p>
                         </div>
                     </div>
@@ -261,8 +261,8 @@ export function ServiceGrid() {
                     <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-6 rounded-[32px] border-2 border-dashed border-primary/20 text-center relative group cursor-pointer hover:border-primary/40 transition-all active:scale-[0.98]" onClick={() => setIsConfirming(true)}>
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[9px] font-black px-4 py-1 rounded-full shadow-lg uppercase tracking-widest">عرض حصري</div>
                         <p className="text-[10px] font-bold text-muted-foreground mb-1 mt-1">سعر الكرت</p>
-                        <p className="text-4xl font-black text-primary mb-1">2,000 <span className="text-sm font-bold opacity-70">ر.ي</span></p>
-                        <p className="text-[10px] font-bold text-primary/60">من شبكة الخير فورجي</p>
+                        <p className="text-4xl font-black text-primary mb-1">{EID_OFFER.price.toLocaleString()} <span className="text-sm font-bold opacity-70">ر.ي</span></p>
+                        <p className="text-[10px] font-bold text-primary/60">من {EID_OFFER.networkName}</p>
                         <Button className="w-full mt-4 h-12 rounded-2xl font-black bg-primary text-white shadow-lg">شراء الآن</Button>
                     </div>
 
@@ -279,11 +279,11 @@ export function ServiceGrid() {
                     <CheckCircle className="h-10 w-10 text-primary" />
                 </div>
                 <DialogTitle className="text-center font-black">تأكيد الشراء</DialogTitle>
-                <DialogDescription className="text-center font-bold">هل أنت متأكد من شراء باقة العيد (55 قيقا)؟</DialogDescription>
+                <DialogDescription className="text-center font-bold">هل أنت متأكد من شراء باقة العيد ({EID_OFFER.data})؟</DialogDescription>
             </DialogHeader>
             <div className="py-4 bg-muted/50 rounded-2xl px-4 mt-4">
                 <p className="text-xs font-bold text-muted-foreground mb-1">سيتم خصم</p>
-                <p className="text-2xl font-black text-primary">2,000 ر.ي</p>
+                <p className="text-2xl font-black text-primary">{EID_OFFER.price.toLocaleString()} ر.ي</p>
             </div>
             <DialogFooter className="grid grid-cols-2 gap-3 mt-6">
                 <Button className="w-full h-11 rounded-xl font-bold" onClick={handlePurchase} disabled={isProcessing}>

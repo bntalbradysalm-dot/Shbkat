@@ -81,7 +81,7 @@ export function ServiceGrid() {
       <div className="px-4">
         <div className="w-full min-h-10 bg-mesh-gradient rounded-[20px] shadow-md border border-white/10 flex items-center justify-center p-2 relative group overflow-hidden">
             <span className="text-white text-[11px] font-black text-center leading-relaxed drop-shadow-sm">
-                بمناسبة عيد الفطر المبارك 🎉 جدد كرتك في منظومة الوادي الآن واحصل على خصم 5% 🌙
+                بمناسبة عيد الفطر .. جدد كرتك الآن مع خصم 5% 🌙
             </span>
         </div>
       </div>

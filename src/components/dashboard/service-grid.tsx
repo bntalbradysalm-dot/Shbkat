@@ -77,7 +77,7 @@ export function ServiceGrid() {
         ))}
       </div>
 
-      {/* شريط العيد الإخباري المتحرك */}
+      {/* شريط العيد الإخباري المتحرك - تم ضبطه ليتحرك ببطء شديد */}
       <div className="px-4">
         <div className="w-full h-10 bg-mesh-gradient rounded-[20px] shadow-md border border-white/10 overflow-hidden flex items-center relative group">
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-primary to-transparent z-10" />
@@ -86,7 +86,6 @@ export function ServiceGrid() {
                 <span className="text-white text-[11px] font-black mx-4">
                     بمناسبة عيد الفطر المبارك 🎉 جدد كرتك في منظومة الوادي الآن واحصل على خصم 5% &nbsp;&nbsp;&nbsp;&nbsp; 🌙 عيدكم مبارك وكل عام وأنتم بخير &nbsp;&nbsp;&nbsp;&nbsp; ⭐️ ستار موبايل تتمنى لكم عيداً سعيداً
                 </span>
-                {/* تكرار النص لضمان استمرارية الحركة */}
                 <span className="text-white text-[11px] font-black mx-4">
                     بمناسبة عيد الفطر المبارك 🎉 جدد كرتك في منظومة الوادي الآن واحصل على خصم 5% &nbsp;&nbsp;&nbsp;&nbsp; 🌙 عيدكم مبارك وكل عام وأنتم بخير &nbsp;&nbsp;&nbsp;&nbsp; ⭐️ ستار موبايل تتمنى لكم عيداً سعيداً
                 </span>

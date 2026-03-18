@@ -101,5 +101,6 @@
 .animate-marquee {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 35s linear infinite;
+  /* تم إبطاء السرعة إلى 50 ثانية لحركة أكثر هدوءاً */
+  animation: marquee 50s linear infinite;
 }

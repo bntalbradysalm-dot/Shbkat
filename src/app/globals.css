@@ -94,13 +94,13 @@
 }
 
 @keyframes marquee {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 
 .animate-marquee {
-  display: inline-block;
+  display: flex;
+  width: max-content;
   white-space: nowrap;
-  /* تم إبطاء السرعة إلى 50 ثانية لحركة أكثر هدوءاً */
-  animation: marquee 50s linear infinite;
+  animation: marquee 60s linear infinite;
 }

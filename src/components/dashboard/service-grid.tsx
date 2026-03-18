@@ -65,7 +65,7 @@ const ServiceItem = ({
 
 export function ServiceGrid() {
   return (
-    <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-5">
+    <div className="relative bg-transparent mt-0 pt-2 pb-4 space-y-4">
       
       <div className="grid grid-cols-3 gap-3 px-4">
         {services.map((service, index) => (
@@ -75,6 +75,23 @@ export function ServiceGrid() {
             index={index} 
           />
         ))}
+      </div>
+
+      {/* شريط العيد الإخباري المتحرك */}
+      <div className="px-4">
+        <div className="w-full h-10 bg-mesh-gradient rounded-[20px] shadow-md border border-white/10 overflow-hidden flex items-center relative group">
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-primary to-transparent z-10" />
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-primary to-transparent z-10" />
+            <div className="animate-marquee whitespace-nowrap">
+                <span className="text-white text-[11px] font-black mx-4">
+                    بمناسبة عيد الفطر المبارك 🎉 جدد كرتك في منظومة الوادي الآن واحصل على خصم 5% &nbsp;&nbsp;&nbsp;&nbsp; 🌙 عيدكم مبارك وكل عام وأنتم بخير &nbsp;&nbsp;&nbsp;&nbsp; ⭐️ ستار موبايل تتمنى لكم عيداً سعيداً
+                </span>
+                {/* تكرار النص لضمان استمرارية الحركة */}
+                <span className="text-white text-[11px] font-black mx-4">
+                    بمناسبة عيد الفطر المبارك 🎉 جدد كرتك في منظومة الوادي الآن واحصل على خصم 5% &nbsp;&nbsp;&nbsp;&nbsp; 🌙 عيدكم مبارك وكل عام وأنتم بخير &nbsp;&nbsp;&nbsp;&nbsp; ⭐️ ستار موبايل تتمنى لكم عيداً سعيداً
+                </span>
+            </div>
+        </div>
       </div>
 
       <svg width="0" height="0" className="absolute">

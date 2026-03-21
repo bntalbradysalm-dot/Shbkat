@@ -150,13 +150,13 @@ export default function UsersPage() {
 
       const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) {
-        setAgentBalance(telecomResult.balance);
+      if (telecomResult && (telecomResult.resultCode === "0" || telecomResult.resultCode === 0)) {
+        setAgentBalance(telecomResult.balance || '0');
       } else {
         setAgentBalance('خطأ');
       }
 
-      if (baityResult.status === 200 && baityResult.data) {
+      if (baityResult && baityResult.status === 200 && baityResult.data) {
         setBaityBalance(String(baityResult.data.balance || '0'));
       } else {
         setBaityBalance('خطأ');
@@ -179,8 +179,11 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
-    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
-    return total;
+    
+    const safeAgent = isNaN(agent) ? 0 : agent;
+    const safeBaity = isNaN(baity) ? 0 : baity;
+    
+    return safeAgent + safeBaity + box;
   }, [agentBalance, baityBalance, boxBalance]);
 
   const netProfit = useMemo(() => {
@@ -332,6 +335,13 @@ export default function UsersPage() {
     return true;
   });
 
+  const formatBalanceDisplay = (val: string | null) => {
+    if (val === 'خطأ' || val === null) return 'خطأ';
+    const num = parseFloat(val);
+    if (isNaN(num)) return 'خطأ';
+    return num.toLocaleString('en-US');
+  };
+
   return (
     <>
       <div className="flex flex-col h-full bg-background">
@@ -351,7 +361,7 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(agentBalance || '0').toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(agentBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -369,7 +379,7 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(baityBalance || '0').toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(baityBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>

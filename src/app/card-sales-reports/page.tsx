@@ -1,19 +1,20 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, orderBy, doc, writeBatch, increment } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, writeBatch, increment, getDocs } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
+import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, Loader2, Trash2, Archive, Inbox } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,19 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Network = {
   id: string;
@@ -57,6 +71,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isTransferring, setIsTransferring] = useState<string | null>(null);
+    const [isClearing, setIsClearing] = useState(false);
 
     const soldCardsQuery = useMemoFirebase(
       () => firestore ? query(collection(firestore, 'soldCards'), where('networkId', '==', network.id)) : null,
@@ -64,71 +79,84 @@ const NetworkDetails = ({ network }: { network: Network }) => {
     );
     const { data: rawSoldCards, isLoading: isLoadingSold } = useCollection<SoldCard>(soldCardsQuery);
     
-    const soldCards = useMemo(() => {
-        if (!rawSoldCards) return [];
-        return [...rawSoldCards].sort((a, b) => new Date(b.soldTimestamp).getTime() - new Date(a.soldTimestamp).getTime());
+    const { pendingCards, completedCards } = useMemo(() => {
+        if (!rawSoldCards) return { pendingCards: [], completedCards: [] };
+        const sorted = [...rawSoldCards].sort((a, b) => new Date(b.soldTimestamp).getTime() - new Date(a.soldTimestamp).getTime());
+        return {
+            pendingCards: sorted.filter(c => c.payoutStatus === 'pending'),
+            completedCards: sorted.filter(c => c.payoutStatus === 'completed')
+        };
     }, [rawSoldCards]);
 
     const { totalSales, totalPayout, totalCommission } = useMemo(() => {
-        if (!soldCards) return { totalSales: 0, totalPayout: 0, totalCommission: 0 };
-        return soldCards.reduce((acc, card) => {
+        if (!rawSoldCards) return { totalSales: 0, totalPayout: 0, totalCommission: 0 };
+        return rawSoldCards.reduce((acc, card) => {
             acc.totalSales += card.price;
             acc.totalPayout += card.payoutAmount;
             acc.totalCommission += card.commissionAmount;
             return acc;
         }, { totalSales: 0, totalPayout: 0, totalCommission: 0 });
-    }, [soldCards]);
+    }, [rawSoldCards]);
 
-    const handleTransferProfit = async (card: SoldCard) => {
+    const handleTransferProfit = (card: SoldCard) => {
         if (!firestore || !card.ownerId) {
             toast({ variant: "destructive", title: "خطأ", description: "معلومات المالك غير متوفرة لهذا الكرت." });
             return; 
         }
         
-        if (typeof card.payoutAmount !== 'number' || card.payoutAmount <= 0) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'مبلغ الأرباح غير صالح.',
-            });
-            return;
-        }
-
         setIsTransferring(card.id);
 
+        const batch = writeBatch(firestore);
+        const now = new Date().toISOString();
+        const payoutAmount = Number(card.payoutAmount) || 0;
+
+        // 1. تحويل الرصيد للمالك
+        const ownerRef = doc(firestore, 'users', card.ownerId);
+        batch.update(ownerRef, { balance: increment(payoutAmount) });
+
+        // 2. إضافة سجل عملية للمالك
+        const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
+        batch.set(ownerTxRef, {
+            userId: card.ownerId,
+            transactionDate: now,
+            amount: payoutAmount,
+            transactionType: 'أرباح مبيعات الكروت',
+            notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
+        });
+
+        // 3. أرشفة الطلب بدلاً من حذفه
+        batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
+
+        batch.commit()
+            .then(() => {
+                toast({ title: "تم التحويل", description: "تم تحويل الربح للمالك وأرشفة الطلب." });
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `soldCards/${card.id}`,
+                    operation: 'update'
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsTransferring(null);
+            });
+    };
+
+    const handleClearNetworkArchive = async () => {
+        if (!firestore || completedCards.length === 0) return;
+        setIsClearing(true);
         try {
             const batch = writeBatch(firestore);
-            const now = new Date().toISOString();
-            const payoutAmount = Number(card.payoutAmount) || 0;
-
-            if (payoutAmount <= 0) { 
-                throw new Error("مبلغ التحويل غير صالح.");
-            }
-
-            // 1. تحديث حالة الطلب إلى مكتمل
-            batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
-
-            // 2. تحويل الرصيد للمالك
-            const ownerRef = doc(firestore, 'users', card.ownerId);
-            batch.update(ownerRef, { balance: increment(payoutAmount) });
-
-            // 3. إضافة سجل عملية للمالك
-            const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: card.ownerId,
-                transactionDate: now,
-                amount: payoutAmount,
-                transactionType: 'أرباح مبيعات الكروت',
-                notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
+            completedCards.forEach(card => {
+                batch.delete(doc(firestore, 'soldCards', card.id));
             });
-
             await batch.commit();
-            toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح." });
-        } catch (e: any) {
-            console.error("Transfer error:", e);
-            toast({ variant: "destructive", title: "خطأ", description: e.message || "فشل تحويل الربح." });
+            toast({ title: "تم مسح الأرشيف", description: "تم تنظيف قائمة المبيعات المؤرشفة لهذه الشبكة." });
+        } catch (e) {
+            toast({ variant: "destructive", title: "خطأ", description: "فشل مسح الأرشيف." });
         } finally {
-            setIsTransferring(null);
+            setIsClearing(false);
         }
     };
 
@@ -158,42 +186,80 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                 </Card>
             </div>
 
-            {soldCards && soldCards.length > 0 ? (
-                <div className="space-y-3">
-                    {soldCards.map(card => (
-                        <Card key={card.id} className="p-3 bg-muted/30 border-none rounded-2xl relative overflow-hidden">
-                            <InfoRow icon={CreditCard} label="رقم الكرت" value={card.cardNumber} isMono />
-                            <InfoRow icon={User} label="المشتري" value={card.buyerName} />
-                            <InfoRow icon={Calendar} label="تاريخ البيع" value={format(parseISO(card.soldTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
-                            <InfoRow icon={Banknote} label="سعر البيع" value={card.price} valueClassName="text-primary" />
-                            <InfoRow icon={TrendingUp} label="حصة المالك" value={card.payoutAmount} valueClassName="text-green-600" />
-                            
-                            <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
-                                {card.payoutStatus === 'completed' ? (
-                                    <Badge className="bg-green-500 text-white border-none px-3 py-1 rounded-lg flex items-center gap-1.5">
-                                        <ShieldCheck className="w-3 h-3" />
-                                        <span className="text-[9px] font-black">تم التحويل (90%)</span>
+            <Tabs defaultValue="new" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted/50 h-10 p-1 mb-4">
+                    <TabsTrigger value="new" className="rounded-lg text-[10px] font-black data-[state=active]:bg-primary data-[state=active]:text-white">
+                        <Inbox className="w-3 h-3 ml-1.5" /> جديد ({pendingCards.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="archive" className="rounded-lg text-[10px] font-black data-[state=active]:bg-muted-foreground data-[state=active]:text-white">
+                        <Archive className="w-3 h-3 ml-1.5" /> الأرشيف ({completedCards.length})
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="new" className="space-y-3 mt-0">
+                    {pendingCards.length > 0 ? (
+                        pendingCards.map(card => (
+                            <Card key={card.id} className="p-3 bg-white dark:bg-slate-900 border-none rounded-2xl relative shadow-sm">
+                                <InfoRow icon={CreditCard} label="رقم الكرت" value={card.cardNumber} isMono />
+                                <InfoRow icon={User} label="المشتري" value={card.buyerName} />
+                                <InfoRow icon={Calendar} label="تاريخ البيع" value={format(parseISO(card.soldTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
+                                <InfoRow icon={Banknote} label="سعر البيع" value={card.price} valueClassName="text-primary" />
+                                <InfoRow icon={TrendingUp} label="حصة المالك" value={card.payoutAmount} valueClassName="text-green-600" />
+                                
+                                <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
+                                    <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
+                                        <span className="text-[9px] font-black">انتظار التحويل</span>
                                     </Badge>
-                                ) : (
-                                    <>
-                                        <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
-                                            <span className="text-[9px] font-black">انتظار التحويل</span>
-                                        </Badge>
-                                        <Button 
-                                            size="sm" 
-                                            className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700"
-                                            onClick={() => handleTransferProfit(card)}
-                                            disabled={isTransferring === card.id}
-                                        >
-                                            {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-                        </Card>
-                    ))}
-                </div>
-            ) : <p className="text-center text-muted-foreground py-8 text-sm">لا توجد مبيعات حالياً لهذه الشبكة.</p>}
+                                    <Button 
+                                        size="sm" 
+                                        className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700 shadow-sm"
+                                        onClick={() => handleTransferProfit(card)}
+                                        disabled={!!isTransferring}
+                                    >
+                                        {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-center text-muted-foreground py-10 text-xs font-bold">لا توجد مبيعات جديدة حالياً.</p>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="archive" className="space-y-3 mt-0">
+                    {completedCards.length > 0 && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full h-8 text-[9px] text-muted-foreground hover:text-destructive mb-2"
+                            onClick={handleClearNetworkArchive}
+                            disabled={isClearing}
+                        >
+                            {isClearing ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="w-3 h-3 ml-1.5" />}
+                            مسح أرشيف هذه الشبكة
+                        </Button>
+                    )}
+                    {completedCards.length > 0 ? (
+                        completedCards.map(card => (
+                            <Card key={card.id} className="p-3 bg-muted/20 border-none rounded-2xl opacity-80">
+                                <InfoRow icon={CreditCard} label="رقم الكرت" value={card.cardNumber} isMono />
+                                <InfoRow icon={User} label="المشتري" value={card.buyerName} />
+                                <InfoRow icon={Calendar} label="تاريخ البيع" value={format(parseISO(card.soldTimestamp), 'd/M/y, h:mm a', { locale: ar })} />
+                                <InfoRow icon={Banknote} label="سعر البيع" value={card.price} />
+                                
+                                <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
+                                    <Badge className="bg-green-500/10 text-green-600 border-none px-3 py-1 rounded-lg">
+                                        <span className="text-[9px] font-black">تم التحويل (أرشيف)</span>
+                                    </Badge>
+                                    <Check className="w-4 h-4 text-green-600" />
+                                </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-center text-muted-foreground py-10 text-xs font-bold">الأرشيف فارغ.</p>
+                    )}
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
@@ -201,13 +267,39 @@ const NetworkDetails = ({ network }: { network: Network }) => {
 export default function CardSalesReportsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
+  const [isClearingAll, setIsClearingAll] = useState(false);
+
   const networksCollection = useMemoFirebase(() => firestore ? query(collection(firestore, 'networks'), orderBy('name')) : null, [firestore]);
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
 
   const isAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
+  const handleClearAllMabi3at = async () => {
+    if (!firestore) return;
+    setIsClearingAll(true);
+    try {
+        const q = collection(firestore, 'soldCards');
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            toast({ title: "لا توجد بيانات", description: "القائمة فارغة بالفعل." });
+            setIsClearingAll(false);
+            return;
+        }
+
+        const batch = writeBatch(firestore);
+        snapshot.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        toast({ title: "تم الحذف", description: "تم مسح كافة السجلات بنجاح." });
+    } catch (e) {
+        toast({ variant: "destructive", title: "خطأ", description: "فشل مسح البيانات." });
+    } finally {
+        setIsClearingAll(false);
+    }
+  };
+
   if (!isAdmin) {
-      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمالك التطبيق فقط.</div>;
+      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمدير النظام.</div>;
   }
 
   const renderContent = () => {
@@ -220,10 +312,9 @@ export default function CardSalesReportsPage() {
     }
     if (!networks || networks.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center text-center h-64">
-          <AlertCircle className="h-16 w-16 text-muted-foreground opacity-20" />
-          <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مضافة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">ستظهر مبيعات الشبكات المحلية هنا بمجرد إضافتها.</p>
+        <div className="flex flex-col items-center justify-center text-center h-64 opacity-20">
+          <AlertCircle className="h-16 w-16" />
+          <h3 className="mt-4 text-lg font-black">لا توجد شبكات مضافة</h3>
         </div>
       );
     }
@@ -231,10 +322,10 @@ export default function CardSalesReportsPage() {
         <div className="space-y-6">
             <div className="text-center space-y-1">
                 <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل يتم تلقائياً للملاك)</p>
-                <div className="p-3 bg-green-50 border border-green-100 rounded-2xl mt-4">
-                    <p className="text-[10px] text-green-700 font-black leading-relaxed">
-                        ✅ نظام التحويل التلقائي: يتم إضافة 90% من قيمة الكرت إلى رصيد مالك الشبكة فور عملية الشراء. يمكنك مراجعة العمليات السابقة هنا.
+                <p className="text-xs font-bold text-muted-foreground">مراجعة مبيعات الشبكات المحلية</p>
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl mt-4">
+                    <p className="text-[10px] text-blue-700 font-black leading-relaxed">
+                        ℹ️ نظام الأرشفة: المبيعات الجديدة تظهر في "الجديد"، وعند التحويل تنتقل لـ "الأرشيف". يمكنك مسح الأرشيف في أي وقت لتنظيف الواجهة.
                     </p>
                 </div>
             </div>
@@ -266,7 +357,34 @@ export default function CardSalesReportsPage() {
   return (
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="أرباح الكروت" />
-      <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex justify-end mb-4">
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="rounded-xl h-9 font-black text-[10px]">
+                        <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                        مسح كافة السجلات الشامل
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-[32px]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-center font-black">تنبيه البدء الحقيقي</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center pt-2">
+                            سيتم حذف كافة مبيعات الكروت (الجديد والأرشيف) من واجهتك الآن. 
+                            هذا الإجراء مخصص للتنظيف ولا يؤثر على أرصدة الملاك.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogAction onClick={handleClearAllMabi3at} className="bg-destructive hover:bg-destructive/90 rounded-2xl h-12 font-bold w-full" disabled={isClearingAll}>
+                            {isClearingAll ? <Loader2 className="animate-spin h-5 w-5" /> : "تأكيد الحذف النهائي"}
+                        </AlertDialogAction>
+                        <AlertDialogCancel className="rounded-2xl h-12 mt-0 w-full" disabled={isClearingAll}>إلغاء</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+        {renderContent()}
+      </div>
       <Toaster/>
     </div>
   );

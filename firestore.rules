@@ -15,17 +15,18 @@ service cloud.firestore {
     }
 
     /**
-     * السماح بالوصول الكامل للمدير على كل شيء في النظام
+     * السماح بالوصول الكامل للمدير على كل شيء في النظام (قاعدة ذهبية)
      */
     match /{document=**} {
       allow read, write: if isAdmin();
     }
     
     /**
-     * مبيعات الكروت - متاحة للجميع الآن للتجربة
+     * مبيعات الكروت - قواعد محددة للعملاء والمدير
      */
     match /soldCards/{cardId} {
-      allow read, write: if request.auth != null;
+      allow read, create, update: if request.auth != null;
+      allow delete: if isAdmin();
     }
     
     // إدارة الشبكات
@@ -58,7 +59,7 @@ service cloud.firestore {
       }
     }
     
-    // طلبات السحب والطلبات الأخرى
+    // الطلبات العامة
     match /withdrawalRequests/{reqId} {
       allow read, write: if request.auth != null;
     }

@@ -316,22 +316,9 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 4. تحويل الأرباح تلقائياً للمالك
-            if (ownerId && ownerId !== 'admin') {
-                const ownerDocRef = doc(firestore, 'users', ownerId);
-                batch.update(ownerDocRef, { balance: increment(payoutAmount) });
+            // 4. تم إيقاف التحويل التلقائي للأرباح لمالك الشبكة (الآن يتم يدوياً من قبل الإدارة)
 
-                const ownerTxRef = doc(collection(firestore, `users/${ownerId}/transactions`));
-                batch.set(ownerTxRef, {
-                    userId: ownerId,
-                    transactionDate: now,
-                    amount: payoutAmount,
-                    transactionType: 'أرباح مبيعات الكروت',
-                    notes: `تم تحويل أرباح كرت ${selectedCategory.name} - شبكة: ${selectedNetwork.name}`
-                });
-            }
-
-            // 5. سجل الكروت المباعة للإدارة (الحالة: مكتملة للتحويل التلقائي)
+            // 5. سجل الكروت المباعة للإدارة (الحالة: انتظار للتحويل اليدوي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
                 networkId: selectedNetwork.id,
@@ -348,7 +335,7 @@ export default function CombinedNetworksPage() {
                 buyerName: userProfile.displayName || 'مشترك',
                 buyerPhoneNumber: userProfile.phoneNumber || '',
                 soldTimestamp: now,
-                payoutStatus: 'completed' 
+                payoutStatus: 'pending' // انتظار التحويل اليدوي من الإدارة
             });
 
             await batch.commit();

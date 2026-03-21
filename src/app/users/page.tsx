@@ -141,7 +141,7 @@ export default function UsersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             action: 'balance',
-            mobile: '770326828', // Using admin number as identifier for token generation
+            mobile: '770326828',
             transid: transid,
         })
       }).then(res => res.json());
@@ -150,7 +150,8 @@ export default function UsersPage() {
 
       const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (telecomResult && telecomResult.balance !== undefined) {
+      // التحقق من نتيجة رصيد الوكيل بناءً على المواصفات الجديدة
+      if (telecomResult && (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) && telecomResult.balance !== undefined) {
         setAgentBalance(String(telecomResult.balance));
       } else {
         setAgentBalance('خطأ');
@@ -449,7 +450,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-sm font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-[11px] font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -458,7 +459,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-sm font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-[11px] font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>

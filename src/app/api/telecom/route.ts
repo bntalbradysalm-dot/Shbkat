@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
@@ -63,17 +64,17 @@ export async function POST(request: Request) {
                 endpoint = 'yem';
                 apiRequestParams.action = action;
                 break;
+            case 'status':
+            case 'balance':
+                endpoint = 'info';
+                apiRequestParams.action = action;
+                break;
             case 'billoffer':
                 endpoint = 'offeryem';
                 apiRequestParams.action = 'billoffer';
                 if (!apiRequestParams.method) {
                     apiRequestParams.method = 'Renew';
                 }
-                break;
-            case 'status':
-            case 'balance':
-                endpoint = 'info';
-                apiRequestParams.action = action;
                 break;
             default:
                 endpoint = 'yem';

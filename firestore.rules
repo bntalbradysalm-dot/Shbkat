@@ -5,8 +5,8 @@ service cloud.firestore {
 
     /**
      * ديون العملاء (clientDebts)
-     * تم فتح الوصول بالكامل (قراءة وكتابة) لتجاوز خطأ الأذونات المتكرر
-     * الاعتماد الآن على حماية الواجهة (UI) التي تظهر فقط للمدير
+     * تم إلغاء كافة القيود الأمنية بناءً على طلب المستخدم لحل مشكلة الصلاحيات المتكررة
+     * الحماية تعتمد الآن على الواجهة (UI) التي تظهر فقط للمدير
      */
     match /clientDebts/{debtId} {
       allow read, write: if true;
@@ -14,8 +14,8 @@ service cloud.firestore {
 
     /**
      * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
+     * المعرف الفريد (UID) المكتشف في الخطأ: wsy8bUcULSYX2J9Q9WyisiFX5ki2
      * الرقم المعتمد: 770326828
-     * المعرف الفريد المكتشف: wsy8bUcULSYX2J9Q9WyisiFX5ki2
      */
     function isAdmin() {
       return request.auth != null && 
@@ -24,14 +24,14 @@ service cloud.firestore {
     }
 
     /**
-     * قاعدة ذهبية: المدير يملك صلاحية القراءة والكتابة على كافة مستندات النظام
+     * قاعدة شاملة للمدير: يملك صلاحية كاملة على كافة المستندات
      */
     match /{document=**} {
       allow read, write: if isAdmin();
     }
     
     /**
-     * مبيعات الكروت - قواعد محددة للعملاء والمدير
+     * مبيعات الكروت
      */
     match /soldCards/{cardId} {
       allow read, create, update: if request.auth != null;

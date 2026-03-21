@@ -142,7 +142,7 @@ export default function UsersPage() {
         body: JSON.stringify({ 
             action: 'balance',
             transid: transid,
-            mobile: '000000000' 
+            // Removed dummy mobile to let the server use the system username for token validation
         })
       }).then(res => res.json());
 
@@ -150,8 +150,8 @@ export default function UsersPage() {
 
       const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (telecomResult && (telecomResult.resultCode === "0" || telecomResult.resultCode === 0)) {
-        setAgentBalance(telecomResult.balance || '0');
+      if (telecomResult && telecomResult.balance !== undefined) {
+        setAgentBalance(String(telecomResult.balance));
       } else {
         setAgentBalance('خطأ');
       }
@@ -414,7 +414,7 @@ export default function UsersPage() {
                         <BarChart3 className="h-3 w-3 text-primary" />
                         <span className="text-[9px] font-black text-primary/80 uppercase tracking-tighter">الرصيد المجمع</span>
                     </div>
-                    <div className="text-sm font-black text-primary truncate">
+                    <div className="text-lg font-black text-primary truncate">
                         {isFetchingBalances ? <Skeleton className="h-4 w-12" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
@@ -426,7 +426,7 @@ export default function UsersPage() {
                             {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                    <div className={cn("text-lg font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
                         {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
@@ -436,7 +436,7 @@ export default function UsersPage() {
                         <Scale className="h-3 w-3 text-orange-600" />
                         <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-tighter">الديون</span>
                     </div>
-                    <div className="text-sm font-black text-orange-600 truncate">
+                    <div className="text-lg font-black text-orange-600 truncate">
                         {debtsAmount.toLocaleString('en-US')} 
                     </div>
                 </div>
@@ -449,7 +449,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -458,7 +458,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>

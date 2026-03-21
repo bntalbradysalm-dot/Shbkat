@@ -31,6 +31,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Network = {
   id: string;
@@ -89,7 +91,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         }, { totalSales: 0, totalPayout: 0, totalCommission: 0 });
     }, [soldCards]);
 
-    const handleTransferProfit = async (card: SoldCard) => {
+    const handleTransferProfit = (card: SoldCard) => {
         if (!firestore || !card.ownerId) {
             toast({ variant: "destructive", title: "خطأ", description: "معلومات المالك غير متوفرة لهذا الكرت." });
             return; 
@@ -106,59 +108,72 @@ const NetworkDetails = ({ network }: { network: Network }) => {
 
         setIsTransferring(card.id);
 
-        try {
-            const batch = writeBatch(firestore);
-            const now = new Date().toISOString();
-            const payoutAmount = Number(card.payoutAmount) || 0;
+        const batch = writeBatch(firestore);
+        const now = new Date().toISOString();
+        const payoutAmount = Number(card.payoutAmount) || 0;
 
-            if (payoutAmount <= 0) { 
-                throw new Error("مبلغ التحويل غير صالح.");
-            }
+        // 1. تحديث حالة الطلب إلى مكتمل
+        batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
 
-            // 1. تحديث حالة الطلب إلى مكتمل
-            batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
+        // 2. تحويل الرصيد للمالك
+        const ownerRef = doc(firestore, 'users', card.ownerId);
+        batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-            // 2. تحويل الرصيد للمالك
-            const ownerRef = doc(firestore, 'users', card.ownerId);
-            batch.update(ownerRef, { balance: increment(payoutAmount) });
+        // 3. إضافة سجل عملية للمالك (سيبقى حتى لو تم حذف السجل من هنا)
+        const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
+        batch.set(ownerTxRef, {
+            userId: card.ownerId,
+            transactionDate: now,
+            amount: payoutAmount,
+            transactionType: 'أرباح مبيعات الكروت',
+            notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
+        });
 
-            // 3. إضافة سجل عملية للمالك
-            const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
-            batch.set(ownerTxRef, {
-                userId: card.ownerId,
-                transactionDate: now,
-                amount: payoutAmount,
-                transactionType: 'أرباح مبيعات الكروت',
-                notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
+        batch.commit()
+            .then(() => {
+                toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح وتسجيله في حسابه." });
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: `soldCards/${card.id}`,
+                    operation: 'update',
+                    requestResourceData: { payoutStatus: 'completed' }
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsTransferring(null);
             });
-
-            await batch.commit();
-            toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح." });
-        } catch (e: any) {
-            console.error("Transfer error:", e);
-            toast({ variant: "destructive", title: "خطأ", description: e.message || "فشل تحويل الربح." });
-        } finally {
-            setIsTransferring(null);
-        }
     };
 
-    const handleDeleteArchived = async () => {
+    const handleDeleteArchived = () => {
         const completedCards = soldCards.filter(c => c.payoutStatus === 'completed');
         if (completedCards.length === 0 || !firestore) return;
 
         setIsTransferring('deleting-archived');
-        try {
-            const batch = writeBatch(firestore);
-            completedCards.forEach(card => {
-                batch.delete(doc(firestore, 'soldCards', card.id));
+        
+        const batch = writeBatch(firestore);
+        completedCards.forEach(card => {
+            batch.delete(doc(firestore, 'soldCards', card.id));
+        });
+
+        batch.commit()
+            .then(() => {
+                toast({ 
+                    title: "تم الحذف", 
+                    description: "تم حذف السجل من صفحة التقارير فقط. السجلات لا تزال في حسابات الملاك." 
+                });
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: 'soldCards',
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsTransferring(null);
             });
-            await batch.commit();
-            toast({ title: "تم الحذف", description: "تم حذف العمليات المحولة بنجاح." });
-        } catch (e: any) {
-            toast({ variant: "destructive", title: "خطأ", description: "فشل حذف الأرشيف." });
-        } finally {
-            setIsTransferring(null);
-        }
     };
 
     if (isLoadingSold) {
@@ -204,9 +219,11 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                         </AlertDialogTrigger>
                         <AlertDialogContent className="rounded-[32px]">
                             <AlertDialogHeader>
-                                <AlertDialogTitle className="text-center font-black">تأكيد حذف الأرشيف</AlertDialogTitle>
+                                <AlertDialogTitle className="text-center font-black text-destructive">تأكيد حذف الأرشيف</AlertDialogTitle>
                                 <AlertDialogDescription className="text-center">
-                                    هل أنت متأكد من حذف جميع العمليات التي تم تحويل أرباحها مسبقاً لهذه الشبكة؟ لن تتمكن من رؤيتها في التقارير بعد الحذف.
+                                    سيتم حذف هذه العمليات من سجل التقارير هذا فقط لتنظيف الواجهة. 
+                                    <br/>
+                                    <strong>ملاحظة:</strong> لن يتم حذف هذه العمليات من سجل العمليات الخاص بمالك الشبكة.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
@@ -243,7 +260,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                                             size="sm" 
                                             className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700"
                                             onClick={() => handleTransferProfit(card)}
-                                            disabled={isTransferring === card.id}
+                                            disabled={!!isTransferring}
                                         >
                                             {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
                                         </Button>

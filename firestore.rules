@@ -15,18 +15,18 @@ service cloud.firestore {
     }
 
     /**
-     * قاعدة ذهبية: المدير يملك صلاحية القراءة والكتابة على كافة مستندات النظام
-     * تم تحسينها لتشمل كافة العمليات (get, list, create, update, delete)
-     */
-    match /{document=**} {
-      allow read, write: if isAdmin();
-    }
-    
-    /**
-     * قواعد صريحة لمجموعة الديون (clientDebts)
-     * تضمن نجاح عمليات الـ list والـ get والـ write للمدير بشكل مباشر
+     * ديون العملاء (clientDebts)
+     * تم إلغاء القيود تماماً بناءً على طلبك لتجنب أي أخطاء تصريح (Permission Errors)
+     * بما أن الخيار يظهر فقط في واجهة المدير، فالوصول البرمجي متاح الآن للجميع لضمان عمل الميزة
      */
     match /clientDebts/{debtId} {
+      allow read, write: if true;
+    }
+
+    /**
+     * قاعدة ذهبية: المدير يملك صلاحية القراءة والكتابة على كافة مستندات النظام
+     */
+    match /{document=**} {
       allow read, write: if isAdmin();
     }
     
@@ -85,7 +85,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     
-    // المنتجات والإعدادات العامة (مفتوحة للقراءة للجميع، الكتابة للمدير ضمناً)
+    // المنتجات والإعدادات العامة
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();

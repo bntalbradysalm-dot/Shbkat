@@ -6,13 +6,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, orderBy, doc, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
+import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -131,6 +142,25 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         }
     };
 
+    const handleDeleteArchived = async () => {
+        const completedCards = soldCards.filter(c => c.payoutStatus === 'completed');
+        if (completedCards.length === 0 || !firestore) return;
+
+        setIsTransferring('deleting-archived');
+        try {
+            const batch = writeBatch(firestore);
+            completedCards.forEach(card => {
+                batch.delete(doc(firestore, 'soldCards', card.id));
+            });
+            await batch.commit();
+            toast({ title: "تم الحذف", description: "تم حذف العمليات المحولة بنجاح." });
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "خطأ", description: "فشل حذف الأرشيف." });
+        } finally {
+            setIsTransferring(null);
+        }
+    };
+
     if (isLoadingSold) {
         return (
             <div className="space-y-2 p-4">
@@ -155,6 +185,37 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                     <p className="text-[8px] font-black uppercase text-orange-600 mb-1">العمولة</p>
                     <div className="text-sm font-black text-orange-600">{totalCommission.toLocaleString()}</div>
                 </Card>
+            </div>
+
+            <div className="flex justify-between items-center mb-2 mt-4">
+                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">سجل المبيعات</h4>
+                {soldCards.some(c => c.payoutStatus === 'completed') && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 text-[9px] text-destructive hover:text-destructive hover:bg-destructive/5 font-black gap-1.5 rounded-lg"
+                                disabled={isTransferring === 'deleting-archived'}
+                            >
+                                {isTransferring === 'deleting-archived' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                حذف الطلبات الجاهزة
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-[32px]">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-center font-black">تأكيد حذف الأرشيف</AlertDialogTitle>
+                                <AlertDialogDescription className="text-center">
+                                    هل أنت متأكد من حذف جميع العمليات التي تم تحويل أرباحها مسبقاً لهذه الشبكة؟ لن تتمكن من رؤيتها في التقارير بعد الحذف.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
+                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteArchived} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">تأكيد الحذف</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </div>
 
             {soldCards && soldCards.length > 0 ? (

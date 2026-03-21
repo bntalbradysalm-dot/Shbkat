@@ -13,17 +13,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -112,14 +101,11 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         const now = new Date().toISOString();
         const payoutAmount = Number(card.payoutAmount) || 0;
 
-        // 1. تحديث حالة الطلب إلى مكتمل
-        batch.update(doc(firestore, 'soldCards', card.id), { payoutStatus: 'completed' });
-
-        // 2. تحويل الرصيد للمالك
+        // 1. تحويل الرصيد للمالك
         const ownerRef = doc(firestore, 'users', card.ownerId);
         batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-        // 3. إضافة سجل عملية للمالك (سيبقى حتى لو تم حذف السجل من هنا)
+        // 2. إضافة سجل عملية للمالك (يبقى في حسابه بشكل دائم)
         const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
         batch.set(ownerTxRef, {
             userId: card.ownerId,
@@ -129,45 +115,17 @@ const NetworkDetails = ({ network }: { network: Network }) => {
             notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
         });
 
+        // 3. حذف الطلب من قائمة المبيعات الخاصة بالإدارة (تنظيف تلقائي)
+        batch.delete(doc(firestore, 'soldCards', card.id));
+
         batch.commit()
             .then(() => {
-                toast({ title: "نجاح", description: "تم تحويل الربح للمالك بنجاح وتسجيله في حسابه." });
+                toast({ title: "تم التحويل", description: "تم تحويل الربح للمالك بنجاح وحذف الطلب من القائمة." });
             })
             .catch(async (serverError) => {
                 const permissionError = new FirestorePermissionError({
                     path: `soldCards/${card.id}`,
-                    operation: 'update',
-                    requestResourceData: { payoutStatus: 'completed' }
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            })
-            .finally(() => {
-                setIsTransferring(null);
-            });
-    };
-
-    const handleDeleteArchived = () => {
-        const completedCards = soldCards.filter(c => c.payoutStatus === 'completed');
-        if (completedCards.length === 0 || !firestore) return;
-
-        setIsTransferring('deleting-archived');
-        
-        const batch = writeBatch(firestore);
-        completedCards.forEach(card => {
-            batch.delete(doc(firestore, 'soldCards', card.id));
-        });
-
-        batch.commit()
-            .then(() => {
-                toast({ 
-                    title: "تم الحذف", 
-                    description: "تم حذف السجل من صفحة التقارير فقط. السجلات لا تزال في حسابات الملاك." 
-                });
-            })
-            .catch(async (serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: 'soldCards',
-                    operation: 'delete',
+                    operation: 'delete'
                 });
                 errorEmitter.emit('permission-error', permissionError);
             })
@@ -203,36 +161,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
             </div>
 
             <div className="flex justify-between items-center mb-2 mt-4">
-                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">سجل المبيعات</h4>
-                {soldCards.some(c => c.payoutStatus === 'completed') && (
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 text-[9px] text-destructive hover:text-destructive hover:bg-destructive/5 font-black gap-1.5 rounded-lg"
-                                disabled={isTransferring === 'deleting-archived'}
-                            >
-                                {isTransferring === 'deleting-archived' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                                حذف الطلبات الجاهزة
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-[32px]">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="text-center font-black text-destructive">تأكيد حذف الأرشيف</AlertDialogTitle>
-                                <AlertDialogDescription className="text-center">
-                                    سيتم حذف هذه العمليات من سجل التقارير هذا فقط لتنظيف الواجهة. 
-                                    <br/>
-                                    <strong>ملاحظة:</strong> لن يتم حذف هذه العمليات من سجل العمليات الخاص بمالك الشبكة.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-4 sm:space-x-0">
-                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">تراجع</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteArchived} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">تأكيد الحذف</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                )}
+                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">سجل المبيعات الجارية</h4>
             </div>
 
             {soldCards && soldCards.length > 0 ? (
@@ -246,31 +175,22 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                             <InfoRow icon={TrendingUp} label="حصة المالك" value={card.payoutAmount} valueClassName="text-green-600" />
                             
                             <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
-                                {card.payoutStatus === 'completed' ? (
-                                    <Badge className="bg-green-500 text-white border-none px-3 py-1 rounded-lg flex items-center gap-1.5">
-                                        <ShieldCheck className="w-3 h-3" />
-                                        <span className="text-[9px] font-black">تم التحويل (90%)</span>
-                                    </Badge>
-                                ) : (
-                                    <>
-                                        <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
-                                            <span className="text-[9px] font-black">انتظار التحويل</span>
-                                        </Badge>
-                                        <Button 
-                                            size="sm" 
-                                            className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700"
-                                            onClick={() => handleTransferProfit(card)}
-                                            disabled={!!isTransferring}
-                                        >
-                                            {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
-                                        </Button>
-                                    </>
-                                )}
+                                <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
+                                    <span className="text-[9px] font-black">بانتظار التحويل</span>
+                                </Badge>
+                                <Button 
+                                    size="sm" 
+                                    className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700 shadow-sm active:scale-95 transition-all"
+                                    onClick={() => handleTransferProfit(card)}
+                                    disabled={!!isTransferring}
+                                >
+                                    {isTransferring === card.id ? <Loader2 className="animate-spin h-3 w-3" /> : "تحويل الربح للمالك"}
+                                </Button>
                             </div>
                         </Card>
                     ))}
                 </div>
-            ) : <p className="text-center text-muted-foreground py-8 text-sm">لا توجد مبيعات حالياً لهذه الشبكة.</p>}
+            ) : <p className="text-center text-muted-foreground py-8 text-sm">لا توجد مبيعات معلقة حالياً لهذه الشبكة.</p>}
         </div>
     )
 }
@@ -308,10 +228,10 @@ export default function CardSalesReportsPage() {
         <div className="space-y-6">
             <div className="text-center space-y-1">
                 <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل اليدوي للملاك)</p>
+                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات المحلية</p>
                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl mt-4">
                     <p className="text-[10px] text-blue-700 font-black leading-relaxed">
-                        ℹ️ نظام التحويل اليدوي: يتم تسجيل مبيعات الكروت هنا. يجب على مدير التطبيق تحويل حصة المالك (90%) يدوياً من خلال الضغط على زر التحويل لكل عملية.
+                        ℹ️ نظام التحويل الذكي: عند الضغط على "تحويل"، سيتم إضافة الرصيد للمالك وحذف العملية من هذه القائمة تلقائياً لتنظيف واجهتك، مع بقائها في سجل المالك.
                     </p>
                 </div>
             </div>

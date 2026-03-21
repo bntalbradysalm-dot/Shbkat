@@ -150,7 +150,6 @@ export default function UsersPage() {
 
       const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      // التحقق من نتيجة رصيد الوكيل بناءً على المواصفات الجديدة
       if (telecomResult && (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) && telecomResult.balance !== undefined) {
         setAgentBalance(String(telecomResult.balance));
       } else {
@@ -361,7 +360,7 @@ export default function UsersPage() {
                     </CardHeader>
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
-                            <h2 className="text-lg font-black text-white truncate">
+                            <h2 className="text-base font-black text-white truncate">
                                 {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(agentBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
@@ -379,7 +378,7 @@ export default function UsersPage() {
                     </CardHeader>
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
-                            <h2 className="text-lg font-black text-white truncate">
+                            <h2 className="text-base font-black text-white truncate">
                                 {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(baityBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
@@ -400,7 +399,7 @@ export default function UsersPage() {
                     </CardHeader>
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
-                            <h2 className="text-lg font-black text-white truncate">
+                            <h2 className="text-base font-black text-white truncate">
                                 {boxBalance.toLocaleString('en-US')}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
@@ -415,7 +414,7 @@ export default function UsersPage() {
                         <BarChart3 className="h-3 w-3 text-primary" />
                         <span className="text-[9px] font-black text-primary/80 uppercase tracking-tighter">الرصيد المجمع</span>
                     </div>
-                    <div className="text-sm font-black text-primary truncate">
+                    <div className="text-xs font-black text-primary truncate">
                         {isFetchingBalances ? <Skeleton className="h-4 w-12" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
@@ -427,7 +426,7 @@ export default function UsersPage() {
                             {netProfit >= 0 ? 'الأرباح' : 'العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                    <div className={cn("text-xs font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
                         {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
@@ -437,7 +436,7 @@ export default function UsersPage() {
                         <Scale className="h-3 w-3 text-orange-600" />
                         <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-tighter">الديون</span>
                     </div>
-                    <div className="text-sm font-black text-orange-600 truncate">
+                    <div className="text-xs font-black text-orange-600 truncate">
                         {debtsAmount.toLocaleString('en-US')} 
                     </div>
                 </div>
@@ -450,7 +449,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-[11px] font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-[9px] font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -459,7 +458,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-[11px] font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-[9px] font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>

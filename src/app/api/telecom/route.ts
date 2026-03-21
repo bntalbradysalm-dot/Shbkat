@@ -11,6 +11,7 @@ const API_BASE_URL = 'http://echehanly.yrbso.net/api/yr/';
 const generateToken = (transid: string, identifier: string) => {
   if (!PASSWORD || !USERNAME) return '';
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
+  // التوكن المعتمد: MD5(MD5(password) + transid + username + identifier)
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Telecom settings are missing in environment variables' }), { status: 500 });
     }
 
+    // المعرف المستخدم في التوكن (الرقم أو رقم اللاعب أو اسم المستخدم)
     const identifier = payload.mobile || payload.playerid || USERNAME;
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);

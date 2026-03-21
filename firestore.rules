@@ -21,6 +21,11 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
     
+    // إدارة ديون العملاء
+    match /clientDebts/{debtId} {
+      allow read, write: if isAdmin();
+    }
+    
     /**
      * مبيعات الكروت - قواعد محددة للعملاء والمدير
      */

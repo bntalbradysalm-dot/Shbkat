@@ -79,17 +79,16 @@
         "soldTimestamp": { "type": "string", "format": "date-time" }
       }
     },
-    "Transaction": {
-      "title": "Transaction",
+    "ClientDebt": {
+      "title": "Client Debt",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "userId": { "type": "string" },
+        "clientName": { "type": "string" },
         "amount": { "type": "number" },
-        "transactionType": { "type": "string" },
-        "transactionDate": { "type": "string", "format": "date-time" },
-        "notes": { "type": "string" }
-      }
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientName", "amount", "timestamp"]
     }
   },
   "auth": {
@@ -100,9 +99,9 @@
       "schema": { "$ref": "#/backend/entities/User" },
       "description": "User profile data."
     },
-    "/users/{userId}/transactions/{txId}": {
-      "schema": { "$ref": "#/backend/entities/Transaction" },
-      "description": "User financial transactions."
+    "/clientDebts/{debtId}": {
+      "schema": { "$ref": "#/backend/entities/ClientDebt" },
+      "description": "Debts owed by clients to the administrator."
     },
     "/products/{productId}": {
       "schema": { "$ref": "#/backend/entities/Product" },

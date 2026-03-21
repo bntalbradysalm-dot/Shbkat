@@ -44,7 +44,8 @@ import {
   TrendingUp,
   TrendingDown,
   Save,
-  X
+  X,
+  Scale
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -69,6 +70,7 @@ type User = {
 
 type AppSettings = {
     boxBalance?: number;
+    debts?: number;
 };
 
 const filterOptions = [
@@ -100,9 +102,11 @@ export default function UsersPage() {
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
-  // Box Balance State
+  // Box and Debts Balance State
   const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
+  const [isDebtsEditingOpen, setIsDebtsEditingOpen] = useState(false);
   const [newBoxValue, setNewBoxValue] = useState('');
+  const [newDebtsValue, setNewDebtsValue] = useState('');
 
   const usersCollection = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'users'), orderBy('registrationDate', 'desc')) : null),
@@ -117,6 +121,7 @@ export default function UsersPage() {
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
   const boxBalance = appSettings?.boxBalance ?? 0;
+  const debtsAmount = appSettings?.debts ?? 0;
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
@@ -179,8 +184,8 @@ export default function UsersPage() {
   }, [agentBalance, baityBalance, boxBalance]);
 
   const netProfit = useMemo(() => {
-    return combinedProvidersBalance - totalUsersBalance;
-  }, [combinedProvidersBalance, totalUsersBalance]);
+    return combinedProvidersBalance - (totalUsersBalance + debtsAmount);
+  }, [combinedProvidersBalance, totalUsersBalance, debtsAmount]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -303,6 +308,20 @@ export default function UsersPage() {
     }
   };
 
+  const handleSaveDebts = async () => {
+    if (!firestore || !settingsDocRef) return;
+    const val = parseFloat(newDebtsValue);
+    if (isNaN(val)) return;
+
+    try {
+        await setDoc(settingsDocRef, { debts: val }, { merge: true });
+        toast({ title: "تم التحديث", description: "تم تحديث مبلغ الديون بنجاح." });
+        setIsDebtsEditingOpen(false);
+    } catch (e) {
+        toast({ variant: "destructive", title: "فشل التحديث" });
+    }
+  };
+
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -379,26 +398,36 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+            <Card className="border-none shadow-md bg-muted/40 rounded-[28px] p-4 grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1 mb-1">
-                        <BarChart3 className="h-2.5 w-2.5 text-primary opacity-70" />
-                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">الرصيد المجمع</span>
+                        <BarChart3 className="h-3 w-3 text-primary" />
+                        <span className="text-[9px] font-black text-primary/80 uppercase tracking-tighter">الرصيد المجمع</span>
                     </div>
-                    <div className="text-[10px] font-black text-primary truncate">
-                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
+                    <div className="text-sm font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-4 w-12" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
                 
-                <div className="space-y-1 text-right px-1">
+                <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1 mb-1">
-                        {netProfit >= 0 ? <TrendingUp className="h-2.5 w-2.5 text-green-600" /> : <TrendingDown className="h-2.5 w-2.5 text-red-600" />}
-                        <span className={cn("text-[7px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
+                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
+                        <span className={cn("text-[9px] font-black uppercase tracking-tighter", netProfit >= 0 ? "text-green-600/80" : "text-red-600/80")}>
                             {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-[10px] font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                    <div className={cn("text-sm font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
                         {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
+                    </div>
+                </div>
+
+                <div className="space-y-1 text-right px-1 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl p-1" onClick={() => { setNewDebtsValue(String(debtsAmount)); setIsDebtsEditingOpen(true); }}>
+                    <div className="flex items-center gap-1 mb-1">
+                        <Scale className="h-3 w-3 text-orange-600" />
+                        <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-tighter">الديون</span>
+                    </div>
+                    <div className="text-sm font-black text-orange-600 truncate">
+                        {debtsAmount.toLocaleString('en-US')} 
                     </div>
                 </div>
             </Card>
@@ -622,6 +651,22 @@ export default function UsersPage() {
             </div>
             <DialogFooter>
                 <Button onClick={handleSaveBoxBalance} className="w-full h-12 rounded-2xl font-black bg-red-600 hover:bg-red-700">تحديث المبلغ</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDebtsEditingOpen} onOpenChange={setIsDebtsEditingOpen}>
+        <DialogContent className="rounded-[32px] max-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">تعديل إجمالي الديون</DialogTitle>
+                <DialogDescription className="text-center">أدخل إجمالي مبالغ الديون الخارجية والمستحقة يدوياً.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">إجمالي الديون</Label>
+                <Input type="number" value={newDebtsValue} onChange={e => setNewDebtsValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-orange-200 focus-visible:ring-orange-500" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleSaveDebts} className="w-full h-12 rounded-2xl font-black bg-orange-600 hover:bg-orange-700">تحديث الديون</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

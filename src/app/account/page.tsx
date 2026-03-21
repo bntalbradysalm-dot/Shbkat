@@ -72,7 +72,7 @@ const managementLinks = [
   { title: 'طلبات التجديد', icon: ListChecks, href: '/renewal-requests' },
   { title: 'طلبات السداد', icon: CreditCard, href: '/bill-payment-requests' },
   { title: 'طلبات السحب', icon: Banknote, href: '/withdrawal-requests' },
-  { title: 'إدارة منظومة الوادي', icon: SatelliteDish, heart: '/alwadi-management' },
+  { title: 'إدارة منظومة الوادي', icon: SatelliteDish, href: '/alwadi-management' },
   { title: 'تقارير منظومة الوادي', icon: BarChart3, href: '/alwadi-reports' },
   { title: 'إدارة طرق الدفع', icon: Wallet, href: '/payment-management' },
   { title: 'إدارة الإعلانات', icon: Megaphone, href: '/ads-management' },

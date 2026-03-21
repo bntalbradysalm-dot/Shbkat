@@ -16,12 +16,13 @@ service cloud.firestore {
 
     /**
      * السماح بالوصول الكامل للمدير على كل شيء في النظام (قاعدة ذهبية)
+     * تم تحديثها لضمان الشمولية المطلقة
      */
     match /{document=**} {
       allow read, write: if isAdmin();
     }
     
-    // إدارة ديون العملاء
+    // قواعد صريحة لمجموعة الديون لضمان عمل عمليات القائمة (List) للمدير
     match /clientDebts/{debtId} {
       allow read, write: if isAdmin();
     }

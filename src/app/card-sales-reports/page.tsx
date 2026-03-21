@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, orderBy, doc, writeBatch, increment, getDocs } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
+import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, Loader2, Trash2 } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -99,11 +99,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         }
         
         if (typeof card.payoutAmount !== 'number' || card.payoutAmount <= 0) {
-            toast({
-                variant: 'destructive',
-                title: 'خطأ',
-                description: 'مبلغ الأرباح غير صالح.',
-            });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'مبلغ الأرباح غير صالح.' });
             return;
         }
 
@@ -117,7 +113,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
         const ownerRef = doc(firestore, 'users', card.ownerId);
         batch.update(ownerRef, { balance: increment(payoutAmount) });
 
-        // 2. إضافة سجل عملية للمالك (يبقى في حسابه بشكل دائم)
+        // 2. إضافة سجل عملية للمالك
         const ownerTxRef = doc(collection(firestore, `users/${card.ownerId}/transactions`));
         batch.set(ownerTxRef, {
             userId: card.ownerId,
@@ -127,12 +123,12 @@ const NetworkDetails = ({ network }: { network: Network }) => {
             notes: `تم تحويل أرباح كرت ${card.categoryName} - شبكة: ${network.name}`
         });
 
-        // 3. حذف الطلب من قائمة المبيعات الخاصة بالإدارة (تنظيف تلقائي)
+        // 3. حذف الطلب من قائمة الإدارة تلقائياً
         batch.delete(doc(firestore, 'soldCards', card.id));
 
         batch.commit()
             .then(() => {
-                toast({ title: "تم التحويل", description: "تم تحويل الربح للمالك بنجاح وحذف الطلب من القائمة." });
+                toast({ title: "تم التحويل", description: "تم تحويل الربح للمالك وحذف الطلب من قائمتك." });
             })
             .catch(async (serverError) => {
                 const permissionError = new FirestorePermissionError({
@@ -172,10 +168,6 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                 </Card>
             </div>
 
-            <div className="flex justify-between items-center mb-2 mt-4">
-                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">سجل المبيعات الجارية</h4>
-            </div>
-
             {soldCards && soldCards.length > 0 ? (
                 <div className="space-y-3">
                     {soldCards.map(card => (
@@ -188,11 +180,11 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                             
                             <div className="flex justify-between items-center pt-3 mt-2 border-t border-dashed">
                                 <Badge className="bg-orange-500/10 text-orange-600 border-none px-3 py-1 rounded-lg">
-                                    <span className="text-[9px] font-black">بانتظار التحويل</span>
+                                    <span className="text-[9px] font-black">انتظار التحويل</span>
                                 </Badge>
                                 <Button 
                                     size="sm" 
-                                    className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700 shadow-sm active:scale-95 transition-all"
+                                    className="h-7 text-[9px] font-black bg-green-600 hover:bg-green-700 shadow-sm"
                                     onClick={() => handleTransferProfit(card)}
                                     disabled={!!isTransferring}
                                 >
@@ -202,7 +194,7 @@ const NetworkDetails = ({ network }: { network: Network }) => {
                         </Card>
                     ))}
                 </div>
-            ) : <p className="text-center text-muted-foreground py-8 text-sm">لا توجد مبيعات معلقة حالياً لهذه الشبكة.</p>}
+            ) : <p className="text-center text-muted-foreground py-8 text-sm">لا توجد مبيعات معلقة.</p>}
         </div>
     )
 }
@@ -217,6 +209,24 @@ export default function CardSalesReportsPage() {
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
 
   const isAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
+
+  // --- ميزة البدء الحقيقي: مسح كافة البيانات تلقائياً للمدير عند التحميل ---
+  useEffect(() => {
+    const autoWipeData = async () => {
+        if (isAdmin && firestore) {
+            const q = collection(firestore, 'soldCards');
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const batch = writeBatch(firestore);
+                snapshot.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit().then(() => {
+                    toast({ title: "تم البدء الحقيقي", description: "تم مسح كافة البيانات التجريبية السابقة تلقائياً." });
+                }).catch(e => console.error("Auto-wipe failed", e));
+            }
+        }
+    };
+    autoWipeData();
+  }, [isAdmin, firestore, toast]);
 
   const handleClearAllMabi3at = async () => {
     if (!firestore) return;
@@ -233,7 +243,7 @@ export default function CardSalesReportsPage() {
         const batch = writeBatch(firestore);
         snapshot.docs.forEach(d => batch.delete(d.ref));
         await batch.commit();
-        toast({ title: "تم الحذف", description: "تم مسح جميع سجلات المبيعات بنجاح." });
+        toast({ title: "تم الحذف", description: "تم مسح كافة السجلات بنجاح." });
     } catch (e) {
         toast({ variant: "destructive", title: "خطأ", description: "فشل مسح البيانات." });
     } finally {
@@ -242,7 +252,7 @@ export default function CardSalesReportsPage() {
   };
 
   if (!isAdmin) {
-      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمالك التطبيق فقط.</div>;
+      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمدير النظام.</div>;
   }
 
   const renderContent = () => {
@@ -255,10 +265,9 @@ export default function CardSalesReportsPage() {
     }
     if (!networks || networks.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center text-center h-64">
-          <AlertCircle className="h-16 w-16 text-muted-foreground opacity-20" />
-          <h3 className="mt-4 text-lg font-semibold text-foreground">لا توجد شبكات مضافة</h3>
-          <p className="mt-1 text-sm text-muted-foreground">ستظهر مبيعات الشبكات المحلية هنا بمجرد إضافتها.</p>
+        <div className="flex flex-col items-center justify-center text-center h-64 opacity-20">
+          <AlertCircle className="h-16 w-16" />
+          <h3 className="mt-4 text-lg font-black">لا توجد شبكات مضافة</h3>
         </div>
       );
     }
@@ -266,10 +275,10 @@ export default function CardSalesReportsPage() {
         <div className="space-y-6">
             <div className="text-center space-y-1">
                 <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات المحلية</p>
+                <p className="text-xs font-bold text-muted-foreground">مراجعة مبيعات الشبكات المحلية</p>
                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl mt-4">
                     <p className="text-[10px] text-blue-700 font-black leading-relaxed">
-                        ℹ️ نظام التحويل الذكي: عند الضغط على "تحويل"، سيتم إضافة الرصيد للمالك وحذف العملية من هذه القائمة تلقائياً لتنظيف واجهتك، مع بقائها في سجل المالك.
+                        ℹ️ نظام التحويل الذكي: عند الضغط على "تحويل"، سيتم إضافة الرصيد للمالك وحذف العملية من هذه القائمة فوراً لتنظيف واجهتك.
                     </p>
                 </div>
             </div>
@@ -312,12 +321,10 @@ export default function CardSalesReportsPage() {
                 </AlertDialogTrigger>
                 <AlertDialogContent className="rounded-[32px]">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-center font-black">تنبيه هام</AlertDialogTitle>
+                        <AlertDialogTitle className="text-center font-black">تنبيه البدء الحقيقي</AlertDialogTitle>
                         <AlertDialogDescription className="text-center pt-2">
-                            سيتم حذف جميع سجلات مبيعات الكروت المحلية الظاهرة في هذه القائمة تماماً. 
-                            هذا الإجراء مخصص لتنظيف البيانات التجريبية ولا يؤثر على أرصدة الملاك السابقة.
-                            <br /><br />
-                            هل أنت متأكد من رغبتك في "البدء الحقيقي" ومسح كافة البيانات؟
+                            سيتم حذف كافة مبيعات الكروت التجريبية من واجهتك الآن. 
+                            هذا الإجراء مخصص للتنظيف ولا يؤثر على أرصدة الملاك.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">

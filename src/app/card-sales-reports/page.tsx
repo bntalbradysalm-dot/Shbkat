@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -231,10 +230,10 @@ export default function CardSalesReportsPage() {
         <div className="space-y-6">
             <div className="text-center space-y-1">
                 <h2 className="text-xl font-black text-primary">أرباح مبيعات الكروت</h2>
-                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل يتم تلقائياً للملاك)</p>
-                <div className="p-3 bg-green-50 border border-green-100 rounded-2xl mt-4">
-                    <p className="text-[10px] text-green-700 font-black leading-relaxed">
-                        ✅ نظام التحويل التلقائي: يتم إضافة 90% من قيمة الكرت إلى رصيد مالك الشبكة فور عملية الشراء. يمكنك مراجعة العمليات السابقة هنا.
+                <p className="text-sm font-bold text-muted-foreground">مراجعة مبيعات الشبكات (التحويل اليدوي للملاك)</p>
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl mt-4">
+                    <p className="text-[10px] text-blue-700 font-black leading-relaxed">
+                        ℹ️ نظام التحويل اليدوي: يتم تسجيل مبيعات الكروت هنا. يجب على مدير التطبيق تحويل حصة المالك (90%) يدوياً من خلال الضغط على زر التحويل لكل عملية.
                     </p>
                 </div>
             </div>

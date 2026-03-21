@@ -4,6 +4,15 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
+     * ديون العملاء (clientDebts)
+     * تم فتح الوصول بالكامل (قراءة وكتابة) لتجاوز خطأ الأذونات المتكرر
+     * الاعتماد الآن على حماية الواجهة (UI) التي تظهر فقط للمدير
+     */
+    match /clientDebts/{debtId} {
+      allow read, write: if true;
+    }
+
+    /**
      * وظيفة للتحقق مما إذا كان المستخدم هو مدير النظام
      * الرقم المعتمد: 770326828
      * المعرف الفريد المكتشف: wsy8bUcULSYX2J9Q9WyisiFX5ki2
@@ -12,15 +21,6 @@ service cloud.firestore {
       return request.auth != null && 
         (request.auth.token.email == '770326828@shabakat.com' || 
          request.auth.uid == 'wsy8bUcULSYX2J9Q9WyisiFX5ki2');
-    }
-
-    /**
-     * ديون العملاء (clientDebts)
-     * تم إلغاء القيود تماماً بناءً على طلبك لتجنب أي أخطاء تصريح (Permission Errors)
-     * بما أن الخيار يظهر فقط في واجهة المدير، فالوصول البرمجي متاح الآن للجميع لضمان عمل الميزة
-     */
-    match /clientDebts/{debtId} {
-      allow read, write: if true;
     }
 
     /**

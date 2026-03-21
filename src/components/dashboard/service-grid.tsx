@@ -77,15 +77,6 @@ export function ServiceGrid() {
         ))}
       </div>
 
-      {/* شريط العيد - نص ثابت مركزي */}
-      <div className="px-4">
-        <div className="w-full min-h-10 bg-mesh-gradient rounded-[20px] shadow-md border border-white/10 flex items-center justify-center p-2 relative group overflow-hidden">
-            <span className="text-white text-[11px] font-black text-center leading-relaxed drop-shadow-sm">
-                بمناسبة عيد الفطر .. جدد كرتك الآن مع خصم 5% 🌙
-            </span>
-        </div>
-      </div>
-
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">

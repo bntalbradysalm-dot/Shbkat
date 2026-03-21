@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, orderBy, doc, writeBatch, increment } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, writeBatch, increment, getDocs } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wifi, User, CreditCard, Calendar, AlertCircle, Banknote, Check, TrendingUp, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
 import {
@@ -22,6 +23,17 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Network = {
   id: string;
@@ -198,10 +210,36 @@ const NetworkDetails = ({ network }: { network: Network }) => {
 export default function CardSalesReportsPage() {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
+  const [isClearingAll, setIsClearingAll] = useState(false);
+
   const networksCollection = useMemoFirebase(() => firestore ? query(collection(firestore, 'networks'), orderBy('name')) : null, [firestore]);
   const { data: networks, isLoading } = useCollection<Network>(networksCollection);
 
   const isAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
+
+  const handleClearAllMabi3at = async () => {
+    if (!firestore) return;
+    setIsClearingAll(true);
+    try {
+        const q = collection(firestore, 'soldCards');
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            toast({ title: "لا توجد بيانات", description: "القائمة فارغة بالفعل." });
+            setIsClearingAll(false);
+            return;
+        }
+
+        const batch = writeBatch(firestore);
+        snapshot.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        toast({ title: "تم الحذف", description: "تم مسح جميع سجلات المبيعات بنجاح." });
+    } catch (e) {
+        toast({ variant: "destructive", title: "خطأ", description: "فشل مسح البيانات." });
+    } finally {
+        setIsClearingAll(false);
+    }
+  };
 
   if (!isAdmin) {
       return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمالك التطبيق فقط.</div>;
@@ -263,7 +301,36 @@ export default function CardSalesReportsPage() {
   return (
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="أرباح الكروت" />
-      <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex justify-end mb-4">
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="rounded-xl h-9 font-black text-[10px]">
+                        <Trash2 className="ml-1.5 h-3.5 w-3.5" />
+                        مسح كافة السجلات (البدء الحقيقي)
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-[32px]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-center font-black">تنبيه هام</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center pt-2">
+                            سيتم حذف جميع سجلات مبيعات الكروت المحلية الظاهرة في هذه القائمة تماماً. 
+                            هذا الإجراء مخصص لتنظيف البيانات التجريبية ولا يؤثر على أرصدة الملاك السابقة.
+                            <br /><br />
+                            هل أنت متأكد من رغبتك في "البدء الحقيقي" ومسح كافة البيانات؟
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
+                        <AlertDialogAction onClick={handleClearAllMabi3at} className="bg-destructive hover:bg-destructive/90 rounded-2xl h-12 font-bold w-full" disabled={isClearingAll}>
+                            {isClearingAll ? <Loader2 className="animate-spin h-5 w-5" /> : "تأكيد الحذف النهائي"}
+                        </AlertDialogAction>
+                        <AlertDialogCancel className="rounded-2xl h-12 mt-0 w-full" disabled={isClearingAll}>إلغاء</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+        {renderContent()}
+      </div>
       <Toaster/>
     </div>
   );

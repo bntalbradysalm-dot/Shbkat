@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking, useUser } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,6 +91,7 @@ const filterOptions = [
 
 export default function UsersPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -115,12 +116,14 @@ export default function UsersPage() {
   const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
   const [isDebtsEditingOpen, setIsDebtsEditingOpen] = useState(false);
   const [newBoxValue, setNewBoxValue] = useState('');
-  const [newDebtsValue, setNewDebtsValue] = useState('');
 
   // Client Debts Specific States
   const [isAddClientDebtOpen, setIsAddClientDebtOpen] = useState(false);
   const [newDebtClientName, setNewDebtClientName] = useState('');
   const [newDebtAmount, setNewDebtAmount] = useState('');
+
+  // Check if current user is Admin
+  const isUserAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
   const usersCollection = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'users'), orderBy('registrationDate', 'desc')) : null),
@@ -134,9 +137,10 @@ export default function UsersPage() {
   );
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
+  // Only fetch client debts for Admin to avoid permission errors for others and hide data
   const clientDebtsCollection = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'clientDebts') : null),
-    [firestore]
+    () => (firestore && isUserAdmin ? collection(firestore, 'clientDebts') : null),
+    [firestore, isUserAdmin]
   );
   const { data: clientDebts, isLoading: isLoadingClientDebts } = useCollection<ClientDebt>(clientDebtsCollection);
 
@@ -157,6 +161,7 @@ export default function UsersPage() {
   }, [users]);
 
   const fetchAllBalances = useCallback(async () => {
+    if (!isUserAdmin) return;
     setIsFetchingBalances(true);
     try {
       const transid = Date.now().toString().slice(-8);
@@ -194,7 +199,7 @@ export default function UsersPage() {
     } finally {
       setIsFetchingBalances(false);
     }
-  }, []);
+  }, [isUserAdmin]);
 
   useEffect(() => {
     fetchAllBalances();
@@ -382,6 +387,10 @@ export default function UsersPage() {
     if (isNaN(num)) return 'خطأ';
     return num.toLocaleString('en-US');
   };
+
+  if (!isUserAdmin) {
+      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمدير النظام فقط.</div>;
+  }
 
   return (
     <>

@@ -5,11 +5,11 @@ service cloud.firestore {
 
     /**
      * ديون العملاء (clientDebts)
-     * تم إلغاء كافة القيود الأمنية بناءً على طلب المستخدم لحل مشكلة الصلاحيات المتكررة
+     * تم السماح بالوصول لجميع المستخدمين المسجلين لحل مشكلة الصلاحيات نهائياً
      * الحماية تعتمد الآن على الواجهة (UI) التي تظهر فقط للمدير
      */
-    match /clientDebts/{debtId} {
-      allow read, write: if true;
+    match /clientDebts/{document=**} {
+      allow read, write: if request.auth != null;
     }
 
     /**

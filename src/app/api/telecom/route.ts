@@ -38,7 +38,11 @@ export async function POST(request: Request) {
       ...payload
     };
     
-    if (service === 'yem4g') {
+    // الأولوية لطلبات الاستعلام والحالة لتوجيهها لمسار info لضمان جلب رصيد الوكيل بدقة
+    if (action === 'balance' || action === 'status') {
+        endpoint = 'info';
+        apiRequestParams.action = action;
+    } else if (service === 'yem4g') {
         endpoint = 'yem4g';
         apiRequestParams.action = action;
     } else if (service === 'post') {
@@ -60,9 +64,9 @@ export async function POST(request: Request) {
     } else if (service === 'yemen' || service === 'yem' || !service) {
         // Yemen Mobile Specific Handling
         if (action === 'billoffer') {
-            endpoint = 'offeryem'; // User requested direct activation via offeryem
+            endpoint = 'offeryem'; // السداد والتفعيل الموحد بناءً على التوثيق
             apiRequestParams.action = 'billoffer';
-            // Map offerid to offerkey as required by the new URL structure
+            // استخدام مسمى offerkey بدلاً من offerid لطلبات التفعيل المباشر
             if (apiRequestParams.offerid) {
                 apiRequestParams.offerkey = apiRequestParams.offerid;
                 delete apiRequestParams.offerid;
@@ -78,11 +82,6 @@ export async function POST(request: Request) {
             case 'solfa':
             case 'queryoffer':
                 endpoint = 'yem';
-                apiRequestParams.action = action;
-                break;
-            case 'status':
-            case 'balance':
-                endpoint = 'info';
                 apiRequestParams.action = action;
                 break;
             default:
@@ -119,6 +118,7 @@ export async function POST(request: Request) {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
+            // محاولة جلب الرصيد من الرد النصي في حال فشل الـ JSON
             const balanceMatch = responseText.match(/Your balance:?\s*([\d.]+)/i);
             if (balanceMatch) {
                 return NextResponse.json({ 

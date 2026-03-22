@@ -186,17 +186,18 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
+    const debts = totalDebts; // تضمين الديون في الرصيد المجمع
     
     const safeAgent = isNaN(agent) ? 0 : agent;
     const safeBaity = isNaN(baity) ? 0 : baity;
     
-    return safeAgent + safeBaity + box;
-  }, [agentBalance, baityBalance, boxBalance]);
+    return safeAgent + safeBaity + box + debts;
+  }, [agentBalance, baityBalance, boxBalance, totalDebts]);
 
   const netProfit = useMemo(() => {
-    // الأرباح = (رصيد المزودين + رصيد الصندوق + الديون) - ما نملكه للمستخدمين
-    return (combinedProvidersBalance + totalDebts) - totalUsersBalance;
-  }, [combinedProvidersBalance, totalUsersBalance, totalDebts]);
+    // الأرباح = الرصيد المجمع (مزودين + صندوق + ديون) - ما نملكه للمستخدمين
+    return combinedProvidersBalance - totalUsersBalance;
+  }, [combinedProvidersBalance, totalUsersBalance]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -464,7 +465,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-lg font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></div>}
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -473,7 +474,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-lg font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>
@@ -566,7 +567,7 @@ export default function UsersPage() {
                                 <AlertDialogDescription className="text-center">سيتم حذف المستخدم وبياناته نهائياً من النظام.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
-                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
+                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogAction>
                                 <AlertDialogAction onClick={() => handleDelete(user.id)} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">حذف</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

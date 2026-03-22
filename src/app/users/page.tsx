@@ -464,7 +464,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-[9px] font-bold text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-lg font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -473,7 +473,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-[9px] font-bold">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-lg font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>

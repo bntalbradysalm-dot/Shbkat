@@ -449,7 +449,7 @@ export default function AccountPage() {
 
     {/* Security PIN Dialog */}
     <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
-        <DialogContent className="rounded-[40px] max-sm p-6 space-y-6">
+        <DialogContent className="rounded-[40px] max-sm p-6 space-y-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-2xl font-black text-primary text-center flex items-center justify-center gap-2">
                     <Fingerprint className="h-6 w-6" />
@@ -491,7 +491,7 @@ export default function AccountPage() {
 
     {/* Developer Dialog */}
     <Dialog open={isDevDialogOpen} onOpenChange={setIsDevDialogOpen}>
-        <DialogContent className="rounded-[40px] max-sm overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="rounded-[40px] max-sm overflow-hidden p-0 border-none shadow-2xl [&>button]:hidden">
             <div className="bg-mesh-gradient h-32 relative">
                 <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 border-4 border-background rounded-[32px] overflow-hidden shadow-xl">
                     <Image 

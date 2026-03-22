@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -588,7 +587,7 @@ export default function UsersPage() {
 
       {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تعديل بيانات المستخدم</DialogTitle>
             </DialogHeader>
@@ -609,7 +608,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isTopUpDialogOpen} onOpenChange={setIsTopUpDialogOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تغذية رصيد (صامتة)</DialogTitle>
                 <DialogDescription className="text-center">سيتم إضافة المبلغ للرصيد مع إشعار داخلي فقط.</DialogDescription>
@@ -625,7 +624,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isManualDepositOpen} onOpenChange={setIsManualDepositOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">إيداع وتبليغ واتساب</DialogTitle>
                 <DialogDescription className="text-center">سيتم إضافة المبلغ وإرسال رسالة واتساب للعميل.</DialogDescription>
@@ -641,7 +640,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">سحب نقدي من الرصيد</DialogTitle>
                 <DialogDescription className="text-center">سيتم خصم المبلغ من رصيد المستخدم حالاً.</DialogDescription>
@@ -658,7 +657,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isBoxEditingOpen} onOpenChange={setIsBoxEditingOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تعديل مبلغ الصندوق</DialogTitle>
                 <DialogDescription className="text-center">أدخل المبلغ الحالي المتوفر في الصندوق يدوياً.</DialogDescription>
@@ -674,7 +673,7 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isDebtsEditingOpen} onOpenChange={setIsDebtsEditingOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
             <DialogHeader>
                 <DialogTitle className="text-center font-black">تعديل إجمالي الديون</DialogTitle>
                 <DialogDescription className="text-center">أدخل المبلغ الإجمالي للديون المستحقة عند العملاء.</DialogDescription>

@@ -579,7 +579,7 @@ export default function YemenMobilePage() {
             mobile: phone, 
             action: 'billoffer', 
             service: 'yemen',
-            offerkey: selectedOffer.offertype, 
+            offerid: selectedOffer.offertype, // تغيير offerkey إلى offerid بناءً على متطلبات الـ API
             method: 'Renew',
             solfa: hasLoan ? 'Y' : 'N',
             amount: selectedOffer.price, // القيمة الأساسية للباقة

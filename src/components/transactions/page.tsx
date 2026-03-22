@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -61,16 +62,15 @@ const getTransactionIcon = (type: string) => {
     }
 };
 
-// Simple hashing function to convert a string to a positive number string
 const generateNumericId = (id: string): string => {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
         const char = id.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash |= 0; // Convert to 32bit integer
+        hash |= 0;
     }
-    // Take absolute value and slice to get a 6-digit number
-    return Math.abs(hash).toString().slice(0, 6).padStart(6, '0');
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.length > 6 ? hashStr.slice(0, 6) : hashStr.padStart(6, '0');
 };
 
 

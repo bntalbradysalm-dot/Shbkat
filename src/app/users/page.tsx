@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, addDocumentNonBlocking, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, useUser } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
   Dialog,
@@ -43,11 +42,7 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Save,
-  X,
-  Scale,
-  Plus,
-  UserPlus
+  Scale
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -100,18 +95,15 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
-  // Box and Debts Balance State
   const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
   const [isDebtsEditingOpen, setIsDebtsEditingOpen] = useState(false);
   const [newBoxValue, setNewBoxValue] = useState('');
   const [newDebtsValue, setNewDebtsValue] = useState('');
 
-  // Check if current user is Admin
   const isUserAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
   const usersCollection = useMemoFirebase(
@@ -186,7 +178,7 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
-    const debts = totalDebts; // تضمين الديون في الرصيد المجمع
+    const debts = totalDebts;
     
     const safeAgent = isNaN(agent) ? 0 : agent;
     const safeBaity = isNaN(baity) ? 0 : baity;
@@ -195,7 +187,6 @@ export default function UsersPage() {
   }, [agentBalance, baityBalance, boxBalance, totalDebts]);
 
   const netProfit = useMemo(() => {
-    // الأرباح = الرصيد المجمع (مزودين + صندوق + ديون) - ما نملكه للمستخدمين
     return combinedProvidersBalance - totalUsersBalance;
   }, [combinedProvidersBalance, totalUsersBalance]);
   
@@ -567,7 +558,7 @@ export default function UsersPage() {
                                 <AlertDialogDescription className="text-center">سيتم حذف المستخدم وبياناته نهائياً من النظام.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="grid grid-cols-2 gap-3 pt-4 sm:space-x-0">
-                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogAction>
+                                <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => handleDelete(user.id)} className="w-full rounded-2xl h-12 bg-destructive hover:bg-destructive/90 font-bold">حذف</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

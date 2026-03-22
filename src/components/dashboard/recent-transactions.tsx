@@ -76,7 +76,9 @@ const generateNumericId = (id: string): string => {
         hash = ((hash << 5) - hash) + char;
         hash |= 0;
     }
-    return Math.abs(hash).toString().slice(0, 6).padStart(6, '0');
+    const hashStr = Math.abs(hash).toString();
+    if (hashStr.length >= 6) return hashStr.slice(0, 6);
+    return ("000000" + hashStr).slice(-6);
 };
 
 export function RecentTransactions() {

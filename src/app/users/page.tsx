@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { collection, doc, updateDoc, increment, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, useDoc, useUser, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,8 +43,7 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Save,
-  X
+  Scale
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -69,6 +68,7 @@ type User = {
 
 type AppSettings = {
     boxBalance?: number;
+    totalDebts?: number;
 };
 
 const filterOptions = [
@@ -80,6 +80,7 @@ const filterOptions = [
 
 export default function UsersPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,14 +96,16 @@ export default function UsersPage() {
   const [editingName, setEditingName] = useState('');
   const [editingPhoneNumber, setEditingPhoneNumber] = useState('');
   
-  // Balances States
   const [agentBalance, setAgentBalance] = useState<string | null>(null);
   const [baityBalance, setBaityBalance] = useState<string | null>(null);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
-  // Box Balance State
   const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
+  const [isDebtsEditingOpen, setIsDebtsEditingOpen] = useState(false);
   const [newBoxValue, setNewBoxValue] = useState('');
+  const [newDebtsValue, setNewDebtsValue] = useState('');
+
+  const isUserAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
   const usersCollection = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'users'), orderBy('registrationDate', 'desc')) : null),
@@ -117,6 +120,7 @@ export default function UsersPage() {
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
   const boxBalance = appSettings?.boxBalance ?? 0;
+  const totalDebts = appSettings?.totalDebts ?? 0;
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
@@ -127,6 +131,7 @@ export default function UsersPage() {
   }, [users]);
 
   const fetchAllBalances = useCallback(async () => {
+    if (!isUserAdmin) return;
     setIsFetchingBalances(true);
     try {
       const transid = Date.now().toString().slice(-8);
@@ -136,8 +141,8 @@ export default function UsersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             action: 'balance',
+            mobile: '770326828',
             transid: transid,
-            mobile: '000000000' 
         })
       }).then(res => res.json());
 
@@ -145,13 +150,13 @@ export default function UsersPage() {
 
       const [telecomResult, baityResult] = await Promise.all([telecomPromise, baityPromise]);
       
-      if (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) {
-        setAgentBalance(telecomResult.balance);
+      if (telecomResult && (telecomResult.resultCode === "0" || telecomResult.resultCode === 0) && telecomResult.balance !== undefined) {
+        setAgentBalance(String(telecomResult.balance));
       } else {
         setAgentBalance('خطأ');
       }
 
-      if (baityResult.status === 200 && baityResult.data) {
+      if (baityResult && baityResult.status === 200 && baityResult.data) {
         setBaityBalance(String(baityResult.data.balance || '0'));
       } else {
         setBaityBalance('خطأ');
@@ -164,7 +169,7 @@ export default function UsersPage() {
     } finally {
       setIsFetchingBalances(false);
     }
-  }, []);
+  }, [isUserAdmin]);
 
   useEffect(() => {
     fetchAllBalances();
@@ -174,9 +179,13 @@ export default function UsersPage() {
     const agent = parseFloat(agentBalance || '0');
     const baity = parseFloat(baityBalance || '0');
     const box = boxBalance;
-    const total = (isNaN(agent) ? 0 : agent) + (isNaN(baity) ? 0 : baity) + box;
-    return total;
-  }, [agentBalance, baityBalance, boxBalance]);
+    const debts = totalDebts;
+    
+    const safeAgent = isNaN(agent) ? 0 : agent;
+    const safeBaity = isNaN(baity) ? 0 : baity;
+    
+    return safeAgent + safeBaity + box + debts;
+  }, [agentBalance, baityBalance, boxBalance, totalDebts]);
 
   const netProfit = useMemo(() => {
     return combinedProvidersBalance - totalUsersBalance;
@@ -303,6 +312,20 @@ export default function UsersPage() {
     }
   };
 
+  const handleSaveTotalDebts = async () => {
+    if (!firestore || !settingsDocRef) return;
+    const val = parseFloat(newDebtsValue);
+    if (isNaN(val)) return;
+
+    try {
+        await setDoc(settingsDocRef, { totalDebts: val }, { merge: true });
+        toast({ title: "تم التحديث", description: "تم تحديث إجمالي الديون بنجاح." });
+        setIsDebtsEditingOpen(false);
+    } catch (e) {
+        toast({ variant: "destructive", title: "فشل التحديث" });
+    }
+  };
+
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -312,6 +335,17 @@ export default function UsersPage() {
     if (accountTypeFilter === 'network-owner') return user.accountType === 'network-owner';
     return true;
   });
+
+  const formatBalanceDisplay = (val: string | null) => {
+    if (val === 'خطأ' || val === null) return 'خطأ';
+    const num = parseFloat(val);
+    if (isNaN(num)) return 'خطأ';
+    return num.toLocaleString('en-US');
+  };
+
+  if (!isUserAdmin) {
+      return <div className="p-10 text-center font-bold">عذراً، هذه الصفحة مخصصة لمدير النظام فقط.</div>;
+  }
 
   return (
     <>
@@ -332,7 +366,7 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(agentBalance || '0').toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(agentBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -350,7 +384,7 @@ export default function UsersPage() {
                     <CardContent className="px-3 pb-4">
                         <div className="flex items-baseline gap-0.5">
                             <h2 className="text-lg font-black text-white truncate">
-                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : parseFloat(baityBalance || '0').toLocaleString('en-US')}
+                                {isFetchingBalances ? <Skeleton className="h-4 w-12 bg-white/20" /> : formatBalanceDisplay(baityBalance)}
                             </h2>
                             <span className="text-[7px] font-bold opacity-70">ر.ي</span>
                         </div>
@@ -379,26 +413,39 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm bg-muted/30 rounded-2xl p-3 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+            <Card className="border-none shadow-md bg-muted/40 rounded-[28px] p-4 grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                 <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1 mb-1">
-                        <BarChart3 className="h-2.5 w-2.5 text-primary opacity-70" />
-                        <span className="text-[7px] font-black text-primary/70 uppercase tracking-tight">الرصيد المجمع</span>
+                        <BarChart3 className="h-3 w-3 text-primary" />
+                        <span className="text-[9px] font-black text-primary/80 uppercase tracking-tighter">الرصيد المجمع</span>
                     </div>
-                    <div className="text-[10px] font-black text-primary truncate">
-                        {isFetchingBalances ? <Skeleton className="h-2.5 w-10" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
+                    <div className="text-base font-black text-primary truncate">
+                        {isFetchingBalances ? <Skeleton className="h-4 w-12" /> : (combinedProvidersBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
                     </div>
                 </div>
                 
-                <div className="space-y-1 text-right px-1">
+                <div className="space-y-1 text-right border-l border-muted-foreground/10 px-1">
                     <div className="flex items-center gap-1 mb-1">
-                        {netProfit >= 0 ? <TrendingUp className="h-2.5 w-2.5 text-green-600" /> : <TrendingDown className="h-2.5 w-2.5 text-red-600" />}
-                        <span className={cn("text-[7px] font-black uppercase tracking-tight", netProfit >= 0 ? "text-green-600/70" : "text-red-600/70")}>
-                            {netProfit >= 0 ? 'صافي الأرباح' : 'صافي العجز'}
+                        {netProfit >= 0 ? <TrendingUp className="h-3 w-3 text-green-600" /> : <TrendingDown className="h-3 w-3 text-red-600" />}
+                        <span className={cn("text-[9px] font-black uppercase tracking-tighter", netProfit >= 0 ? "text-green-600/80" : "text-red-600/80")}>
+                            {netProfit >= 0 ? 'الأرباح' : 'العجز'}
                         </span>
                     </div>
-                    <div className={cn("text-[10px] font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
+                    <div className={cn("text-base font-black truncate", netProfit >= 0 ? "text-green-600" : "text-red-600")}>
                         {Math.abs(netProfit).toLocaleString('en-US', { maximumFractionDigits: 0 })} 
+                    </div>
+                </div>
+
+                <div className="space-y-1 text-right px-1 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl p-1" onClick={() => {
+                    setNewDebtsValue(String(totalDebts));
+                    setIsDebtsEditingOpen(true);
+                }}>
+                    <div className="flex items-center gap-1 mb-1">
+                        <Scale className="h-3 w-3 text-orange-600" />
+                        <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-tighter">الديون</span>
+                    </div>
+                    <div className="text-base font-black text-orange-600 truncate">
+                        {totalDebts.toLocaleString('en-US')} 
                     </div>
                 </div>
             </Card>
@@ -410,7 +457,7 @@ export default function UsersPage() {
                     <Wallet className="h-4 w-4 text-primary opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} ريال</div>}
+                    {isLoading ? <Skeleton className="h-10 w-32" /> : <div className="text-2xl font-black text-primary">{totalUsersBalance.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></div>}
                 </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-muted/30">
@@ -419,7 +466,7 @@ export default function UsersPage() {
                     <Users className="h-4 w-4 text-muted-foreground opacity-50" />
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
+                    {isLoading ? <Skeleton className="h-10 w-24" /> : <div className="text-2xl font-black">{(users?.length ?? 0).toLocaleString('en-US')}</div>}
                 </CardContent>
                 </Card>
             </div>
@@ -622,6 +669,22 @@ export default function UsersPage() {
             </div>
             <DialogFooter>
                 <Button onClick={handleSaveBoxBalance} className="w-full h-12 rounded-2xl font-black bg-red-600 hover:bg-red-700">تحديث المبلغ</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDebtsEditingOpen} onOpenChange={setIsDebtsEditingOpen}>
+        <DialogContent className="rounded-[32px] max-sm">
+            <DialogHeader>
+                <DialogTitle className="text-center font-black">تعديل إجمالي الديون</DialogTitle>
+                <DialogDescription className="text-center">أدخل المبلغ الإجمالي للديون المستحقة عند العملاء.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">إجمالي مبلغ الديون</Label>
+                <Input type="number" value={newDebtsValue} onChange={e => setNewDebtsValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-orange-200 focus-visible:ring-orange-500" />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleSaveTotalDebts} className="w-full h-12 rounded-2xl font-black bg-orange-600 hover:bg-orange-700">تحديث الديون</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

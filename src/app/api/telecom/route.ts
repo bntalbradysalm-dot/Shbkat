@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import CryptoJS from 'crypto-js';
 
@@ -5,11 +6,12 @@ import CryptoJS from 'crypto-js';
 const USERID = process.env.TELECOM_USERID;
 const USERNAME = process.env.TELECOM_USERNAME;
 const PASSWORD = process.env.TELECOM_PASSWORD;
-const API_BASE_URL = 'https://echehanly.yrbso.net/api/yr/'; 
+const API_BASE_URL = 'http://echehanly.yrbso.net/api/yr/'; 
 
 const generateToken = (transid: string, identifier: string) => {
   if (!PASSWORD || !USERNAME) return '';
   const hashPassword = CryptoJS.MD5(PASSWORD).toString();
+  // التوكن المعتمد: MD5(MD5(password) + transid + username + identifier)
   const tokenString = hashPassword + transid + USERNAME + identifier;
   return CryptoJS.MD5(tokenString).toString();
 };
@@ -23,6 +25,7 @@ export async function POST(request: Request) {
         return new NextResponse(JSON.stringify({ message: 'Telecom settings are missing in environment variables' }), { status: 500 });
     }
 
+    // المعرف المستخدم في التوكن (الرقم أو رقم اللاعب أو اسم المستخدم)
     const identifier = payload.mobile || payload.playerid || USERNAME;
     const transid = payload.transid || `${Date.now()}`.slice(-10);
     const token = generateToken(transid, identifier);
@@ -63,13 +66,6 @@ export async function POST(request: Request) {
                 endpoint = 'yem';
                 apiRequestParams.action = action;
                 break;
-            case 'billoffer':
-                endpoint = 'offeryem';
-                apiRequestParams.action = 'billoffer';
-                if (!apiRequestParams.method) {
-                    apiRequestParams.method = 'Renew';
-                }
-                break;
             case 'status':
             case 'balance':
                 endpoint = 'info';
@@ -86,7 +82,7 @@ export async function POST(request: Request) {
     const fullUrl = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // زيادة المهلة لـ 90 ثانية
+    const timeoutId = setTimeout(() => controller.abort(), 90000); 
 
     try {
         const response = await fetch(fullUrl, {
@@ -94,13 +90,8 @@ export async function POST(request: Request) {
             signal: controller.signal,
             headers: { 
                 'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
                 'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
-                'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"Windows"',
+                'User-Agent': 'Mozilla/5.0 (StarMobile)',
             },
             cache: 'no-store'
         });
@@ -128,13 +119,7 @@ export async function POST(request: Request) {
 
     } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        let friendlyMessage = fetchError.message;
-        if (fetchError.name === 'AbortError') {
-            friendlyMessage = 'انتهت مهلة الطلب. السيرفر بطيء جداً في الرد.';
-        } else if (fetchError.message.includes('fetch failed')) {
-            friendlyMessage = 'فشل الاتصال التقني بمزود الخدمة. قد يكون هناك حظر IP أو السيرفر متوقف حالياً.';
-        }
-        return new NextResponse(JSON.stringify({ message: 'تنبيه: ' + friendlyMessage }), { status: 504 });
+        return new NextResponse(JSON.stringify({ message: 'فشل الاتصال: ' + fetchError.message }), { status: 504 });
     }
   } catch (error: any) {
     return new NextResponse(JSON.stringify({ message: `خطأ داخلي: ${error.message}` }), { status: 500 });

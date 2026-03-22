@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -117,7 +118,9 @@ const generateNumericId = (id: string): string => {
         hash = ((hash << 5) - hash) + char;
         hash |= 0;
     }
-    return Math.abs(hash).toString().slice(0, 6).padStart(6, '0');
+    const hashStr = Math.abs(hash).toString();
+    if (hashStr.length >= 6) return hashStr.slice(0, 6);
+    return ("000000" + hashStr).slice(-6);
 };
 
 
@@ -130,7 +133,6 @@ export default function TransactionsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   
-  // Date Filtering State
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [appliedFrom, setAppliedFrom] = useState<string>('');
@@ -404,7 +406,6 @@ export default function TransactionsPage() {
         <SimpleHeader title="كشف الحساب" />
         
         <div className="px-4 space-y-4">
-            {/* Filter Section */}
             <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
@@ -456,9 +457,8 @@ export default function TransactionsPage() {
                 </CardContent>
             </Card>
 
-            {/* Actions Section */}
             {transactions && transactions.length > 0 && !appliedFrom && !appliedTo && (
-                <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
+                <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive flex items-center gap-2 text-xs">
                             <Archive className="h-3.5 w-3.5" />
@@ -482,7 +482,6 @@ export default function TransactionsPage() {
                 </AlertDialog>
             )}
 
-            {/* List Section */}
             <div className="flex justify-between items-center px-1">
                 <h3 className="text-sm font-bold text-primary">
                     {appliedFrom || appliedTo ? 'نتائج البحث' : 'أحدث العمليات'}

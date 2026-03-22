@@ -119,7 +119,8 @@ const generateNumericId = (id: string): string => {
         hash |= 0;
     }
     const hashStr = Math.abs(hash).toString();
-    return hashStr.length > 6 ? hashStr.slice(0, 6) : hashStr.padStart(6, '0');
+    if (hashStr.length >= 6) return hashStr.slice(0, 6);
+    return ("000000" + hashStr).slice(-6);
 };
 
 

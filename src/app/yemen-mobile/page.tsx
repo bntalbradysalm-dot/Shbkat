@@ -579,7 +579,7 @@ export default function YemenMobilePage() {
             mobile: phone, 
             action: 'billoffer', 
             service: 'yemen',
-            offerid: selectedOffer.offertype, // تغيير offerkey إلى offerid بناءً على متطلبات الـ API
+            offerid: selectedOffer.offertype, // إرسال كود الباقة الصحيح في حقل offerid
             method: 'Renew',
             solfa: hasLoan ? 'Y' : 'N',
             amount: selectedOffer.price, // القيمة الأساسية للباقة
@@ -890,7 +890,7 @@ export default function YemenMobilePage() {
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
-                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" onClick={handlePayment} style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>تأكيد السداد</AlertDialogAction>
+                <AlertDialogAction className="w-full rounded-2xl h-12 font-bold text-white" style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }} onClick={handlePayment}>تأكيد السداد</AlertDialogAction>
                 <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
             </AlertDialogFooter>
         </AlertDialogContent>
@@ -940,7 +940,7 @@ export default function YemenMobilePage() {
       {showSuccess && lastTxDetails && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
             <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+            <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">
                         <CheckCircle className="h-16 w-16 text-white" />

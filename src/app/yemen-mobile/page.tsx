@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -579,10 +580,10 @@ export default function YemenMobilePage() {
             mobile: phone, 
             action: 'billoffer', 
             service: 'yemen',
-            offerid: selectedOffer.offertype, // إرسال كود الباقة الصحيح في حقل offerid
+            offerid: selectedOffer.offertype, 
             method: 'Renew',
             solfa: hasLoan ? 'Y' : 'N',
-            amount: selectedOffer.price, // القيمة الأساسية للباقة
+            amount: selectedOffer.price, 
             transid 
         };
 

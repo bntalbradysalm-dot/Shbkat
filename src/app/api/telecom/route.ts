@@ -57,6 +57,20 @@ export async function POST(request: Request) {
         }
     } else if (service === 'games') {
         endpoint = 'gameswcards';
+    } else if (service === 'yemen' || service === 'yem' || !service) {
+        // Yemen Mobile Specific Handling
+        if (action === 'billoffer') {
+            endpoint = 'offeryem'; // User requested direct activation via offeryem
+            apiRequestParams.action = 'billoffer';
+            // Map offerid to offerkey as required by the new URL structure
+            if (apiRequestParams.offerid) {
+                apiRequestParams.offerkey = apiRequestParams.offerid;
+                delete apiRequestParams.offerid;
+            }
+        } else {
+            endpoint = 'yem';
+            apiRequestParams.action = action;
+        }
     } else { 
         switch(action) {
             case 'query':

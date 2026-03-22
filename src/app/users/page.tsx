@@ -71,13 +71,6 @@ type AppSettings = {
     totalDebts?: number;
 };
 
-type ClientDebt = {
-    id: string;
-    name: string;
-    amount: number;
-    createdAt: string;
-};
-
 const filterOptions = [
     { label: 'الكل', value: 'all', icon: LayoutGrid },
     { label: 'لديه رصيد', value: 'with-balance', icon: Wallet },
@@ -112,10 +105,6 @@ export default function UsersPage() {
   const [newBoxValue, setNewBoxValue] = useState('');
   const [newDebtsValue, setNewDebtsValue] = useState('');
 
-  // States for individual debts
-  const [debtName, setDebtName] = useState('');
-  const [debtAmount, setDebtAmount] = useState('');
-
   const isUserAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
 
   const usersCollection = useMemoFirebase(
@@ -129,13 +118,6 @@ export default function UsersPage() {
     [firestore]
   );
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
-
-  // Fetch individual client debts
-  const debtsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'clientDebts'), orderBy('createdAt', 'desc')) : null),
-    [firestore]
-  );
-  const { data: clientDebts } = useCollection<ClientDebt>(debtsQuery);
 
   const boxBalance = appSettings?.boxBalance ?? 0;
   const totalDebts = appSettings?.totalDebts ?? 0;
@@ -344,48 +326,6 @@ export default function UsersPage() {
     }
   };
 
-  // Debt Management Logic
-  const handleAddDebt = () => {
-    if (!debtName || !debtAmount || !firestore || !settingsDocRef) {
-        toast({ variant: "destructive", title: "بيانات ناقصة", description: "يرجى إدخال الاسم والمبلغ." });
-        return;
-    }
-    const amount = parseFloat(debtAmount);
-    if (isNaN(amount)) return;
-
-    const debtRef = collection(firestore, 'clientDebts');
-    addDocumentNonBlocking(debtRef, {
-        name: debtName,
-        amount: amount,
-        createdAt: new Date().toISOString()
-    });
-    
-    // Auto-update total debts
-    const currentTotal = parseFloat(newDebtsValue) || 0;
-    const newTotal = currentTotal + amount;
-    setNewDebtsValue(String(newTotal));
-    updateDocumentNonBlocking(settingsDocRef, { totalDebts: newTotal });
-
-    setDebtName('');
-    setDebtAmount('');
-    toast({ title: "تمت الإضافة", description: "تم تسجيل الدين وتحديث الإجمالي." });
-  };
-
-  const handleDeleteDebt = (debt: ClientDebt) => {
-    if (!firestore || !settingsDocRef) return;
-    
-    const debtRef = doc(firestore, 'clientDebts', debt.id);
-    deleteDocumentNonBlocking(debtRef);
-    
-    // Auto-update total debts
-    const currentTotal = parseFloat(newDebtsValue) || 0;
-    const newTotal = Math.max(0, currentTotal - debt.amount);
-    setNewDebtsValue(String(newTotal));
-    updateDocumentNonBlocking(settingsDocRef, { totalDebts: newTotal });
-
-    toast({ title: "تم الحذف", description: "تم حذف سجل الدين وتحديث الإجمالي." });
-  };
-
   const filteredUsers = users?.filter(user => {
     const searchMatch = (user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || user.phoneNumber?.includes(searchTerm));
     if (!searchMatch) return false;
@@ -401,17 +341,6 @@ export default function UsersPage() {
     const num = parseFloat(val);
     if (isNaN(num)) return 'خطأ';
     return num.toLocaleString('en-US');
-  };
-
-  const generateNumericId = (id: string): string => {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        const char = id.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-    }
-    const hashStr = Math.abs(hash).toString();
-    return hashStr.slice(0, 6).padStart(6, '0');
   };
 
   if (!isUserAdmin) {
@@ -745,55 +674,18 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isDebtsEditingOpen} onOpenChange={setIsDebtsEditingOpen}>
-        <DialogContent className="rounded-[32px] max-sm max-h-[90vh] overflow-y-auto">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
-                <DialogTitle className="text-center font-black">إدارة الديون</DialogTitle>
-                <DialogDescription className="text-center">أدخل المبلغ الإجمالي أو أضف تفاصيل الديون بالأسماء.</DialogDescription>
+                <DialogTitle className="text-center font-black">تعديل إجمالي الديون</DialogTitle>
+                <DialogDescription className="text-center">أدخل المبلغ الإجمالي للديون المستحقة عند العملاء.</DialogDescription>
             </DialogHeader>
-            <div className="py-4 space-y-6">
-                <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">إجمالي مبلغ الديون</Label>
-                    <Input type="number" value={newDebtsValue} onChange={e => setNewDebtsValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-orange-200 focus-visible:ring-orange-500" />
-                    <Button onClick={handleSaveTotalDebts} className="w-full h-10 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs mt-2">تحديث الإجمالي يدوياً</Button>
-                </div>
-
-                <div className="border-t pt-4 space-y-4">
-                    <h4 className="text-sm font-black text-primary text-center">إضافة تفاصيل ديون العملاء</h4>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] pr-1">اسم العميل</Label>
-                            <Input value={debtName} onChange={e => setDebtName(e.target.value)} placeholder="الاسم" className="h-11 rounded-xl bg-muted/30 border-none" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] pr-1">المبلغ</Label>
-                            <Input type="number" value={debtAmount} onChange={e => setDebtAmount(e.target.value)} placeholder="0" className="h-11 rounded-xl bg-muted/30 border-none" />
-                        </div>
-                    </div>
-                    
-                    <Button onClick={handleAddDebt} className="w-full h-12 rounded-2xl font-black shadow-md">
-                        <PlusCircle className="ml-2 h-5 w-5" /> إضافة للدائمة
-                    </Button>
-
-                    <div className="space-y-2 pt-2">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-2">العملاء الذين عليهم ديون:</p>
-                        {clientDebts?.map(debt => (
-                            <div key={debt.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-2xl border border-primary/5 animate-in fade-in-0 slide-in-from-top-1">
-                                <div className="text-right">
-                                    <p className="text-sm font-black text-foreground">{debt.name}</p>
-                                    <p className="text-xs font-bold text-primary">{debt.amount.toLocaleString()} ريال</p>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => handleDeleteDebt(debt)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                        {(!clientDebts || clientDebts.length === 0) && (
-                            <p className="text-center text-[10px] text-muted-foreground py-4">لا يوجد عملاء مسجلين حالياً</p>
-                        )}
-                    </div>
-                </div>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">إجمالي مبلغ الديون</Label>
+                <Input type="number" value={newDebtsValue} onChange={e => setNewDebtsValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-orange-200 focus-visible:ring-orange-500" />
             </div>
+            <DialogFooter>
+                <Button onClick={handleSaveTotalDebts} className="w-full h-12 rounded-2xl font-black bg-orange-600 hover:bg-orange-700">تحديث الديون</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

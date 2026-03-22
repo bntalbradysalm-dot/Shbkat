@@ -458,7 +458,7 @@ export default function TransactionsPage() {
             </Card>
 
             {transactions && transactions.length > 0 && !appliedFrom && !appliedTo && (
-                <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
+                <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive flex items-center gap-2 text-xs">
                             <Archive className="h-3.5 w-3.5" />

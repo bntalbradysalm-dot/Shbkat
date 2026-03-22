@@ -72,14 +72,7 @@ type User = {
 
 type AppSettings = {
     boxBalance?: number;
-    debts?: number;
-};
-
-type ClientDebt = {
-    id: string;
-    clientName: string;
-    amount: number;
-    timestamp: string;
+    totalDebts?: number;
 };
 
 const filterOptions = [
@@ -116,11 +109,7 @@ export default function UsersPage() {
   const [isBoxEditingOpen, setIsBoxEditingOpen] = useState(false);
   const [isDebtsEditingOpen, setIsDebtsEditingOpen] = useState(false);
   const [newBoxValue, setNewBoxValue] = useState('');
-
-  // Client Debts Specific States
-  const [isAddClientDebtOpen, setIsAddClientDebtOpen] = useState(false);
-  const [newDebtClientName, setNewDebtClientName] = useState('');
-  const [newDebtAmount, setNewDebtAmount] = useState('');
+  const [newDebtsValue, setNewDebtsValue] = useState('');
 
   // Check if current user is Admin
   const isUserAdmin = user?.email === '770326828@shabakat.com' || user?.uid === 'wsy8bUcULSYX2J9Q9WyisiFX5ki2';
@@ -137,20 +126,8 @@ export default function UsersPage() {
   );
   const { data: appSettings } = useDoc<AppSettings>(settingsDocRef);
 
-  // Only fetch client debts for Admin to avoid permission errors for others and hide data
-  const clientDebtsCollection = useMemoFirebase(
-    () => (firestore && isUserAdmin ? collection(firestore, 'clientDebts') : null),
-    [firestore, isUserAdmin]
-  );
-  const { data: clientDebts, isLoading: isLoadingClientDebts } = useCollection<ClientDebt>(clientDebtsCollection);
-
   const boxBalance = appSettings?.boxBalance ?? 0;
-  
-  // مجموع الديون المحسوب من قائمة العملاء
-  const calculatedTotalDebts = useMemo(() => {
-    if (!clientDebts) return 0;
-    return clientDebts.reduce((sum, debt) => sum + (Number(debt.amount) || 0), 0);
-  }, [clientDebts]);
+  const totalDebts = appSettings?.totalDebts ?? 0;
 
   const totalUsersBalance = useMemo(() => {
     if (!users) return 0;
@@ -217,8 +194,9 @@ export default function UsersPage() {
   }, [agentBalance, baityBalance, boxBalance]);
 
   const netProfit = useMemo(() => {
-    return combinedProvidersBalance - (totalUsersBalance + calculatedTotalDebts);
-  }, [combinedProvidersBalance, totalUsersBalance, calculatedTotalDebts]);
+    // الأرباح = (رصيد المزودين + رصيد الصندوق + الديون) - ما نملكه للمستخدمين
+    return (combinedProvidersBalance + totalDebts) - totalUsersBalance;
+  }, [combinedProvidersBalance, totalUsersBalance, totalDebts]);
   
   const handleDelete = (userId: string) => {
     if (!firestore) return;
@@ -341,34 +319,18 @@ export default function UsersPage() {
     }
   };
 
-  const handleAddClientDebt = async () => {
-    if (!firestore || !clientDebtsCollection || !newDebtClientName || !newDebtAmount) {
-        toast({ variant: "destructive", title: "خطأ", description: "يرجى تعبئة جميع الحقول." });
-        return;
-    }
-    const amt = parseFloat(newDebtAmount);
-    if (isNaN(amt) || amt <= 0) return;
+  const handleSaveTotalDebts = async () => {
+    if (!firestore || !settingsDocRef) return;
+    const val = parseFloat(newDebtsValue);
+    if (isNaN(val)) return;
 
     try {
-        await addDocumentNonBlocking(clientDebtsCollection, {
-            clientName: newDebtClientName,
-            amount: amt,
-            timestamp: new Date().toISOString()
-        });
-        toast({ title: "تمت الإضافة", description: "تم تسجيل دين العميل بنجاح." });
-        setNewDebtClientName('');
-        setNewDebtAmount('');
-        setIsAddClientDebtOpen(false);
+        await setDoc(settingsDocRef, { totalDebts: val }, { merge: true });
+        toast({ title: "تم التحديث", description: "تم تحديث إجمالي الديون بنجاح." });
+        setIsDebtsEditingOpen(false);
     } catch (e) {
-        toast({ variant: "destructive", title: "فشل الإضافة" });
+        toast({ variant: "destructive", title: "فشل التحديث" });
     }
-  };
-
-  const handleDeleteClientDebt = (id: string) => {
-    if (!firestore) return;
-    const docRef = doc(firestore, 'clientDebts', id);
-    deleteDocumentNonBlocking(docRef);
-    toast({ title: "تم الحذف", description: "تم حذف سجل الدين." });
   };
 
   const filteredUsers = users?.filter(user => {
@@ -481,13 +443,16 @@ export default function UsersPage() {
                     </div>
                 </div>
 
-                <div className="space-y-1 text-right px-1 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl p-1" onClick={() => setIsDebtsEditingOpen(true)}>
+                <div className="space-y-1 text-right px-1 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl p-1" onClick={() => {
+                    setNewDebtsValue(String(totalDebts));
+                    setIsDebtsEditingOpen(true);
+                }}>
                     <div className="flex items-center gap-1 mb-1">
                         <Scale className="h-3 w-3 text-orange-600" />
                         <span className="text-[9px] font-black text-orange-600/80 uppercase tracking-tighter">الديون</span>
                     </div>
                     <div className="text-base font-black text-orange-600 truncate">
-                        {calculatedTotalDebts.toLocaleString('en-US')} 
+                        {totalDebts.toLocaleString('en-US')} 
                     </div>
                 </div>
             </Card>
@@ -716,96 +681,17 @@ export default function UsersPage() {
       </Dialog>
 
       <Dialog open={isDebtsEditingOpen} onOpenChange={setIsDebtsEditingOpen}>
-        <DialogContent className="rounded-[40px] max-sm max-h-[90vh] overflow-y-auto no-scrollbar">
+        <DialogContent className="rounded-[32px] max-sm">
             <DialogHeader>
-                <DialogTitle className="text-center font-black text-xl text-orange-600 flex items-center justify-center gap-2">
-                    <Scale className="h-6 w-6" />
-                    إدارة ديون العملاء
-                </DialogTitle>
-                <DialogDescription className="text-center font-bold">
-                    إجمالي الديون المسجلة: <span className="text-orange-600">{calculatedTotalDebts.toLocaleString()} ريال</span>
-                </DialogDescription>
+                <DialogTitle className="text-center font-black">تعديل إجمالي الديون</DialogTitle>
+                <DialogDescription className="text-center">أدخل المبلغ الإجمالي للديون المستحقة عند العملاء.</DialogDescription>
             </DialogHeader>
-            
-            <div className="py-6 space-y-6">
-                {/* قسم إضافة دين جديد */}
-                <div className="bg-muted/30 p-4 rounded-3xl space-y-4 border border-orange-100">
-                    <h4 className="text-xs font-black text-orange-600 uppercase flex items-center gap-2">
-                        <UserPlus className="h-4 w-4" />
-                        إضافة دين جديد
-                    </h4>
-                    <div className="space-y-3">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black text-muted-foreground mr-1">اسم العميل</Label>
-                            <Input 
-                                placeholder="اسم العميل الرباعي" 
-                                className="h-11 rounded-xl"
-                                value={newDebtClientName}
-                                onChange={e => setNewDebtClientName(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black text-muted-foreground mr-1">المبلغ</Label>
-                            <Input 
-                                type="number" 
-                                placeholder="0.00" 
-                                className="h-11 rounded-xl text-center font-black text-lg"
-                                value={newDebtAmount}
-                                onChange={e => setNewDebtAmount(e.target.value)}
-                            />
-                        </div>
-                        <Button 
-                            className="w-full h-11 rounded-xl bg-orange-600 hover:bg-orange-700 font-black text-xs"
-                            onClick={handleAddClientDebt}
-                        >
-                            <Plus className="ml-2 h-4 w-4" />
-                            تسجيل الدين الآن
-                        </Button>
-                    </div>
-                </div>
-
-                {/* قائمة العملاء المسجلين */}
-                <div className="space-y-3">
-                    <h4 className="text-xs font-black text-muted-foreground uppercase px-1">العملاء المسجلون (الديون)</h4>
-                    {isLoadingClientDebts ? (
-                        <Skeleton className="h-20 w-full rounded-2xl" />
-                    ) : !clientDebts || clientDebts.length === 0 ? (
-                        <p className="text-center text-xs text-muted-foreground py-4">لا يوجد عملاء مدينون حالياً.</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {clientDebts.map(debt => (
-                                <Card key={debt.id} className="rounded-2xl border-none shadow-sm bg-card overflow-hidden">
-                                    <CardContent className="p-3 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-orange-50">
-                                                <UserIcon className="h-4 w-4 text-orange-600" />
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-xs">{debt.clientName}</p>
-                                                <p className="text-[9px] text-muted-foreground">{debt.timestamp ? format(new Date(debt.timestamp), 'd MMM, h:mm a', { locale: ar }) : ''}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <p className="font-black text-xs text-orange-600">{debt.amount.toLocaleString()} ر.ي</p>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-                                                onClick={() => handleDeleteClientDebt(debt.id)}
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </div>
+            <div className="py-4">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase mr-1">إجمالي مبلغ الديون</Label>
+                <Input type="number" value={newDebtsValue} onChange={e => setNewDebtsValue(e.target.value)} placeholder="0.00" className="h-12 rounded-2xl text-center text-xl font-black border-orange-200 focus-visible:ring-orange-500" />
             </div>
-
             <DialogFooter>
-                <Button variant="ghost" className="w-full rounded-2xl font-bold" onClick={() => setIsDebtsEditingOpen(false)}>إغلاق النافذة</Button>
+                <Button onClick={handleSaveTotalDebts} className="w-full h-12 rounded-2xl font-black bg-orange-600 hover:bg-orange-700">تحديث الديون</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

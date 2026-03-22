@@ -79,16 +79,15 @@
         "soldTimestamp": { "type": "string", "format": "date-time" }
       }
     },
-    "ClientDebt": {
-      "title": "Client Debt",
+    "AppSettings": {
+      "title": "App Settings",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "clientName": { "type": "string" },
-        "amount": { "type": "number" },
-        "timestamp": { "type": "string", "format": "date-time" }
-      },
-      "required": ["clientName", "amount", "timestamp"]
+        "boxBalance": { "type": "number" },
+        "totalDebts": { "type": "number" },
+        "appLink": { "type": "string" },
+        "supportPhoneNumber": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -99,9 +98,9 @@
       "schema": { "$ref": "#/backend/entities/User" },
       "description": "User profile data."
     },
-    "/clientDebts/{debtId}": {
-      "schema": { "$ref": "#/backend/entities/ClientDebt" },
-      "description": "Debts owed by clients to the administrator."
+    "/appSettings/global": {
+      "schema": { "$ref": "#/backend/entities/AppSettings" },
+      "description": "Global application configuration and balances."
     },
     "/products/{productId}": {
       "schema": { "$ref": "#/backend/entities/Product" },
@@ -118,18 +117,6 @@
     "/soldCards/{cardId}": {
       "schema": { "$ref": "#/backend/entities/SoldCard" },
       "description": "History of sold network cards."
-    },
-    "/withdrawalRequests/{reqId}": {
-      "description": "Network owner payout requests."
-    },
-    "/billPaymentRequests/{reqId}": {
-      "description": "Telecom bill payment requests."
-    },
-    "/renewalRequests/{reqId}": {
-      "description": "Alwadi system renewal requests."
-    },
-    "/notifications/{notifId}": {
-      "description": "Global announcements."
     }
   }
 }

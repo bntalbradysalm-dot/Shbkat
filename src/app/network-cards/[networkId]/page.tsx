@@ -84,10 +84,16 @@ function NetworkPurchasePageComponent() {
   ), [firestore, networkId]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<CardCategory>(categoriesQuery);
 
+  // ترتيب الكروت من الأقل سعراً إلى الأعلى سعراً
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.price - b.price);
+  }, [categories]);
+
   const [selectedCategory, setSelectedCategory] = useState<CardCategory | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
+  const [purchasedCard, setPurchasedCard] = setPurchasedCard<NetworkCard | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -155,8 +161,6 @@ function NetworkPurchasePageComponent() {
             cardNumber: cardToPurchaseData.cardNumber,
         });
 
-        // 4. تم إيقاف التحويل التلقائي للأرباح لمالك الشبكة (الآن يتم يدوياً من قبل الإدارة)
-
         // 5. سجل الكروت المباعة (الحالة: انتظار للتحويل اليدوي من الإدارة)
         const soldCardRef = doc(collection(firestore, 'soldCards'));
         batch.set(soldCardRef, {
@@ -209,7 +213,7 @@ function NetworkPurchasePageComponent() {
     if (isLoadingCategories) {
         return (
             <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton className="h-28 w-full rounded-xl" />)}
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
             </div>
         );
     }
@@ -226,7 +230,7 @@ function NetworkPurchasePageComponent() {
 
     return (
         <div className="space-y-4">
-            {categories.map((category, index) => (
+            {sortedCategories.map((category, index) => (
                 <Card key={category.id} className="overflow-hidden animate-in fade-in-0" style={{ animationDelay: `${index * 100}ms` }}>
                     <CardContent className="p-0 flex">
                         <div className="flex-none w-1/4 bg-accent/50 flex flex-col items-center justify-center p-4 text-accent-foreground">

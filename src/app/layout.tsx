@@ -1,21 +1,36 @@
-
 'use client';
 
 import './globals.css';
 import { usePathname } from 'next/navigation';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { ThemeProvider } from '@/components/theme-provider';
-import { FirebaseProvider, useUser } from '@/firebase';
+import { FirebaseProvider, useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { WelcomeModal } from '@/components/dashboard/welcome-modal';
 import { AppErrorDialog } from '@/components/layout/app-error-dialog';
 import { SplashScreen } from '@/components/layout/splash-screen';
+import { PinOverlay } from '@/components/layout/pin-overlay';
+import { doc } from 'firebase/firestore';
+
+type UserProfile = {
+  isPinEnabled?: boolean;
+  pinCode?: string;
+};
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
   const [isNavVisible, setIsNavVisible] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [isPinVerified, setIsPinVerified] = useState(false);
+
+  // Fetch user profile for PIN check
+  const userDocRef = useMemoFirebase(
+    () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
     // قائمة الصفحات الرئيسية التي يجب أن يظهر فيها شريط التنقل
@@ -35,10 +50,15 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   // التحقق من حالة شاشة الترحيب في جلسة التصفح
   useEffect(() => {
-    // تم تحديث المفتاح إلى v3 لضمان ظهور الشاشة بالمدة الجديدة 10 ثوانٍ
     const hasSeenSplash = sessionStorage.getItem('has_seen_splash_v3');
     if (hasSeenSplash) {
       setShowSplash(false);
+    }
+
+    // التحقق من حالة الرمز السري في الجلسة الحالية
+    const isVerified = sessionStorage.getItem('is_pin_verified');
+    if (isVerified) {
+        setIsPinVerified(true);
     }
   }, []);
 
@@ -47,12 +67,27 @@ function AppContent({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem('has_seen_splash_v3', 'true');
   };
 
+  const handlePinVerified = () => {
+    setIsPinVerified(true);
+    sessionStorage.setItem('is_pin_verified', 'true');
+  };
+
+  // Logic to determine if we should show the PIN lock
+  const shouldShowPinLock = user && userProfile?.isPinEnabled && userProfile?.pinCode && !isPinVerified && !showSplash;
+
   return (
     <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl relative">
       {showSplash && (
         <SplashScreen 
           onComplete={handleSplashComplete} 
           isAppReady={!isUserLoading} 
+        />
+      )}
+
+      {shouldShowPinLock && (
+        <PinOverlay 
+            userPin={userProfile.pinCode!} 
+            onVerified={handlePinVerified} 
         />
       )}
       

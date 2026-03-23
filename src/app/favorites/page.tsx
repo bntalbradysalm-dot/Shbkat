@@ -99,6 +99,15 @@ export default function FavoritesPage() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   
+  // ترتيب الكروت من الأقل سعراً للأعلى سعراً (فقط للشبكات المحلية)
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    if (selectedNetwork?.isLocal) {
+        return [...categories].sort((a, b) => a.price - b.price);
+    }
+    return categories; // الشبكات الخارجية تبقى كما هي
+  }, [categories, selectedNetwork]);
+
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
@@ -262,8 +271,6 @@ export default function FavoritesPage() {
                 notes: `شبكة: ${selectedNetwork.name}`,
                 cardNumber: cardData.cardNumber,
             });
-
-            // 4. تم إيقاف التحويل التلقائي للأرباح لمالك الشبكة (الآن يتم يدوياً من قبل الإدارة)
 
             // 5. سجل الكروت المباعة للإدارة (الحالة: انتظار للتحويل اليدوي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
@@ -453,7 +460,7 @@ export default function FavoritesPage() {
                   <p className="text-center py-10 text-muted-foreground">لا توجد فئات متاحة حالياً.</p>
                 ) : (
                   <div className="space-y-3">
-                    {categories.map((cat, idx) => {
+                    {sortedCategories.map((cat, idx) => {
                         const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
                         return (
                             <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>

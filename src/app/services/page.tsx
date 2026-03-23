@@ -94,7 +94,7 @@ type UserProfile = {
 };
 
 const CustomLoader = () => (
-  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10">
+  <div className="bg-card/90 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10 backdrop-blur-md">
     <div className="relative w-12 h-12">
       <svg
         viewBox="0 0 50 50"
@@ -133,6 +133,15 @@ export default function CombinedNetworksPage() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   
+  // ترتيب الكروت من الأقل سعراً للأعلى سعراً (فقط للشبكات المحلية)
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    if (selectedNetwork?.isLocal) {
+        return [...categories].sort((a, b) => a.price - b.price);
+    }
+    return categories; // الشبكات الخارجية تبقى كما هي
+  }, [categories, selectedNetwork]);
+
   // Purchase States
   const [isProcessing, setIsProcessing] = useState(false);
   const [purchasedCard, setPurchasedCard] = useState<any>(null);
@@ -316,8 +325,6 @@ export default function CombinedNetworksPage() {
                 cardNumber: cardData.cardNumber,
             });
 
-            // 4. تم إيقاف التحويل التلقائي للأرباح لمالك الشبكة (الآن يتم يدوياً من قبل الإدارة)
-
             // 5. سجل الكروت المباعة للإدارة (الحالة: انتظار للتحويل اليدوي)
             const soldCardRef = doc(collection(firestore, 'soldCards'));
             batch.set(soldCardRef, {
@@ -486,7 +493,7 @@ export default function CombinedNetworksPage() {
               <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900">
                 {isLoadingCategories ? ( <div className="flex justify-center py-10"><CustomLoader /></div> ) : categoryError ? ( <p className="text-center text-destructive font-bold p-4 bg-destructive/10 rounded-2xl">{categoryError}</p> ) : (
                   <div className="space-y-3">
-                    {categories.map((cat, idx) => {
+                    {sortedCategories.map((cat, idx) => {
                         const gradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
                         return (
                             <div key={cat.id} className="animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 100}ms` }}>

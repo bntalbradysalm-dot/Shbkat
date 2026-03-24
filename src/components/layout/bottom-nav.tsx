@@ -129,7 +129,7 @@ export function BottomNav() {
             <Link href={centerItem.href} className="group relative">
                 <div className={cn(
                     "w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-500 active:scale-90 relative overflow-hidden",
-                    pathname.startsWith(centerItem.href) ? "bg-mesh-gradient" : "bg-primary"
+                    "bg-mesh-gradient"
                 )}>
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <centerItem.icon className={cn(

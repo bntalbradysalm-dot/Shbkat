@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,8 @@ const ALSAFAA_OFFERS: RenewalOption[] = [
   { id: '3', title: 'فئة 3000 ريال', price: 3000 },
   { id: '4', title: 'فئة 5000 ريال', price: 5000 },
 ];
+
+const ALSAFAA_LOGO = "https://i.postimg.cc/8cFZ4Hsp/20260324-220349.jpg";
 
 export default function AlsafaaPage() {
   const firestore = useFirestore();
@@ -211,8 +214,15 @@ export default function AlsafaaPage() {
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="bg-white/20 p-4 rounded-[24px] backdrop-blur-md border border-white/20 shadow-2xl animate-in zoom-in-95 duration-700">
-                    <Wifi className="h-10 w-10 text-white" />
+                <div className="bg-white p-1 rounded-[24px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden border-2 border-white">
+                    <div className="relative h-24 w-56 rounded-[20px] overflow-hidden">
+                        <Image 
+                            src={ALSAFAA_LOGO}
+                            alt="Alsafaa Logo" 
+                            fill 
+                            className="object-contain"
+                        />
+                    </div>
                 </div>
                 <div className="space-y-1">
                     <h2 className="text-2xl font-black text-white tracking-tight">تجديد كروت شبكة الصفاء</h2>

@@ -13,18 +13,31 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 type Service = {
   name: string;
-  icon: LucideIcon;
+  icon: any;
   href: string;
 };
+
+const AlsafaaIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
+  <div className={cn("relative", className)} style={style}>
+    <Image 
+      src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
+      alt="شبكة الصفاء" 
+      fill 
+      className="object-contain"
+    />
+  </div>
+);
 
 const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-  { name: 'شبكة الصفاء', icon: Wifi, href: '/alsafaa' },
+  { name: 'شبكة الصفاء', icon: AlsafaaIcon, href: '/alsafaa' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
@@ -52,7 +65,7 @@ const ServiceItem = ({
             className="h-8 w-8 transition-transform group-hover:scale-110" 
             style={{ 
                 strokeWidth: 2,
-                stroke: 'url(#icon-gradient)'
+                stroke: name === 'شبكة الصفاء' ? undefined : 'url(#icon-gradient)'
             }}
           />
         </div>

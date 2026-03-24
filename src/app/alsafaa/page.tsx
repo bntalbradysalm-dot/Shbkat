@@ -14,10 +14,13 @@ import {
   Wallet,
   Hash,
   LayoutGrid,
-  Wifi,
   Star,
   Zap,
-  Clock
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -28,6 +31,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -70,6 +80,7 @@ export default function AlsafaaPage() {
 
   const [cardNumber, setCardNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
+  const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -127,10 +138,8 @@ export default function AlsafaaPage() {
     try {
       const batch = writeBatch(firestore);
       
-      // 1. خصم الرصيد
       batch.update(userDocRef, { balance: increment(-selectedOption.price) });
       
-      // 2. تسجيل العملية
       const txRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(txRef, {
         userId: user.uid,
@@ -155,6 +164,12 @@ export default function AlsafaaPage() {
       setIsProcessing(false);
     }
   };
+
+  const groupedOffers = ALSAFAA_OFFERS.reduce((acc, offer) => {
+    if (!acc[offer.groupName]) acc[offer.groupName] = [];
+    acc[offer.groupName].push(offer);
+    return acc;
+  }, {} as Record<string, RenewalOption[]>);
 
   if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ طلبك..." />;
 
@@ -207,12 +222,6 @@ export default function AlsafaaPage() {
       </div>
     );
   }
-
-  const groupedOffers = ALSAFAA_OFFERS.reduce((acc, offer) => {
-    if (!acc[offer.groupName]) acc[offer.groupName] = [];
-    acc[offer.groupName].push(offer);
-    return acc;
-  }, {} as Record<string, RenewalOption[]>);
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -267,7 +276,7 @@ export default function AlsafaaPage() {
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <LayoutGrid className="w-3.5 h-3.5 text-primary" />
-                        اختر فئة التجديد
+                        اختر نوع الباقة
                     </h3>
                     <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
                         <Wallet className="w-3 h-3 text-primary" />
@@ -275,64 +284,65 @@ export default function AlsafaaPage() {
                     </div>
                 </div>
 
-                {Object.entries(groupedOffers).map(([groupName, offers]) => (
-                  <div key={groupName} className="space-y-3">
-                    <div className="flex items-center gap-2 px-2">
-                      {groupName === 'الباقة الأساسية' ? <Zap className="w-4 h-4 text-blue-500" /> : <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
-                      <h4 className="text-sm font-black text-foreground/80">{groupName}</h4>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                        {offers.map((option, index) => (
+                <div className="grid grid-cols-2 gap-4">
+                    {Object.keys(groupedOffers).map((groupName) => {
+                        const isBasic = groupName === 'الباقة الأساسية';
+                        const isSelected = selectedOption?.groupName === groupName;
+                        return (
                             <button
-                                key={option.id}
-                                onClick={() => setSelectedOption(option)}
+                                key={groupName}
+                                onClick={() => setActiveGroup(groupName)}
                                 className={cn(
-                                    "relative p-4 rounded-[24px] border-2 transition-all duration-300 flex items-center justify-between group overflow-hidden",
-                                    selectedOption?.id === option.id
-                                        ? "bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.02] text-white"
-                                        : "bg-white dark:bg-slate-900 border-transparent shadow-sm hover:border-primary/30"
+                                    "relative p-6 rounded-[32px] border-2 transition-all duration-300 flex flex-col items-center justify-center text-center gap-3 overflow-hidden group shadow-sm active:scale-95",
+                                    isSelected 
+                                        ? "border-primary bg-primary/5 shadow-md" 
+                                        : "bg-white dark:bg-slate-900 border-transparent hover:border-primary/20"
                                 )}
                             >
-                                <div className="flex items-center gap-4 text-right">
-                                  <div className={cn(
-                                    "p-2 rounded-xl shrink-0",
-                                    selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
-                                  )}>
-                                    <Clock className={cn("w-5 h-5", selectedOption?.id === option.id ? "text-white" : "text-primary")} />
-                                  </div>
-                                  <div className="flex flex-col items-start">
-                                    <span className="text-sm font-black">{option.title}</span>
-                                    <span className={cn("text-[10px] font-bold", selectedOption?.id === option.id ? "text-white/70" : "text-muted-foreground")}>مدة الاشتراك</span>
-                                  </div>
+                                <div className={cn(
+                                    "p-4 rounded-2xl transition-colors",
+                                    isBasic ? "bg-blue-500/10 text-blue-600" : "bg-amber-500/10 text-amber-600"
+                                )}>
+                                    {isBasic ? <Zap className="w-8 h-8" /> : <ShieldCheck className="w-8 h-8" />}
                                 </div>
-
-                                <div className="flex items-center gap-3">
-                                  {option.discount && (
-                                    <Badge className="bg-green-500/20 text-green-600 border-none text-[9px] font-black px-2 h-5 animate-pulse">
-                                      وفر {option.discount.toLocaleString()} ريال
-                                    </Badge>
-                                  )}
-                                  <div className="text-left shrink-0">
-                                      <div className={cn(
-                                          "font-black text-lg",
-                                          selectedOption?.id === option.id ? "text-white" : "text-primary"
-                                      )}>
-                                          {option.price.toLocaleString()}
-                                          <span className="text-[9px] mr-1 opacity-70">ر.ي</span>
-                                      </div>
-                                  </div>
+                                <div className="space-y-1">
+                                    <span className="text-xs font-black block text-foreground">{groupName}</span>
+                                    {isSelected && (
+                                        <Badge className="bg-primary text-white text-[8px] font-black h-4 px-1.5 border-none">
+                                            مختار: {selectedOption.title}
+                                        </Badge>
+                                    )}
                                 </div>
-
-                                {selectedOption?.id === option.id && (
-                                    <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 rounded-bl-full flex items-center justify-center translate-x-2 -translate-y-2">
-                                        <CheckCircle className="w-4 h-4 text-white" />
+                                {isSelected && (
+                                    <div className="absolute top-2 left-2">
+                                        <div className="bg-primary rounded-full p-0.5">
+                                            <Check className="w-3 h-3 text-white" strokeWidth={4} />
+                                        </div>
                                     </div>
                                 )}
                             </button>
-                        ))}
+                        );
+                    })}
+                </div>
+
+                {selectedOption && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+                        <Card className="bg-primary/5 border-primary/10 border rounded-2xl p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-xl">
+                                    <CheckCircle className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">الباقة المختارة حالياً</p>
+                                    <p className="text-sm font-black text-foreground">{selectedOption.groupName} - {selectedOption.title}</p>
+                                </div>
+                            </div>
+                            <div className="text-left">
+                                <p className="text-lg font-black text-primary">{selectedOption.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p>
+                            </div>
+                        </Card>
                     </div>
-                  </div>
-                ))}
+                )}
             </div>
 
             <div className="pt-2">
@@ -346,6 +356,64 @@ export default function AlsafaaPage() {
             </div>
         </div>
       </div>
+
+      {/* Package Selection Dialog */}
+      <Dialog open={!!activeGroup} onOpenChange={() => setActiveGroup(null)}>
+        <DialogContent className="rounded-[40px] max-w-[90vw] sm:max-w-md p-6 overflow-hidden border-none shadow-2xl [&>button]:hidden">
+            <DialogHeader className="mb-4">
+                <DialogTitle className="text-center font-black text-xl text-primary flex items-center justify-center gap-2">
+                    {activeGroup === 'الباقة الأساسية' ? <Zap className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                    فئات {activeGroup}
+                </DialogTitle>
+                <DialogDescription className="text-center font-bold text-xs">
+                    اختر مدة التجديد المناسبة لك من القائمة أدناه
+                </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-3 py-2">
+                {activeGroup && groupedOffers[activeGroup].map((offer) => (
+                    <button
+                        key={offer.id}
+                        onClick={() => {
+                            setSelectedOption(offer);
+                            setActiveGroup(null);
+                        }}
+                        className={cn(
+                            "flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
+                            selectedOption?.id === offer.id 
+                                ? "border-primary bg-primary/5" 
+                                : "border-muted bg-muted/30 hover:border-primary/30"
+                        )}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={cn(
+                                "p-2 rounded-xl transition-colors",
+                                selectedOption?.id === offer.id ? "bg-primary text-white" : "bg-white text-muted-foreground group-hover:text-primary"
+                            )}>
+                                <Clock className="w-4 h-4" />
+                            </div>
+                            <span className="font-black text-sm text-foreground">{offer.title}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                            {offer.discount && (
+                                <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-black h-5">
+                                    وفر {offer.discount.toLocaleString()}
+                                </Badge>
+                            )}
+                            <div className="text-left font-black text-primary text-base">
+                                {offer.price.toLocaleString()} <span className="text-[10px]">ر.ي</span>
+                            </div>
+                        </div>
+                    </button>
+                ))}
+            </div>
+
+            <Button variant="outline" className="w-full h-12 rounded-2xl font-black mt-4 border-2" onClick={() => setActiveGroup(null)}>
+                تراجع
+            </Button>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[40px] max-sm">

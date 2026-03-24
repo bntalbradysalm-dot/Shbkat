@@ -28,10 +28,10 @@ const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { id: 'alsafaa', name: 'شبكة الصفاء', icon: Wifi, href: '/alsafaa' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { id: 'transfer', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
   { id: 'support', name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -153,7 +153,7 @@ export function BalanceCard() {
       </Card>
 
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
           <DialogHeader>
             <DialogTitle className="text-center font-black">اختيار اختصار مفضل</DialogTitle>
             <DialogDescription className="text-center">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -13,7 +14,10 @@ import {
   Wallet,
   Hash,
   LayoutGrid,
-  Wifi
+  Wifi,
+  Star,
+  Zap,
+  Clock
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -34,6 +38,7 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,19 +46,17 @@ type RenewalOption = {
   id: string;
   title: string;
   price: number;
-};
-
-type UserProfile = {
-  balance?: number;
-  displayName?: string;
-  phoneNumber?: string;
+  groupName: string;
+  discount?: number;
 };
 
 const ALSAFAA_OFFERS: RenewalOption[] = [
-  { id: '1', title: 'فئة 1000 ريال', price: 1000 },
-  { id: '2', title: 'فئة 2000 ريال', price: 2000 },
-  { id: '3', title: 'فئة 3000 ريال', price: 3000 },
-  { id: '4', title: 'فئة 5000 ريال', price: 5000 },
+  { id: 'b3', title: '3 أشهر', price: 7000, groupName: 'الباقة الأساسية' },
+  { id: 'b6', title: '6 أشهر', price: 14000, groupName: 'الباقة الأساسية' },
+  { id: 'b12', title: '12 شهراً', price: 26000, groupName: 'الباقة الأساسية', discount: 2000 },
+  { id: 'c3', title: '3 أشهر', price: 8000, groupName: 'الباقة الشاملة' },
+  { id: 'c6', title: '6 أشهر', price: 16000, groupName: 'الباقة الشاملة' },
+  { id: 'c12', title: '12 شهراً', price: 30000, groupName: 'الباقة الشاملة', discount: 2000 },
 ];
 
 const ALSAFAA_LOGO = "https://i.postimg.cc/90nZ85Kk/20260324-221446.jpg";
@@ -76,7 +79,7 @@ export default function AlsafaaPage() {
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile } = useDoc<any>(userDocRef);
 
   useEffect(() => {
     if (showSuccess && audioRef.current) {
@@ -134,7 +137,7 @@ export default function AlsafaaPage() {
         transactionDate: now,
         amount: selectedOption.price,
         transactionType: `تجديد كرت شبكة الصفاء`,
-        notes: `رقم الكرت: ${cardNumber} - فئة: ${selectedOption.title}`,
+        notes: `رقم الكرت: ${cardNumber} - ${selectedOption.groupName}: ${selectedOption.title}`,
         cardNumber: cardNumber
       });
 
@@ -174,8 +177,8 @@ export default function AlsafaaPage() {
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                     <div className="flex justify-between items-center border-b border-muted pb-2">
-                        <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> الفئة:</span>
-                        <span className="font-bold">{selectedOption?.title}</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> الباقة:</span>
+                        <span className="font-bold">{selectedOption?.groupName} - {selectedOption?.title}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم الكرت:</span>
@@ -204,6 +207,12 @@ export default function AlsafaaPage() {
       </div>
     );
   }
+
+  const groupedOffers = ALSAFAA_OFFERS.reduce((acc, offer) => {
+    if (!acc[offer.groupName]) acc[offer.groupName] = [];
+    acc[offer.groupName].push(offer);
+    return acc;
+  }, {} as Record<string, RenewalOption[]>);
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
@@ -254,7 +263,7 @@ export default function AlsafaaPage() {
                 </CardContent>
             </Card>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                         <LayoutGrid className="w-3.5 h-3.5 text-primary" />
@@ -266,37 +275,64 @@ export default function AlsafaaPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                    {ALSAFAA_OFFERS.map((option, index) => (
-                        <button
-                            key={option.id}
-                            onClick={() => setSelectedOption(option)}
-                            className={cn(
-                                "relative p-5 rounded-[28px] border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 text-center group",
-                                selectedOption?.id === option.id
-                                    ? "bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.02]"
-                                    : "bg-white dark:bg-slate-900 border-transparent shadow-sm hover:border-primary/30"
-                            )}
-                            style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                            <span className={cn("text-[11px] font-black", selectedOption?.id === option.id ? "text-white" : "text-foreground")}>
-                                {option.title}
-                            </span>
-                            <div className={cn(
-                                "font-black text-base mt-1",
-                                selectedOption?.id === option.id ? "text-white" : "text-primary"
-                            )}>
-                                {option.price.toLocaleString()}
-                                <span className="text-[9px] mr-1 opacity-70">ر.ي</span>
-                            </div>
-                            {selectedOption?.id === option.id && (
-                                <div className="absolute -top-1 -left-1">
-                                    <CheckCircle className="w-5 h-5 text-white fill-primary" />
+                {Object.entries(groupedOffers).map(([groupName, offers]) => (
+                  <div key={groupName} className="space-y-3">
+                    <div className="flex items-center gap-2 px-2">
+                      {groupName === 'الباقة الأساسية' ? <Zap className="w-4 h-4 text-blue-500" /> : <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
+                      <h4 className="text-sm font-black text-foreground/80">{groupName}</h4>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                        {offers.map((option, index) => (
+                            <button
+                                key={option.id}
+                                onClick={() => setSelectedOption(option)}
+                                className={cn(
+                                    "relative p-4 rounded-[24px] border-2 transition-all duration-300 flex items-center justify-between group overflow-hidden",
+                                    selectedOption?.id === option.id
+                                        ? "bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.02] text-white"
+                                        : "bg-white dark:bg-slate-900 border-transparent shadow-sm hover:border-primary/30"
+                                )}
+                            >
+                                <div className="flex items-center gap-4 text-right">
+                                  <div className={cn(
+                                    "p-2 rounded-xl shrink-0",
+                                    selectedOption?.id === option.id ? "bg-white/20" : "bg-primary/5"
+                                  )}>
+                                    <Clock className={cn("w-5 h-5", selectedOption?.id === option.id ? "text-white" : "text-primary")} />
+                                  </div>
+                                  <div className="flex flex-col items-start">
+                                    <span className="text-sm font-black">{option.title}</span>
+                                    <span className={cn("text-[10px] font-bold", selectedOption?.id === option.id ? "text-white/70" : "text-muted-foreground")}>مدة الاشتراك</span>
+                                  </div>
                                 </div>
-                            )}
-                        </button>
-                    ))}
-                </div>
+
+                                <div className="flex items-center gap-3">
+                                  {option.discount && (
+                                    <Badge className="bg-green-500/20 text-green-600 border-none text-[9px] font-black px-2 h-5 animate-pulse">
+                                      وفر {option.discount.toLocaleString()} ريال
+                                    </Badge>
+                                  )}
+                                  <div className="text-left shrink-0">
+                                      <div className={cn(
+                                          "font-black text-lg",
+                                          selectedOption?.id === option.id ? "text-white" : "text-primary"
+                                      )}>
+                                          {option.price.toLocaleString()}
+                                          <span className="text-[9px] mr-1 opacity-70">ر.ي</span>
+                                      </div>
+                                  </div>
+                                </div>
+
+                                {selectedOption?.id === option.id && (
+                                    <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 rounded-bl-full flex items-center justify-center translate-x-2 -translate-y-2">
+                                        <CheckCircle className="w-4 h-4 text-white" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <div className="pt-2">
@@ -321,7 +357,11 @@ export default function AlsafaaPage() {
                         <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3"/> الفئة المختارة:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><Star className="w-3 h-3"/> نوع الباقة:</span>
+                        <span className="font-bold">{selectedOption?.groupName}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-dashed">
+                        <span className="text-muted-foreground flex items-center gap-2"><Clock className="w-3 h-3"/> مدة التجديد:</span>
                         <span className="font-bold">{selectedOption?.title}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-2xl px-3 mt-2">

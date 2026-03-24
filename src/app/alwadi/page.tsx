@@ -158,7 +158,8 @@ export default function AlwadiPage() {
   if (showSuccess) {
     return (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
-        <audio ref={audioRef} src="https://file-examples.com/storage/fe25457f7e69a011a9649b2/2017/11/file_example_MP3_700KB.mp3" preload="auto" />
+        {/* يمكنك استبدال الرابط أدناه برابط ملف الصوت الخاص بك */}
+        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">
@@ -169,7 +170,7 @@ export default function AlwadiPage() {
             <CardContent className="p-8 space-y-6">
                 <div>
                     <h2 className="text-2xl font-black text-green-600">تم تجديد كرتك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">تم التجديد بنجاح</p>
+                    <p className="text-sm text-muted-foreground mt-1">بانتظار تأكيد الإدارة</p>
                 </div>
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">

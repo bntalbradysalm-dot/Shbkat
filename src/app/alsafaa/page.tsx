@@ -56,7 +56,7 @@ const ALSAFAA_OFFERS: RenewalOption[] = [
   { id: '4', title: 'فئة 5000 ريال', price: 5000 },
 ];
 
-const ALSAFAA_LOGO = "https://i.postimg.cc/8cFZ4Hsp/20260324-220349.jpg";
+const ALSAFAA_LOGO = "https://i.postimg.cc/90nZ85Kk/20260324-221446.jpg";
 
 export default function AlsafaaPage() {
   const firestore = useFirestore();

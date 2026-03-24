@@ -136,7 +136,7 @@ export function BalanceCard() {
                 {isLoading ? (
                     <Skeleton className="h-10 w-28 bg-white/20" />
                 ) : isBalanceVisible ? (
-                    balance.toLocaleString('en-US')
+                    balance === 0 ? "0.00" : balance.toLocaleString('en-US')
                 ) : (
                     "******"
                 )}

@@ -20,7 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Check
+  Check,
+  Search,
+  Loader2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -83,6 +85,7 @@ export default function AlsafaaPage() {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isInquiring, setIsInquiring] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
@@ -97,6 +100,26 @@ export default function AlsafaaPage() {
       audioRef.current.play().catch(e => console.error("Audio play failed", e));
     }
   }, [showSuccess]);
+
+  const handleInquiry = () => {
+    if (!cardNumber) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "الرجاء إدخال رقم الكرت أولاً.",
+      });
+      return;
+    }
+    setIsInquiring(true);
+    // محاكاة استعلام مؤقت
+    setTimeout(() => {
+      setIsInquiring(false);
+      toast({
+        title: "طلب استعلام",
+        description: "سيتم تفعيل الربط مع الـ API الخاص بالاستعلام قريباً.",
+      });
+    }, 1000);
+  };
 
   const handleRenewClick = () => {
     if (!cardNumber) {
@@ -255,19 +278,30 @@ export default function AlsafaaPage() {
         <div className="px-4 mt-6 space-y-8 pb-10">
             <Card className="rounded-[32px] border-none shadow-sm bg-card overflow-hidden">
                 <CardContent className="p-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت المراد تجديده</Label>
-                        <div className="relative">
-                            <Input
-                                id="cardNumber"
-                                type="tel"
-                                placeholder="ادخل رقم الكرت"
-                                value={cardNumber}
-                                onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                                className="h-14 rounded-2xl bg-muted/20 border-none focus-visible:ring-primary pr-11 font-black text-lg text-right"
-                            />
-                            <Hash className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-60" />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="cardNumber" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم الكرت المراد تجديده</Label>
+                            <div className="relative">
+                                <Input
+                                    id="cardNumber"
+                                    type="tel"
+                                    placeholder="ادخل رقم الكرت"
+                                    value={cardNumber}
+                                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
+                                    className="h-12 rounded-2xl bg-muted/10 border-2 border-primary/20 focus-visible:ring-primary pr-11 font-black text-lg text-right"
+                                />
+                                <Hash className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-60" />
+                            </div>
                         </div>
+                        <Button 
+                            variant="outline" 
+                            className="w-full h-11 rounded-2xl font-black border-2 border-primary/20 text-primary hover:bg-primary/5 active:scale-95 transition-all"
+                            onClick={handleInquiry}
+                            disabled={isInquiring || !cardNumber}
+                        >
+                            {isInquiring ? <Loader2 className="animate-spin h-4 w-4 ml-2" /> : <Search className="h-4 w-4 ml-2" />}
+                            استعلام عن الكرت
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

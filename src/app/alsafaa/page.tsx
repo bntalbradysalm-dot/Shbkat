@@ -351,12 +351,17 @@ export default function AlsafaaPage() {
                             </div>
                         </div>
 
-                        <div className="bg-primary/5 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border border-primary/10">
+                        <div className={cn(
+                            "p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all duration-500",
+                            inquiryResult.remainingDays > 9 
+                                ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                                : "bg-red-500/10 border-red-500/20 text-red-600"
+                        )}>
                             <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-primary" />
-                                <span className="text-sm font-black text-primary">{inquiryResult.remainingDays} يوم</span>
+                                <Clock className="w-4 h-4" />
+                                <span className="text-sm font-black">{inquiryResult.remainingDays} يوم</span>
                             </div>
-                            <p className="text-[9px] font-bold text-primary/60 uppercase">المدة المتبقية لصلاحية الكرت</p>
+                            <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
                         </div>
                     </CardContent>
                 </Card>

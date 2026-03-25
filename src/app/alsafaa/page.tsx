@@ -346,8 +346,8 @@ export default function AlsafaaPage() {
                                 <p className="text-xs font-black text-foreground">{inquiryResult.expiryDate}</p>
                             </div>
                             <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
-                                <p className="text-[9px] font-bold text-muted-foreground mb-1">المتبقي</p>
-                                <p className="text-xs font-black text-primary">{inquiryResult.remainingData}</p>
+                                <p className="text-[9px] font-bold text-muted-foreground mb-1">رقم الكرت</p>
+                                <p className="text-xs font-black text-primary">{cardNumber}</p>
                             </div>
                         </div>
 

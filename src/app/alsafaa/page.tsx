@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Check,
   Search,
-  Loader2
+  Loader2,
+  User
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -61,6 +62,13 @@ type RenewalOption = {
   discount?: number;
 };
 
+type InquiryResult = {
+  subscriberName: string;
+  expiryDate: string;
+  remainingData: string;
+  remainingDays: number;
+};
+
 const ALSAFAA_OFFERS: RenewalOption[] = [
   { id: 'b3', title: '3 أشهر', price: 7000, groupName: 'الباقة الأساسية' },
   { id: 'b6', title: '6 أشهر', price: 14000, groupName: 'الباقة الأساسية' },
@@ -86,6 +94,7 @@ export default function AlsafaaPage() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInquiring, setIsInquiring] = useState(false);
+  const [inquiryResult, setInquiryResult] = useState<InquiryResult | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
@@ -111,14 +120,26 @@ export default function AlsafaaPage() {
       return;
     }
     setIsInquiring(true);
-    // محاكاة استعلام مؤقت
+    setInquiryResult(null);
+
+    // محاكاة استعلام للرقم 0
     setTimeout(() => {
       setIsInquiring(false);
-      toast({
-        title: "طلب استعلام",
-        description: "سيتم تفعيل الربط مع الـ API الخاص بالاستعلام قريباً.",
-      });
-    }, 1000);
+      if (cardNumber === '0') {
+        setInquiryResult({
+          subscriberName: "محمد راضي باشادي",
+          expiryDate: "2025-04-10",
+          remainingData: "1500 MB",
+          remainingDays: 5
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "غير موجود",
+          description: "رقم الكرت غير صحيح أو غير مسجل في قاعدة البيانات.",
+        });
+      }
+    }, 1500);
   };
 
   const handleRenewClick = () => {
@@ -305,6 +326,42 @@ export default function AlsafaaPage() {
                 </CardContent>
             </Card>
 
+            {/* Inquiry Results Section */}
+            {inquiryResult && (
+                <Card className="rounded-[32px] border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                    <CardHeader className="bg-primary/5 pb-4">
+                        <CardTitle className="text-xs font-black text-primary uppercase text-center flex items-center justify-center gap-2">
+                            <User className="h-4 w-4" /> معلومات الاشتراك
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4">
+                        <div className="text-center">
+                            <p className="text-[10px] font-bold text-muted-foreground mb-1">اسم المشترك</p>
+                            <h3 className="text-lg font-black text-foreground">{inquiryResult.subscriberName}</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
+                                <p className="text-[9px] font-bold text-muted-foreground mb-1">تاريخ الانتهاء</p>
+                                <p className="text-xs font-black text-foreground">{inquiryResult.expiryDate}</p>
+                            </div>
+                            <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
+                                <p className="text-[9px] font-bold text-muted-foreground mb-1">المتبقي</p>
+                                <p className="text-xs font-black text-primary">{inquiryResult.remainingData}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-primary/5 p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border border-primary/10">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-black text-primary">{inquiryResult.remainingDays} يوم</span>
+                            </div>
+                            <p className="text-[9px] font-bold text-primary/60 uppercase">المدة المتبقية لصلاحية الكرت</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="space-y-6">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -319,7 +376,6 @@ export default function AlsafaaPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                     {Object.keys(groupedOffers).map((groupName) => {
-                        const isBasic = groupName === 'الباقة الأساسية';
                         const isSelected = selectedOption?.groupName === groupName;
                         return (
                             <button

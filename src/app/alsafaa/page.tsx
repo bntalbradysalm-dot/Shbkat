@@ -294,8 +294,7 @@ export default function AlsafaaPage() {
                             </div>
                         </div>
                         <Button 
-                            variant="outline" 
-                            className="w-full h-11 rounded-2xl font-black border-2 border-primary/20 text-primary hover:bg-primary/5 active:scale-95 transition-all"
+                            className="w-full h-11 rounded-2xl font-black bg-mesh-gradient text-white shadow-lg active:scale-95 transition-all border-none"
                             onClick={handleInquiry}
                             disabled={isInquiring || !cardNumber}
                         >
@@ -393,7 +392,7 @@ export default function AlsafaaPage() {
 
       {/* Package Selection Dialog */}
       <Dialog open={!!activeGroup} onOpenChange={() => setActiveGroup(null)}>
-        <DialogContent className="rounded-[40px] max-w-[90vw] sm:max-w-md p-6 overflow-hidden border-none shadow-2xl [&>button]:hidden">
+        <DialogContent className="rounded-[40px] max-w-[90vw] sm:max-w-md p-6 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
             <DialogHeader className="mb-4">
                 <DialogTitle className="text-center font-black text-xl text-primary flex items-center justify-center gap-2">
                     {activeGroup === 'الباقة الأساسية' ? <Zap className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}

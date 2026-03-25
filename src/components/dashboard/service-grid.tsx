@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -26,7 +27,7 @@ const AlsafaaIcon = ({ className, style }: { className?: string, style?: React.C
   <div className={cn("relative", className)} style={style}>
     <Image 
       src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
-      alt="شبكة الصفاء" 
+      alt="شبكة الصفاء الرقمية" 
       fill 
       className="object-contain"
     />
@@ -37,7 +38,7 @@ const services: Service[] = [
   { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { name: 'الشبكات', icon: Wifi, href: '/services' },
   { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-  { name: 'شبكة الصفاء', icon: AlsafaaIcon, href: '/alsafaa' },
+  { name: 'شبكة الصفاء الرقمية', icon: AlsafaaIcon, href: '/alsafaa' },
   { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { name: 'المفضلة', icon: Heart, href: '/favorites' },
@@ -65,7 +66,7 @@ const ServiceItem = ({
             className="h-8 w-8 transition-transform group-hover:scale-110" 
             style={{ 
                 strokeWidth: 2,
-                stroke: name === 'شبكة الصفاء' ? undefined : 'url(#icon-gradient)'
+                stroke: name === 'شبكة الصفاء الرقمية' ? undefined : 'url(#icon-gradient)'
             }}
           />
         </div>

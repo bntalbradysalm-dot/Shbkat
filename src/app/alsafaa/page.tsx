@@ -168,7 +168,7 @@ export default function AlsafaaPage() {
         userId: user.uid,
         transactionDate: now,
         amount: selectedOption.price,
-        transactionType: `تجديد كرت شبكة الصفاء`,
+        transactionType: `تجديد كرت شبكة الصفاء الرقمية`,
         notes: `رقم الكرت: ${cardNumber} - ${selectedOption.groupName}: ${selectedOption.title}`,
         cardNumber: cardNumber
       });
@@ -210,7 +210,7 @@ export default function AlsafaaPage() {
             <CardContent className="p-8 space-y-6">
                 <div>
                     <h2 className="text-2xl font-black text-green-600">تم التجديد بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">شبكة الصفاء - نظام السداد المباشر</p>
+                    <p className="text-sm text-muted-foreground mt-1">شبكة الصفاء الرقمية - نظام السداد المباشر</p>
                 </div>
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
@@ -248,7 +248,7 @@ export default function AlsafaaPage() {
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
-      <SimpleHeader title="شبكة الصفاء" />
+      <SimpleHeader title="شبكة الصفاء الرقمية" />
       <div className="flex-1 overflow-y-auto">
         
         {/* Hero Section */}
@@ -266,7 +266,7 @@ export default function AlsafaaPage() {
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد كروت شبكة الصفاء</h2>
+                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد كروت شبكة الصفاء الرقمية</h2>
                     <div className="flex items-center justify-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
                         <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التفعيل المباشر</p>

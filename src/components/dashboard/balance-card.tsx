@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,7 @@ const AlsafaaIcon = ({ className, size, style }: { className?: string, size?: nu
   <div className={cn("relative", className)} style={{ width: size, height: size, ...style }}>
     <Image 
       src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
-      alt="شبكة الصفاء" 
+      alt="شبكة الصفاء الرقمية" 
       fill 
       className="object-contain"
     />
@@ -41,7 +42,7 @@ const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
-  { id: 'alsafaa', name: 'شبكة الصفاء', icon: AlsafaaIcon, href: '/alsafaa' },
+  { id: 'alsafaa', name: 'شبكة الصفاء الرقمية', icon: AlsafaaIcon, href: '/alsafaa' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },

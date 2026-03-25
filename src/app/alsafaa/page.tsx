@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -399,8 +398,7 @@ export default function AlsafaaPage() {
       <Dialog open={!!activeGroup} onOpenChange={() => setActiveGroup(null)}>
         <DialogContent className="rounded-[40px] max-w-[90vw] sm:max-w-md p-6 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
             <DialogHeader className="mb-4">
-                <DialogTitle className="text-center font-black text-xl text-primary flex items-center justify-center gap-2">
-                    {activeGroup === 'الباقة الأساسية' ? <Zap className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                <DialogTitle className="text-center font-black text-xl text-primary">
                     فئات {activeGroup}
                 </DialogTitle>
                 <DialogDescription className="text-center font-bold text-xs">

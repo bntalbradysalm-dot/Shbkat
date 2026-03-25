@@ -72,6 +72,7 @@ const ALSAFAA_OFFERS: RenewalOption[] = [
 ];
 
 const ALSAFAA_LOGO = "https://i.postimg.cc/90nZ85Kk/20260324-221446.jpg";
+const ALSAFAA_ICON = "https://i.postimg.cc/HWc1sG9N/20260324-231520.png";
 
 export default function AlsafaaPage() {
   const firestore = useFirestore();
@@ -201,7 +202,7 @@ export default function AlsafaaPage() {
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
         <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
         
-        <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+        <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">
                 <div className="bg-white/20 p-4 rounded-full animate-bounce">
                     <CheckCircle className="h-16 w-16 text-white" />
@@ -332,11 +333,15 @@ export default function AlsafaaPage() {
                                         : "bg-white dark:bg-slate-900 border-transparent hover:border-primary/20"
                                 )}
                             >
-                                <div className={cn(
-                                    "p-4 rounded-2xl transition-colors",
-                                    isBasic ? "bg-blue-500/10 text-blue-600" : "bg-amber-500/10 text-amber-600"
-                                )}>
-                                    {isBasic ? <Zap className="w-8 h-8" /> : <ShieldCheck className="w-8 h-8" />}
+                                <div className="p-2 rounded-2xl bg-white shadow-sm border border-muted w-16 h-16 flex items-center justify-center overflow-hidden">
+                                    <div className="relative w-full h-full">
+                                        <Image 
+                                            src={ALSAFAA_ICON}
+                                            alt={groupName}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1">
                                     <span className="text-xs font-black block text-foreground">{groupName}</span>

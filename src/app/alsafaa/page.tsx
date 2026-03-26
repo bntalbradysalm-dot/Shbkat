@@ -20,7 +20,8 @@ import {
   User,
   Zap,
   Package,
-  CalendarDays
+  CalendarDays,
+  AlertCircle
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -62,6 +63,12 @@ type SafaaPackage = {
     duration: string;
 };
 
+// فئات افتراضية تظهر قبل الاستعلام
+const PRE_FETCHED_PACKAGES = [
+    { subid: 'default_base', package: 'الباقة الأساسية', price: 5000, timeplan: 'تجديد 3 أشهر', isDefault: true },
+    { subid: 'default_plus', package: 'برايمر بلص', price: 1000, timeplan: 'تجديد 3 أشهر', isDefault: true },
+];
+
 export default function AlsafaaPage() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -73,7 +80,7 @@ export default function AlsafaaPage() {
   const [cardNumber, setCardNumber] = useState('');
   const [isInquiring, setIsInquiring] = useState(false);
   const [inquiryResult, setInquiryResult] = useState<SafaaPackage[] | null>(null);
-  const [selectedPkg, setSelectedPkg] = useState<SafaaPackage | null>(null);
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
   
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -101,6 +108,43 @@ export default function AlsafaaPage() {
       toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم الكرت أولاً." });
       return;
     }
+
+    // تجربة رقم 0
+    if (cardNumber === '0') {
+        setIsInquiring(true);
+        setTimeout(() => {
+            const demoData: SafaaPackage[] = [
+                {
+                    cardid: '0',
+                    subid: '105283',
+                    clientname: 'مستشار تجريبي - الصفاء',
+                    expires: '31/12/2025',
+                    expiry: 'صالحة لغاية 2025-12-31',
+                    package: 'الباقة الأساسية',
+                    planid: '27',
+                    price: 5000,
+                    timeplan: 'تجديد 3 أشهر',
+                    duration: '3'
+                },
+                {
+                    cardid: '0',
+                    subid: '105284',
+                    clientname: 'مستشار تجريبي - الصفاء',
+                    expires: '31/12/2025',
+                    expiry: 'صالحة لغاية 2025-12-31',
+                    package: 'برايمر بلص',
+                    planid: '12',
+                    price: 1000,
+                    timeplan: 'تجديد 3 أشهر',
+                    duration: '3'
+                }
+            ];
+            setInquiryResult(demoData);
+            setIsInquiring(false);
+        }, 800);
+        return;
+    }
+
     setIsInquiring(true);
     setInquiryResult(null);
     setSelectedPkg(null);
@@ -115,12 +159,11 @@ export default function AlsafaaPage() {
 
         if (result.success) {
             setInquiryResult(result.data);
-            // إذا كانت هناك باقة واحدة فقط، نحددها تلقائياً
             if (result.data.length === 1) {
                 setSelectedPkg(result.data[0]);
             }
         } else {
-            toast({ variant: "destructive", title: "تنبيه من النظام", description: result.message });
+            toast({ variant: "destructive", title: "تنبيه من النظام", description: result.message || "فشل الاتصال بالنظام." });
         }
     } catch (error) {
         toast({ variant: "destructive", title: "خطأ", description: "فشل الاتصال بسيرفر الشبكة." });
@@ -131,13 +174,24 @@ export default function AlsafaaPage() {
 
   const handleRenewClick = () => {
     if (!selectedPkg) {
-      toast({ variant: "destructive", title: "تنبيه", description: "يرجى اختيار الباقة المراد تجديدها من النتائج أعلاه." });
+      toast({ variant: "destructive", title: "تنبيه", description: "يرجى اختيار الباقة المراد تجديدها." });
       return;
+    }
+    if (!cardNumber) {
+        toast({ variant: "destructive", title: "تنبيه", description: "الرجاء إدخال رقم الكرت أولاً." });
+        return;
     }
     if ((userProfile?.balance ?? 0) < selectedPkg.price) {
       toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
       return;
     }
+    
+    // إذا كانت باقة افتراضية، يجب التأكد من عمل استعلام أولاً للحصول على subid حقيقي
+    if (selectedPkg.isDefault && cardNumber !== '0') {
+        toast({ variant: "destructive", title: "تنبيه", description: "الرجاء الضغط على زر الاستعلام أولاً للتحقق من بيانات الكرت قبل التجديد." });
+        return;
+    }
+
     setIsConfirming(true);
   };
 
@@ -148,19 +202,21 @@ export default function AlsafaaPage() {
     setIsConfirming(false);
 
     try {
-      // تنفيذ التجديد في API الشبكة
-      const res = await fetch('/api/alsafaa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              action: 'recharge', 
-              payload: { cardNumber: selectedPkg.cardid, subid: selectedPkg.subid } 
-          })
-      });
-      const result = await res.json();
+      // تنفيذ التجديد في API الشبكة (تخطي للرقم التجريبي 0)
+      if (cardNumber !== '0') {
+          const res = await fetch('/api/alsafaa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  action: 'recharge', 
+                  payload: { cardNumber: cardNumber, subid: selectedPkg.subid } 
+              })
+          });
+          const result = await res.json();
 
-      if (!result.success) {
-          throw new Error(result.message);
+          if (!result.success) {
+              throw new Error(result.message);
+          }
       }
 
       // تحديث الرصيد وتسجيل العملية في Firebase
@@ -176,8 +232,8 @@ export default function AlsafaaPage() {
         transactionDate: now,
         amount: selectedPkg.price,
         transactionType: `تجديد باقة شبكة الصفاء الرقمية`,
-        notes: `باقة: ${selectedPkg.package} - رقم الكرت: ${selectedPkg.cardid} - رقم المرجع: ${result.correlator || 'N/A'}`,
-        cardNumber: selectedPkg.cardid
+        notes: `باقة: ${selectedPkg.package} - رقم الكرت: ${cardNumber}`,
+        cardNumber: cardNumber
       });
 
       await batch.commit();
@@ -208,6 +264,8 @@ export default function AlsafaaPage() {
       } catch (e) { return 0; }
   };
 
+  if (!isMounted) return null;
+
   if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد..." />;
 
   if (showSuccess) {
@@ -234,15 +292,15 @@ export default function AlsafaaPage() {
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
-                        <span className="font-mono font-bold">{selectedPkg?.cardid}</span>
+                        <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                        <span className="font-black text-primary">{isMounted ? selectedPkg?.price.toLocaleString('en-US') : '...'} ريال</span>
+                        <span className="font-black text-primary">{selectedPkg?.price.toLocaleString('en-US')} ريال</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                        <span className="font-bold">{isMounted ? finalRemainingBalance.toLocaleString('en-US') : '...'} ريال</span>
+                        <span className="font-bold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
                     </div>
                 </div>
 
@@ -329,7 +387,7 @@ export default function AlsafaaPage() {
                             
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
-                                    <p className="text-[9px] font-bold text-muted-foreground mb-1">الانتهاء</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground mb-1">تاريخ الانتهاء</p>
                                     <p className="text-xs font-black text-foreground">{inquiryResult[0].expires}</p>
                                 </div>
                                 <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
@@ -359,65 +417,65 @@ export default function AlsafaaPage() {
                             })()}
                         </CardContent>
                     </Card>
-
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center px-2">
-                            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                                <LayoutGrid className="w-3.5 h-3.5 text-primary" />
-                                اختر الباقة للتجديد
-                            </h3>
-                            <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
-                                <Wallet className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-black text-primary">{isMounted ? (userProfile?.balance ?? 0).toLocaleString('en-US') : '...'} ر.ي</span>
-                            </div>
-                        </div>
-
-                        <div className="grid gap-3">
-                            {inquiryResult.map((pkg) => (
-                                <button
-                                    key={pkg.subid}
-                                    onClick={() => setSelectedPkg(pkg)}
-                                    className={cn(
-                                        "p-4 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between text-right gap-3 overflow-hidden shadow-sm active:scale-[0.98]",
-                                        selectedPkg?.subid === pkg.subid 
-                                            ? "border-primary bg-primary/5" 
-                                            : "bg-white dark:bg-slate-900 border-transparent"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-2xl bg-white shadow-sm border w-12 h-12 flex items-center justify-center shrink-0">
-                                            <div className="relative w-full h-full">
-                                                <Image src={ALSAFAA_ICON} alt={pkg.package} fill className="object-contain" />
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-xs font-black block text-foreground">{pkg.package}</span>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <Badge className="bg-muted text-muted-foreground text-[8px] font-black h-4 px-1.5 border-none">
-                                                    {pkg.timeplan}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-lg font-black text-primary">{isMounted ? pkg.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span></p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="pt-2">
-                        <Button 
-                            className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
-                            onClick={handleRenewClick}
-                            disabled={!selectedPkg}
-                        >
-                            تجديد الباقة المختارة
-                        </Button>
-                    </div>
                 </div>
             )}
+
+            <div className="space-y-3">
+                <div className="flex justify-between items-center px-2">
+                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+                        فئات التجديد المتاحة
+                    </h3>
+                    <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
+                        <Wallet className="w-3 h-3 text-primary" />
+                        <span className="text-[10px] font-black text-primary">{(userProfile?.balance ?? 0).toLocaleString('en-US')} ر.ي</span>
+                    </div>
+                </div>
+
+                <div className="grid gap-3">
+                    {(inquiryResult || PRE_FETCHED_PACKAGES).map((pkg: any) => (
+                        <button
+                            key={pkg.subid}
+                            onClick={() => setSelectedPkg(pkg)}
+                            className={cn(
+                                "p-4 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between text-right gap-3 overflow-hidden shadow-sm active:scale-[0.98]",
+                                selectedPkg?.subid === pkg.subid 
+                                    ? "border-primary bg-primary/5" 
+                                    : "bg-white dark:bg-slate-900 border-transparent"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-2xl bg-white shadow-sm border w-12 h-12 flex items-center justify-center shrink-0">
+                                    <div className="relative w-full h-full">
+                                        <Image src={ALSAFAA_ICON} alt={pkg.package} fill className="object-contain" />
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-xs font-black block text-foreground">{pkg.package}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <Badge className="bg-muted text-muted-foreground text-[8px] font-black h-4 px-1.5 border-none">
+                                            {pkg.timeplan}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-left">
+                                <p className="text-lg font-black text-primary">{pkg.price.toLocaleString('en-US')} <span className="text-[10px]">ر.ي</span></p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="pt-2">
+                <Button 
+                    className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
+                    onClick={handleRenewClick}
+                    disabled={!selectedPkg}
+                >
+                    تجديد الباقة المختارة
+                </Button>
+            </div>
         </div>
       </div>
 
@@ -428,7 +486,7 @@ export default function AlsafaaPage() {
                 <div className="py-4 space-y-3 text-right text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3 h-3"/> رقم الكرت:</span>
-                        <span className="font-mono font-bold">{selectedPkg?.cardid}</span>
+                        <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground flex items-center gap-2"><Star className="w-3 h-3"/> نوع الباقة:</span>
@@ -440,7 +498,7 @@ export default function AlsafaaPage() {
                     </div>
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-2xl px-3 mt-2">
                         <span className="font-black">المبلغ المخصوم:</span>
-                        <span className="font-black text-primary text-xl">{isMounted ? selectedPkg?.price.toLocaleString('en-US') : '...'} ريال</span>
+                        <span className="font-black text-primary text-xl">{selectedPkg?.price.toLocaleString('en-US')} ريال</span>
                     </div>
                 </div>
             </AlertDialogHeader>

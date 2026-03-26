@@ -30,6 +30,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -120,7 +121,7 @@ export default function AlsafaaPage() {
       });
       return;
     }
-    setIsInquiring(true);
+    isInquiring(true);
     setInquiryResult(null);
 
     // محاكاة استعلام للرقم 0
@@ -358,13 +359,13 @@ export default function AlsafaaPage() {
                                 ? "bg-green-500/10 border-green-500/20 text-green-600" 
                                 : "bg-red-500/10 border-red-500/20 text-red-600"
                         )}>
+                            <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
                             <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4" />
                                 <span className="text-sm font-black">
                                     {inquiryResult.remainingDays} {inquiryResult.remainingDays > 10 ? 'يوم' : 'أيام'}
                                 </span>
                             </div>
-                            <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
                         </div>
                     </CardContent>
                 </Card>

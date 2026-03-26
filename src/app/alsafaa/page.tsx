@@ -142,7 +142,7 @@ export default function AlsafaaPage() {
         toast({
           variant: "destructive",
           title: "غير موجود",
-          description: "رقم الكرت غير صحيح أو غير مسجل في قاعدة البيانات.",
+          description: "رقّم الكرت غير صحيح أو غير مسجل في قاعدة البيانات.",
         });
       }
     }, 1500);
@@ -544,7 +544,7 @@ export default function AlsafaaPage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="grid grid-cols-2 gap-3 sm:space-x-0">
                 <AlertDialogAction onClick={handleFinalSubmit} className="w-full rounded-2xl h-12 font-bold shadow-lg">
-                    تأكيد وإرسال
+                    تأكيد
                 </AlertDialogAction>
                 <AlertDialogCancel className="w-full rounded-2xl h-12 mt-0">إلغاء</AlertDialogCancel>
             </AlertDialogFooter>

@@ -246,7 +246,7 @@ export default function AlsafaaPage() {
                         <span className="font-bold">{selectedOption?.groupName} - {selectedOption?.title}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
-                        <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم الكرت:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
                         <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -525,7 +525,7 @@ export default function AlsafaaPage() {
                 <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                 <div className="py-4 space-y-3 text-right text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3  h-3"/> رقم الكرت:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3 h-3"/> رقم الكرت:</span>
                         <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">

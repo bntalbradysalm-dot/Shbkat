@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -318,7 +317,7 @@ export default function AlsafaaPage() {
                                     onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
                                     className="h-12 rounded-2xl bg-muted/10 border-2 border-primary/20 focus-visible:ring-primary pr-11 font-black text-lg text-right"
                                 />
-                                <Hash className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-60" />
+                                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-60" />
                             </div>
                         </div>
                         <Button 

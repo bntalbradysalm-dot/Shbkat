@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -329,9 +330,9 @@ export default function AlsafaaPage() {
             {/* Inquiry Results Section */}
             {inquiryResult && (
                 <Card className="rounded-[32px] border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-                    <CardHeader className="bg-primary/5 pb-4">
-                        <CardTitle className="text-xs font-black text-primary uppercase text-center flex items-center justify-center gap-2">
-                            <User className="h-4 w-4" /> معلومات الاشتراك
+                    <CardHeader className="bg-mesh-gradient pb-4">
+                        <CardTitle className="text-xs font-black text-white uppercase text-center flex items-center justify-center gap-2">
+                            <User className="h-4 w-4 text-white" /> معلومات الاشتراك
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
@@ -520,7 +521,7 @@ export default function AlsafaaPage() {
                 <AlertDialogTitle className="text-center font-black">تأكيد معلومات التجديد</AlertDialogTitle>
                 <div className="py-4 space-y-3 text-right text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
-                        <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3 h-3"/> رقم الكرت:</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3  h-3"/> رقم الكرت:</span>
                         <span className="font-mono font-bold">{cardNumber}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">

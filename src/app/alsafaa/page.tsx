@@ -366,7 +366,6 @@ export default function AlsafaaPage() {
                         )}>
                             <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
                             <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
                                 <span className="text-sm font-black">
                                     {inquiryResult.remainingDays} {inquiryResult.remainingDays > 10 ? 'يوم' : 'أيام'}
                                 </span>

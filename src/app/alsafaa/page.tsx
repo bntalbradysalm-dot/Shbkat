@@ -90,6 +90,7 @@ export default function AlsafaaPage() {
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const [isMounted, setIsMounted] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
@@ -107,6 +108,10 @@ export default function AlsafaaPage() {
   const { data: userProfile } = useDoc<any>(userDocRef);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (showSuccess && audioRef.current) {
       audioRef.current.play().catch(e => console.error("Audio play failed", e));
     }
@@ -121,7 +126,7 @@ export default function AlsafaaPage() {
       });
       return;
     }
-    isInquiring(true);
+    setIsInquiring(true);
     setInquiryResult(null);
 
     // محاكاة استعلام للرقم 0
@@ -247,11 +252,11 @@ export default function AlsafaaPage() {
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                        <span className="font-black text-primary">{selectedOption?.price.toLocaleString('en-US')} ريال</span>
+                        <span className="font-black text-primary">{isMounted ? selectedOption?.price.toLocaleString('en-US') : '...'} ريال</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                        <span className="font-bold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
+                        <span className="font-bold">{isMounted ? finalRemainingBalance.toLocaleString('en-US') : '...'} ريال</span>
                     </div>
                 </div>
 
@@ -379,7 +384,7 @@ export default function AlsafaaPage() {
                     </h3>
                     <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
                         <Wallet className="w-3 h-3 text-primary" />
-                        <span className="text-[10px] font-black text-primary">{(userProfile?.balance ?? 0).toLocaleString()} ر.ي</span>
+                        <span className="text-[10px] font-black text-primary">{isMounted ? (userProfile?.balance ?? 0).toLocaleString('en-US') : '...'} ر.ي</span>
                     </div>
                 </div>
 
@@ -440,7 +445,7 @@ export default function AlsafaaPage() {
                                 </div>
                             </div>
                             <div className="text-left">
-                                <p className="text-lg font-black text-primary">{selectedOption.price.toLocaleString()} <span className="text-[10px]">ر.ي</span></p>
+                                <p className="text-lg font-black text-primary">{isMounted ? selectedOption.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span></p>
                             </div>
                         </Card>
                     </div>
@@ -499,11 +504,11 @@ export default function AlsafaaPage() {
                         <div className="flex items-center gap-3">
                             {offer.discount && (
                                 <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-black h-5">
-                                    وفر {offer.discount.toLocaleString()}
+                                    وفر {isMounted ? offer.discount.toLocaleString('en-US') : '...'}
                                 </Badge>
                             )}
                             <div className="text-left font-black text-primary text-base">
-                                {offer.price.toLocaleString()} <span className="text-[10px]">ر.ي</span>
+                                {isMounted ? offer.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span>
                             </div>
                         </div>
                     </button>
@@ -535,7 +540,7 @@ export default function AlsafaaPage() {
                     </div>
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-2xl px-3 mt-2">
                         <span className="font-black">المبلغ المخصوم:</span>
-                        <span className="font-black text-primary text-xl">{selectedOption?.price.toLocaleString()} ريال</span>
+                        <span className="font-black text-primary text-xl">{isMounted ? selectedOption?.price.toLocaleString('en-US') : '...'} ريال</span>
                     </div>
                 </div>
             </AlertDialogHeader>

@@ -2,31 +2,39 @@
 import { NextResponse } from 'next/server';
 
 /**
- * إعدادات الوصول لـ API شبكة الصفاء الرقمية
+ * إعدادات الوصول لـ API شبكة الصفاء الرقمية - العنوان الجديد (Port 8086)
  */
-const API_BASE = 'https://api.alsafaa.net'; 
+const API_BASE = 'http://alsafa.ddns.net:8086'; 
 const USER = 'TEST';
 const PASS = '12341234';
 
 /**
  * وظيفة مساعدة للحصول على مفتاح API صالح عبر تسجيل الدخول (POST)
+ * يتم إرسال المعلمات في الرابط (Query Params) ولكن باستخدام طريقة POST
  */
 async function getApiKey() {
     try {
         const loginUrl = `${API_BASE}/login?username=${USER}&password=${PASS}`;
         const res = await fetch(loginUrl, { 
             method: 'POST',
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: {
+                'Accept': 'application/json',
+            }
         });
         
-        if (!res.ok) throw new Error('فشل الاتصال بسيرفر تسجيل الدخول.');
+        if (!res.ok) throw new Error('فشل الاتصال بسيرفر تسجيل الدخول (الصفاء).');
         
         const data = await res.json();
-        // النظام يعيد مصفوفة، نتحقق من العنصر الأول
-        if (Array.isArray(data) && data[0] && data[0].errorid === '100') {
-            return data[0].APIKEY;
+        
+        // النظام يعيد مصفوفة، نتحقق من العنصر الأول ومن رمز الخطأ 100 (لا يوجد خطأ)
+        if (Array.isArray(data) && data[0]) {
+            if (data[0].errorid === '100') {
+                return data[0].APIKEY;
+            }
+            throw new Error(data[0].errormsg || 'فشل التوثيق: رمز خطأ ' + data[0].errorid);
         }
-        throw new Error(data[0]?.errormsg || 'فشل تسجيل الدخول لـ API الصفاء (تحقق من الحساب)');
+        throw new Error('تنسيق استجابة غير معروف من سيرفر الصفاء.');
     } catch (error: any) {
         console.error('Safaa Login Error:', error);
         throw error;
@@ -36,6 +44,8 @@ async function getApiKey() {
 export async function POST(request: Request) {
     try {
         const { action, payload } = await request.json();
+        
+        // الحصول على APIKEY أولاً قبل أي عملية
         const apikey = await getApiKey();
 
         if (action === 'info') {
@@ -43,16 +53,17 @@ export async function POST(request: Request) {
             const infoUrl = `${API_BASE}/getcardinfo?cardid=${payload.cardNumber}&apikey=${apikey}`;
             const res = await fetch(infoUrl, { 
                 method: 'POST',
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
             });
             
             if (!res.ok) throw new Error('فشل جلب بيانات الكرت من المصدر.');
             
             const data = await res.json();
             
-            // التحقق من صحة الاستجابة (النظام يعيد مصفوفة من الباقات أو خطأ)
+            // التحقق من صحة الاستجابة
             if (Array.isArray(data) && data.length > 0) {
-                // إذا كان هناك خطأ في الاستعلام (مثلاً الكرت غير موجود)
+                // إذا كان هناك خطأ في الاستعلام (مثل الكرت غير موجود)
                 if (data[0].errorid && data[0].errorid !== '100') {
                     return NextResponse.json({ success: false, message: data[0].errormsg });
                 }
@@ -69,7 +80,11 @@ export async function POST(request: Request) {
                 rechargeUrl += `&subid=${payload.subid}`;
             }
             
-            const res = await fetch(rechargeUrl, { method: 'POST', cache: 'no-store' });
+            const res = await fetch(rechargeUrl, { 
+                method: 'POST', 
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
+            });
             
             if (!res.ok) throw new Error('فشل تنفيذ التجديد من المصدر.');
             
@@ -79,13 +94,14 @@ export async function POST(request: Request) {
             if (Array.isArray(data) && data[0] && data[0].errorid === '100') {
                 return NextResponse.json({ 
                     success: true, 
-                    message: data[0].errormsg, 
+                    message: data[0].errormsg || 'تمت العملية بنجاح', 
                     correlator: data[0].correlator 
                 });
             } else {
+                const errorMsg = (Array.isArray(data) && data[0]) ? data[0].errormsg : 'فشلت عملية التجديد من المصدر.';
                 return NextResponse.json({ 
                     success: false, 
-                    message: data[0]?.errormsg || 'فشلت عملية التجديد من المصدر.' 
+                    message: errorMsg 
                 });
             }
         }

@@ -109,7 +109,7 @@ export default function AlsafaaPage() {
       return;
     }
 
-    // تجربة رقم 0
+    // تجربة رقم 0 للعرض التجريبي
     if (cardNumber === '0') {
         setIsInquiring(true);
         setTimeout(() => {
@@ -186,7 +186,7 @@ export default function AlsafaaPage() {
       return;
     }
     
-    // إذا كانت باقة افتراضية، يجب التأكد من عمل استعلام أولاً للحصول على subid حقيقي
+    // إذا كانت باقة افتراضية، يجب التأكد من عمل استعلام أولاً
     if (selectedPkg.isDefault && cardNumber !== '0') {
         toast({ variant: "destructive", title: "تنبيه", description: "الرجاء الضغط على زر الاستعلام أولاً للتحقق من بيانات الكرت قبل التجديد." });
         return;
@@ -300,7 +300,7 @@ export default function AlsafaaPage() {
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">الرصيد المتبقي:</span>
-                        <span className="font-bold">{finalRemainingBalance.toLocaleString('en-US')} ريال</span>
+                        <span className="font-bold">{(userProfile?.balance ?? 0).toLocaleString('en-US')} ريال</span>
                     </div>
                 </div>
 

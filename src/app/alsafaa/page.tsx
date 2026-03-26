@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,18 +12,15 @@ import {
   CheckCircle, 
   History, 
   Wallet,
-  Hash,
   LayoutGrid,
   Star,
-  Zap,
   Clock,
-  ChevronLeft,
-  ChevronRight,
-  ShieldCheck,
-  Check,
   Search,
   Loader2,
-  User
+  User,
+  Zap,
+  Package,
+  CalendarDays
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -34,13 +32,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -55,32 +46,21 @@ import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
-type RenewalOption = {
-  id: string;
-  title: string;
-  price: number;
-  groupName: string;
-  discount?: number;
-};
-
-type InquiryResult = {
-  subscriberName: string;
-  expiryDate: string;
-  remainingData: string;
-  remainingDays: number;
-};
-
-const ALSAFAA_OFFERS: RenewalOption[] = [
-  { id: 'b3', title: '3 أشهر', price: 7000, groupName: 'الباقة الأساسية' },
-  { id: 'b6', title: '6 أشهر', price: 14000, groupName: 'الباقة الأساسية' },
-  { id: 'b12', title: '12 شهراً', price: 26000, groupName: 'الباقة الأساسية', discount: 2000 },
-  { id: 'c3', title: '3 أشهر', price: 8000, groupName: 'الباقة الشاملة' },
-  { id: 'c6', title: '6 أشهر', price: 16000, groupName: 'الباقة الشاملة' },
-  { id: 'c12', title: '12 شهراً', price: 30000, groupName: 'الباقة الشاملة', discount: 2000 },
-];
-
 const ALSAFAA_LOGO = "https://i.postimg.cc/90nZ85Kk/20260324-221446.jpg";
 const ALSAFAA_ICON = "https://i.postimg.cc/HWc1sG9N/20260324-231520.png";
+
+type SafaaPackage = {
+    cardid: string;
+    subid: string;
+    clientname: string;
+    expires: string;
+    expiry: string;
+    package: string;
+    planid: string;
+    price: number;
+    timeplan: string;
+    duration: string;
+};
 
 export default function AlsafaaPage() {
   const firestore = useFirestore();
@@ -91,12 +71,12 @@ export default function AlsafaaPage() {
 
   const [isMounted, setIsMounted] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
-  const [selectedOption, setSelectedOption] = useState<RenewalOption | null>(null);
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [isInquiring, setIsInquiring] = useState(false);
+  const [inquiryResult, setInquiryResult] = useState<SafaaPackage[] | null>(null);
+  const [selectedPkg, setSelectedPkg] = useState<SafaaPackage | null>(null);
+  
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isInquiring, setIsInquiring] = useState(false);
-  const [inquiryResult, setInquiryResult] = useState<InquiryResult | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalRemainingBalance, setFinalRemainingBalance] = useState(0);
 
@@ -116,93 +96,93 @@ export default function AlsafaaPage() {
     }
   }, [showSuccess]);
 
-  const handleInquiry = () => {
+  const handleInquiry = async () => {
     if (!cardNumber) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "الرجاء إدخال رقم الكرت أولاً.",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "الرجاء إدخال رقم الكرت أولاً." });
       return;
     }
     setIsInquiring(true);
     setInquiryResult(null);
+    setSelectedPkg(null);
 
-    // محاكاة استعلام للرقم 0
-    setTimeout(() => {
-      setIsInquiring(false);
-      if (cardNumber === '0') {
-        setInquiryResult({
-          subscriberName: "محمد راضي باشادي",
-          expiryDate: "2025-04-10",
-          remainingData: "1500 MB",
-          remainingDays: 5
+    try {
+        const res = await fetch('/api/alsafaa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'info', payload: { cardNumber } })
         });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "غير موجود",
-          description: "رقّم الكرت غير صحيح أو غير مسجل في قاعدة البيانات.",
-        });
-      }
-    }, 1500);
+        const result = await res.json();
+
+        if (result.success) {
+            setInquiryResult(result.data);
+            // إذا كانت هناك باقة واحدة فقط، نحددها تلقائياً
+            if (result.data.length === 1) {
+                setSelectedPkg(result.data[0]);
+            }
+        } else {
+            toast({ variant: "destructive", title: "غير موجود", description: result.message });
+        }
+    } catch (error) {
+        toast({ variant: "destructive", title: "خطأ", description: "فشل الاتصال بسيرفر الشبكة." });
+    } finally {
+        setIsInquiring(false);
+    }
   };
 
   const handleRenewClick = () => {
-    if (!cardNumber) {
-      toast({
-        variant: "destructive",
-        title: "بيانات ناقصة",
-        description: "الرجاء إدخال رقم الكرت أولاً.",
-      });
+    if (!selectedPkg) {
+      toast({ variant: "destructive", title: "تنبيه", description: "يرجى اختيار الباقة المراد تجديدها من النتائج أعلاه." });
       return;
     }
-    if (!selectedOption) {
-      toast({
-        variant: "destructive",
-        title: "لم يتم اختيار باقة",
-        description: "الرجاء اختيار الفئة المطلوبة.",
-      });
-      return;
-    }
-    if ((userProfile?.balance ?? 0) < selectedOption.price) {
-      toast({
-        variant: "destructive",
-        title: "رصيد غير كافٍ",
-        description: "رصيدك الحالي لا يكفي لإتمام هذه العملية.",
-      });
+    if ((userProfile?.balance ?? 0) < selectedPkg.price) {
+      toast({ variant: "destructive", title: "رصيد غير كافٍ", description: "رصيدك الحالي لا يكفي لإتمام هذه العملية." });
       return;
     }
     setIsConfirming(true);
   };
 
   const handleFinalSubmit = async () => {
-    if (!user || !firestore || !selectedOption || !userProfile || !userDocRef) return;
+    if (!user || !firestore || !selectedPkg || !userProfile || !userDocRef) return;
 
     setIsProcessing(true);
     setIsConfirming(false);
 
-    const currentBalance = userProfile.balance ?? 0;
-    const now = new Date().toISOString();
-
     try {
+      // 1. تنفيذ التجديد في API الشبكة أولاً
+      const res = await fetch('/api/alsafaa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              action: 'recharge', 
+              payload: { cardNumber: selectedPkg.cardid, subid: selectedPkg.subid } 
+          })
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+          throw new Error(result.message);
+      }
+
+      // 2. تحديث الرصيد وتسجيل العملية في Firebase عند نجاح الـ API
       const batch = writeBatch(firestore);
-      
-      batch.update(userDocRef, { balance: increment(-selectedOption.price) });
+      const now = new Date().toISOString();
+      const currentBalance = userProfile.balance ?? 0;
+
+      batch.update(userDocRef, { balance: increment(-selectedPkg.price) });
       
       const txRef = doc(collection(firestore, 'users', user.uid, 'transactions'));
       batch.set(txRef, {
         userId: user.uid,
         transactionDate: now,
-        amount: selectedOption.price,
-        transactionType: `تجديد كرت شبكة الصفاء الرقمية`,
-        notes: `رقم الكرت: ${cardNumber} - ${selectedOption.groupName}: ${selectedOption.title}`,
-        cardNumber: cardNumber
+        amount: selectedPkg.price,
+        transactionType: `تجديد باقة شبكة الصفاء الرقمية`,
+        notes: `باقة: ${selectedPkg.package} - رقم الكرت: ${selectedPkg.cardid} - رقم المرجع: ${result.correlator || 'N/A'}`,
+        cardNumber: selectedPkg.cardid
       });
 
       await batch.commit();
       
-      setFinalRemainingBalance(currentBalance - selectedOption.price);
+      setFinalRemainingBalance(currentBalance - selectedPkg.price);
       setShowSuccess(true);
     } catch (error: any) {
       toast({
@@ -215,13 +195,19 @@ export default function AlsafaaPage() {
     }
   };
 
-  const groupedOffers = ALSAFAA_OFFERS.reduce((acc, offer) => {
-    if (!acc[offer.groupName]) acc[offer.groupName] = [];
-    acc[offer.groupName].push(offer);
-    return acc;
-  }, {} as Record<string, RenewalOption[]>);
+  // وظيفة لحساب الأيام المتبقية تقريبياً (للعرض الجمالي فقط)
+  const calculateDaysLeft = (dateStr: string) => {
+      if (!dateStr) return 0;
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return 0;
+      const expiry = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      const now = new Date();
+      const diffTime = expiry.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+  };
 
-  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ طلبك..." />;
+  if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد..." />;
 
   if (showSuccess) {
     return (
@@ -242,16 +228,16 @@ export default function AlsafaaPage() {
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                     <div className="flex justify-between items-center border-b border-muted pb-2">
-                        <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> الباقة:</span>
-                        <span className="font-bold">{selectedOption?.groupName} - {selectedOption?.title}</span>
+                        <span className="text-muted-foreground flex items-center gap-2"><Package className="w-3.5 h-3.5" /> الباقة:</span>
+                        <span className="font-bold">{selectedPkg?.package}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> رقم الكرت:</span>
-                        <span className="font-mono font-bold">{cardNumber}</span>
+                        <span className="font-mono font-bold">{selectedPkg?.cardid}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-muted pb-2">
                         <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
-                        <span className="font-black text-primary">{isMounted ? selectedOption?.price.toLocaleString('en-US') : '...'} ريال</span>
+                        <span className="font-black text-primary">{isMounted ? selectedPkg?.price.toLocaleString('en-US') : '...'} ريال</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">الرصيد المتبقي:</span>
@@ -284,19 +270,14 @@ export default function AlsafaaPage() {
             <div className="relative flex flex-col items-center text-center space-y-4">
                 <div className="bg-white p-1 rounded-[24px] shadow-2xl animate-in zoom-in-95 duration-700 overflow-hidden border-2 border-white">
                     <div className="relative h-24 w-56 rounded-[20px] overflow-hidden">
-                        <Image 
-                            src={ALSAFAA_LOGO}
-                            alt="Alsafaa Logo" 
-                            fill 
-                            className="object-contain"
-                        />
+                        <Image src={ALSAFAA_LOGO} alt="Alsafaa Logo" fill className="object-contain" />
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد كروت شبكة الصفاء الرقمية</h2>
+                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد باقات الصفاء الرقمية</h2>
                     <div className="flex items-center justify-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                        <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التفعيل المباشر</p>
+                        <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التفعيل المباشر (API)</p>
                     </div>
                 </div>
             </div>
@@ -334,190 +315,113 @@ export default function AlsafaaPage() {
 
             {/* Inquiry Results Section */}
             {inquiryResult && (
-                <Card className="rounded-[32px] border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-                    <CardHeader className="bg-mesh-gradient pb-4">
-                        <CardTitle className="text-xs font-black text-white uppercase text-center flex items-center justify-center gap-2">
-                            <User className="h-4 w-4 text-white" /> معلومات الاشتراك
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-4">
-                        <div className="text-center">
-                            <p className="text-[10px] font-bold text-muted-foreground mb-1">اسم المشترك</p>
-                            <h3 className="text-lg font-black text-foreground">{inquiryResult.subscriberName}</h3>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 pt-2">
-                            <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
-                                <p className="text-[9px] font-bold text-muted-foreground mb-1">تاريخ الانتهاء</p>
-                                <p className="text-xs font-black text-foreground">{inquiryResult.expiryDate}</p>
+                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                    <Card className="rounded-[32px] border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden">
+                        <CardHeader className="bg-mesh-gradient pb-4">
+                            <CardTitle className="text-xs font-black text-white uppercase text-center flex items-center justify-center gap-2">
+                                <User className="h-4 w-4 text-white" /> معلومات المشترك
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-4">
+                            <div className="text-center">
+                                <p className="text-[10px] font-bold text-muted-foreground mb-1">اسم العميل</p>
+                                <h3 className="text-lg font-black text-foreground">{inquiryResult[0].clientname}</h3>
                             </div>
-                            <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
-                                <p className="text-[9px] font-bold text-muted-foreground mb-1">رقم الكرت</p>
-                                <p className="text-xs font-black text-primary">{cardNumber}</p>
-                            </div>
-                        </div>
-
-                        <div className={cn(
-                            "p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all duration-500",
-                            inquiryResult.remainingDays > 9 
-                                ? "bg-green-500/10 border-green-500/20 text-green-600" 
-                                : "bg-red-500/10 border-red-500/20 text-red-600"
-                        )}>
-                            <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-black">
-                                    {inquiryResult.remainingDays} {inquiryResult.remainingDays > 10 ? 'يوم' : 'أيام'}
-                                </span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            <div className="space-y-6">
-                <div className="flex justify-between items-center px-2">
-                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                        <LayoutGrid className="w-3.5 h-3.5 text-primary" />
-                        اختر نوع الباقة
-                    </h3>
-                    <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
-                        <Wallet className="w-3 h-3 text-primary" />
-                        <span className="text-[10px] font-black text-primary">{isMounted ? (userProfile?.balance ?? 0).toLocaleString('en-US') : '...'} ر.ي</span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    {Object.keys(groupedOffers).map((groupName) => {
-                        const isSelected = selectedOption?.groupName === groupName;
-                        return (
-                            <button
-                                key={groupName}
-                                onClick={() => setActiveGroup(groupName)}
-                                className={cn(
-                                    "relative p-6 rounded-[32px] border-2 transition-all duration-300 flex flex-col items-center justify-center text-center gap-3 overflow-hidden group shadow-sm active:scale-95",
-                                    isSelected 
-                                        ? "border-primary bg-primary/5 shadow-md" 
-                                        : "bg-white dark:bg-slate-900 border-transparent hover:border-primary/20"
-                                )}
-                            >
-                                <div className="p-2 rounded-2xl bg-white shadow-sm border border-muted w-16 h-16 flex items-center justify-center overflow-hidden">
-                                    <div className="relative w-full h-full">
-                                        <Image 
-                                            src={ALSAFAA_ICON}
-                                            alt={groupName}
-                                            fill
-                                            className="object-contain"
-                                        />
-                                    </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
+                                    <p className="text-[9px] font-bold text-muted-foreground mb-1">الانتهاء</p>
+                                    <p className="text-xs font-black text-foreground">{inquiryResult[0].expires}</p>
                                 </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs font-black block text-foreground">{groupName}</span>
-                                    {isSelected && (
-                                        <Badge className="bg-primary text-white text-[8px] font-black h-4 px-1.5 border-none">
-                                            مختار: {selectedOption.title}
-                                        </Badge>
-                                    )}
+                                <div className="bg-muted/30 p-3 rounded-2xl text-center border border-muted">
+                                    <p className="text-[9px] font-bold text-muted-foreground mb-1">رقم الكرت</p>
+                                    <p className="text-xs font-black text-primary">{cardNumber}</p>
                                 </div>
-                                {isSelected && (
-                                    <div className="absolute top-2 left-2">
-                                        <div className="bg-primary rounded-full p-0.5">
-                                            <Check className="w-3 h-3 text-white" strokeWidth={4} />
+                            </div>
+
+                            {/* عرض حالة الأيام المتبقية للباقة الأولى (أو الأهم) */}
+                            {(() => {
+                                const days = calculateDaysLeft(inquiryResult[0].expires);
+                                const isCritical = days <= 9;
+                                return (
+                                    <div className={cn(
+                                        "p-3 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all duration-500",
+                                        isCritical 
+                                            ? "bg-red-500/10 border-red-500/20 text-red-600" 
+                                            : "bg-green-500/10 border-green-500/20 text-green-600"
+                                    )}>
+                                        <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-black">
+                                                {days} {days <= 10 && days > 0 ? 'أيام' : 'يوم'}
+                                            </span>
                                         </div>
                                     </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+                                );
+                            })()}
+                        </CardContent>
+                    </Card>
 
-                {selectedOption && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-500">
-                        <Card className="bg-primary/5 border-primary/10 border rounded-2xl p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary/10 rounded-xl">
-                                    <CheckCircle className="w-5 h-5 text-primary" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">الباقة المختارة حالياً</p>
-                                    <p className="text-sm font-black text-foreground">{selectedOption.groupName} - {selectedOption.title}</p>
-                                </div>
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center px-2">
+                            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+                                اختر الباقة للتجديد
+                            </h3>
+                            <div className="bg-primary/10 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/5">
+                                <Wallet className="w-3 h-3 text-primary" />
+                                <span className="text-[10px] font-black text-primary">{isMounted ? (userProfile?.balance ?? 0).toLocaleString('en-US') : '...'} ر.ي</span>
                             </div>
-                            <div className="text-left">
-                                <p className="text-lg font-black text-primary">{isMounted ? selectedOption.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span></p>
-                            </div>
-                        </Card>
+                        </div>
+
+                        <div className="grid gap-3">
+                            {inquiryResult.map((pkg) => (
+                                <button
+                                    key={pkg.subid}
+                                    onClick={() => setSelectedPkg(pkg)}
+                                    className={cn(
+                                        "p-4 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between text-right gap-3 overflow-hidden shadow-sm active:scale-[0.98]",
+                                        selectedPkg?.subid === pkg.subid 
+                                            ? "border-primary bg-primary/5" 
+                                            : "bg-white dark:bg-slate-900 border-transparent"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-2xl bg-white shadow-sm border w-12 h-12 flex items-center justify-center shrink-0">
+                                            <div className="relative w-full h-full">
+                                                <Image src={ALSAFAA_ICON} alt={pkg.package} fill className="object-contain" />
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-xs font-black block text-foreground">{pkg.package}</span>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <Badge className="bg-muted text-muted-foreground text-[8px] font-black h-4 px-1.5 border-none">
+                                                    {pkg.timeplan}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-lg font-black text-primary">{isMounted ? pkg.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span></p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                )}
-            </div>
 
-            <div className="pt-2">
-                <Button 
-                    className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
-                    onClick={handleRenewClick}
-                    disabled={!selectedOption || !cardNumber}
-                >
-                    تجديد الآن
-                </Button>
-            </div>
+                    <div className="pt-2">
+                        <Button 
+                            className="w-full h-14 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-transform"
+                            onClick={handleRenewClick}
+                            disabled={!selectedPkg}
+                        >
+                            تجديد الباقة المختارة
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
       </div>
-
-      {/* Package Selection Dialog */}
-      <Dialog open={!!activeGroup} onOpenChange={() => setActiveGroup(null)}>
-        <DialogContent className="rounded-[40px] max-w-[90vw] sm:max-w-md p-6 overflow-hidden border-none shadow-2xl [&>button]:hidden bg-white dark:bg-slate-950">
-            <DialogHeader className="mb-4">
-                <DialogTitle className="text-center font-black text-xl text-primary">
-                    فئات {activeGroup}
-                </DialogTitle>
-                <DialogDescription className="text-center font-bold text-xs">
-                    اختر مدة التجديد المناسبة لك من القائمة أدناه
-                </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-3 py-2">
-                {activeGroup && groupedOffers[activeGroup].map((offer) => (
-                    <button
-                        key={offer.id}
-                        onClick={() => {
-                            setSelectedOption(offer);
-                            setActiveGroup(null);
-                        }}
-                        className={cn(
-                            "flex items-center justify-between p-4 rounded-2xl border-2 transition-all group",
-                            selectedOption?.id === offer.id 
-                                ? "border-primary bg-primary/5" 
-                                : "border-muted bg-muted/30 hover:border-primary/30"
-                        )}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "p-2 rounded-xl transition-colors",
-                                selectedOption?.id === offer.id ? "bg-primary text-white" : "bg-white text-muted-foreground group-hover:text-primary"
-                            )}>
-                                <Clock className="w-4 h-4" />
-                            </div>
-                            <span className="font-black text-sm text-foreground">{offer.title}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                            {offer.discount && (
-                                <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-black h-5">
-                                    وفر {isMounted ? offer.discount.toLocaleString('en-US') : '...'}
-                                </Badge>
-                            )}
-                            <div className="text-left font-black text-primary text-base">
-                                {isMounted ? offer.price.toLocaleString('en-US') : '...'} <span className="text-[10px]">ر.ي</span>
-                            </div>
-                        </div>
-                    </button>
-                ))}
-            </div>
-
-            <Button variant="outline" className="w-full h-12 rounded-2xl font-black mt-4 border-2" onClick={() => setActiveGroup(null)}>
-                تراجع
-            </Button>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
         <AlertDialogContent className="rounded-[40px] max-sm">
@@ -526,19 +430,19 @@ export default function AlsafaaPage() {
                 <div className="py-4 space-y-3 text-right text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground flex items-center gap-2"><CreditCard className="w-3 h-3"/> رقم الكرت:</span>
-                        <span className="font-mono font-bold">{cardNumber}</span>
+                        <span className="font-mono font-bold">{selectedPkg?.cardid}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground flex items-center gap-2"><Star className="w-3 h-3"/> نوع الباقة:</span>
-                        <span className="font-bold">{selectedOption?.groupName}</span>
+                        <span className="font-bold">{selectedPkg?.package}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                         <span className="text-muted-foreground flex items-center gap-2"><Clock className="w-3 h-3"/> مدة التجديد:</span>
-                        <span className="font-bold">{selectedOption?.title}</span>
+                        <span className="font-bold">{selectedPkg?.timeplan}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 bg-muted/50 rounded-2xl px-3 mt-2">
                         <span className="font-black">المبلغ المخصوم:</span>
-                        <span className="font-black text-primary text-xl">{isMounted ? selectedOption?.price.toLocaleString('en-US') : '...'} ريال</span>
+                        <span className="font-black text-primary text-xl">{isMounted ? selectedPkg?.price.toLocaleString('en-US') : '...'} ريال</span>
                     </div>
                 </div>
             </AlertDialogHeader>

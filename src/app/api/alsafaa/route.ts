@@ -3,14 +3,14 @@ import { NextResponse } from 'next/server';
 
 /**
  * إعدادات الوصول لـ API شبكة الصفاء الرقمية
- * يتم جلب الرابط من متغيرات البيئة لضمان المرونة
+ * تم ضبطها وفقاً للبيانات المزودة: TEST / 12341234
  */
-const API_BASE = process.env.ALSAFAA_API_URL || 'https://api.alsafaa.net'; 
+const API_BASE = 'https://api.alsafaa.net'; 
 const USER = 'TEST';
 const PASS = '12341234';
 
 /**
- * وظيفة مساعدة للحصول على مفتاح API صالح عبر تسجيل الدخول
+ * وظيفة مساعدة للحصول على مفتاح API صالح عبر تسجيل الدخول (POST)
  */
 async function getApiKey() {
     try {
@@ -19,6 +19,7 @@ async function getApiKey() {
             cache: 'no-store'
         });
         const data = await res.json();
+        // النظام يعيد مصفوفة، نتحقق من العنصر الأول
         if (data && data[0] && data[0].errorid === '100') {
             return data[0].APIKEY;
         }
@@ -42,22 +43,16 @@ export async function POST(request: Request) {
             });
             const data = await res.json();
             
-            // التحقق من صحة الاستجابة (النظام يعيد مصفوفة من الباقات)
+            // التحقق من صحة الاستجابة (النظام يعيد مصفوفة من الباقات أو خطأ)
             if (data && Array.isArray(data) && data.length > 0) {
+                // إذا كان هناك خطأ في الاستعلام (مثلاً الكرت غير موجود)
+                if (data[0].errorid && data[0].errorid !== '100') {
+                    return NextResponse.json({ success: false, message: data[0].errormsg });
+                }
                 return NextResponse.json({ success: true, data });
             } else {
                 return NextResponse.json({ success: false, message: 'الكرت غير موجود أو لا توجد باقات مرتبطة به.' });
             }
-        }
-
-        if (action === 'plans') {
-            // جلب الباقات المتاحة للتجديد بناءً على رقم الباقة الحالية
-            const res = await fetch(`${API_BASE}/plansavail?apikey=${apikey}&planid=${payload.planid}`, { 
-                method: 'POST',
-                cache: 'no-store'
-            });
-            const data = await res.json();
-            return NextResponse.json({ success: true, data });
         }
 
         if (action === 'recharge') {
@@ -70,10 +65,18 @@ export async function POST(request: Request) {
             const res = await fetch(url, { method: 'POST', cache: 'no-store' });
             const data = await res.json();
 
+            // التحقق من نجاح العملية (errorid == 100)
             if (data && data[0] && data[0].errorid === '100') {
-                return NextResponse.json({ success: true, message: data[0].errormsg, correlator: data[0].correlator });
+                return NextResponse.json({ 
+                    success: true, 
+                    message: data[0].errormsg, 
+                    correlator: data[0].correlator 
+                });
             } else {
-                return NextResponse.json({ success: false, message: data[0]?.errormsg || 'فشلت عملية التجديد من المصدر.' });
+                return NextResponse.json({ 
+                    success: false, 
+                    message: data[0]?.errormsg || 'فشلت عملية التجديد من المصدر.' 
+                });
             }
         }
 

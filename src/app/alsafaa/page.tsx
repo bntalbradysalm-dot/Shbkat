@@ -120,7 +120,7 @@ export default function AlsafaaPage() {
                 setSelectedPkg(result.data[0]);
             }
         } else {
-            toast({ variant: "destructive", title: "غير موجود", description: result.message });
+            toast({ variant: "destructive", title: "تنبيه من النظام", description: result.message });
         }
     } catch (error) {
         toast({ variant: "destructive", title: "خطأ", description: "فشل الاتصال بسيرفر الشبكة." });
@@ -148,7 +148,7 @@ export default function AlsafaaPage() {
     setIsConfirming(false);
 
     try {
-      // 1. تنفيذ التجديد في API الشبكة أولاً
+      // تنفيذ التجديد في API الشبكة
       const res = await fetch('/api/alsafaa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -163,7 +163,7 @@ export default function AlsafaaPage() {
           throw new Error(result.message);
       }
 
-      // 2. تحديث الرصيد وتسجيل العملية في Firebase عند نجاح الـ API
+      // تحديث الرصيد وتسجيل العملية في Firebase
       const batch = writeBatch(firestore);
       const now = new Date().toISOString();
       const currentBalance = userProfile.balance ?? 0;
@@ -195,16 +195,17 @@ export default function AlsafaaPage() {
     }
   };
 
-  // وظيفة لحساب الأيام المتبقية تقريبياً (للعرض الجمالي فقط)
   const calculateDaysLeft = (dateStr: string) => {
       if (!dateStr) return 0;
-      const parts = dateStr.split('/');
-      if (parts.length !== 3) return 0;
-      const expiry = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-      const now = new Date();
-      const diffTime = expiry.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays : 0;
+      try {
+          const parts = dateStr.split('/');
+          if (parts.length !== 3) return 0;
+          const expiry = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          const now = new Date();
+          const diffTime = expiry.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays > 0 ? diffDays : 0;
+      } catch (e) { return 0; }
   };
 
   if (isProcessing) return <ProcessingOverlay message="جاري تنفيذ التجديد..." />;
@@ -264,7 +265,6 @@ export default function AlsafaaPage() {
       <SimpleHeader title="شبكة الصفاء الرقمية" />
       <div className="flex-1 overflow-y-auto">
         
-        {/* Hero Section */}
         <div className="bg-mesh-gradient pt-8 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
@@ -313,7 +313,6 @@ export default function AlsafaaPage() {
                 </CardContent>
             </Card>
 
-            {/* Inquiry Results Section */}
             {inquiryResult && (
                 <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
                     <Card className="rounded-[32px] border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden">
@@ -339,7 +338,6 @@ export default function AlsafaaPage() {
                                 </div>
                             </div>
 
-                            {/* عرض حالة الأيام المتبقية للباقة الأولى (أو الأهم) */}
                             {(() => {
                                 const days = calculateDaysLeft(inquiryResult[0].expires);
                                 const isCritical = days <= 9;
@@ -350,7 +348,7 @@ export default function AlsafaaPage() {
                                             ? "bg-red-500/10 border-red-500/20 text-red-600" 
                                             : "bg-green-500/10 border-green-500/20 text-green-600"
                                     )}>
-                                        <p className="text-[9px] font-bold opacity-80 uppercase">المدة المتبقية لصلاحية الكرت</p>
+                                        <p className="text-[9px] font-bold opacity-80 uppercase text-center">المدة المتبقية لصلاحية الكرت</p>
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-black">
                                                 {days} {days <= 10 && days > 0 ? 'أيام' : 'يوم'}

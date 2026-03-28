@@ -127,20 +127,22 @@ export function ServiceGrid() {
       </div>
 
       <Dialog open={isDigitalNetworksOpen} onOpenChange={setIsDigitalNetworksOpen}>
-        <DialogContent className="rounded-[40px] max-sm p-6 overflow-hidden border-none shadow-2xl bg-[#F8FAFC] dark:bg-slate-950 [&>button]:hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            
-            <DialogHeader className="mb-6 relative z-10">
-                <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <Tv className="h-6 w-6 text-primary" />
-                </div>
-                <DialogTitle className="text-xl font-black text-primary text-center">شبكات البث الرقمي</DialogTitle>
-                <DialogDescription className="text-center font-bold text-xs text-muted-foreground">
-                    اختر المنظومة التي ترغب بتجديدها
-                </DialogDescription>
-            </DialogHeader>
+        <DialogContent className="rounded-[40px] max-sm p-0 overflow-hidden border-none shadow-2xl bg-[#F8FAFC] dark:bg-slate-950 [&>button]:hidden">
+            {/* رأس المنبثق مع التدرج اللوني */}
+            <div className="bg-mesh-gradient p-0 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                
+                <DialogHeader className="pt-12 pb-10 px-8 text-white text-center relative z-10">
+                    <div className="bg-white/20 p-4 rounded-[24px] w-16 h-16 mx-auto mb-4 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl overflow-hidden">
+                        <Tv className="h-8 w-8 text-white" />
+                    </div>
+                    <DialogTitle className="text-2xl font-black text-white drop-shadow-md">شبكات البث الرقمي</DialogTitle>
+                    <DialogDescription className="text-xs text-white/70 font-bold mt-1">اختر المنظومة التي ترغب بتجديدها</DialogDescription>
+                </DialogHeader>
+            </div>
 
-            <div className="grid gap-4 relative z-10">
+            <div className="p-6 grid gap-4 relative z-10">
                 <Link href="/alwadi" onClick={() => setIsDigitalNetworksOpen(false)}>
                     <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
                         <div className="flex items-center gap-4">
@@ -170,15 +172,15 @@ export function ServiceGrid() {
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:-translate-x-1" />
                     </div>
                 </Link>
-            </div>
 
-            <div className="mt-6">
-                <button 
-                    onClick={() => setIsDigitalNetworksOpen(false)}
-                    className="w-full py-3 rounded-2xl text-xs font-black text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    إغلاق
-                </button>
+                <div className="mt-2">
+                    <button 
+                        onClick={() => setIsDigitalNetworksOpen(false)}
+                        className="w-full py-3 rounded-2xl text-xs font-black text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        إغلاق النافذة
+                    </button>
+                </div>
             </div>
         </DialogContent>
       </Dialog>

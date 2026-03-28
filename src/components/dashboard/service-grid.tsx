@@ -166,7 +166,7 @@ export function ServiceGrid() {
                             </div>
                             <div className="text-right">
                                 <p className="font-black text-sm text-foreground">شبكة الصفاء الرقمية</p>
-                                <p className="text-[10px] font-bold text-muted-foreground">تجديد API مباشر</p>
+                                <p className="text-[10px] font-bold text-muted-foreground">تجديد مباشر</p>
                             </div>
                         </div>
                         <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:-translate-x-1" />

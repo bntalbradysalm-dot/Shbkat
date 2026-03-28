@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -45,6 +44,17 @@ const AlsafaaIcon = ({ className, style }: { className?: string, style?: React.C
   </div>
 );
 
+const AlwadiLogoIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
+  <div className={cn("relative", className)} style={style}>
+    <Image 
+      src="https://i.postimg.cc/MKMWP3VG/15.jpg" 
+      alt="منظومة الوادي" 
+      fill 
+      className="object-contain"
+    />
+  </div>
+);
+
 const ServiceItem = ({
   name,
   icon: Icon,
@@ -67,7 +77,7 @@ const ServiceItem = ({
           className="h-8 w-8 transition-transform group-hover:scale-110" 
           style={{ 
               strokeWidth: 2,
-              stroke: name === 'شبكة الصفاء الرقمية' ? undefined : 'url(#icon-gradient)'
+              stroke: (name === 'شبكة الصفاء الرقمية' || name === 'منظومة الوادي') ? undefined : 'url(#icon-gradient)'
           }}
         />
       </div>
@@ -133,8 +143,8 @@ export function ServiceGrid() {
                 <Link href="/alwadi" onClick={() => setIsDigitalNetworksOpen(false)}>
                     <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors">
-                                <SatelliteDish className="h-6 w-6 text-primary" />
+                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors overflow-hidden flex items-center justify-center">
+                                <AlwadiLogoIcon className="h-6 w-12" />
                             </div>
                             <div className="text-right">
                                 <p className="font-black text-sm text-foreground">منظومة الوادي</p>
@@ -148,7 +158,7 @@ export function ServiceGrid() {
                 <Link href="/alsafaa" onClick={() => setIsDigitalNetworksOpen(false)}>
                     <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors">
+                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors overflow-hidden flex items-center justify-center">
                                 <AlsafaaIcon className="h-6 w-6" />
                             </div>
                             <div className="text-right">

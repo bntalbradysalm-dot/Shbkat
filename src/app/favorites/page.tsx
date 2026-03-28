@@ -259,7 +259,7 @@ export default function FavoritesPage() {
             // 1. تحديث حالة الكرت
             batch.update(cardToPurchaseDoc.ref, { status: 'sold', soldTo: user.uid, soldTimestamp: now });
             
-            // 2. خصم الرصيد من المشتري
+            // 2. سجل العملية للمشتري
             batch.update(userDocRef, { balance: increment(-categoryPrice) });
             
             // 3. سجل العملية للمشتري
@@ -398,13 +398,7 @@ export default function FavoritesPage() {
                         >
                             <CardContent className="p-4 flex items-center justify-between gap-2">
                                 <div className="p-3 bg-white/20 rounded-xl shrink-0 backdrop-blur-sm border border-white/10 w-12 h-12 flex items-center justify-center overflow-hidden">
-                                    {fav.logo ? (
-                                        <div className="relative w-full h-full">
-                                            <Image src={fav.logo} alt={fav.name} fill className="object-contain" unoptimized />
-                                        </div>
-                                    ) : (
-                                        <Wifi className="h-6 w-6 text-white" />
-                                    )}
+                                    <Wifi className="h-6 w-6 text-white" />
                                 </div>
                                 
                                 <div className="flex-1 text-right mx-4 space-y-1 text-white overflow-hidden">
@@ -438,13 +432,7 @@ export default function FavoritesPage() {
                     <DialogTitle className="sr-only">{selectedNetwork?.name || 'تفاصيل الشبكة'}</DialogTitle>
                     <DialogDescription className="sr-only">تفاصيل الشبكة والفئات المتاحة للشراء</DialogDescription>
                     <div className="bg-white/20 p-3 rounded-2xl w-14 h-14 mx-auto mb-3 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl overflow-hidden">
-                        {selectedNetwork.logo ? (
-                            <div className="relative w-full h-full">
-                                <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
-                            </div>
-                        ) : (
-                            <Wifi className="h-7 w-7 text-white" />
-                        )}
+                        <Wifi className="h-7 w-7 text-white" />
                     </div>
                     <h2 className="text-xl font-black text-white drop-shadow-md">{selectedNetwork.name}</h2>
                     <p className="text-[10px] text-white/70 font-bold mt-1 bg-white/10 py-1 px-3 rounded-full border border-white/5 inline-block">{selectedNetwork.location}</p>
@@ -478,13 +466,7 @@ export default function FavoritesPage() {
                                                 "h-11 w-11 rounded-[18px] flex items-center justify-center shrink-0 shadow-lg bg-gradient-to-br text-white overflow-hidden",
                                                 gradient
                                             )}>
-                                                {selectedNetwork.logo ? (
-                                                    <div className="relative w-full h-full p-1.5 bg-white/10">
-                                                        <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
-                                                    </div>
-                                                ) : (
-                                                    <Wifi className="h-5 w-5" />
-                                                )}
+                                                <Wifi className="h-5 w-5" />
                                             </div>
                                             <div className="text-right space-y-0.5">
                                                 <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors">{cat.name}</h4>
@@ -549,7 +531,7 @@ export default function FavoritesPage() {
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-            <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
+            <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <CardContent className="p-8 space-y-6">
                     <div>
                         <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[40px] -m-8">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,18 +9,13 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Hash,
+  Hash as HashIcon,
   Calendar,
-  History,
   Smartphone,
-  Loader2,
   Globe,
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle,
-  Hash as HashIcon,
-  Search,
   Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,10 +30,9 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection as firestoreCollection } from 'firebase/firestore';
@@ -77,14 +71,8 @@ type Offer = {
     id?: string; 
 };
 
-type BillingInfo = {
-    balance: number;
-    customer_type: string;
-};
-
 // --- STYLES ---
 const YOU_PRIMARY = '#FECC4F';
-const YOU_TEXT = '#4A3B00'; // Darker text for better contrast on yellow
 const YOU_GRADIENT = {
     backgroundColor: '#FECC4F',
     backgroundImage: `
@@ -190,8 +178,6 @@ export default function YouServicesPage() {
     const [phone, setPhone] = useState('');
     const [activeTab, setActiveTab] = useState("packages");
     const [lineType, setLineType] = useState('prepaid');
-    const [isSearching, setIsSearching] = useState(false);
-    const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
     const [amount, setAmount] = useState('');
     const [selectedFastOffer, setSelectedFastOffer] = useState<FastOffer | null>(null);
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
@@ -208,46 +194,9 @@ export default function YouServicesPage() {
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-    const handleSearch = useCallback(async (phoneNumber: string) => {
-        if (!phoneNumber || phoneNumber.length !== 9) return;
-        
-        setIsSearching(true);
-        setBillingInfo(null);
-
-        try {
-            const response = await fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phoneNumber, action: 'query', service: 'you' }),
-            });
-            const result = await response.json();
-
-            if (response.ok) {
-                const allDataString = JSON.stringify(result).toLowerCase();
-                const isPostpaid = allDataString.includes('فوترة') || 
-                                   allDataString.includes('postpaid') || 
-                                   allDataString.includes('post_paid') ||
-                                   allDataString.includes('باقة فوترة');
-                
-                const detectedType = isPostpaid ? 'postpaid' : 'prepaid';
-                setLineType(detectedType);
-                setBillingInfo({ balance: parseFloat(result.balance || "0"), customer_type: isPostpaid ? 'فوترة' : 'دفع مسبق' });
-            } else {
-                throw new Error(result.message || 'فشل الاستعلام من المزود.');
-            }
-        } catch (e: any) {
-            toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: e.message });
-        } finally {
-            setIsSearching(false);
-        }
-    }, [toast]);
-
     const handlePhoneChange = (val: string) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
-        if (cleaned.length === 9 && cleaned.startsWith('73')) {
-            handleSearch(cleaned);
-        }
     };
 
     const handleContactPick = async () => {
@@ -427,7 +376,7 @@ export default function YouServicesPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
+                                <Button className="rounded-2xl h-12 font-bold bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" onClick={() => { setShowSuccess(false); }}>تحويل جديد</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -438,8 +387,6 @@ export default function YouServicesPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#FFF9F0] dark:bg-slate-950">
-            {/* مؤشرات التحميل الشفافة */}
-            {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isActivatingOffer && <ProcessingOverlay message="جاري تفعيل الباقة..." />}
             {isProcessing && <ProcessingOverlay message="جاري تنفيذ طلبك..." />}
 
@@ -466,7 +413,6 @@ export default function YouServicesPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#FECC4F]/20">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
-                        {isSearching && <Loader2 className="h-4 w-4 animate-spin text-[#E6B000]" />}
                     </div>
                     <div className="relative">
                         <Input
@@ -488,20 +434,15 @@ export default function YouServicesPage() {
 
                 {phone.length === 9 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {billingInfo && (
-                            <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={YOU_GRADIENT}>
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-[#4A3B00]">
-                                    <div className="p-3 border-l border-[#4A3B00]/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الرقم</p>
-                                        <p className="text-sm font-black">{billingInfo.balance.toLocaleString('en-US')} ريال</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">نوع الخط</p>
-                                        <p className="text-sm font-black">{billingInfo.customer_type}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        
+                        <div className="flex justify-center mt-2">
+                            <Tabs value={lineType} onValueChange={setLineType} className="w-full max-w-[240px]">
+                                <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-xl h-10 p-1 shadow-sm border border-[#FECC4F]/10">
+                                    <TabsTrigger value="prepaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-[#FECC4F] data-[state=active]:text-[#4A3B00]">دفع مسبق</TabsTrigger>
+                                    <TabsTrigger value="postpaid" className="rounded-lg font-bold text-xs data-[state=active]:bg-[#FECC4F] data-[state=active]:text-[#4A3B00]">فوترة</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
 
                         <Tabs defaultValue="packages" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-[#FECC4F]/10">

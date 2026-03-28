@@ -331,7 +331,7 @@ export default function AlsafaaPage() {
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد باقات الصفاء الرقمية</h2>
+                    <h2 className="text-2xl font-black text-white tracking-tight">تجديد إشتراك الصفاء الرقمية</h2>
                     <div className="flex items-center justify-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
                         <p className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em]">نظام التجديد المباشر</p>

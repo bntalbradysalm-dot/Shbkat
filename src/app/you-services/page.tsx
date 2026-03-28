@@ -208,14 +208,9 @@ export default function YouServicesPage() {
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-    const handleSearch = useCallback(async () => {
-        if (!phone || phone.length !== 9) return;
+    const handleSearch = useCallback(async (phoneNumber: string) => {
+        if (!phoneNumber || phoneNumber.length !== 9) return;
         
-        if (!phone.startsWith('73')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم YOU يجب أن يبدأ بـ 73' });
-            return;
-        }
-
         setIsSearching(true);
         setBillingInfo(null);
 
@@ -223,7 +218,7 @@ export default function YouServicesPage() {
             const response = await fetch('/api/telecom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile: phone, action: 'query', service: 'you' }),
+                body: JSON.stringify({ mobile: phoneNumber, action: 'query', service: 'you' }),
             });
             const result = await response.json();
 
@@ -245,7 +240,15 @@ export default function YouServicesPage() {
         } finally {
             setIsSearching(false);
         }
-    }, [phone, toast]);
+    }, [toast]);
+
+    const handlePhoneChange = (val: string) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 9);
+        setPhone(cleaned);
+        if (cleaned.length === 9 && cleaned.startsWith('73')) {
+            handleSearch(cleaned);
+        }
+    };
 
     const handleContactPick = async () => {
         if (!('contacts' in navigator && 'ContactsManager' in window)) {
@@ -269,8 +272,7 @@ export default function YouServicesPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
                 
-                setPhone(selectedNumber.slice(0, 9));
-                handleSearch();
+                handlePhoneChange(selectedNumber);
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -425,7 +427,7 @@ export default function YouServicesPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" onClick={() => { setShowSuccess(false); handleSearch(); }}>تحديث</Button>
+                                <Button className="rounded-2xl h-12 font-bold bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" onClick={() => { setShowSuccess(false); handleSearch(phone); }}>تحديث</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -464,13 +466,14 @@ export default function YouServicesPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#FECC4F]/20">
                     <div className="flex justify-between items-center mb-2 px-1">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">رقم الجوال</Label>
+                        {isSearching && <Loader2 className="h-4 w-4 animate-spin text-[#E6B000]" />}
                     </div>
                     <div className="relative">
                         <Input
                             type="tel"
                             placeholder="73xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#FECC4F] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -481,18 +484,6 @@ export default function YouServicesPage() {
                             <Users className="h-5 w-5" />
                         </button>
                     </div>
-                    {phone.length === 9 && phone.startsWith('73') && (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                            <Button 
-                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-md bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" 
-                                onClick={handleSearch} 
-                                disabled={isSearching}
-                            >
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                                استعلام
-                            </Button>
-                        </div>
-                    )}
                 </div>
 
                 {phone.length === 9 && (

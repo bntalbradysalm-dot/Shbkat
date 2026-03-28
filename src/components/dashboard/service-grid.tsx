@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
@@ -159,7 +160,7 @@ export function ServiceGrid() {
                     <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors overflow-hidden flex items-center justify-center">
-                                <AlsafaaIcon className="h-6 w-6" />
+                                <AlsafaaIcon className="h-6 w-12" />
                             </div>
                             <div className="text-right">
                                 <p className="font-black text-sm text-foreground">شبكة الصفاء الرقمية</p>

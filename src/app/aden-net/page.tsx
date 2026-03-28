@@ -9,14 +9,12 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, 
   CheckCircle, 
-  Search,
   Globe,
   Clock,
   Hash,
   Calendar,
   History,
   Phone,
-  Loader2,
   Users
 } from 'lucide-react';
 import {
@@ -37,18 +35,11 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 type UserProfile = {
   balance?: number;
-};
-
-type QueryResult = {
-    balance?: string;
-    expireDate?: string;
-    message?: string;
 };
 
 type Offer = {
@@ -116,8 +107,6 @@ export default function AdenNetPage() {
     const { user } = useUser();
 
     const [phone, setPhone] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
-    const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
     const [isActivatingOffer, setIsActivatingOffer] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -135,51 +124,6 @@ export default function AdenNetPage() {
             audioRef.current.play().catch(e => console.error("Audio play failed", e));
         }
     }, [showSuccess]);
-
-    useEffect(() => {
-        if (phone.length !== 9) {
-            setQueryResult(null);
-        }
-    }, [phone]);
-
-    const handleSearch = async () => {
-        if (!phone || phone.length !== 9) return;
-        
-        if (!phone.startsWith('79')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 79 لعدن نت' });
-            return;
-        }
-
-        setIsSearching(true);
-        setQueryResult(null);
-        try {
-            const transid = Date.now().toString().slice(-8);
-            const response = await fetch('/api/telecom', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mobile: phone, 
-                    action: 'query', 
-                    service: 'adenet',
-                    num: '3000',
-                    transid: transid
-                })
-            });
-            const result = await response.json();
-            
-            if (!response.ok) throw new Error(result.message || 'فشل الاستعلام من المصدر.');
-            
-            setQueryResult({
-                balance: result.balance || '...',
-                expireDate: result.expireDate || '...',
-                message: result.resultDesc
-            });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'خطأ في الاستعلام', description: error.message });
-        } finally {
-            setIsSearching(false);
-        }
-    };
 
     const handleContactPick = async () => {
         if (!('contacts' in navigator && 'ContactsManager' in window)) {
@@ -326,8 +270,6 @@ export default function AdenNetPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
-            {/* مؤشرات التحميل الشفافة */}
-            {isSearching && <ProcessingOverlay message="جاري الاستعلام..." />}
             {isActivatingOffer && <ProcessingOverlay message="جاري تفعيل الباقة..." />}
 
             <SimpleHeader title="عدن نت" />
@@ -368,38 +310,10 @@ export default function AdenNetPage() {
                             <Users className="h-5 w-5" />
                         </button>
                     </div>
-                    {phone.length === 9 && phone.startsWith('79') && (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                            <Button 
-                                className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" 
-                                onClick={handleSearch}
-                                disabled={isSearching}
-                                style={{ backgroundColor: ADEN_NET_PRIMARY }}
-                            >
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                                استعلام
-                            </Button>
-                        </div>
-                    )}
                 </div>
 
                 {phone.length === 9 && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                        {queryResult && (
-                            <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={ADEN_NET_GRADIENT}>
-                                <div className="bg-white/10 backdrop-blur-md rounded-[22px] grid grid-cols-2 text-center text-white">
-                                    <div className="p-3 border-l border-white/10">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">رصيد الحساب</p>
-                                        <p className="text-sm font-black">{queryResult.balance}</p>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-[10px] font-bold opacity-80 mb-1">تاريخ الانتهاء</p>
-                                        <p className="text-sm font-black">{queryResult.expireDate}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         <div className="pt-2 pb-10">
                             <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 px-1">باقات عدن نت المتوفرة</h3>
                             <div className="grid grid-cols-1 gap-1">

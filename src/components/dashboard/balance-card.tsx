@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,9 +18,22 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import Link from "next/link";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 const Icon4G = ({ size }: { size?: number }) => (
   <span className="font-black leading-none" style={{ fontSize: size ? `${size * 0.8}px` : '10px' }}>4G</span>
+);
+
+const AlsafaaIcon = ({ className, size, style }: { className?: string, size?: number, style?: React.CSSProperties }) => (
+  <div className={cn("relative", className)} style={{ width: size, height: size, ...style }}>
+    <Image 
+      src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
+      alt="شبكة الصفاء الرقمية" 
+      fill 
+      className="object-contain"
+    />
+  </div>
 );
 
 const availableServices = [
@@ -28,10 +42,10 @@ const availableServices = [
   { id: 'pay-bills', name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
   { id: 'digital-cards', name: 'الشبكات', icon: Wifi, href: '/services' },
   { id: 'alwadi', name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
+  { id: 'alsafaa', name: 'شبكة الصفاء الرقمية', icon: AlsafaaIcon, href: '/alsafaa' },
   { id: 'withdraw', name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
   { id: 'games', name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
   { id: 'favorites', name: 'المفضلة', icon: Heart, href: '/favorites' },
-  { id: 'transfer', name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
   { id: 'statement', name: 'سجل العمليات', icon: History, href: '/transactions' },
   { id: 'support', name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },
 ];
@@ -153,7 +167,7 @@ export function BalanceCard() {
       </Card>
 
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="rounded-[32px] max-sm">
+        <DialogContent className="rounded-[32px] max-sm p-6 [&>button]:hidden">
           <DialogHeader>
             <DialogTitle className="text-center font-black">اختيار اختصار مفضل</DialogTitle>
             <DialogDescription className="text-center">

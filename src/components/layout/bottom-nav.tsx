@@ -56,7 +56,7 @@ export function BottomNav() {
 
   if (isUserLoading) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 px-4 pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pb-6 px-4 pointer-events-none">
         <div className="w-full max-w-[400px] h-20 bg-card/80 backdrop-blur-xl rounded-[32px] border shadow-2xl flex items-center justify-around px-2">
             {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-10 rounded-xl" />)}
         </div>
@@ -103,7 +103,7 @@ export function BottomNav() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
       <div className="w-full max-w-[450px] relative pointer-events-auto select-none">
         
         {/* خلفية الشريط المتموجة باستخدام SVG */}

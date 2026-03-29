@@ -294,13 +294,7 @@ export default function BaityNetworksPage() {
               >
                 <CardContent className="p-5 flex items-center justify-between gap-4">
                     <div className="p-3 bg-primary/5 rounded-[24px] border border-primary/5 group-hover:bg-primary/10 transition-colors w-14 h-14 flex items-center justify-center overflow-hidden">
-                        {network.logo ? (
-                            <div className="relative w-full h-full">
-                                <Image src={network.logo} alt={network.name} fill className="object-contain" unoptimized />
-                            </div>
-                        ) : (
-                            <Wifi className="h-8 w-8 text-primary" />
-                        )}
+                        <Wifi className="h-8 w-8 text-primary" />
                     </div>
 
                     <div className="flex-1 text-right overflow-hidden">
@@ -342,13 +336,7 @@ export default function BaityNetworksPage() {
                 
                 <DialogHeader className="pt-12 pb-10 px-8 text-white text-center relative z-10">
                     <div className="bg-white/20 p-4 rounded-[24px] w-16 h-16 mx-auto mb-4 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl overflow-hidden">
-                        {selectedNetwork.logo ? (
-                            <div className="relative w-full h-full">
-                                <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
-                            </div>
-                        ) : (
-                            <Wifi className="h-8 w-8 text-white" />
-                        )}
+                        <Wifi className="h-8 w-8 text-white" />
                     </div>
                     <DialogTitle className="text-2xl font-black text-white drop-shadow-md">فئات {selectedNetwork.name}</DialogTitle>
                     <DialogDescription className="text-xs text-white/70 font-bold mt-1">اختر الفئة المناسبة وابدأ التصفح الآن</DialogDescription>
@@ -409,13 +397,7 @@ export default function BaityNetworksPage() {
                                             "h-14 w-14 rounded-full flex items-center justify-center shadow-lg bg-gradient-to-br text-white overflow-hidden",
                                             isFeatured ? "from-orange-400 to-orange-600" : "from-blue-400 to-blue-600"
                                         )}>
-                                            {selectedNetwork.logo ? (
-                                                <div className="relative w-full h-full p-2 bg-white/10">
-                                                    <Image src={selectedNetwork.logo} alt={selectedNetwork.name} fill className="object-contain" unoptimized />
-                                                </div>
-                                            ) : (
-                                                <Wifi className="h-6 w-6" />
-                                            )}
+                                            <Wifi className="h-6 w-6" />
                                         </div>
                                     </div>
                                 </CardContent>

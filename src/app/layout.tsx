@@ -114,6 +114,9 @@ export default function RootLayout({
         <title>Star Mobile - ستار موبايل</title>
         <meta name="description" content="تطبيق ستار موبايل لخدمات الاتصالات والإنترنت" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+        <link rel="icon" type="image/jpeg" sizes="32x32" href="https://i.postimg.cc/nzs88T1b/20260308-154520.jpg" />
+        <link rel="icon" type="image/jpeg" sizes="16x16" href="https://i.postimg.cc/nzs88T1b/20260308-154520.jpg" />
+        <link rel="apple-touch-icon" href="https://i.postimg.cc/nzs88T1b/20260308-154520.jpg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet" />

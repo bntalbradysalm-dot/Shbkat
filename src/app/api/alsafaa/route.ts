@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
  * إعدادات الوصول لـ API شبكة الصفاء الرقمية - العنوان الجديد (Port 8086)
  */
 const API_BASE = 'http://alsafa.ddns.net:8086'; 
-const USER = 'TEST';
+const USER = 'Test';
 const PASS = '12341234';
 
 /**

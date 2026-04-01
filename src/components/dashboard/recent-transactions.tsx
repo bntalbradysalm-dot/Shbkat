@@ -148,7 +148,7 @@ export function RecentTransactions() {
                                 <Card className="rounded-3xl border-border/50 shadow-sm overflow-hidden bg-card cursor-pointer hover:bg-muted/30 transition-all active:scale-[0.98]">
                                     <CardContent className="p-4 flex items-center justify-between">
                                         <div className="p-2.5 bg-muted/30 rounded-xl border border-border/50 shrink-0">
-                                            <Icon className="h-6 w-6" style={{ stroke: 'url(#icon-gradient)' }} />
+                                            <Icon className="h-5 w-5" style={{ stroke: 'url(#icon-gradient)' }} />
                                         </div>
 
                                         <div className="flex-1 text-right mx-4 overflow-hidden">

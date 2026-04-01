@@ -69,13 +69,13 @@ const QutaibiDirectForm = ({ onToggleTransactions }: { onToggleTransactions: () 
                 </div>
                 <div className="flex items-center gap-3">
                     <h3 className="font-black text-base text-white drop-shadow-md">بنك القطيبي (ريال جديد)</h3>
-                    <div className="bg-white rounded-full p-1.5 w-11 h-11 flex items-center justify-center shadow-lg">
-                        <div className="relative w-8 h-8">
+                    <div className="bg-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg overflow-hidden border-2 border-white">
+                        <div className="relative w-full h-full">
                             <Image 
                                 src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
                                 alt="Qutaibi" 
                                 fill 
-                                className="object-contain"
+                                className="object-cover"
                             />
                         </div>
                     </div>
@@ -229,15 +229,14 @@ export default function TopUpPage() {
                         )}
                     >
                         <div className={cn(
-                            "p-2 rounded-2xl transition-all duration-300",
-                            selectedMethod?.id === method.id ? "bg-white shadow-md" : "bg-muted/50"
+                            "w-16 h-16 rounded-2xl transition-all duration-300 overflow-hidden relative shadow-sm",
+                            selectedMethod?.id === method.id ? "ring-2 ring-primary ring-offset-2" : "bg-muted/50"
                         )}>
                             <Image 
                                 src={getLogoSrc(method.logoUrl)} 
                                 alt={method.name} 
-                                width={48} 
-                                height={48} 
-                                className="rounded-xl object-contain" 
+                                fill
+                                className="object-cover" 
                             />
                         </div>
                         <p className={cn(
@@ -305,7 +304,7 @@ export default function TopUpPage() {
                                                     src={getLogoSrc(selectedMethod.logoUrl)} 
                                                     alt={selectedMethod.name} 
                                                     fill
-                                                    className="object-contain p-1" 
+                                                    className="object-cover" 
                                                 />
                                             </div>
                                             <div className="text-right">

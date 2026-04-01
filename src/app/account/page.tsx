@@ -111,7 +111,7 @@ type AppSettings = {
 
 const CustomLoader = () => (
   <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
-    <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white p-1">
+    <div className="relative w-28 h-28 overflow-hidden rounded-[32px] border-4 border-white/30 shadow-2xl bg-white">
         <Image 
             src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" 
             alt="Star Mobile Logo" 
@@ -326,7 +326,7 @@ export default function AccountPage() {
                     : 'border-transparent text-muted-foreground hover:bg-muted/50'
                 )}
               >
-                <span className="h-5 w-5"><Sun className="h-5 w-5" /></span>
+                <span className="h-5 w-5"><Suspense fallback={<Sun className="h-5 w-5" />}><Sun className="h-5 w-5" /></Suspense></span>
                 <span className="text-xs font-bold">فاتح</span>
               </button>
               <button

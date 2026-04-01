@@ -19,7 +19,7 @@ export function PromotionalImage({ disableLink = false }: PromotionalImageProps)
                     src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" 
                     alt="Star Mobile Logo" 
                     fill
-                    className="object-cover p-1"
+                    className="object-cover"
                     priority
                 />
             </div>

@@ -42,7 +42,8 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Scale
+  Scale,
+  MapPin
 } from 'lucide-react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,7 @@ type User = {
   balance?: number;
   accountType?: 'user' | 'network-owner';
   registrationDate?: string;
+  location?: string;
 };
 
 type AppSettings = {
@@ -532,6 +534,12 @@ export default function UsersPage() {
                                         </Badge>
                                     )}
                                 </div>
+                                {user.location && (
+                                    <p className="text-[10px] font-black text-primary/70 flex items-center gap-1">
+                                        <MapPin className="h-2.5 w-2.5" />
+                                        {user.location}
+                                    </p>
+                                )}
                                 <p className="text-muted-foreground text-[10px] font-bold font-mono tracking-wider">{user.phoneNumber}</p>
                             </div>
                         </div>

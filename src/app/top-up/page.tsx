@@ -9,9 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
     Copy, 
-    MessageCircle, 
     Wallet, 
-    Banknote, 
     User as UserIcon, 
     MapPin, 
     ExternalLink, 
@@ -21,9 +19,7 @@ import {
     ChevronDown,
     CircleDollarSign,
     CheckCircle2,
-    ShieldCheck,
-    Info,
-    ArrowRightLeft
+    Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -133,7 +129,6 @@ export default function TopUpPage() {
     const router = useRouter();
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-    const [amount, setAmount] = useState('');
 
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -168,25 +163,13 @@ export default function TopUpPage() {
     };
 
     const handleSendRequest = () => {
-        if (!selectedMethod || !amount || !userProfile) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إكمال البيانات.' });
-            return;
-        }
-
         const phone = appSettings?.supportPhoneNumber;
         if (!phone) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'رقم الدعم غير متوفر حالياً.' });
             return;
         }
 
-        const message = `*طلب إيداع رصيد جديد* 💰\n\n` +
-            `👤 *اسم العميل:* ${userProfile.displayName || 'غير معروف'}\n` +
-            `📱 *رقم الهاتف:* ${userProfile.phoneNumber || 'غير معروف'}\n` +
-            `💵 *المبلغ:* ${Number(amount).toLocaleString('en-US')} ريال\n` +
-            `🏦 *طريقة التحويل:* ${selectedMethod.name}\n\n` +
-            `_الرجاء إرسال صورة الإيصال بعد هذه الرسالة لتأكيد العملية_`;
-
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
         window.open(whatsappUrl, '_blank');
     };
 
@@ -340,46 +323,19 @@ export default function TopUpPage() {
                             </div>
 
                             <Card className="border-none shadow-2xl rounded-[32px] overflow-hidden bg-card">
-                                <CardContent className="p-6 space-y-6">
-                                    <div className="space-y-2 text-center">
-                                        <Label htmlFor="amount" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المبلغ الذي قمت بتحويله</Label>
-                                        <div className="relative max-w-[220px] mx-auto">
-                                            <Input
-                                                id="amount"
-                                                type="number"
-                                                inputMode="numeric"
-                                                placeholder="0.00"
-                                                value={amount}
-                                                onChange={(e) => setAmount(e.target.value)}
-                                                className="text-center h-16 text-3xl font-black border-none bg-muted/20 rounded-2xl focus-visible:ring-primary text-primary transition-all"
-                                            />
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 font-black text-xs">ر.ي</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <Button 
-                                            className="w-full h-14 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-xl active:scale-95 transition-transform border-none"
-                                            onClick={handleSendRequest} 
-                                            disabled={!amount}
-                                        >
-                                            <MessageCircle className="ml-2 h-5 w-5" />
-                                            إرسال الإيصال عبر واتساب
-                                        </Button>
-                                        
-                                        <div className="p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 flex gap-3">
-                                            <Info className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                                            <p className="text-[10px] text-orange-700/80 font-bold leading-relaxed">
-                                                يرجى إرسال رسالة الواتساب التلقائية ثم إرفاق صورة الإيصال في المحادثة لضمان سرعة إضافة الرصيد لحسابك.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <CardContent className="p-6">
+                                    <Button 
+                                        className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-xl active:scale-95 transition-transform border-none"
+                                        onClick={handleSendRequest} 
+                                    >
+                                        أرسل الإيصال عبر واتساب
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
                     )}
 
-                    {/* الوكيل الرسمي Section - Kept as is */}
+                    {/* الوكيل الرسمي Section */}
                     <div className="pt-10 border-t border-muted-foreground/10">
                         <div className="px-4 pb-10 space-y-4">
                             <h2 className="text-lg font-black text-primary text-center">غذي حسابك عبر الوكيل الرسمي</h2>

@@ -230,7 +230,7 @@ export default function TopUpPage() {
                     >
                         <div className={cn(
                             "w-16 h-16 rounded-2xl transition-all duration-300 overflow-hidden relative shadow-sm",
-                            selectedMethod?.id === method.id ? "ring-2 ring-primary ring-offset-2" : "bg-muted/50"
+                            selectedMethod?.id === method.id ? "" : "bg-muted/50"
                         )}>
                             <Image 
                                 src={getLogoSrc(method.logoUrl)} 

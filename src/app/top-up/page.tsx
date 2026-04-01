@@ -323,9 +323,9 @@ export default function TopUpPage() {
                             </div>
 
                             <Card className="border-none shadow-2xl rounded-[32px] overflow-hidden bg-card">
-                                <CardContent className="p-6">
+                                <CardContent className="p-4">
                                     <Button 
-                                        className="w-full h-12 rounded-2xl bg-mesh-gradient text-white font-black text-base shadow-xl active:scale-95 transition-transform border-none"
+                                        className="w-full h-11 rounded-2xl bg-mesh-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-transform border-none"
                                         onClick={handleSendRequest} 
                                     >
                                         أرسل الإيصال عبر واتساب
@@ -337,7 +337,7 @@ export default function TopUpPage() {
 
                     {/* الوكيل الرسمي Section */}
                     <div className="pt-10 border-t border-muted-foreground/10">
-                        <div className="px-4 pb-10 space-y-4">
+                        <div className="px-0 pb-10 space-y-4">
                             <h2 className="text-lg font-black text-primary text-center">غذي حسابك عبر الوكيل الرسمي</h2>
                             <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
                                 <CardContent className="p-6 space-y-6">

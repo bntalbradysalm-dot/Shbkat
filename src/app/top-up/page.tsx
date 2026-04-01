@@ -9,9 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
     Copy, 
-    MessageCircle, 
     Wallet, 
-    Banknote, 
     User as UserIcon, 
     MapPin, 
     ExternalLink, 
@@ -19,7 +17,9 @@ import {
     PhoneCall, 
     QrCode, 
     ChevronDown,
-    CircleDollarSign
+    CircleDollarSign,
+    CheckCircle2,
+    Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -55,31 +55,29 @@ const getLogoSrc = (url?: string) => {
     return 'https://placehold.co/100x100/e2e8f0/e2e8f0'; 
 };
 
-// مكون واجهة القطيبي المباشرة
+// مكون واجهة القطيبي المباشرة بتصميم متناسق
 const QutaibiDirectForm = ({ onToggleTransactions }: { onToggleTransactions: () => void }) => {
     return (
         <div className="bg-[#A3D133] rounded-[40px] p-6 text-white space-y-5 shadow-2xl animate-in zoom-in-95 duration-500 max-w-sm mx-auto border-t-4 border-white/10">
-            {/* Header */}
             <div className="flex justify-between items-center px-1">
                 <div className="bg-white/20 p-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-white/30 transition-colors">
                     <HelpCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex items-center gap-3">
                     <h3 className="font-black text-base text-white drop-shadow-md">بنك القطيبي (ريال جديد)</h3>
-                    <div className="bg-white rounded-full p-1.5 w-11 h-11 flex items-center justify-center shadow-lg">
-                        <div className="relative w-8 h-8">
+                    <div className="bg-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg overflow-hidden border-2 border-white">
+                        <div className="relative w-full h-full">
                             <Image 
                                 src="https://i.postimg.cc/QN4zjX32/Asset-24x-8.png" 
                                 alt="Qutaibi" 
                                 fill 
-                                className="object-contain"
+                                className="object-cover"
                             />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Inputs Section */}
             <div className="space-y-4 pt-2">
                 <div className="relative group">
                     <Input 
@@ -105,14 +103,12 @@ const QutaibiDirectForm = ({ onToggleTransactions }: { onToggleTransactions: () 
                 </div>
             </div>
 
-            {/* Action Button */}
             <div className="pt-2">
                 <Button className="w-full h-14 bg-[#8EBC24] hover:bg-[#7DA81F] text-white font-black text-lg rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)] border-b-4 border-black/30 active:translate-y-1 active:border-b-0 transition-all">
                     طلب رمز التأكيد
                 </Button>
             </div>
 
-            {/* Footer Links */}
             <div 
                 className="flex justify-between items-center px-4 pt-3 cursor-pointer group"
                 onClick={onToggleTransactions}
@@ -133,7 +129,6 @@ export default function TopUpPage() {
     const router = useRouter();
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-    const [amount, setAmount] = useState('');
 
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -168,39 +163,26 @@ export default function TopUpPage() {
     };
 
     const handleSendRequest = () => {
-        if (!selectedMethod || !amount || !userProfile) {
-            toast({ variant: 'destructive', title: 'خطأ', description: 'الرجاء إكمال البيانات.' });
-            return;
-        }
-
         const phone = appSettings?.supportPhoneNumber;
         if (!phone) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'رقم الدعم غير متوفر حالياً.' });
             return;
         }
 
-        const message = `*طلب إيداع رصيد جديد* 💰\n\n` +
-            `👤 *اسم العميل:* ${userProfile.displayName || 'غير معروف'}\n` +
-            `📱 *رقم الهاتف:* ${userProfile.phoneNumber || 'غير معروف'}\n` +
-            `💵 *المبلغ:* ${Number(amount).toLocaleString('en-US')} ريال\n` +
-            `🏦 *طريقة التحويل:* ${selectedMethod.name}\n\n` +
-            `_الرجاء إرسال صورة الإيصال بعد هذه الرسالة لتأكيد العملية_`;
-
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
         window.open(whatsappUrl, '_blank');
     };
 
-    // التحقق إذا كان بنك القطيبي مختاراً
     const isQutaibiSelected = selectedMethod?.name.includes('القطيبي');
 
     const renderPaymentMethods = () => {
         if (isLoadingMethods) {
             return (
-                <div className="grid grid-cols-2 gap-4 px-4">
+                <div className="grid grid-cols-2 gap-4">
                     {[...Array(2)].map((_, i) => (
-                         <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-xl bg-card p-4 aspect-square border">
-                            <Skeleton className="h-12 w-12 rounded-lg"/>
-                            <Skeleton className="h-4 w-24"/>
+                         <div key={i} className="flex flex-col items-center justify-center space-y-2 rounded-3xl bg-card p-4 aspect-square border-2 border-border/50 animate-pulse">
+                            <div className="h-12 w-12 rounded-2xl bg-muted" />
+                            <div className="h-3 w-20 bg-muted rounded" />
                         </div>
                     ))}
                 </div>
@@ -209,162 +191,193 @@ export default function TopUpPage() {
 
         if (!paymentMethods || paymentMethods.length === 0) {
             return (
-                <div className="flex flex-col items-center justify-center text-center h-40 px-4">
-                    <p className="mt-4 text-lg font-semibold">لا توجد طرق دفع متاحة</p>
+                <div className="flex flex-col items-center justify-center text-center py-10 opacity-40">
+                    <Info className="h-12 w-12" />
+                    <p className="mt-2 text-sm font-bold">لا توجد طرق دفع متاحة حالياً</p>
                 </div>
             );
         }
 
         return (
-            <div className="grid grid-cols-2 gap-4 px-4">
+            <div className="grid grid-cols-2 gap-4">
                 {paymentMethods.map(method => (
-                    <Card
+                    <div
                         key={method.id}
                         onClick={() => setSelectedMethod(method)}
                         className={cn(
-                            "flex flex-col items-center justify-center space-y-2 rounded-xl p-4 aspect-square cursor-pointer transition-all border-2",
+                            "group flex flex-col items-center justify-center space-y-3 rounded-[32px] p-4 aspect-square cursor-pointer transition-all duration-300 border-2 relative overflow-hidden",
                             selectedMethod?.id === method.id 
-                                ? 'border-primary shadow-lg bg-primary/5' 
-                                : 'border-border hover:border-primary/50'
+                                ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10 scale-[1.02]' 
+                                : 'border-transparent bg-white dark:bg-slate-900 shadow-sm hover:border-primary/20'
                         )}
                     >
-                        <Image 
-                            src={getLogoSrc(method.logoUrl)} 
-                            alt={method.name} 
-                            width={48} 
-                            height={48} 
-                            className="rounded-lg object-contain" 
-                        />
-                        <p className="text-center text-xs font-semibold">{method.name}</p>
-                    </Card>
+                        <div className={cn(
+                            "w-16 h-16 rounded-2xl transition-all duration-300 overflow-hidden relative shadow-sm",
+                            selectedMethod?.id === method.id ? "" : "bg-muted/50"
+                        )}>
+                            <Image 
+                                src={getLogoSrc(method.logoUrl)} 
+                                alt={method.name} 
+                                fill
+                                className="object-cover" 
+                            />
+                        </div>
+                        <p className={cn(
+                            "text-center text-xs font-black transition-colors",
+                            selectedMethod?.id === method.id ? "text-primary" : "text-foreground/70"
+                        )}>{method.name}</p>
+                        
+                        {selectedMethod?.id === method.id && (
+                            <div className="absolute top-2 left-2 animate-in zoom-in-50 duration-300">
+                                <CheckCircle2 className="w-5 h-5 text-primary" />
+                            </div>
+                        )}
+                    </div>
                 ))}
             </div>
         );
     };
 
     return (
-        <div className="flex flex-col h-full bg-background">
-            <SimpleHeader title="إيداع رصيد" />
-            <div className="flex-1 overflow-y-auto space-y-6 pb-20">
-                <div className="pt-4">
-                    <div className="px-4">
-                        <h2 className="text-lg font-bold">1. اختر طريقة التحويل</h2>
-                        <p className="text-sm text-muted-foreground">حول المبلغ إلى أحد حساباتنا الظاهرة أدناه.</p>
-                    </div>
-                    <div className="mt-4">
-                        {renderPaymentMethods()}
+        <div className="flex flex-col h-full bg-[#F8FAFC] dark:bg-slate-950">
+            <SimpleHeader title="تغذية الحساب" />
+            
+            <div className="flex-1 overflow-y-auto">
+                {/* Hero Header */}
+                <div className="bg-mesh-gradient pt-6 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden mb-8">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="relative flex flex-col items-center text-center space-y-4">
+                        <div className="bg-white/20 p-3 rounded-[24px] backdrop-blur-md border border-white/20 shadow-2xl animate-in zoom-in-95 duration-700">
+                            <CircleDollarSign className="h-8 w-8 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-2xl font-black text-white tracking-tight">إيداع رصيد جديد</h2>
+                            <p className="text-[10px] text-white/70 font-bold uppercase tracking-[0.2em]">قم بتغذية محفظتك لتستمتع بخدماتنا</p>
+                        </div>
                     </div>
                 </div>
 
-                {selectedMethod && !isQutaibiSelected && (
-                    <div className="animate-in fade-in-0 duration-300 px-4">
-                        <h2 className="text-lg font-bold">2. بيانات الحساب المختارة</h2>
-                        <Card className="mt-4 border-primary/20">
-                            <CardContent className="p-4 text-center space-y-3">
-                                 <Image 
-                                    src={getLogoSrc(selectedMethod.logoUrl)} 
-                                    alt={selectedMethod.name} 
-                                    width={56} 
-                                    height={56} 
-                                    className="rounded-xl object-contain mx-auto" 
-                                />
-                                <div>
-                                    <p className="text-xs text-muted-foreground">اسم صاحب الحساب</p>
-                                    <p className="text-lg font-bold">{selectedMethod.accountHolderName}</p>
-                                </div>
-                                <div className="flex items-center justify-center bg-muted p-2 rounded-lg gap-1 border border-primary/10">
-                                    <Button variant="ghost" size="sm" onClick={() => handleCopy(selectedMethod.accountNumber)} className="text-primary font-bold">
-                                        <Copy className="ml-1 h-3 w-3" />
-                                        نسخ
+                <div className="px-4 space-y-8 pb-10">
+                    
+                    {/* Step 1: Selection */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 px-2">
+                            <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-primary/20">1</div>
+                            <h3 className="text-sm font-black text-foreground/80 uppercase tracking-widest">اختر طريقة التحويل</h3>
+                        </div>
+                        {renderPaymentMethods()}
+                    </div>
+
+                    {/* Step 2: Details */}
+                    {selectedMethod && (
+                        <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-primary/20">2</div>
+                                <h3 className="text-sm font-black text-foreground/80 uppercase tracking-widest">بيانات التحويل</h3>
+                            </div>
+
+                            {isQutaibiSelected ? (
+                                <QutaibiDirectForm onToggleTransactions={() => router.push('/transactions')} />
+                            ) : (
+                                <Card className="border-none shadow-lg rounded-[32px] overflow-hidden bg-white dark:bg-slate-900">
+                                    <CardContent className="p-6 text-center space-y-5">
+                                        <div className="flex items-center justify-center gap-4">
+                                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-md border-2 border-primary/5">
+                                                <Image 
+                                                    src={getLogoSrc(selectedMethod.logoUrl)} 
+                                                    alt={selectedMethod.name} 
+                                                    fill
+                                                    className="object-cover" 
+                                                />
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">اسم صاحب الحساب</p>
+                                                <p className="text-base font-black text-foreground">{selectedMethod.accountHolderName}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-primary/5 p-4 rounded-[24px] border-2 border-dashed border-primary/10 flex flex-col items-center gap-2">
+                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest">رقم الحساب</p>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl font-black font-mono tracking-wider text-primary">{selectedMethod.accountNumber}</span>
+                                                <button 
+                                                    onClick={() => handleCopy(selectedMethod.accountNumber)}
+                                                    className="p-2 bg-primary text-white rounded-xl active:scale-90 transition-transform shadow-md"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Step 3: Action */}
+                    {selectedMethod && !isQutaibiSelected && (
+                        <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-primary/20">3</div>
+                                <h3 className="text-sm font-black text-foreground/80 uppercase tracking-widest">تأكيد الإيداع</h3>
+                            </div>
+
+                            <Card className="border-none shadow-2xl rounded-[32px] overflow-hidden bg-card">
+                                <CardContent className="p-4">
+                                    <Button 
+                                        className="w-full h-11 rounded-2xl bg-mesh-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-transform border-none"
+                                        onClick={handleSendRequest} 
+                                    >
+                                        أرسل الإيصال عبر واتساب
                                     </Button>
-                                    <p className="text-lg font-mono tracking-wider text-primary dark:text-primary-foreground">{selectedMethod.accountNumber}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
 
-                {selectedMethod && isQutaibiSelected && (
-                    <div className="px-4">
-                        <h2 className="text-lg font-bold mb-4">2. تعبئة بيانات الشحن المباشر</h2>
-                        <QutaibiDirectForm onToggleTransactions={() => router.push('/transactions')} />
-                    </div>
-                )}
-                
-                {selectedMethod && !isQutaibiSelected && (
-                    <div className="px-4 space-y-4">
-                        <h2 className="text-lg font-bold">3. تأكيد عملية الإيداع</h2>
-                        <Card className="shadow-md">
-                            <CardContent className="p-4 space-y-4">
-                                <div className='space-y-2'>
-                                    <Label htmlFor="amount" className="flex items-center gap-2 text-muted-foreground">
-                                        <Wallet className="h-4 w-4 text-primary" />
-                                        المبلغ الذي قمت بتحويله (بالريال)
-                                    </Label>
-                                    <Input
-                                        id="amount"
-                                        type="number"
-                                        inputMode='numeric'
-                                        placeholder="0.00"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        className="text-right h-12 text-xl font-bold border-2 focus-visible:ring-primary"
-                                    />
-                                </div>
-                                <Button className="w-full h-14 text-lg font-bold shadow-lg" onClick={handleSendRequest} disabled={!amount || !selectedMethod}>
-                                    <MessageCircle className="ml-2 h-6 w-6" />
-                                    إرسال الإيصال عبر واتساب
-                                </Button>
-                                <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-                                    <p className="text-xs text-center text-muted-foreground leading-relaxed">
-                                        بعد الضغط على الزر، سيتم فتح محادثة الواتساب مع الإدارة. يرجى إرسال الرسالة التلقائية ثم إرفاق صورة الإيصال ليتم إضافة الرصيد لحسابك.
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
+                    {/* الوكيل الرسمي Section */}
+                    <div className="pt-10 border-t border-muted-foreground/10">
+                        <div className="px-0 pb-10 space-y-4">
+                            <h2 className="text-lg font-black text-primary text-center">غذي حسابك عبر الوكيل الرسمي</h2>
+                            <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
+                                <CardContent className="p-6 space-y-6">
+                                    <div className="flex flex-col items-center text-center gap-2">
+                                        <div className="relative w-24 h-24 mb-2 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg bg-white/10 backdrop-blur-md">
+                                            <Image 
+                                                src="https://i.postimg.cc/fLVNsBZx/967-770-326-828-20260218-132606.jpg"
+                                                alt="Official Agent Logo"
+                                                fill
+                                                className="object-cover"
+                                                data-ai-hint="company logo"
+                                            />
+                                        </div>
+                                        <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
+                                        <div className="flex items-center gap-2 opacity-80">
+                                            <MapPin className="h-4 w-4 text-white" />
+                                            <p className="text-xs font-bold text-white">حضرموت - شبام - بجانب سوبر ماركت البر</p>
+                                        </div>
+                                    </div>
 
-                {/* الوكيل الرسمي Section */}
-                <div className="px-4 pb-10 space-y-4">
-                    <h2 className="text-lg font-black text-primary border-t pt-6 text-center">غذي حسابك عبر الوكيل الرسمي</h2>
-                    <Card className="border-none shadow-xl bg-mesh-gradient text-white rounded-[32px] overflow-hidden">
-                        <CardContent className="p-6 space-y-6">
-                            <div className="flex flex-col items-center text-center gap-2">
-                                <div className="relative w-24 h-24 mb-2 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg bg-white/10 backdrop-blur-md">
-                                    <Image 
-                                        src="https://i.postimg.cc/fLVNsBZx/967-770-326-828-20260218-132606.jpg"
-                                        alt="Official Agent Logo"
-                                        fill
-                                        className="object-cover"
-                                        data-ai-hint="company logo"
-                                    />
-                                </div>
-                                <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
-                                <div className="flex items-center gap-2 opacity-80">
-                                    <MapPin className="h-4 w-4 text-white" />
-                                    <p className="text-xs font-bold text-white">حضرموت - شبام - بجانب سوبر ماركت البر</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <Button 
-                                    className="w-full h-14 rounded-2xl bg-white text-primary hover:bg-white/90 font-black text-base shadow-lg"
-                                    onClick={() => window.open('https://maps.app.goo.gl/Qs6cNBxMutA6SsvH6', '_blank')}
-                                >
-                                    <ExternalLink className="ml-2 h-5 w-5" />
-                                    عرض الموقع على الخريطة
-                                </Button>
-                                <div className="bg-black/10 rounded-2xl p-4 text-center">
-                                    <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1 text-white">ساعات العمل</p>
-                                    <p className="text-base font-black leading-relaxed text-white">
-                                        الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
-                                        الفترة المسائية: 4:00 عصراً - 9:00 مساءً
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    <div className="space-y-3">
+                                        <Button 
+                                            className="w-full h-14 rounded-2xl bg-white text-primary hover:bg-white/90 font-black text-base shadow-lg"
+                                            onClick={() => window.open('https://maps.app.goo.gl/Qs6cNBxMutA6SsvH6', '_blank')}
+                                        >
+                                            <ExternalLink className="ml-2 h-5 w-5" />
+                                            عرض الموقع على الخريطة
+                                        </Button>
+                                        <div className="bg-black/10 rounded-2xl p-4 text-center">
+                                            <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1 text-white">ساعات العمل</p>
+                                            <p className="text-base font-black leading-relaxed text-white">
+                                                الفترة الصباحية: 8:00 صباحاً - 12:30 ظهراً<br/>
+                                                الفترة المسائية: 4:00 عصراً - 9:00 مساءً
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
             <Toaster />

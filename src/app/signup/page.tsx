@@ -117,7 +117,7 @@ export default function SignupPage() {
         <div className="px-6 flex flex-col items-center">
           <div className="my-6 text-center animate-in zoom-in duration-700">
              <div className="relative w-16 h-16 mx-auto mb-3">
-                <div className="relative w-full h-full overflow-hidden rounded-[24px] border-4 border-white/30 shadow-2xl bg-white p-1">
+                <div className="relative w-full h-full overflow-hidden rounded-[24px] border-4 border-white/30 shadow-2xl bg-white">
                     <Image src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" alt="Logo" fill className="object-cover" />
                 </div>
              </div>

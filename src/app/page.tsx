@@ -72,7 +72,7 @@ export default function LoginPage() {
           <div className="mb-8 text-center animate-in fade-in zoom-in duration-700">
             <div className="relative w-28 h-28 mx-auto mb-4">
                 <div className="absolute inset-0 bg-white/20 rounded-[40px] blur-2xl animate-pulse" />
-                <div className="relative w-full h-full overflow-hidden rounded-[36px] border-4 border-white/30 shadow-2xl bg-white p-1">
+                <div className="relative w-full h-full overflow-hidden rounded-[36px] border-4 border-white/30 shadow-2xl bg-white">
                     <Image 
                         src="https://i.postimg.cc/2551nF1s/20260308-183624.jpg" 
                         alt="Star Mobile Logo" 

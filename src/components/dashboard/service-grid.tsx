@@ -75,7 +75,7 @@ const ServiceItem = ({
     >
       <div className="mb-1.5">
         <Icon 
-          className="h-6 w-6 transition-transform group-hover:scale-110" 
+          className="h-8 w-8 transition-transform group-hover:scale-110" 
           style={{ 
               strokeWidth: 2,
               stroke: (name === 'شبكة الصفاء الرقمية' || name === 'منظومة الوادي') ? undefined : 'url(#icon-gradient)'

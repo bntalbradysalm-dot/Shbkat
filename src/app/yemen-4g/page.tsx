@@ -251,7 +251,13 @@ export default function Yemen4GPage() {
                 })
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+            
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (!response.ok || (!isSuccess && !isPending)) {
+                throw new Error(result.resultDesc || result.message || 'فشلت عملية السداد من المصدر.');
+            }
             
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });
@@ -304,7 +310,13 @@ export default function Yemen4GPage() {
                 })
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'فشل تفعيل الباقة.');
+            
+            const isSuccess = result.resultCode === "0" || result.resultCode === 0;
+            const isPending = result.resultCode === "-2" || result.resultCode === -2;
+
+            if (!response.ok || (!isSuccess && !isPending)) {
+                throw new Error(result.resultDesc || result.message || 'فشل تفعيل الباقة من المصدر.');
+            }
 
             const batch = writeBatch(firestore);
             batch.update(userDocRef, { balance: increment(-totalToDeduct) });

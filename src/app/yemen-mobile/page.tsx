@@ -827,11 +827,11 @@ export default function YemenMobilePage() {
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">
                                                             <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.startDate)}</span>
+                                                                <span className="text-[11px] font-black text-green-600" dir="ltr">{formatFullDateTime(off.startDate)}</span>
                                                                 <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
                                                             </div>
                                                             <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.expireDate)}</span>
+                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
                                                                 <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
                                                             </div>
                                                         </div>

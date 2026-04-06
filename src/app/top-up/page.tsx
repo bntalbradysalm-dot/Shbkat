@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { 
     Copy, 
     Wallet, 
-    User as UserIcon, 
     MapPin, 
     ExternalLink, 
     HelpCircle, 
@@ -19,14 +18,7 @@ import {
     ChevronDown,
     CircleDollarSign,
     CheckCircle2,
-    Info,
-    Camera,
-    Image as ImageIcon,
-    Loader2,
-    FileText,
-    AlertCircle,
-    CheckCircle,
-    X
+    Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -35,16 +27,6 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from '@/components/ui/dialog';
-import { processAlomqyReceipt, AlomqyReceiptOutput } from '@/ai/flows/process-alomqy-receipt-flow';
-import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,13 +128,6 @@ export default function TopUpPage() {
     const router = useRouter();
     
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-    
-    // Alomqy States
-    const [isAlomqyDialogOpen, setIsAlomqyDialogOpen] = useState(false);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analyzedData, setAnalyzedData] = useState<AlomqyReceiptOutput | null>(null);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const userDocRef = useMemoFirebase(
       () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -197,55 +172,7 @@ export default function TopUpPage() {
         window.open(whatsappUrl, '_blank');
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setSelectedImage(reader.result as string);
-            setAnalyzedData(null);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleStartAnalysis = async () => {
-        if (!selectedImage) return;
-
-        setIsAnalyzing(true);
-        try {
-            const result = await processAlomqyReceipt({ receiptImage: selectedImage });
-            
-            if (!result.isAlomqy) {
-                toast({ 
-                    variant: 'destructive', 
-                    title: 'إيصال غير صحيح', 
-                    description: 'يبدو أن هذا الإيصال ليس تابعاً لشركة العمقي.' 
-                });
-                setIsAnalyzing(false);
-                return;
-            }
-
-            // تحقق من التاريخ
-            const today = new Date().toISOString().split('T')[0];
-            if (result.date !== today) {
-                toast({ 
-                    variant: 'destructive', 
-                    title: 'تنبيه التاريخ', 
-                    description: 'تاريخ الإيصال لا يطابق تاريخ اليوم. يرجى إرسال إيصال جديد.' 
-                });
-            }
-
-            setAnalyzedData(result);
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'خطأ في التحليل', description: error.message });
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
-
     const isQutaibiSelected = selectedMethod?.name.includes('القطيبي');
-    const isAlomqySelected = selectedMethod?.name.includes('العمقي');
 
     const renderPaymentMethods = () => {
         if (isLoadingMethods) {
@@ -312,8 +239,6 @@ export default function TopUpPage() {
 
     return (
         <div className="flex flex-col h-full bg-[#F8FAFC] dark:bg-slate-950">
-            {isAnalyzing && <ProcessingOverlay message="جاري قراءة بيانات الإيصال..." />}
-            
             <SimpleHeader title="تغذية الحساب" />
             
             <div className="flex-1 overflow-y-auto">
@@ -395,9 +320,9 @@ export default function TopUpPage() {
                                 <CardContent className="p-4">
                                     <Button 
                                         className="w-full h-11 rounded-2xl bg-mesh-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-transform border-none"
-                                        onClick={isAlomqySelected ? () => setIsAlomqyDialogOpen(true) : handleSendRequest} 
+                                        onClick={handleSendRequest} 
                                     >
-                                        {isAlomqySelected ? "غذي حسابك" : "أرسل الإيصال عبر واتساب"}
+                                        أرسل الإيصال عبر واتساب
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -447,121 +372,6 @@ export default function TopUpPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Alomqy Receipt Dialog */}
-            <Dialog open={isAlomqyDialogOpen} onOpenChange={setIsAlomqyDialogOpen}>
-                <DialogContent className="rounded-[40px] max-w-[90vw] p-6 space-y-6 [&>button]:hidden">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-black text-primary text-center flex items-center justify-center gap-2">
-                            <Camera className="h-6 w-6" />
-                            تأكيد التحويل (العمقي)
-                        </DialogTitle>
-                        <DialogDescription className="text-center font-bold">
-                            الرجاء رفع صورة إيصال التحويل لنقوم بفحص البيانات آلياً.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4">
-                        {!selectedImage ? (
-                            <div 
-                                onClick={() => fileInputRef.current?.click()}
-                                className="border-4 border-dashed border-primary/20 rounded-[32px] p-10 flex flex-col items-center justify-center gap-4 bg-muted/30 cursor-pointer hover:bg-primary/5 transition-colors"
-                            >
-                                <div className="p-4 bg-primary/10 rounded-full">
-                                    <ImageIcon className="h-10 w-10 text-primary" />
-                                </div>
-                                <p className="text-sm font-black text-primary">اضغط لاختيار صورة الإيصال</p>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    className="hidden" 
-                                    accept="image/*" 
-                                    onChange={handleFileChange}
-                                />
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden border-2 border-primary/10 shadow-lg">
-                                    <Image src={selectedImage} alt="Receipt Preview" fill className="object-cover" />
-                                    <button 
-                                        onClick={() => setSelectedImage(null)}
-                                        className="absolute top-3 left-3 p-2 bg-black/50 text-white rounded-full backdrop-blur-md"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-
-                                {!analyzedData ? (
-                                    <Button 
-                                        className="w-full h-12 rounded-2xl font-black" 
-                                        onClick={handleStartAnalysis}
-                                        disabled={isAnalyzing}
-                                    >
-                                        {isAnalyzing ? <Loader2 className="animate-spin h-5 w-5 ml-2" /> : <FileText className="ml-2 h-5 w-5" />}
-                                        تحليل الإيصال بالذكاء الاصطناعي
-                                    </Button>
-                                ) : (
-                                    <div className="bg-green-500/10 border-2 border-green-500/20 rounded-3xl p-5 space-y-4 animate-in zoom-in-95">
-                                        <div className="flex items-center gap-3 text-green-600">
-                                            <CheckCircle className="h-6 w-6" />
-                                            <h4 className="font-black">تم استلام معلومات السند</h4>
-                                        </div>
-                                        <div className="space-y-2 text-right">
-                                            <div className="flex justify-between border-b border-green-500/10 pb-2">
-                                                <span className="text-[10px] font-bold opacity-70">رقم السند:</span>
-                                                <span className="font-mono font-black text-sm">{analyzedData.receiptNumber}</span>
-                                            </div>
-                                            <div className="flex justify-between border-b border-green-500/10 pb-2">
-                                                <span className="text-[10px] font-bold opacity-70">البنك:</span>
-                                                <span className="font-black text-xs">العمقي وإخوانه للصرافة</span>
-                                            </div>
-                                            <div className="flex justify-between border-b border-green-500/10 pb-2">
-                                                <span className="text-[10px] font-bold opacity-70">المبلغ:</span>
-                                                <span className="font-black text-base text-primary">{analyzedData.amount.toLocaleString('en-US')} ريال يمني</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-[10px] font-bold opacity-70">التاريخ:</span>
-                                                <span className="font-black text-xs">{analyzedData.date}</span>
-                                            </div>
-                                        </div>
-                                        <div className="pt-2">
-                                            <p className="text-[10px] text-center font-bold text-green-700 leading-relaxed">
-                                                ✅ جاري مراجعة معلومات التحويل وسيتم إضافة المبلغ إلى حسابك فور التأكد.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex gap-3">
-                        <Button 
-                            className="flex-1 h-12 rounded-2xl font-black bg-mesh-gradient border-none" 
-                            disabled={!analyzedData}
-                            onClick={() => {
-                                toast({ title: "تم الإرسال", description: "جاري مراجعة الطلب من قبل الإدارة." });
-                                setIsAlomqyDialogOpen(false);
-                                setSelectedImage(null);
-                                setAnalyzedData(null);
-                            }}
-                        >
-                            تأكيد الإرسال
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="flex-1 h-12 rounded-2xl font-black" 
-                            onClick={() => {
-                                setIsAlomqyDialogOpen(false);
-                                setSelectedImage(null);
-                                setAnalyzedData(null);
-                            }}
-                        >
-                            إلغاء
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <Toaster />
         </div>

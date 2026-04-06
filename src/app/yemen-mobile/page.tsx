@@ -793,31 +793,32 @@ export default function YemenMobilePage() {
                                         {activeOffers.length > 0 ? (
                                             activeOffers.map((off, idx) => (
                                                 <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-[#B32C4C]/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <button 
-                                                            onClick={() => handleRenewOffer(off.offerName)}
-                                                            className="p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
-                                                            style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
-                                                        >
-                                                            <RefreshCw className="w-4 h-4 text-white" />
-                                                            <span className="text-[9px] text-white font-bold">تجديد</span>
-                                                        </button>
-                                                    </div>
-
+                                                    
                                                     <div className="flex-1 space-y-1.5 text-right">
-                                                        <h4 className="text-sm font-black text-[#B32C4C] leading-tight mb-1">
+                                                        <h4 className="text-base font-black text-[#B32C4C] leading-tight mb-1">
                                                             {off.offerName}
                                                         </h4>
                                                         <div className="flex flex-col gap-1">
                                                             <div className="flex items-center justify-start gap-2 text-green-600">
-                                                                <Calendar className="w-3.5 h-3.5" />
-                                                                <span className="text-[11px] font-black">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
+                                                                <Calendar className="w-4 h-4" />
+                                                                <span className="text-sm font-black">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
                                                             </div>
                                                             <div className="flex items-center justify-start gap-2 text-destructive/90">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                <span className="text-[11px] font-black">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
+                                                                <Clock className="w-4 h-4" />
+                                                                <span className="text-sm font-black">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
                                                             </div>
                                                         </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center justify-center shrink-0">
+                                                        <button 
+                                                            onClick={() => handleRenewOffer(off.offerName)}
+                                                            className="p-3 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]"
+                                                            style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
+                                                        >
+                                                            <RefreshCw className="w-5 h-5 text-white" />
+                                                            <span className="text-[10px] text-white font-bold">تجديد</span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ))
@@ -852,7 +853,7 @@ export default function YemenMobilePage() {
                                     ))}
                                 </Accordion>
                             </div>
-                        ) : null}
+                        ) : null} statistics
                     </TabsContent>
                 </Tabs>
             </div>

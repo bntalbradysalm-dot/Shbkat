@@ -804,18 +804,18 @@ export default function YemenMobilePage() {
                                                         </button>
                                                     </div>
 
-                                                    <div className="flex-1 space-y-1">
-                                                        <h4 className="text-xs font-black text-[#B32C4C] leading-tight">
+                                                    <div className="flex-1 space-y-1.5 text-right">
+                                                        <h4 className="text-sm font-black text-[#B32C4C] leading-tight mb-1">
                                                             {off.offerName}
                                                         </h4>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center gap-1.5 text-destructive/80">
-                                                                <Clock className="w-3 h-3 text-destructive/60" />
-                                                                <span className="text-[9px] font-bold">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center justify-start gap-2 text-green-600">
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                <span className="text-[11px] font-black">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                                <Calendar className="w-3 h-3 text-[#B32C4C]/60" />
-                                                                <span className="text-[9px] font-bold">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
+                                                            <div className="flex items-center justify-start gap-2 text-destructive/90">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                <span className="text-[11px] font-black">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
                                                             </div>
                                                         </div>
                                                     </div>

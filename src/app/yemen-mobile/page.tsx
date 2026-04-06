@@ -334,15 +334,26 @@ export default function YemenMobilePage() {
     const day = parseInt(dateStr.substring(6, 8));
     const hour = parseInt(dateStr.substring(8, 10) || "0");
     const minute = parseInt(dateStr.substring(10, 12) || "0");
-    const d = new Date(year, month, day, hour, minute);
+    const second = parseInt(dateStr.substring(12, 14) || "0");
+    const d = new Date(year, month, day, hour, minute, second);
     return isNaN(d.getTime()) ? null : d;
   };
 
   const formatFullDateTime = (dateStr: string) => {
     const d = parseTelecomDate(dateStr);
     if (!d) return '...';
+    const months = [
+        "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+    ];
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    
+    return `${day} ${month} ${year} ${time}`;
   };
 
   const getFriendlyErrorMessage = (msg: string) => {
@@ -806,12 +817,12 @@ export default function YemenMobilePage() {
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">
                                                             <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{formatFullDateTime(off.startDate)}</span>
+                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.startDate)}</span>
                                                                 <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
                                                             </div>
                                                             <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{formatFullDateTime(off.expireDate)}</span>
-                                                                <span className="text-[11px] font-black text-red-600">:الإنتهاء</span>
+                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.expireDate)}</span>
+                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
                                                             </div>
                                                         </div>
                                                     </div>

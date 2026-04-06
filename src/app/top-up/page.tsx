@@ -25,7 +25,8 @@ import {
     Loader2,
     FileText,
     AlertCircle,
-    CheckCircle
+    CheckCircle,
+    X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';

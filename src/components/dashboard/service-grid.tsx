@@ -34,28 +34,6 @@ type Service = {
   isTrigger?: boolean;
 };
 
-const AlsafaaIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <div className={cn("relative", className)} style={style}>
-    <Image 
-      src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
-      alt="شبكة الصفاء الرقمية" 
-      fill 
-      className="object-contain"
-    />
-  </div>
-);
-
-const AlwadiLogoIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <div className={cn("relative", className)} style={style}>
-    <Image 
-      src="https://i.postimg.cc/MKMWP3VG/15.jpg" 
-      alt="منظومة الوادي" 
-      fill 
-      className="object-contain"
-    />
-  </div>
-);
-
 const ServiceItem = ({
   name,
   icon: Icon,
@@ -78,7 +56,7 @@ const ServiceItem = ({
           className="h-8 w-8 transition-transform group-hover:scale-110" 
           style={{ 
               strokeWidth: 2,
-              stroke: (name === 'شبكة الصفاء الرقمية' || name === 'منظومة الوادي') ? undefined : 'url(#icon-gradient)'
+              stroke: 'url(#icon-gradient)'
           }}
         />
       </div>
@@ -101,7 +79,7 @@ export function ServiceGrid() {
   const services: Service[] = [
     { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
     { name: 'الشبكات', icon: Wifi, href: '/services' },
-    { name: 'منظومة الوادي', icon: AlwadiLogoIcon, href: '/alwadi' },
+    { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
     { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
     { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
     { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },

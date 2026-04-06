@@ -142,17 +142,19 @@ export default function Yemen4GPage() {
         }
     }, [showSuccess]);
 
-    useEffect(() => {
-        if (phone.length !== 9) {
-            setQueryResult(null);
+    const handlePhoneChange = (val: string) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 9);
+        setPhone(cleaned);
+        if (cleaned.length === 9 && !cleaned.startsWith('10')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
         }
-    }, [phone]);
+    };
 
     const handleSearch = async () => {
         if (!phone || phone.length !== 9) return;
         
         if (!phone.startsWith('10')) {
-            toast({ variant: 'destructive', title: 'خطأ في الرقم', description: 'رقم الهاتف يجب أن يبدأ بـ 10 ليمن فورجي' });
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
             return;
         }
 
@@ -215,7 +217,7 @@ export default function Yemen4GPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('010')) selectedNumber = selectedNumber.substring(1);
                 
-                setPhone(selectedNumber.slice(0, 9));
+                handlePhoneChange(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -224,6 +226,12 @@ export default function Yemen4GPage() {
 
     const handlePayment = async () => {
         if (!phone || !amount || !user || !userDocRef || !firestore) return;
+        
+        if (!phone.startsWith('10')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
+            return;
+        }
+
         const baseAmount = parseFloat(amount);
         if (isNaN(baseAmount) || baseAmount <= 0) return;
 
@@ -285,6 +293,11 @@ export default function Yemen4GPage() {
     const handleActivateOffer = async () => {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
+        if (!phone.startsWith('10')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
+            return;
+        }
+
         const basePrice = selectedOffer.price;
         const commission = Math.ceil(basePrice * 0.05);
         const totalToDeduct = basePrice + commission;
@@ -343,7 +356,7 @@ export default function Yemen4GPage() {
             <div className="flex flex-col h-full">
                 <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
+                    <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
                             <div className="bg-white/20 p-4 rounded-full animate-bounce">
                                 <CheckCircle className="h-16 w-16 text-white" />
@@ -425,7 +438,7 @@ export default function Yemen4GPage() {
                             type="tel"
                             placeholder="10xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#106BA2] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -451,7 +464,7 @@ export default function Yemen4GPage() {
                     )}
                 </div>
 
-                {phone.length === 9 && (
+                {phone.length === 9 && phone.startsWith('10') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         {queryResult && (
                             <div className="rounded-3xl overflow-hidden shadow-lg p-1 animate-in zoom-in-95" style={YEMEN_4G_GRADIENT}>

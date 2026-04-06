@@ -367,6 +367,12 @@ export default function YemenMobilePage() {
   const handleSearch = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber || phoneNumber.length !== 9) return;
     
+    // التحقق من المقدمة (77 أو 78)
+    if (!phoneNumber.startsWith('77') && !phoneNumber.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     setIsSearching(true);
     setBillingInfo(null);
     setActiveOffers([]);
@@ -444,8 +450,12 @@ export default function YemenMobilePage() {
   const handlePhoneChange = (val: string) => {
     const cleaned = val.replace(/\D/g, '').slice(0, 9);
     setPhone(cleaned);
-    if (cleaned.length === 9 && (cleaned.startsWith('77') || cleaned.startsWith('78'))) {
-        handleSearch(cleaned);
+    if (cleaned.length === 9) {
+        if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
+            handleSearch(cleaned);
+        } else {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        }
     }
   };
 
@@ -511,6 +521,12 @@ export default function YemenMobilePage() {
 
   const handlePayment = async () => {
     if (!phone || !amount || !user || !userDocRef || !firestore) return;
+    
+    if (!phone.startsWith('77') && !phone.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
 
@@ -567,6 +583,11 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
+    if (!phone.startsWith('77') && !phone.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     // سحب قيمة السلفة من الاستعلام المسبق
     const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
     const loanAmt = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
@@ -685,7 +706,7 @@ export default function YemenMobilePage() {
             </div>
         </div>
 
-        {phone.length === 9 && (
+        {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-[#B32C4C]/5">

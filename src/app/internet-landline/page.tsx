@@ -145,10 +145,18 @@ export default function LandlinePage() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (phone.length !== 8 || !phone.startsWith('05')) {
+        if (phone.length >= 7 && !phone.startsWith('0')) {
             setQueryResult(null);
         }
     }, [phone]);
+
+    const handlePhoneChange = (val: string) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 9);
+        setPhone(cleaned);
+        if (cleaned.length >= 7 && !cleaned.startsWith('0')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'الرقم الأرضي يجب أن يبدأ بـ 0' });
+        }
+    };
 
     const handleSearch = async () => {
         if (!phone || phone.length < 7) {
@@ -156,11 +164,15 @@ export default function LandlinePage() {
             return;
         }
         
+        if (!phone.startsWith('0')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'الرقم الأرضي يجب أن يبدأ بـ 0' });
+            return;
+        }
+        
         setIsSearching(true);
         setQueryResult(null);
         try {
             const transid = Date.now().toString().slice(-8);
-            const serviceType = activeTab === 'internet' ? 'adsl' : 'line';
             
             const response = await fetch('/api/telecom', {
                 method: 'POST',
@@ -236,14 +248,20 @@ export default function LandlinePage() {
             const contacts = await (navigator as any).contacts.select(props, opts);
             if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
                 let num = contacts[0].tel[0].replace(/\D/g, '').slice(-8);
-                if (!num.startsWith('05')) num = '05' + num.slice(-6);
-                setPhone(num.slice(0, 8));
+                if (!num.startsWith('0')) num = '0' + num;
+                handlePhoneChange(num);
             }
         } catch (err) { console.error(err); }
     };
 
     const handlePayment = async (payAmount: number, typeLabel: string) => {
         if (!phone || !user || !userDocRef || !firestore) return;
+        
+        if (!phone.startsWith('0')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'الرقم الأرضي يجب أن يبدأ بـ 0' });
+            return;
+        }
+
         const commission = Math.ceil(payAmount * 0.05);
         const totalToDeduct = payAmount + commission;
 
@@ -322,25 +340,14 @@ export default function LandlinePage() {
                             type="tel"
                             placeholder="0xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
                         />
                         <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors" style={{ color: currentTheme.primary }}><Users className="h-5 w-5" /></button>
                     </div>
-                    {/* استعلام الانترنت الأرضي والثابت فقط .. اخفيها موقت */}
-                    {/* 
-                    {phone.length >= 7 && (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                            <Button className="w-full h-12 rounded-2xl font-bold mt-4 shadow-sm text-white" onClick={handleSearch} disabled={isSearching} style={{ backgroundColor: currentTheme.primary }}>
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
-                                استعلام الآن
-                            </Button>
-                        </div>
-                    )}
-                    */}
                 </div>
 
-                {phone.length >= 7 && (
+                {phone.length >= 7 && phone.startsWith('0') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <Tabs defaultValue="internet" value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-primary/5">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -260,7 +259,7 @@ const POSTPAID_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
+      className="bg-[#fad9b2] rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
       <div className="flex justify-center mb-3">
@@ -275,7 +274,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       </div>
       <h4 className="text-sm font-black text-[#B32C4C] mb-1 group-hover:text-[#B32C4C]/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-2xl font-black text-[#B32C4C]">
+        <span className="text-2xl font-black text-foreground">
             {offer.price.toLocaleString('en-US')}
         </span>
       </div>
@@ -333,22 +332,19 @@ export default function YemenMobilePage() {
     const year = parseInt(dateStr.substring(0, 4));
     const month = parseInt(dateStr.substring(4, 6)) - 1;
     const day = parseInt(dateStr.substring(6, 8));
-    const hour = parseInt(dateStr.substring(8, 10) || "0");
-    const minute = parseInt(dateStr.substring(10, 12) || "0");
-    const d = new Date(year, month, day, hour, minute);
+    const d = new Date(year, month, day);
     return isNaN(d.getTime()) ? null : d;
   };
 
-  const formatSubscriptionDate = (dateStr: string) => {
+  const formatFullDateTime = (dateStr: string) => {
     const d = parseTelecomDate(dateStr);
     if (!d) return '...';
-    return format(d, 'd MMMM yyyy', { locale: ar });
-  };
-
-  const formatExpiryDate = (dateStr: string) => {
-    const d = parseTelecomDate(dateStr);
-    if (!d) return '...';
-    return `${format(d, 'd', { locale: ar })}/${format(d, 'MMMM', { locale: ar })}/${format(d, 'yyyy', { locale: ar })}`;
+    
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    
+    return `${day} - ${month} - ${year}`;
   };
 
   const getFriendlyErrorMessage = (msg: string) => {
@@ -361,6 +357,11 @@ export default function YemenMobilePage() {
   const handleSearch = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber || phoneNumber.length !== 9) return;
     
+    if (!phoneNumber.startsWith('77') && !phoneNumber.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     setIsSearching(true);
     setBillingInfo(null);
     setActiveOffers([]);
@@ -438,8 +439,12 @@ export default function YemenMobilePage() {
   const handlePhoneChange = (val: string) => {
     const cleaned = val.replace(/\D/g, '').slice(0, 9);
     setPhone(cleaned);
-    if (cleaned.length === 9 && (cleaned.startsWith('77') || cleaned.startsWith('78'))) {
-        handleSearch(cleaned);
+    if (cleaned.length === 9) {
+        if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
+            handleSearch(cleaned);
+        } else {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        }
     }
   };
 
@@ -505,6 +510,12 @@ export default function YemenMobilePage() {
 
   const handlePayment = async () => {
     if (!phone || !amount || !user || !userDocRef || !firestore) return;
+    
+    if (!phone.startsWith('77') && !phone.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
 
@@ -561,7 +572,11 @@ export default function YemenMobilePage() {
   const handleActivateOffer = async () => {
     if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
     
-    // سحب قيمة السلفة من الاستعلام المسبق
+    if (!phone.startsWith('77') && !phone.startsWith('78')) {
+        toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        return;
+    }
+
     const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
     const loanAmt = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
     const totalToDeduct = selectedOffer.price + loanAmt;
@@ -575,7 +590,6 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // بناء طلب التفعيل والتحصيل الموحد بناءً على التوثيق
         const payload: any = { 
             mobile: phone, 
             action: 'billoffer', 
@@ -679,7 +693,7 @@ export default function YemenMobilePage() {
             </div>
         </div>
 
-        {phone.length === 9 && (
+        {phone.length === 9 && (phone.startsWith('77') || phone.startsWith('78')) && (
             <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="balance">
                     <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-slate-900 rounded-2xl h-14 p-1.5 shadow-sm border border-[#B32C4C]/5">
@@ -790,36 +804,34 @@ export default function YemenMobilePage() {
                                     <div className="p-3 text-center" style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}>
                                         <h3 className="text-white font-black text-sm">الاشتراكات الحالية</h3>
                                     </div>
-                                    <div className="p-4 space-y-2">
+                                    <div className="p-4 space-y-3">
                                         {activeOffers.length > 0 ? (
                                             activeOffers.map((off, idx) => (
-                                                <div key={idx} className="flex gap-3 items-center p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-[#B32C4C]/5 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <button 
-                                                            onClick={() => handleRenewOffer(off.offerName)}
-                                                            className="p-2.5 rounded-xl shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1 min-w-[60px]"
-                                                            style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
-                                                        >
-                                                            <RefreshCw className="w-4 h-4 text-white" />
-                                                            <span className="text-[9px] text-white font-bold">تجديد</span>
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="flex-1 space-y-1">
-                                                        <h4 className="text-xs font-black text-[#B32C4C] leading-tight">
+                                                <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-muted/50 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                                    <div className="flex-1 text-right overflow-hidden">
+                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 text-right">
                                                             {off.offerName}
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center gap-1.5 text-destructive/80">
-                                                                <Clock className="w-3 h-3 text-destructive/60" />
-                                                                <span className="text-[9px] font-bold">الانتهاء: {formatExpiryDate(off.expireDate)}</span>
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.startDate)}</span>
+                                                                <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                                <Calendar className="w-3 h-3 text-[#B32C4C]/60" />
-                                                                <span className="text-[9px] font-bold">الاشتراك: {formatSubscriptionDate(off.startDate)}</span>
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
+                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
+                                                    <button 
+                                                        onClick={() => handleRenewOffer(off.offerName)}
+                                                        className="w-16 h-16 rounded-xl flex flex-col items-center justify-center gap-1 shrink-0 active:scale-95 transition-all shadow-md"
+                                                        style={{ backgroundColor: YEMEN_MOBILE_PRIMARY }}
+                                                    >
+                                                        <RefreshCw className="w-5 h-5 text-white" />
+                                                        <span className="text-[10px] text-white font-black">تجديد</span>
+                                                    </button>
                                                 </div>
                                             ))
                                         ) : (

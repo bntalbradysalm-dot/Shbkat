@@ -125,6 +125,14 @@ export default function AdenNetPage() {
         }
     }, [showSuccess]);
 
+    const handlePhoneChange = (val: string) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 9);
+        setPhone(cleaned);
+        if (cleaned.length === 9 && !cleaned.startsWith('79')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم عدن نت يجب أن يبدأ بـ 79' });
+        }
+    };
+
     const handleContactPick = async () => {
         if (!('contacts' in navigator && 'ContactsManager' in window)) {
             toast({
@@ -147,7 +155,7 @@ export default function AdenNetPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('079')) selectedNumber = selectedNumber.substring(1);
                 
-                setPhone(selectedNumber.slice(0, 9));
+                handlePhoneChange(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -157,6 +165,11 @@ export default function AdenNetPage() {
     const handleActivateOffer = async () => {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
         
+        if (!phone.startsWith('79')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم عدن نت يجب أن يبدأ بـ 79' });
+            return;
+        }
+
         const basePrice = selectedOffer.price;
         const commission = Math.ceil(basePrice * 0.05);
         const totalToDeduct = basePrice + commission;
@@ -299,7 +312,7 @@ export default function AdenNetPage() {
                             type="tel"
                             placeholder="79xxxxxxx"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#1FB8C0] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -312,7 +325,7 @@ export default function AdenNetPage() {
                     </div>
                 </div>
 
-                {phone.length === 9 && (
+                {phone.length === 9 && phone.startsWith('79') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         <div className="pt-2 pb-10">
                             <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 px-1">باقات عدن نت المتوفرة</h3>

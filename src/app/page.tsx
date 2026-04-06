@@ -65,8 +65,8 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen bg-mesh-gradient text-white overflow-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-sm mx-auto">
+      <div className="flex flex-col h-full bg-mesh-gradient text-white overflow-y-auto no-scrollbar">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-sm mx-auto py-12">
           
           {/* Logo Section */}
           <div className="mb-8 text-center animate-in fade-in zoom-in duration-700">

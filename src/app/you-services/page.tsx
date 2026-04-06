@@ -197,6 +197,9 @@ export default function YouServicesPage() {
     const handlePhoneChange = (val: string) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
+        if (cleaned.length === 9 && !cleaned.startsWith('73')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم شركة YOU يجب أن يبدأ بـ 73' });
+        }
     };
 
     const handleContactPick = async () => {
@@ -236,6 +239,12 @@ export default function YouServicesPage() {
 
     const handleProcessPayment = async (payAmount: number, typeLabel: string, numCode: string = '0') => {
         if (!phone || !user || !userDocRef || !firestore) return;
+        
+        if (!phone.startsWith('73')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم شركة YOU يجب أن يبدأ بـ 73' });
+            return;
+        }
+
         const finalToDeduct = typeLabel.includes('شحن') ? payAmount : payAmount * 3;
 
         if ((userProfile?.balance ?? 0) < finalToDeduct) {
@@ -269,7 +278,7 @@ export default function YouServicesPage() {
             const result = await response.json();
             
             if (!response.ok || (result.resultCode !== "0" && result.resultCode !== 0 && result.resultCode !== "-2" && result.resultCode !== -2)) {
-                throw new Error(result.message || 'فشلت عملية السداد من المصدر.');
+                throw new Error(result.message || 'فشل عملية السداد من المصدر.');
             }
             
             const batch = writeBatch(firestore);
@@ -298,6 +307,12 @@ export default function YouServicesPage() {
 
     const handleActivateOffer = async () => {
         if (!selectedOffer || !phone || !user || !userDocRef || !firestore) return;
+        
+        if (!phone.startsWith('73')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم شركة YOU يجب أن يبدأ بـ 73' });
+            return;
+        }
+
         const totalToDeduct = selectedOffer.price;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
@@ -358,32 +373,7 @@ export default function YouServicesPage() {
         }
     };
 
-    if (showSuccess && lastTxDetails) {
-        return (
-            <div className="flex flex-col h-full">
-                <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
-                    <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
-                        <div className="bg-green-500 p-8 flex justify-center"><div className="bg-white/20 p-4 rounded-full animate-bounce"><CheckCircle className="h-16 w-16 text-white" /></div></div>
-                        <CardContent className="p-8 space-y-6">
-                            <div><h2 className="text-2xl font-black text-green-600">تمت العملية بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلبك بنجاح</p></div>
-                            <div className="w-full space-y-3 text-sm bg-[#FECC4F]/5 p-5 rounded-[24px] text-right border-2 border-dashed border-[#FECC4F]/20">
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><HashIcon className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black text-[#E6B000]">{lastTxDetails.transid}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الجوال:</span><span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5" /> النوع:</span><span className="font-bold">{lastTxDetails.type}</span></div>
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ:</span><span className="font-black text-[#E6B000]">{lastTxDetails.amount.toLocaleString('en-US')} ريال</span></div>
-                                <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => router.push('/login')}>الرئيسية</Button>
-                                <Button className="rounded-2xl h-12 font-bold bg-[#FECC4F] text-[#4A3B00] hover:bg-[#E6B000]" onClick={() => { setShowSuccess(false); }}>تحويل جديد</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        );
-    }
+    const currentCategories = lineType === 'prepaid' ? YOU_CATEGORIES : YOU_CATEGORIES;
 
     return (
         <div className="flex flex-col h-full bg-[#FFF9F0] dark:bg-slate-950">
@@ -432,7 +422,7 @@ export default function YouServicesPage() {
                     </div>
                 </div>
 
-                {phone.length === 9 && (
+                {phone.length === 9 && phone.startsWith('73') && (
                     <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                         
                         <div className="flex justify-center mt-2">
@@ -453,7 +443,7 @@ export default function YouServicesPage() {
 
                             <TabsContent value="packages" className="pt-2 animate-in fade-in-0 duration-300">
                                 <Accordion type="single" collapsible className="w-full space-y-3">
-                                    {YOU_CATEGORIES.map((cat) => (
+                                    {currentCategories.map((cat) => (
                                         <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                             <AccordionTrigger className="px-4 py-4 rounded-2xl text-[#4A3B00] hover:no-underline shadow-md group data-[state=open]:rounded-b-none" style={YOU_GRADIENT}>
                                                 <div className="flex items-center gap-3 flex-1">

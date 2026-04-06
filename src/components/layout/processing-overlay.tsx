@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const CustomLoader = () => (
   <div className="bg-card/95 p-4 rounded-3xl shadow-2xl flex items-center justify-center w-24 h-24 animate-in zoom-in-95 border border-white/10 backdrop-blur-md">
@@ -32,14 +32,34 @@ const CustomLoader = () => (
 
 /**
  * مؤشر تحميل شفاف مع ضبابية خفيفة (Backdrop Blur) يظهر فوق المحتوى.
- * تم إضافة تأثير الضبابية بناءً على طلب المستخدم لتعزيز الهوية البصرية.
+ * تم تعديله ليمنع التفاعل مع الصفحة أو الخروج منها تماماً أثناء معالجة الطلبات.
  */
 export const ProcessingOverlay = ({ message }: { message: string }) => {
+  // منع التمرير عند ظهور الغطاء لضمان ثبات الواجهة
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
+    // محاولة تقييد حركة الصفحة في الجوال
+    const preventDefault = (e: Event) => e.preventDefault();
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.removeEventListener('touchmove', preventDefault);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in-0 p-4 pointer-events-none backdrop-blur-[2px] bg-black/5">
-      <div className="flex flex-col items-center justify-center gap-4 text-center pointer-events-auto">
+    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center animate-in fade-in-0 p-4 pointer-events-auto backdrop-blur-md bg-black/40">
+      <div className="flex flex-col items-center justify-center gap-6 text-center animate-in zoom-in-95 duration-500">
         <CustomLoader />
-        <p className="text-sm font-black text-primary animate-pulse drop-shadow-sm">{message}</p>
+        <div className="space-y-2">
+            <p className="text-base font-black text-white animate-pulse drop-shadow-md">{message}</p>
+            <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+                <p className="text-[10px] text-white/80 font-bold">الرجاء عدم إغلاق التطبيق أو العودة للخلف</p>
+            </div>
+        </div>
       </div>
     </div>
   );

@@ -59,6 +59,12 @@
     @apply border-border;
     font-family: 'Almarai', sans-serif !important;
   }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: 'Almarai', sans-serif !important;
@@ -103,4 +109,12 @@
   width: max-content;
   white-space: nowrap;
   animation: marquee 60s linear infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { 
     Copy, 
     Wallet, 
-    User as UserIcon, 
     MapPin, 
     ExternalLink, 
     HelpCircle, 
@@ -242,8 +241,7 @@ export default function TopUpPage() {
         <div className="flex flex-col h-full bg-[#F8FAFC] dark:bg-slate-950">
             <SimpleHeader title="تغذية الحساب" />
             
-            <div className="flex-1 overflow-y-auto">
-                {/* Hero Header */}
+            <div className="flex-1 overflow-y-auto pb-32 no-scrollbar">
                 <div className="bg-mesh-gradient pt-6 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden mb-8">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                     <div className="relative flex flex-col items-center text-center space-y-4">
@@ -258,8 +256,6 @@ export default function TopUpPage() {
                 </div>
 
                 <div className="px-4 space-y-8 pb-10">
-                    
-                    {/* Step 1: Selection */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 px-2">
                             <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-primary/20">1</div>
@@ -268,7 +264,6 @@ export default function TopUpPage() {
                         {renderPaymentMethods()}
                     </div>
 
-                    {/* Step 2: Details */}
                     {selectedMethod && (
                         <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-3 px-2">
@@ -314,7 +309,6 @@ export default function TopUpPage() {
                         </div>
                     )}
 
-                    {/* Step 3: Action */}
                     {selectedMethod && !isQutaibiSelected && (
                         <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
                             <div className="flex items-center gap-3 px-2">
@@ -335,7 +329,6 @@ export default function TopUpPage() {
                         </div>
                     )}
 
-                    {/* الوكيل الرسمي Section */}
                     <div className="pt-10 border-t border-muted-foreground/10">
                         <div className="px-0 pb-10 space-y-4">
                             <h2 className="text-lg font-black text-primary text-center">غذي حسابك عبر الوكيل الرسمي</h2>
@@ -348,7 +341,6 @@ export default function TopUpPage() {
                                                 alt="Official Agent Logo"
                                                 fill
                                                 className="object-cover"
-                                                data-ai-hint="company logo"
                                             />
                                         </div>
                                         <h3 className="text-xl font-black text-white">مكتب ستار ميديا للاعلان والتسويق</h3>
@@ -380,6 +372,7 @@ export default function TopUpPage() {
                     </div>
                 </div>
             </div>
+
             <Toaster />
         </div>
     );

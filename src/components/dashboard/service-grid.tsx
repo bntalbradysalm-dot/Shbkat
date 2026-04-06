@@ -34,28 +34,6 @@ type Service = {
   isTrigger?: boolean;
 };
 
-const AlsafaaIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <div className={cn("relative", className)} style={style}>
-    <Image 
-      src="https://i.postimg.cc/HWc1sG9N/20260324-231520.png" 
-      alt="شبكة الصفاء الرقمية" 
-      fill 
-      className="object-contain"
-    />
-  </div>
-);
-
-const AlwadiLogoIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <div className={cn("relative", className)} style={style}>
-    <Image 
-      src="https://i.postimg.cc/MKMWP3VG/15.jpg" 
-      alt="منظومة الوادي" 
-      fill 
-      className="object-contain"
-    />
-  </div>
-);
-
 const ServiceItem = ({
   name,
   icon: Icon,
@@ -78,7 +56,7 @@ const ServiceItem = ({
           className="h-8 w-8 transition-transform group-hover:scale-110" 
           style={{ 
               strokeWidth: 2,
-              stroke: (name === 'شبكة الصفاء الرقمية' || name === 'منظومة الوادي') ? undefined : 'url(#icon-gradient)'
+              stroke: 'url(#icon-gradient)'
           }}
         />
       </div>
@@ -98,12 +76,10 @@ const ServiceItem = ({
 };
 
 export function ServiceGrid() {
-  const [isDigitalNetworksOpen, setIsDigitalNetworksOpen] = useState(false);
-
   const services: Service[] = [
     { name: 'تسديد رصيد', icon: Smartphone, href: '/telecom-services' },
     { name: 'الشبكات', icon: Wifi, href: '/services' },
-    { name: 'شبكات البث الرقمي', icon: Tv, isTrigger: true },
+    { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
     { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
     { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
     { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
@@ -121,69 +97,9 @@ export function ServiceGrid() {
             key={service.name} 
             {...service} 
             index={index} 
-            onClick={service.isTrigger ? () => setIsDigitalNetworksOpen(true) : undefined}
           />
         ))}
       </div>
-
-      <Dialog open={isDigitalNetworksOpen} onOpenChange={setIsDigitalNetworksOpen}>
-        <DialogContent className="rounded-[40px] max-sm p-0 overflow-hidden border-none shadow-2xl bg-[#F8FAFC] dark:bg-slate-950 [&>button]:hidden">
-            {/* رأس المنبثق مع التدرج اللوني */}
-            <div className="bg-mesh-gradient p-0 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
-                
-                <DialogHeader className="pt-12 pb-10 px-8 text-white text-center relative z-10">
-                    <div className="bg-white/20 p-4 rounded-[24px] w-16 h-16 mx-auto mb-4 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl overflow-hidden">
-                        <Tv className="h-8 w-8 text-white" />
-                    </div>
-                    <DialogTitle className="text-2xl font-black text-white drop-shadow-md">شبكات البث الرقمي</DialogTitle>
-                    <DialogDescription className="text-xs text-white/70 font-bold mt-1">اختر المنظومة التي ترغب بتجديدها</DialogDescription>
-                </DialogHeader>
-            </div>
-
-            <div className="p-6 grid gap-4 relative z-10">
-                <Link href="/alwadi" onClick={() => setIsDigitalNetworksOpen(false)}>
-                    <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors overflow-hidden flex items-center justify-center">
-                                <AlwadiLogoIcon className="h-6 w-12" />
-                            </div>
-                            <div className="text-right">
-                                <p className="font-black text-sm text-foreground">منظومة الوادي</p>
-                                <p className="text-[10px] font-bold text-muted-foreground">تجديد مباشر</p>
-                            </div>
-                        </div>
-                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:-translate-x-1" />
-                    </div>
-                </Link>
-
-                <Link href="/alsafaa" onClick={() => setIsDigitalNetworksOpen(false)}>
-                    <div className="p-4 bg-white dark:bg-slate-900 rounded-[28px] border-2 border-transparent hover:border-primary/20 transition-all shadow-sm flex items-center justify-between group active:scale-[0.98]">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors overflow-hidden flex items-center justify-center">
-                                <AlsafaaIcon className="h-6 w-12" />
-                            </div>
-                            <div className="text-right">
-                                <p className="font-black text-sm text-foreground">شبكة الصفاء الرقمية</p>
-                                <p className="text-[10px] font-bold text-muted-foreground">تجديد مباشر</p>
-                            </div>
-                        </div>
-                        <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:-translate-x-1" />
-                    </div>
-                </Link>
-
-                <div className="mt-2">
-                    <button 
-                        onClick={() => setIsDigitalNetworksOpen(false)}
-                        className="w-full py-3 rounded-2xl text-xs font-black text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        إغلاق النافذة
-                    </button>
-                </div>
-            </div>
-        </DialogContent>
-      </Dialog>
 
       <svg width="0" height="0" className="absolute">
         <defs>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -260,7 +259,7 @@ const POSTPAID_CATEGORIES = [
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
+      className="bg-[#fad9b2] rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
       <div className="flex justify-center mb-3">
@@ -275,7 +274,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
       </div>
       <h4 className="text-sm font-black text-[#B32C4C] mb-1 group-hover:text-[#B32C4C]/80 transition-colors">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
-        <span className="text-2xl font-black text-[#B32C4C]">
+        <span className="text-2xl font-black text-foreground">
             {offer.price.toLocaleString('en-US')}
         </span>
       </div>

@@ -241,7 +241,7 @@ export default function TopUpPage() {
         <div className="flex flex-col h-full bg-[#F8FAFC] dark:bg-slate-950">
             <SimpleHeader title="تغذية الحساب" />
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pb-32 no-scrollbar">
                 <div className="bg-mesh-gradient pt-6 pb-12 px-6 rounded-b-[50px] shadow-xl relative overflow-hidden mb-8">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                     <div className="relative flex flex-col items-center text-center space-y-4">

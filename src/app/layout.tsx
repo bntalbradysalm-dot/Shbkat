@@ -11,6 +11,7 @@ import { AppErrorDialog } from '@/components/layout/app-error-dialog';
 import { SplashScreen } from '@/components/layout/splash-screen';
 import { PinOverlay } from '@/components/layout/pin-overlay';
 import { doc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 type UserProfile = {
   isPinEnabled?: boolean;
@@ -76,7 +77,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const shouldShowPinLock = user && userProfile?.isPinEnabled && userProfile?.pinCode && !isPinVerified && !showSplash;
 
   return (
-    <div className="mx-auto max-w-md bg-card min-h-screen flex flex-col shadow-2xl relative">
+    <div className="mx-auto max-w-[450px] bg-card h-[100dvh] flex flex-col shadow-2xl relative overflow-hidden">
       {showSplash && (
         <SplashScreen 
           onComplete={handleSplashComplete} 
@@ -91,10 +92,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
         />
       )}
       
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col relative overflow-hidden">
         <WelcomeModal />
         <AppErrorDialog />
-        <main className={`flex-1 overflow-y-auto ${isNavVisible ? 'pb-24' : ''}`}>
+        <main className={cn("flex-1 flex flex-col min-h-0 relative")}>
           {children}
         </main>
         {isNavVisible && <BottomNav />}

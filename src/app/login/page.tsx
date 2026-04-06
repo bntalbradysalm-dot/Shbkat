@@ -102,11 +102,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-20">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       <Header />
-      <div className="flex-1 space-y-4">
-        <BalanceCard />
-        {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
+      <div className="flex-1 overflow-y-auto pb-32 no-scrollbar">
+        <div className="space-y-4">
+          <BalanceCard />
+          {userProfile?.accountType === 'network-owner' ? <OwnerDashboard /> : <UserDashboard />}
+        </div>
       </div>
     </div>
   );

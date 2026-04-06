@@ -346,15 +346,13 @@ export default function YemenMobilePage() {
         "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
         "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
     ];
-    const pad = (n: number) => n.toString().padStart(2, '0');
     
     const day = d.getDate();
     const monthName = months[d.getMonth()];
     const year = d.getFullYear();
-    const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     
-    // التنسيق المطلوب: اليوم - الشهر - السنة - الوقت
-    return `${day} ${monthName} ${year} ${time}`;
+    // التنسيق المطلوب: اليوم - الشهر - السنة (بدون وقت)
+    return `${day} - ${monthName} - ${year}`;
   };
 
   const getFriendlyErrorMessage = (msg: string) => {
@@ -832,19 +830,19 @@ export default function YemenMobilePage() {
                                                         <span className="text-[10px] text-white font-black">تجديد</span>
                                                     </button>
 
-                                                    {/* Text Content (Right) */}
-                                                    <div className="flex-1 text-right overflow-hidden">
-                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 truncate">
+                                                    {/* Text Content (Left-aligned text within Right-aligned flow) */}
+                                                    <div className="flex-1 text-left overflow-hidden">
+                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 truncate text-right">
                                                             {off.offerName}
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center justify-start gap-1.5">
-                                                                <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
+                                                            <div className="flex items-center justify-end gap-1.5">
                                                                 <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.startDate)}</span>
+                                                                <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
                                                             </div>
-                                                            <div className="flex items-center justify-start gap-1.5">
-                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
+                                                            <div className="flex items-center justify-end gap-1.5">
                                                                 <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">{formatFullDateTime(off.expireDate)}</span>
+                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -339,16 +339,12 @@ export default function YemenMobilePage() {
   const formatFullDateTime = (dateStr: string) => {
     const d = parseTelecomDate(dateStr);
     if (!d) return '...';
-    const months = [
-        "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-    ];
     
     const day = d.getDate();
-    const monthName = months[d.getMonth()];
+    const month = d.getMonth() + 1;
     const year = d.getFullYear();
     
-    return `${day} - ${monthName} - ${year}`;
+    return `${day} - ${month} - ${year}`;
   };
 
   const getFriendlyErrorMessage = (msg: string) => {
@@ -826,12 +822,12 @@ export default function YemenMobilePage() {
                                                             {off.offerName}
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-black text-green-600" dir="ltr">{formatFullDateTime(off.startDate)}</span>
+                                                            <div className="flex items-center justify-start gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.startDate)}</span>
                                                                 <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
                                                             </div>
-                                                            <div className="flex items-center justify-end gap-1.5">
-                                                                <span className="text-[11px] font-black text-gray-700 dark:text-gray-300" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
+                                                            <div className="flex items-center justify-start gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
                                                                 <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
                                                             </div>
                                                         </div>

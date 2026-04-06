@@ -332,10 +332,7 @@ export default function YemenMobilePage() {
     const year = parseInt(dateStr.substring(0, 4));
     const month = parseInt(dateStr.substring(4, 6)) - 1;
     const day = parseInt(dateStr.substring(6, 8));
-    const hour = parseInt(dateStr.substring(8, 10) || "0");
-    const minute = parseInt(dateStr.substring(10, 12) || "0");
-    const second = parseInt(dateStr.substring(12, 14) || "0");
-    const d = new Date(year, month, day, hour, minute, second);
+    const d = new Date(year, month, day);
     return isNaN(d.getTime()) ? null : d;
   };
 
@@ -351,7 +348,6 @@ export default function YemenMobilePage() {
     const monthName = months[d.getMonth()];
     const year = d.getFullYear();
     
-    // التنسيق المطلوب: اليوم - الشهر - السنة (بدون وقت)
     return `${day} - ${monthName} - ${year}`;
   };
 
@@ -365,7 +361,6 @@ export default function YemenMobilePage() {
   const handleSearch = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber || phoneNumber.length !== 9) return;
     
-    // التحقق من المقدمة (77 أو 78)
     if (!phoneNumber.startsWith('77') && !phoneNumber.startsWith('78')) {
         toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
         return;
@@ -586,7 +581,6 @@ export default function YemenMobilePage() {
         return;
     }
 
-    // سحب قيمة السلفة من الاستعلام المسبق
     const hasLoan = billingInfo?.isLoan && (billingInfo?.loanAmount || 0) > 0;
     const loanAmt = hasLoan ? (billingInfo?.loanAmount || 0) : 0;
     const totalToDeduct = selectedOffer.price + loanAmt;
@@ -600,7 +594,6 @@ export default function YemenMobilePage() {
     try {
         const transid = Date.now().toString().slice(-8);
         
-        // بناء طلب التفعيل والتحصيل الموحد بناءً على التوثيق
         const payload: any = { 
             mobile: phone, 
             action: 'billoffer', 
@@ -819,8 +812,6 @@ export default function YemenMobilePage() {
                                         {activeOffers.length > 0 ? (
                                             activeOffers.map((off, idx) => (
                                                 <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-muted/50 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
-                                                    
-                                                    {/* Renew Button (Left) */}
                                                     <button 
                                                         onClick={() => handleRenewOffer(off.offerName)}
                                                         className="w-16 h-16 rounded-xl flex flex-col items-center justify-center gap-1 shrink-0 active:scale-95 transition-all shadow-md"
@@ -830,9 +821,8 @@ export default function YemenMobilePage() {
                                                         <span className="text-[10px] text-white font-black">تجديد</span>
                                                     </button>
 
-                                                    {/* Text Content (Left-aligned text within Right-aligned flow) */}
-                                                    <div className="flex-1 text-left overflow-hidden">
-                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 truncate text-right">
+                                                    <div className="flex-1 text-right overflow-hidden">
+                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 text-right">
                                                             {off.offerName}
                                                         </h4>
                                                         <div className="flex flex-col gap-0.5">

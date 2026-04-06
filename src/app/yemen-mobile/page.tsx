@@ -808,6 +808,22 @@ export default function YemenMobilePage() {
                                         {activeOffers.length > 0 ? (
                                             activeOffers.map((off, idx) => (
                                                 <div key={idx} className="flex gap-4 items-center p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-muted/50 mb-2 text-right animate-in fade-in-0 slide-in-from-bottom-2">
+                                                    <div className="flex-1 text-right overflow-hidden">
+                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 text-right">
+                                                            {off.offerName}
+                                                        </h4>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.startDate)}</span>
+                                                                <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-end gap-1.5">
+                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
+                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
                                                     <button 
                                                         onClick={() => handleRenewOffer(off.offerName)}
                                                         className="w-16 h-16 rounded-xl flex flex-col items-center justify-center gap-1 shrink-0 active:scale-95 transition-all shadow-md"
@@ -816,22 +832,6 @@ export default function YemenMobilePage() {
                                                         <RefreshCw className="w-5 h-5 text-white" />
                                                         <span className="text-[10px] text-white font-black">تجديد</span>
                                                     </button>
-
-                                                    <div className="flex-1 text-right overflow-hidden">
-                                                        <h4 className="text-[13px] font-black text-[#003366] dark:text-blue-400 leading-tight mb-1 text-right">
-                                                            {off.offerName}
-                                                        </h4>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center justify-start gap-1.5">
-                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.startDate)}</span>
-                                                                <span className="text-[11px] font-black text-green-600">:الإشتراك</span>
-                                                            </div>
-                                                            <div className="flex items-center justify-start gap-1.5">
-                                                                <span className="text-[11px] font-black text-foreground" dir="ltr">{formatFullDateTime(off.expireDate)}</span>
-                                                                <span className="text-[11px] font-black text-red-600">:الانتهـــاء</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             ))
                                         ) : (

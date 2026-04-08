@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Wifi, 
-  Zap, 
   CheckCircle, 
   Copy, 
   MessageSquare, 
@@ -13,10 +12,7 @@ import {
   Loader2, 
   Database, 
   Clock, 
-  Star, 
-  ArrowUpRight,
-  TrendingUp,
-  Wallet
+  ArrowUpRight
 } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, writeBatch, increment, collection } from 'firebase/firestore';
@@ -32,23 +28,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
+
+type NetworkCard = {
+    cardID: string;
+    cardPass?: string;
+};
 
 export function QuickBuyCard() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [purchasedCard, setPurchasedCard] = useState<any>(null);
+  const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
 
@@ -58,12 +54,13 @@ export function QuickBuyCard() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
+  // تم تحديث الـ ID ليكون 1150 وهو المعرف المعتمد لفئة 1500 (60GB) في نظام وناسة
   const cardDetails = {
     name: "وناسة - كروت فئة 1500 ريال",
     price: 1500,
     data: "60GB",
     validity: "شهر كامل",
-    classId: "wanasa_60gb_1500" 
+    classId: "1150" 
   };
 
   const handlePurchase = async () => {
@@ -92,6 +89,12 @@ export function QuickBuyCard() {
       }
 
       const result = await response.json();
+      
+      // التأكد من وجود بيانات الكرت في الرد
+      if (!result.data || !result.data.order || !result.data.order.card) {
+          throw new Error('لم يتم استلام بيانات الكرت من المصدر.');
+      }
+
       const cardData = result.data.order.card;
 
       const batch = writeBatch(firestore);
@@ -256,7 +259,7 @@ export function QuickBuyCard() {
       )}
 
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
-        <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900">
+        <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900 border-none shadow-2xl outline-none">
             <DialogHeader>
                 <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Smartphone className="text-primary h-6 w-6" />

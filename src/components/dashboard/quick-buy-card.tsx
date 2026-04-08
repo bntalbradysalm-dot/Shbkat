@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -157,7 +156,7 @@ export function QuickBuyCard() {
         <CardContent className="p-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-              <Zap className="h-5 w-5 text-white animate-pulse" />
+              <Wifi className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div className="text-right">
               <h4 className="text-[13px] font-black text-white">وناسة - كروت فئة 1500 ريال</h4>

@@ -352,7 +352,7 @@ export default function UsersPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="إدارة المستخدمين" />
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 pb-36 space-y-6 no-scrollbar">
           
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
@@ -505,7 +505,7 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className="space-y-3 pb-24">
+          <div className="space-y-3">
             <div className="flex justify-between items-center px-1 mb-1">
                 <h3 className="text-xs font-black text-primary uppercase tracking-widest">النتائج ({filteredUsers?.length || 0})</h3>
             </div>

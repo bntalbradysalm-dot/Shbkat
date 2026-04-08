@@ -292,7 +292,7 @@ export default function AccountPage() {
     <>
     <div className="flex flex-col h-full bg-background">
       <SimpleHeader title="حسابي" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 pb-36 space-y-6 no-scrollbar">
         <Card className="overflow-hidden rounded-[28px] shadow-lg bg-mesh-gradient text-white border-none">
           <CardContent className="p-6 flex items-center gap-4">
             <div className="flex-grow text-right">

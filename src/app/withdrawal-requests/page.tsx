@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -273,7 +272,7 @@ export default function WithdrawalRequestsPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="طلبات السحب" />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-36 no-scrollbar">
           {renderContent()}
         </div>
       </div>

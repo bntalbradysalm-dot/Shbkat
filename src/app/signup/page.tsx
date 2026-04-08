@@ -104,9 +104,9 @@ export default function SignupPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen bg-mesh-gradient text-white pb-10">
+      <div className="flex flex-col h-full bg-mesh-gradient text-white pb-10 overflow-y-auto no-scrollbar">
         
-        <header className="p-4 flex items-center justify-between animate-in fade-in duration-500">
+        <header className="p-4 flex items-center justify-between animate-in fade-in duration-500 shrink-0">
             <Link href="/" className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
                 <ChevronRight className="h-5 w-5" />
             </Link>
@@ -125,7 +125,7 @@ export default function SignupPage() {
             <p className="text-white/70 text-[10px] font-bold mt-1">سجل بياناتك للانضمام لعائلة ستار موبايل</p>
           </div>
 
-          <form onSubmit={handleSignup} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000">
+          <form onSubmit={handleSignup} className="w-full space-y-4 animate-in slide-in-from-bottom-8 duration-1000 pb-10">
             
             {/* Full Name */}
             <div className="space-y-1.5">

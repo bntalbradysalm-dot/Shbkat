@@ -30,8 +30,7 @@ import {
   Code,
   UserRound,
   ShieldCheck,
-  TrendingUp,
-  Fingerprint
+  TrendingUp
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SimpleHeader } from '@/components/layout/simple-header';
@@ -52,17 +51,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -86,7 +81,6 @@ const managementLinks = [
 
 const userAppSettingsLinks = [
     { id: 'change-password', title: 'تغيير كلمة المرور', icon: Lock, href: '/change-password' },
-    { id: 'manage-pin', title: 'تفعيل الرمز السري', icon: Fingerprint, action: 'pin' },
     { id: 'share-app', title: 'شارك التطبيق', icon: Share2, action: 'share' },
     { id: 'help-center', title: 'مركز المساعدة', icon: HelpCircle, action: 'help' },
     { id: 'privacy-policy', title: 'سياسة الخصوصية', icon: ShieldCheck, href: '/privacy-policy' },
@@ -100,8 +94,6 @@ type UserProfile = {
   phoneNumber?: string;
   balance?: number;
   photoURL?: string;
-  pinCode?: string;
-  isPinEnabled?: boolean;
 };
 
 type AppSettings = {
@@ -139,8 +131,6 @@ const LoadingSpinner = () => (
 export default function AccountPage() {
   const [activeTheme, setActiveTheme] = useState('light');
   const [isDevDialogOpen, setIsDevDialogOpen] = useState(false);
-  const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
-  const [pinInput, setPinInput] = useState('');
   
   const router = useRouter();
   const auth = useAuth();
@@ -232,50 +222,8 @@ export default function AccountPage() {
         case 'developer':
             setIsDevDialogOpen(true);
             break;
-        case 'pin':
-            setPinInput(userProfile?.pinCode || '');
-            setIsPinDialogOpen(true);
-            break;
     }
   }
-
-  const handleSetPin = () => {
-    if (!userDocRef) return;
-    
-    if (pinInput.length !== 6) {
-        toast({
-            variant: 'destructive',
-            title: 'خطأ في الرمز',
-            description: 'يجب أن يتكون الرمز السري من 6 أرقام.',
-        });
-        return;
-    }
-
-    updateDocumentNonBlocking(userDocRef, {
-        pinCode: pinInput,
-        isPinEnabled: true
-    });
-
-    toast({
-        title: 'تم التفعيل',
-        description: 'تم تفعيل الرمز السري بنجاح لحماية حسابك.',
-    });
-    setIsPinDialogOpen(false);
-  };
-
-  const handleDisablePin = () => {
-    if (!userDocRef) return;
-    
-    updateDocumentNonBlocking(userDocRef, {
-        isPinEnabled: false
-    });
-
-    toast({
-        title: 'تم الإلغاء',
-        description: 'تم إلغاء تفعيل الرمز السري.',
-    });
-    setIsPinDialogOpen(false);
-  };
 
   const handleLogout = () => {
     if (auth) {
@@ -353,7 +301,6 @@ export default function AccountPage() {
                 <CardContent className="p-0">
                     {userAppSettingsLinks.map((link, index) => {
                         const Icon = link.icon;
-                        const isPinEnabled = link.id === 'manage-pin' && userProfile?.isPinEnabled;
                         return (
                             <div
                                 key={link.id}
@@ -363,10 +310,9 @@ export default function AccountPage() {
                                 }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <Icon className={cn("h-5 w-5", isPinEnabled ? "text-green-600" : "text-primary")} />
+                                    <Icon className={cn("h-5 w-5", "text-primary")} />
                                     <span className="text-sm font-bold text-foreground">
                                         {link.title}
-                                        {isPinEnabled && <span className="mr-2 text-[10px] text-green-600 font-black">(مفعّل)</span>}
                                     </span>
                                 </div>
                                 <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:-translate-x-1" />
@@ -446,48 +392,6 @@ export default function AccountPage() {
 
       </div>
     </div>
-
-    {/* Security PIN Dialog */}
-    <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
-        <DialogContent className="rounded-[40px] max-sm p-6 space-y-6 [&>button]:hidden">
-            <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-primary text-center flex items-center justify-center gap-2">
-                    <Fingerprint className="h-6 w-6" />
-                    تفعيل الرمز السري
-                </DialogTitle>
-                <DialogDescription className="text-center font-bold text-foreground/70">
-                    أدخل رمزاً مكوناً من 6 أرقام لحماية التطبيق عند كل فتح.
-                </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="pin" className="text-[10px] font-black uppercase pr-1 text-muted-foreground tracking-widest">الرمز السري الجديد (6 أرقام)</Label>
-                    <Input 
-                        id="pin"
-                        type="tel"
-                        maxLength={6}
-                        value={pinInput}
-                        onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        className="h-14 rounded-2xl text-center text-3xl font-black tracking-[0.5em] border-2 focus-visible:ring-primary bg-muted/20"
-                        placeholder="000000"
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-3">
-                <Button className="w-full h-12 rounded-2xl font-black shadow-lg" onClick={handleSetPin}>
-                    حفظ وتفعيل الرمز
-                </Button>
-                {userProfile?.isPinEnabled && (
-                    <Button variant="ghost" className="w-full h-12 rounded-2xl font-black text-destructive hover:text-destructive hover:bg-destructive/5" onClick={handleDisablePin}>
-                        إلغاء تفعيل الرمز الحالي
-                    </Button>
-                )}
-                <Button variant="outline" className="w-full h-12 rounded-2xl font-black" onClick={() => setIsPinDialogOpen(false)}>إلغاء</Button>
-            </div>
-        </DialogContent>
-    </Dialog>
 
     {/* Developer Dialog */}
     <Dialog open={isDevDialogOpen} onOpenChange={setIsDevDialogOpen}>

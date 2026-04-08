@@ -40,8 +40,6 @@ import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-const WANASA_LOGO = "https://i.postimg.cc/bv0v6vQp/wanasa-logo.png"; // شعار افتراضي لشبكة وناسة
-
 export function QuickBuyCard() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -62,11 +60,11 @@ export function QuickBuyCard() {
   const { data: userProfile } = useDoc<any>(userDocRef);
 
   const cardDetails = {
-    name: "وناسة - فئة 1500 ريال",
+    name: "وناسة - كروت فئة 1500 ريال",
     price: 1500,
     data: "60GB",
     validity: "شهر كامل",
-    classId: "wanasa_60gb_1500" // هذا المعرف يجب أن يطابق ما هو في API بيتي
+    classId: "wanasa_60gb_1500" 
   };
 
   const handlePurchase = async () => {
@@ -83,7 +81,6 @@ export function QuickBuyCard() {
 
     setIsProcessing(true);
     try {
-      // 1. طلب الكرت من API بيتي (أو محاكاة العملية)
       const response = await fetch(`/services/networks-api/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +95,6 @@ export function QuickBuyCard() {
       const result = await response.json();
       const cardData = result.data.order.card;
 
-      // 2. تحديث الرصيد وسجل العمليات في Firebase
       const batch = writeBatch(firestore);
       const now = new Date().toISOString();
 
@@ -154,36 +150,33 @@ export function QuickBuyCard() {
       
       {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
 
-      {/* الشريط المختصر في الصفحة الرئيسية */}
       <Card 
-        className="relative overflow-hidden rounded-[24px] border-none shadow-md bg-white dark:bg-slate-900 cursor-pointer active:scale-[0.98] transition-all group"
+        className="relative overflow-hidden rounded-[24px] border-none shadow-md bg-mesh-gradient cursor-pointer active:scale-[0.98] transition-all group"
         onClick={() => setIsOpen(true)}
       >
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#B32C4C]" />
         <CardContent className="p-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="bg-orange-500/10 p-2 rounded-xl">
-              <Zap className="h-5 w-5 text-orange-600 animate-pulse" />
+            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+              <Zap className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div className="text-right">
-              <h4 className="text-[13px] font-black text-foreground">وناسة - كروت فئة 1500 ريال</h4>
+              <h4 className="text-[13px] font-black text-white">وناسة - كروت فئة 1500 ريال</h4>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
-                  <Database className="w-3 h-3 text-primary" /> 60GB
+                <span className="text-[10px] font-bold text-white/80 flex items-center gap-1">
+                  <Database className="w-3 h-3 text-white/60" /> 60GB
                 </span>
-                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-primary" /> شهر كامل
+                <span className="text-[10px] font-bold text-white/80 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-white/60" /> شهر كامل
                 </span>
               </div>
             </div>
           </div>
-          <div className="p-2 bg-primary/5 rounded-lg group-hover:bg-primary/10 transition-colors">
-            <ArrowUpRight className="h-4 w-4 text-primary" />
+          <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+            <ArrowUpRight className="h-4 w-4 text-white" />
           </div>
         </CardContent>
       </Card>
 
-      {/* منبثق التفاصيل والشراء */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[40px] p-0 overflow-hidden border-none shadow-2xl bg-[#F8FAFC] dark:bg-slate-950">
           <div className="bg-mesh-gradient pt-12 pb-10 px-8 text-center relative overflow-hidden">
@@ -235,7 +228,6 @@ export function QuickBuyCard() {
         </DialogContent>
       </Dialog>
 
-      {/* منبثق نجاح الشراء */}
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
             <Card className="w-full max-sm text-center shadow-2xl rounded-[48px] overflow-hidden border-none bg-background">
@@ -264,7 +256,6 @@ export function QuickBuyCard() {
         </div>
       )}
 
-      {/* حوار إرسال SMS */}
       <Dialog open={isSmsDialogOpen} onOpenChange={setIsSmsDialogOpen}>
         <DialogContent className="rounded-[32px] max-sm p-6 z-[10002] bg-white dark:bg-slate-900">
             <DialogHeader>

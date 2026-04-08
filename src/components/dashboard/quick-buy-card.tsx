@@ -54,7 +54,7 @@ export function QuickBuyCard() {
   );
   const { data: userProfile } = useDoc<any>(userDocRef);
 
-  // تم تحديث الـ ID ليكون 1150 وهو المعرف المعتمد لفئة 1500 (60GB) في نظام وناسة
+  // المعرف 1150 هو المعرف المعتمد لفئة 1500 (60GB) في نظام وناسة
   const cardDetails = {
     name: "وناسة - كروت فئة 1500 ريال",
     price: 1500,
@@ -90,7 +90,6 @@ export function QuickBuyCard() {
 
       const result = await response.json();
       
-      // التأكد من وجود بيانات الكرت في الرد
       if (!result.data || !result.data.order || !result.data.order.card) {
           throw new Error('لم يتم استلام بيانات الكرت من المصدر.');
       }
@@ -252,7 +251,7 @@ export function QuickBuyCard() {
                             <MessageSquare className="ml-2 h-4 w-4" /> ارسال SMS
                         </Button>
                     </div>
-                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => setPurchasedCard(null)}>إغلاق</Button>
+                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => { setPurchasedCard(null); setIsOpen(false); }}>إغلاق</Button>
                 </CardContent>
             </Card>
         </div>

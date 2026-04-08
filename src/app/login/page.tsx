@@ -1,7 +1,9 @@
+
 'use client';
 
 import { BalanceCard } from '@/components/dashboard/balance-card';
 import { ServiceGrid } from '@/components/dashboard/service-grid';
+import { QuickBuyCard } from '@/components/dashboard/quick-buy-card';
 import { Header } from '@/components/layout/header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -64,6 +66,7 @@ const OwnerDashboard = () => (
       </div>
        <div className="mt-4">
         <ServiceGrid />
+        <QuickBuyCard />
         <RecentTransactions />
       </div>
   </div>
@@ -72,6 +75,7 @@ const OwnerDashboard = () => (
 const UserDashboard = () => (
   <>
     <ServiceGrid />
+    <QuickBuyCard />
     <RecentTransactions />
   </>
 );

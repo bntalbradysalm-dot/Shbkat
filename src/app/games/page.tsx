@@ -21,7 +21,9 @@ import {
   History,
   ChevronLeft,
   Gem,
-  Trophy
+  Trophy,
+  Database,
+  Clock
 } from 'lucide-react';
 import {
   Dialog,
@@ -281,28 +283,29 @@ export default function GamesPage() {
                     </div>
                 ) : (
                     <div className="space-y-4 animate-in fade-in-0 duration-500 pb-10">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-xs font-black text-muted-foreground hover:text-primary mb-2 p-0 h-auto"
-                            onClick={() => setActiveGame(null)}
-                        >
-                            <ChevronLeft className="h-4 w-4 ml-1 rotate-180" /> العودة للمعرض
-                        </Button>
-
-                        <Card className="overflow-hidden rounded-[28px] shadow-lg border-none bg-mesh-gradient text-white">
-                            <CardContent className="p-6 flex items-center justify-between">
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black opacity-80 mb-1 uppercase tracking-widest">رصيدك الحالي</p>
-                                    <div className="flex items-baseline gap-1">
-                                        <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
-                                        <span className="text-[10px] font-bold opacity-70">ريال</span>
+                        {/* Game Banner Header */}
+                        <Card className="overflow-hidden rounded-[32px] shadow-xl border-none h-48 relative">
+                            <Image 
+                                src={currentGameInfo?.banner || ''} 
+                                alt={currentGameInfo?.name || ''} 
+                                fill 
+                                className="object-cover" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
+                                <div className="flex justify-between items-center w-full">
+                                    <div className="text-right">
+                                        <h2 className="text-xl font-black text-white">{currentGameInfo?.name}</h2>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                            <p className="text-[10px] font-bold text-white/80">شحن فوري متاح</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-left bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                                        <p className="text-[8px] font-bold text-white/70 uppercase">رصيدك</p>
+                                        <p className="text-base font-black text-white">{userProfile?.balance?.toLocaleString() || '0'} ر.ي</p>
                                     </div>
                                 </div>
-                                <div className="p-3 bg-white/20 rounded-2xl">
-                                    {activeGame === 'pubg' ? <Trophy className="h-6 w-6 text-white" /> : <Gem className="h-6 w-6 text-white" />}
-                                </div>
-                            </CardContent>
+                            </div>
                         </Card>
 
                         <div className="space-y-3">

@@ -82,7 +82,7 @@ export function ServiceGrid() {
     { name: 'منظومة الوادي', icon: SatelliteDish, href: '/alwadi' },
     { name: 'تحويل لمشترك', icon: ArrowLeftRight, href: '/transfer' },
     { name: 'غذي حسابك', icon: Wallet, href: '/top-up' },
-    { name: 'شدات ببجي', icon: Gamepad2, href: '/games' },
+    { name: 'معرض الألعاب', icon: Gamepad2, href: '/games' },
     { name: 'المفضلة', icon: Heart, href: '/favorites' },
     { name: 'سجل العمليات', icon: History, href: '/transactions' },
     { name: 'الدعم الفني', icon: MessageCircleQuestion, href: '/support' },

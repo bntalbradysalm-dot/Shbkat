@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -18,7 +19,10 @@ import {
   AlertCircle,
   Hash,
   Calendar,
-  History
+  History,
+  ChevronLeft,
+  Gem,
+  Trophy
 } from 'lucide-react';
 import {
   Dialog,
@@ -37,16 +41,18 @@ import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-type UCPrice = {
+type GameOffer = {
     amount: string;
     price: number;
     code: string;
+    description?: string;
 };
 
-const UC_PACKAGES: UCPrice[] = [
+const PUBG_PACKAGES: GameOffer[] = [
     { amount: '10 شدة', price: 500, code: '10' },
     { amount: '60 شدة', price: 1800, code: '60' },
     { amount: '325 شدة', price: 8000, code: '325' },
@@ -56,7 +62,21 @@ const UC_PACKAGES: UCPrice[] = [
     { amount: '1800 شدة', price: 39000, code: '1800' },
 ];
 
-const UC_ICON_URL = "https://i.postimg.cc/XYP5H9vQ/2J2L4wpmxzn-Xwg-CUwx-IV9y-L9w2NGG9RQd3I1Bu-KW.png";
+const FF_PACKAGES: GameOffer[] = [
+    { amount: '100 جوهرة', price: 2000, code: '100' },
+    { amount: '210 جوهرة', price: 3500, code: '210' },
+    { amount: '530 جوهرة', price: 8000, code: '530' },
+    { amount: 'عضوية اسبوعية', price: 1500, code: 'weekly' },
+    { amount: 'عضوية شهرية', price: 6500, code: 'monthly' },
+    { amount: 'بوياه باس', price: 2200, code: 'booyah' },
+    { amount: '1080 جوهرة', price: 16500, code: '1080' },
+    { amount: '2200 جوهرة', price: 32000, code: '2200' },
+];
+
+const GAMES = [
+    { id: 'pubg', name: 'ببجي موبايل', icon: 'https://i.postimg.cc/XYP5H9vQ/2J2L4wpmxzn-Xwg-CUwx-IV9y-L9w2NGG9RQd3I1Bu-KW.png', banner: 'https://i.postimg.cc/K8pPdgWg/112750758-whatsubject.jpg' },
+    { id: 'freefire', name: 'فري فاير', icon: 'https://i.postimg.cc/SxYnqndZ/freefire-logo.jpg', banner: 'https://i.postimg.cc/MKMTxh9Z/free-fire-wallpaper.jpg' }
+];
 
 export default function GamesPage() {
     const router = useRouter();
@@ -64,7 +84,8 @@ export default function GamesPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const [selectedPackage, setSelectedPackage] = useState<UCPrice | null>(null);
+    const [activeGame, setActiveGame] = useState<'pubg' | 'freefire' | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<GameOffer | null>(null);
     const [playerId, setPlayerId] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -85,17 +106,15 @@ export default function GamesPage() {
     }, [showSuccess]);
 
     const handlePurchase = async () => {
-        if (!selectedPackage || !playerId || !user || !userDocRef || !firestore) {
+        if (!selectedPackage || !playerId || !user || !userDocRef || !firestore || !activeGame) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم اللاعب.' });
             return;
         }
 
-        const basePrice = selectedPackage.price;
-        const commission = Math.ceil(basePrice * 0.05);
-        const totalToDeduct = basePrice + commission;
+        const totalToDeduct = selectedPackage.price;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
-            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك لا يكفي لإتمام العملية شاملة العمولة.' });
+            toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
             return;
         }
 
@@ -110,7 +129,7 @@ export default function GamesPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     service: 'games',
-                    type: 'pubg',
+                    type: activeGame,
                     uniqcode: selectedPackage.code,
                     playerid: playerId,
                     mobile: userProfile?.phoneNumber || '000',
@@ -136,8 +155,8 @@ export default function GamesPage() {
                 userId: user.uid, 
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
-                transactionType: `شحن شدات: ${selectedPackage.amount}`, 
-                notes: `رقم اللاعب: ${playerId}. الحالة: ${isPending ? 'قيد التنفيذ' : 'ناجحة'}`, 
+                transactionType: `شحن ${activeGame === 'pubg' ? 'شدات' : 'جواهر'}: ${selectedPackage.amount}`, 
+                notes: `رقم اللاعب: ${playerId}. اللعبة: ${activeGame === 'pubg' ? 'ببجي' : 'فري فاير'}`, 
                 recipientPhoneNumber: playerId,
                 transid: transid
             });
@@ -157,7 +176,7 @@ export default function GamesPage() {
 
     if (showSuccess) {
         return (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full bg-background">
                 <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
@@ -169,13 +188,17 @@ export default function GamesPage() {
                         <CardContent className="p-8 space-y-6">
                             <div>
                                 <h2 className="text-2xl font-black text-green-600">تم الشحن بنجاح</h2>
-                                <p className="text-sm text-muted-foreground mt-1">وصلت الشدات لحساب اللاعب</p>
+                                <p className="text-sm text-muted-foreground mt-1">وصلت الطلبية لحساب اللاعب</p>
                             </div>
 
                             <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span>
                                     <span className="font-mono font-black text-primary">{lastTransid}</span>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2">
+                                    <span className="text-muted-foreground flex items-center gap-2"><Trophy className="w-3.5 h-3.5" /> اللعبة:</span>
+                                    <span className="font-bold">{activeGame === 'pubg' ? 'ببجي موبايل' : 'فري فاير'}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Zap className="w-3.5 h-3.5" /> فئة الشحن:</span>
@@ -186,7 +209,7 @@ export default function GamesPage() {
                                     <span className="font-mono font-bold tracking-widest">{playerId}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> الإجمالي المخصوم:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span>
                                     <span className="font-black text-primary">{lastTotalAmount.toLocaleString('en-US')} ريال</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-1">
@@ -208,119 +231,170 @@ export default function GamesPage() {
         );
     }
 
+    const currentPackages = activeGame === 'pubg' ? PUBG_PACKAGES : FF_PACKAGES;
+    const currentGameInfo = GAMES.find(g => g.id === activeGame);
+
     return (
         <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
             {isProcessing && <ProcessingOverlay message="جاري معالجة طلبك..." />}
             
-            <SimpleHeader title="شدات ببجي" />
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <SimpleHeader title={activeGame ? (activeGame === 'pubg' ? 'شدات ببجي' : 'جواهر فري فاير') : 'معرض الألعاب'} />
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 
-                {/* Banner */}
-                <div className="relative w-full aspect-[21/9] rounded-[28px] overflow-hidden shadow-lg border border-primary/10 mb-2 animate-in fade-in-0 zoom-in-95 duration-500">
-                    <Image 
-                        src="https://i.postimg.cc/K8pPdgWg/112750758-whatsubject.jpg" 
-                        alt="PUBG Mobile Banner" 
-                        fill 
-                        className="object-cover"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-4">
-                        <h3 className="text-white font-black text-lg">ببجي موبايل - PUBG Mobile</h3>
-                        <p className="text-white/70 text-[10px] font-bold">اشحن شداتك الآن بأفضل الأسعار وأسرع سداد</p>
-                    </div>
-                </div>
+                {!activeGame ? (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className="text-center space-y-2 mb-2">
+                            <div className="bg-primary/10 w-16 h-16 rounded-[24px] flex items-center justify-center mx-auto mb-4 border border-primary/5 shadow-inner">
+                                <Gamepad2 className="h-8 w-8 text-primary" />
+                            </div>
+                            <h1 className="text-xl font-black text-foreground">متجر شحن الألعاب</h1>
+                            <p className="text-xs text-muted-foreground font-bold">اختر لعبتك المفضلة وابدأ الشحن فوراً</p>
+                        </div>
 
-                <div className="space-y-3 pb-10">
-                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">اختر فئة الشحن</h3>
-                    <div className="grid grid-cols-1 gap-3">
-                        {UC_PACKAGES.map((pkg) => (
-                            <Card 
-                                key={pkg.code} 
-                                className="cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] border-none shadow-sm rounded-3xl overflow-hidden group"
-                                onClick={() => setSelectedPackage(pkg)}
-                            >
-                                <CardContent className="p-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative h-12 w-12 shrink-0 rounded-2xl overflow-hidden group-hover:scale-110 transition-transform">
-                                            <Image 
-                                                src={UC_ICON_URL}
-                                                alt="UC Icon"
-                                                fill
-                                                className="object-contain"
-                                            />
-                                        </div>
-                                        <div className="text-right">
-                                            <h4 className="font-black text-sm text-foreground">{pkg.amount}</h4>
-                                            <p className="text-[10px] font-bold text-muted-foreground">شحن مباشر</p>
+                        <div className="grid grid-cols-1 gap-4">
+                            {GAMES.map((game) => (
+                                <Card 
+                                    key={game.id} 
+                                    className="cursor-pointer overflow-hidden rounded-[32px] border-none shadow-lg active:scale-[0.98] transition-all group"
+                                    onClick={() => setActiveGame(game.id as any)}
+                                >
+                                    <div className="relative h-48 w-full">
+                                        <Image src={game.banner} alt={game.name} fill className="object-cover transition-transform group-hover:scale-105 duration-700" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">
+                                            <div className="flex items-center gap-4 w-full">
+                                                <div className="relative h-14 w-14 rounded-2xl overflow-hidden border-2 border-white shadow-xl shrink-0">
+                                                    <Image src={game.icon} alt={game.name} fill className="object-cover" />
+                                                </div>
+                                                <div className="flex-1 text-right">
+                                                    <h3 className="text-xl font-black text-white">{game.name}</h3>
+                                                    <p className="text-xs text-white/70 font-bold">شحن مباشر وسريع</p>
+                                                </div>
+                                                <div className="bg-white/20 p-2 rounded-full backdrop-blur-md">
+                                                    <ChevronLeft className="h-5 w-5 text-white" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-left">
-                                        <div className="flex items-baseline gap-1 justify-end">
-                                            <span className="text-lg font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
-                                        </div>
-                                        <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">شراء</Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                </Card>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="space-y-4 animate-in fade-in-0 duration-500 pb-10">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-xs font-black text-muted-foreground hover:text-primary mb-2 p-0 h-auto"
+                            onClick={() => setActiveGame(null)}
+                        >
+                            <ChevronLeft className="h-4 w-4 ml-1 rotate-180" /> العودة للمعرض
+                        </Button>
+
+                        <Card className="overflow-hidden rounded-[28px] shadow-lg border-none bg-mesh-gradient text-white">
+                            <CardContent className="p-6 flex items-center justify-between">
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black opacity-80 mb-1 uppercase tracking-widest">رصيدك الحالي</p>
+                                    <div className="flex items-baseline gap-1">
+                                        <h2 className="text-2xl font-black text-white">{userProfile?.balance?.toLocaleString() || '0'}</h2>
+                                        <span className="text-[10px] font-bold opacity-70">ريال</span>
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-white/20 rounded-2xl">
+                                    {activeGame === 'pubg' ? <Trophy className="h-6 w-6 text-white" /> : <Gem className="h-6 w-6 text-white" />}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">اختر فئة الشحن</h3>
+                            <div className="grid grid-cols-1 gap-3">
+                                {currentPackages.map((pkg) => (
+                                    <Card 
+                                        key={pkg.code} 
+                                        className="cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] border-none shadow-sm rounded-3xl overflow-hidden group"
+                                        onClick={() => setSelectedPackage(pkg)}
+                                    >
+                                        <CardContent className="p-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative h-12 w-12 shrink-0 rounded-2xl overflow-hidden bg-muted p-1 group-hover:scale-110 transition-transform">
+                                                    <Image 
+                                                        src={currentGameInfo?.icon || ''}
+                                                        alt="Icon"
+                                                        fill
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                                <div className="text-right">
+                                                    <h4 className="font-black text-sm text-foreground">{pkg.amount}</h4>
+                                                    <p className="text-[10px] font-bold text-muted-foreground">تفعيل فوري</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-left">
+                                                <div className="flex items-baseline gap-1 justify-end">
+                                                    <span className="text-lg font-black text-primary">{pkg.price.toLocaleString('en-US')}</span>
+                                                    <span className="text-[10px] font-bold text-primary opacity-70">ر.ي</span>
+                                                </div>
+                                                <Button size="sm" className="h-7 rounded-lg text-[10px] font-black px-4 mt-1">شراء</Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Toaster />
 
             <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
-                <DialogContent className="rounded-[32px] max-w-sm">
-                    <DialogHeader>
-                        <div className="relative w-16 h-16 mx-auto mb-4 animate-in zoom-in-95 duration-500 rounded-2xl overflow-hidden">
+                <DialogContent className="rounded-[32px] max-w-sm border-none shadow-2xl overflow-hidden p-0">
+                    <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                        <div className="relative w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl">
                             <Image 
-                                src={UC_ICON_URL}
-                                alt="UC Icon"
+                                src={currentGameInfo?.icon || ''}
+                                alt="Icon"
                                 fill
-                                className="object-contain"
+                                className="object-cover"
                             />
                         </div>
-                        <DialogTitle className="text-center font-black">تأكيد شحن {selectedPackage?.amount}</DialogTitle>
-                        <DialogDescription className="text-center">أدخل رقم اللاعب (Player ID) لإتمام العملية</DialogDescription>
-                    </DialogHeader>
+                        <h3 className="text-white font-black text-xl drop-shadow-md">تأكيد عملية الشحن</h3>
+                        <p className="text-white/70 text-xs font-bold mt-1 uppercase tracking-widest">{selectedPackage?.amount}</p>
+                    </div>
                     
-                    <div className="space-y-4 py-4">
+                    <div className="p-6 space-y-6 bg-card">
                         <div className="space-y-2">
                             <Label htmlFor="playerid" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">رقم اللاعب (Player ID)</Label>
-                            <Input 
-                                id="playerid"
-                                placeholder="" 
-                                type="tel"
-                                value={playerId} 
-                                onChange={e => setPlayerId(e.target.value.replace(/\D/g, ''))}
-                                className="rounded-2xl h-14 text-center text-2xl font-black border-2 focus-visible:ring-primary tracking-widest"
-                            />
+                            <div className="relative">
+                                <Input 
+                                    id="playerid"
+                                    placeholder="أدخل الـ ID الخاص بك" 
+                                    type="tel"
+                                    value={playerId} 
+                                    onChange={e => setPlayerId(e.target.value.replace(/\D/g, ''))}
+                                    className="rounded-2xl h-14 text-center text-2xl font-black border-none bg-muted/20 focus-visible:ring-primary tracking-widest"
+                                />
+                                <User className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-30" />
+                            </div>
                         </div>
 
-                        <div className="bg-muted/50 p-4 rounded-[24px] space-y-2 text-sm">
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground font-bold">سعر الشحن:</span>
-                                <span className="font-black">{selectedPackage?.price.toLocaleString('en-US')} ريال</span>
+                        <div className="bg-muted/50 p-5 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 text-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المبلغ المخصوم من رصيدك</p>
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-3xl font-black text-primary">{selectedPackage?.price.toLocaleString('en-US')}</span>
+                                <span className="text-xs font-bold text-primary/70">ريال</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground font-bold">العمولة (5%):</span>
-                                <span className="font-black text-orange-600">{Math.ceil((selectedPackage?.price || 0) * 0.05).toLocaleString('en-US')} ريال</span>
-                            </div>
-                            <div className="pt-2 border-t border-dashed flex justify-between items-center">
-                                <span className="font-black text-foreground">الإجمالي:</span>
-                                <span className="font-black text-primary text-lg">
-                                    {((selectedPackage?.price || 0) + Math.ceil((selectedPackage?.price || 0) * 0.05)).toLocaleString('en-US')} ريال
-                                </span>
-                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <Button className="h-12 rounded-2xl font-black text-base shadow-xl shadow-primary/20" onClick={handlePurchase} disabled={isProcessing || !playerId}>
+                                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : 'تأكيد وشحن'}
+                            </Button>
+                            <Button variant="outline" className="h-12 rounded-2xl font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
                         </div>
                     </div>
-
-                    <DialogFooter className="grid grid-cols-2 gap-3">
-                        <Button className="rounded-2xl h-12 font-black shadow-lg shadow-primary/20" onClick={handlePurchase} disabled={isProcessing || !playerId}>
-                            {isProcessing ? <Loader2 className="animate-spin" /> : 'شحن الآن'}
-                        </Button>
-                        <Button variant="outline" className="rounded-2xl h-12 font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

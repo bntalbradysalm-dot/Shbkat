@@ -1,3 +1,4 @@
+
 'use client';
 
 import { BalanceCard } from '@/components/dashboard/balance-card';

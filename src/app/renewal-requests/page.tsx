@@ -299,7 +299,7 @@ export default function RenewalRequestsPage() {
     <>
       <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="طلبات التجديد" />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-36 no-scrollbar">
           {renderContent()}
         </div>
       </div>

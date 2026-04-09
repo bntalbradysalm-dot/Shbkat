@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -402,97 +401,98 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full bg-background pb-20">
+      <div className="flex flex-col h-full bg-background">
         <SimpleHeader title="كشف الحساب" />
-        
-        <div className="px-4 space-y-4">
-            <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
-                        <Filter className="w-4 h-4" />
-                        تحديد فترة كشف الحساب
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="fromDate" className="text-[10px] text-muted-foreground pr-1">من تاريخ</Label>
-                            <Input 
-                                id="fromDate"
-                                type="date" 
-                                value={fromDate}
-                                onChange={(e) => setFromDate(e.target.value)}
-                                className="rounded-xl h-10 text-xs bg-background cursor-pointer"
-                            />
+        <div className="flex-1 overflow-y-auto pb-36 no-scrollbar">
+            <div className="px-4 space-y-4">
+                <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
+                            <Filter className="w-4 h-4" />
+                            تحديد فترة كشف الحساب
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="fromDate" className="text-[10px] text-muted-foreground pr-1">من تاريخ</Label>
+                                <Input 
+                                    id="fromDate"
+                                    type="date" 
+                                    value={fromDate}
+                                    onChange={(e) => setFromDate(e.target.value)}
+                                    className="rounded-xl h-10 text-xs bg-background cursor-pointer"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="toDate" className="text-[10px] text-muted-foreground pr-1">إلى تاريخ</Label>
+                                <Input 
+                                    id="toDate"
+                                    type="date" 
+                                    value={toDate}
+                                    onChange={(e) => setToDate(e.target.value)}
+                                    className="rounded-xl h-10 text-xs bg-background cursor-pointer"
+                                />
+                            </div>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="toDate" className="text-[10px] text-muted-foreground pr-1">إلى تاريخ</Label>
-                            <Input 
-                                id="toDate"
-                                type="date" 
-                                value={toDate}
-                                onChange={(e) => setToDate(e.target.value)}
-                                className="rounded-xl h-10 text-xs bg-background cursor-pointer"
-                            />
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="rounded-xl text-xs font-bold" 
+                                onClick={handleResetFilter}
+                            >
+                                إعادة تعيين
+                            </Button>
+                            <Button 
+                                size="sm" 
+                                className="rounded-xl text-xs font-bold" 
+                                onClick={handleFilter}
+                            >
+                                <Search className="w-3 h-3 ml-1.5" />
+                                فلترة
+                            </Button>
                         </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-xl text-xs font-bold" 
-                            onClick={handleResetFilter}
-                        >
-                            إعادة تعيين
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            className="rounded-xl text-xs font-bold" 
-                            onClick={handleFilter}
-                        >
-                            <Search className="w-3 h-3 ml-1.5" />
-                            فلترة
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {transactions && transactions.length > 0 && !appliedFrom && !appliedTo && (
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive flex items-center gap-2 text-xs">
-                            <Archive className="h-3.5 w-3.5" />
-                            أرشفة جميع العمليات السابقة
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>تأكيد الأرشفة</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                هل أنت متأكد من رغبتك في أرشفة جميع العمليات؟ سيتم إخفاؤها نهائياً من سجلك الحالي.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-row gap-2">
-                            <AlertDialogCancel className="flex-1 rounded-2xl">إلغاء</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteAll} className="bg-destructive hover:bg-destructive/90 flex-1 rounded-2xl">
-                                أرشفة الكل
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
+                {transactions && transactions.length > 0 && !appliedFrom && !appliedTo && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-destructive flex items-center gap-2 text-xs">
+                                <Archive className="h-3.5 w-3.5" />
+                                أرشفة جميع العمليات السابقة
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-3xl">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>تأكيد الأرشفة</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    هل أنت متأكد من رغبتك في أرشفة جميع العمليات؟ سيتم إخفاؤها نهائياً من سجلك الحالي.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="flex-row gap-2">
+                                <AlertDialogCancel className="flex-1 rounded-2xl">إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteAll} className="bg-destructive hover:bg-destructive/90 flex-1 rounded-2xl">
+                                    أرشفة الكل
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
 
-            <div className="flex justify-between items-center px-1">
-                <h3 className="text-sm font-bold text-primary">
-                    {appliedFrom || appliedTo ? 'نتائج البحث' : 'أحدث العمليات'}
-                </h3>
-                <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-bold">
-                    {filteredTransactions.length} عملية
-                </span>
-            </div>
+                <div className="flex justify-between items-center px-1">
+                    <h3 className="text-sm font-bold text-primary">
+                        {appliedFrom || appliedTo ? 'نتائج البحث' : 'أحدث العمليات'}
+                    </h3>
+                    <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-bold">
+                        {filteredTransactions.length} عملية
+                    </span>
+                </div>
 
-            <div className="space-y-1">
-                {renderContent()}
+                <div className="space-y-1">
+                    {renderContent()}
+                </div>
             </div>
         </div>
       </div>

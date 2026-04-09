@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -75,7 +74,7 @@ const FF_PACKAGES: GameOffer[] = [
 
 const GAMES = [
     { id: 'pubg', name: 'ببجي موبايل', icon: 'https://i.postimg.cc/XYP5H9vQ/2J2L4wpmxzn-Xwg-CUwx-IV9y-L9w2NGG9RQd3I1Bu-KW.png', banner: 'https://i.postimg.cc/K8pPdgWg/112750758-whatsubject.jpg' },
-    { id: 'freefire', name: 'فري فاير', icon: 'https://i.postimg.cc/SxYnqndZ/freefire-logo.jpg', banner: 'https://i.postimg.cc/MKMTxh9Z/free-fire-wallpaper.jpg' }
+    { id: 'freefire', name: 'فري فاير', icon: 'https://i.postimg.cc/Pqdhw9QC/R.png', banner: 'https://i.postimg.cc/xTqXkJ1Q/2024-Free-Fire.jpg' }
 ];
 
 export default function GamesPage() {
@@ -85,7 +84,7 @@ export default function GamesPage() {
     const { user } = useUser();
 
     const [activeGame, setActiveGame] = useState<'pubg' | 'freefire' | null>(null);
-    const [selectedPackage, setSelectedPackage] = useState<GameOffer | null>(null);
+    const [selectedOffer, setSelectedOffer] = useState<GameOffer | null>(null);
     const [playerId, setPlayerId] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -106,12 +105,12 @@ export default function GamesPage() {
     }, [showSuccess]);
 
     const handlePurchase = async () => {
-        if (!selectedPackage || !playerId || !user || !userDocRef || !firestore || !activeGame) {
+        if (!selectedOffer || !playerId || !user || !userDocRef || !firestore || !activeGame) {
             toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال رقم اللاعب.' });
             return;
         }
 
-        const totalToDeduct = selectedPackage.price;
+        const totalToDeduct = selectedOffer.price;
 
         if ((userProfile?.balance ?? 0) < totalToDeduct) {
             toast({ variant: 'destructive', title: 'رصيد غير كافٍ', description: 'رصيدك الحالي لا يكفي لإتمام هذه العملية.' });
@@ -130,7 +129,7 @@ export default function GamesPage() {
                 body: JSON.stringify({ 
                     service: 'games',
                     type: activeGame,
-                    uniqcode: selectedPackage.code,
+                    uniqcode: selectedOffer.code,
                     playerid: playerId,
                     mobile: userProfile?.phoneNumber || '000',
                     transid: transid 
@@ -155,7 +154,7 @@ export default function GamesPage() {
                 userId: user.uid, 
                 transactionDate: new Date().toISOString(), 
                 amount: totalToDeduct,
-                transactionType: `شحن ${activeGame === 'pubg' ? 'شدات' : 'جواهر'}: ${selectedPackage.amount}`, 
+                transactionType: `شحن ${activeGame === 'pubg' ? 'شدات' : 'جواهر'}: ${selectedOffer.amount}`, 
                 notes: `رقم اللاعب: ${playerId}. اللعبة: ${activeGame === 'pubg' ? 'ببجي' : 'فري فاير'}`, 
                 recipientPhoneNumber: playerId,
                 transid: transid
@@ -202,7 +201,7 @@ export default function GamesPage() {
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><Zap className="w-3.5 h-3.5" /> فئة الشحن:</span>
-                                    <span className="font-bold">{selectedPackage?.amount}</span>
+                                    <span className="font-bold">{selectedOffer?.amount}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
                                     <span className="text-muted-foreground flex items-center gap-2"><User className="w-3.5 h-3.5" /> رقم اللاعب (ID):</span>
@@ -313,7 +312,7 @@ export default function GamesPage() {
                                     <Card 
                                         key={pkg.code} 
                                         className="cursor-pointer hover:bg-primary/5 transition-all active:scale-[0.98] border-none shadow-sm rounded-3xl overflow-hidden group"
-                                        onClick={() => setSelectedPackage(pkg)}
+                                        onClick={() => setSelectedOffer(pkg)}
                                     >
                                         <CardContent className="p-4 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
@@ -348,7 +347,7 @@ export default function GamesPage() {
 
             <Toaster />
 
-            <Dialog open={!!selectedPackage && !showSuccess} onOpenChange={() => setSelectedPackage(null)}>
+            <Dialog open={!!selectedOffer && !showSuccess} onOpenChange={() => setSelectedOffer(null)}>
                 <DialogContent className="rounded-[32px] max-w-sm border-none shadow-2xl overflow-hidden p-0">
                     <div className="bg-mesh-gradient p-8 text-center relative overflow-hidden">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -361,7 +360,7 @@ export default function GamesPage() {
                             />
                         </div>
                         <h3 className="text-white font-black text-xl drop-shadow-md">تأكيد عملية الشحن</h3>
-                        <p className="text-white/70 text-xs font-bold mt-1 uppercase tracking-widest">{selectedPackage?.amount}</p>
+                        <p className="text-white/70 text-xs font-bold mt-1 uppercase tracking-widest">{selectedOffer?.amount}</p>
                     </div>
                     
                     <div className="p-6 space-y-6 bg-card">
@@ -383,7 +382,7 @@ export default function GamesPage() {
                         <div className="bg-muted/50 p-5 rounded-[28px] border-2 border-dashed border-primary/10 space-y-2 text-center">
                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المبلغ المخصوم من رصيدك</p>
                             <div className="flex items-baseline justify-center gap-1">
-                                <span className="text-3xl font-black text-primary">{selectedPackage?.price.toLocaleString('en-US')}</span>
+                                <span className="text-3xl font-black text-primary">{selectedOffer?.price.toLocaleString('en-US')}</span>
                                 <span className="text-xs font-bold text-primary/70">ريال</span>
                             </div>
                         </div>
@@ -392,7 +391,7 @@ export default function GamesPage() {
                             <Button className="h-12 rounded-2xl font-black text-base shadow-xl shadow-primary/20" onClick={handlePurchase} disabled={isProcessing || !playerId}>
                                 {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : 'تأكيد وشحن'}
                             </Button>
-                            <Button variant="outline" className="h-12 rounded-2xl font-bold" onClick={() => setSelectedPackage(null)}>إلغاء</Button>
+                            <Button variant="outline" className="h-12 rounded-2xl font-bold" onClick={() => setSelectedOffer(null)}>إلغاء</Button>
                         </div>
                     </div>
                 </DialogContent>

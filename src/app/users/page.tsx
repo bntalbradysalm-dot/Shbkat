@@ -374,7 +374,7 @@ export default function UsersPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-3xl">
+                <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-green-400 to-green-600 text-white rounded-3xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-3">
                         <CardTitle className="text-[7px] font-black opacity-80 uppercase tracking-tight">رصيد بيتي</CardTitle>
                         <RefreshCw 

@@ -247,7 +247,7 @@ export default function BaityNetworksPage() {
   return (
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
-        
+        <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
         <div className="bg-mesh-gradient pt-12 pb-16 px-6 rounded-b-[40px] shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex flex-col items-center text-center space-y-4">
@@ -442,7 +442,6 @@ export default function BaityNetworksPage() {
 
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
-            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[48px] overflow-hidden border-none bg-background">
                 <CardContent className="p-8 space-y-6">
                     <div className="bg-green-500 p-8 flex justify-center mb-4 rounded-t-[48px] -m-8">

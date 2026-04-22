@@ -198,6 +198,7 @@ export default function AlsafaaPage() {
     if (!user || !firestore || !selectedPkg || !userProfile || !userDocRef) return;
 
     setIsProcessing(true);
+    const currentBalance = userProfile.balance ?? 0;
     setIsConfirming(false);
 
     try {
@@ -221,7 +222,6 @@ export default function AlsafaaPage() {
       // تحديث الرصيد وتسجيل العملية في Firebase
       const batch = writeBatch(firestore);
       const now = new Date().toISOString();
-      const currentBalance = userProfile.balance ?? 0;
 
       batch.update(userDocRef, { balance: increment(-selectedPkg.price) });
       
@@ -270,7 +270,7 @@ export default function AlsafaaPage() {
   if (showSuccess) {
     return (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
-        <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+        <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
         
         <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">

@@ -361,6 +361,7 @@ export default function FavoritesPage() {
   return (
     <>
       <div className="flex flex-col h-full bg-background text-foreground">
+        <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
         <SimpleHeader title="المفضلة" />
         <div className="p-4">
           <div className="relative">
@@ -530,7 +531,6 @@ export default function FavoritesPage() {
 
       {purchasedCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10001] flex items-center justify-center p-4 animate-in fade-in-0">
-            <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                 <CardContent className="p-8 space-y-6">
                     <div>

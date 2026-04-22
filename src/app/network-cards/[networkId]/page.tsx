@@ -93,7 +93,7 @@ function NetworkPurchasePageComponent() {
   const [selectedCategory, setSelectedCategory] = useState<CardCategory | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [purchasedCard, setPurchasedCard] = setPurchasedCard<NetworkCard | null>(null);
+  const [purchasedCard, setPurchasedCard] = useState<NetworkCard | null>(null);
   const [isSmsDialogOpen, setIsSmsDialogOpen] = useState(false);
   const [smsRecipient, setSmsRecipient] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -268,6 +268,7 @@ function NetworkPurchasePageComponent() {
   return (
     <>
         <div className="flex flex-col h-full bg-background">
+            <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
             <SimpleHeader title={networkName} />
             <div className="flex-1 overflow-y-auto p-4">{renderContent()}</div>
         </div>
@@ -294,7 +295,6 @@ function NetworkPurchasePageComponent() {
 
         {purchasedCard && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in-0">
-                <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
                 <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-background">
                     <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                     <CardContent className="p-8 space-y-6">

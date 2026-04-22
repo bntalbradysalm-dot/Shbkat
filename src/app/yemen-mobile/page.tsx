@@ -320,6 +320,8 @@ export default function YemenMobilePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastTxDetails, setLastTxDetails] = useState<any>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const sulfaAudioRef = useRef<HTMLAudioElement>(null);
+  const noSulfaAudioRef = useRef<HTMLAudioElement>(null);
 
   const userDocRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, 'users', user.uid) : null),
@@ -424,6 +426,14 @@ export default function YemenMobilePage() {
           });
           
           setActiveOffers(mappedOffers);
+
+          // تنبيه صوتي حسب الحالة
+          if (isLoan) {
+              sulfaAudioRef.current?.play().catch(e => console.error("Sulfa audio play error", e));
+          } else {
+              noSulfaAudioRef.current?.play().catch(e => console.error("No sulfa audio play error", e));
+          }
+
       } else {
           const providerError = queryResult.resultDesc || queryResult.message || 'رقم غير صحيح أو فشل في الاستعلام من المزود.';
           throw new Error(getFriendlyErrorMessage(providerError));
@@ -649,6 +659,10 @@ export default function YemenMobilePage() {
 
   return (
     <div className="flex flex-col h-full bg-[#F4F7F9] dark:bg-slate-950">
+      <audio ref={sulfaAudioRef} src="/sulfa.mp3" preload="auto" />
+      <audio ref={noSulfaAudioRef} src="/nosulfa.mp3" preload="auto" />
+      <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+
       <SimpleHeader title="يمن موبايل" />
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -952,7 +966,6 @@ export default function YemenMobilePage() {
 
       {showSuccess && lastTxDetails && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in-0 p-4">
-            <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
             <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                 <div className="bg-green-500 p-8 flex justify-center">
                     <div className="bg-white/20 p-4 rounded-full animate-bounce">

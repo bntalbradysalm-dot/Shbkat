@@ -194,11 +194,19 @@ export default function YouServicesPage() {
     );
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-    const handlePhoneChange = (val: string) => {
+    const handlePhoneChange = (val: string, element: HTMLInputElement) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
-        if (cleaned.length === 9 && !cleaned.startsWith('73')) {
-            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم شركة YOU يجب أن يبدأ بـ 73' });
+        
+        if (cleaned.length === 9) {
+            element.blur();
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            if (!cleaned.startsWith('73')) {
+                toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم شركة YOU يجب أن يبدأ بـ 73' });
+            }
         }
     };
 
@@ -224,7 +232,9 @@ export default function YouServicesPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
                 
-                handlePhoneChange(selectedNumber);
+                const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
+                if (inputElement) handlePhoneChange(selectedNumber, inputElement);
+                else setPhone(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -409,7 +419,7 @@ export default function YouServicesPage() {
                             type="tel"
                             placeholder="73xxxxxxx"
                             value={phone}
-                            onChange={(e) => handlePhoneChange(e.target.value)}
+                            onChange={(e) => handlePhoneChange(e.target.value, e.target)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#FECC4F] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -566,3 +576,4 @@ export default function YouServicesPage() {
         </div>
     );
 }
+

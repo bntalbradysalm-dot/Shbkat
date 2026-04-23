@@ -111,11 +111,11 @@ const PREPAID_CATEGORIES = [
     offers: [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: '30 يوم', offertype: 'A5533822' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: '24 ساعة', offertype: 'A4826' },
-      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
-      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: '7 أيام', offertype: 'A88336' },
-      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: '30 يوم', offertype: 'A3823' },
-      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: '30 يوم', offertype: 'A88335' },
-      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', sms: '600', minutes: '1100', validity: '30 يوم', offertype: 'A88441' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', icon: Zap, minutes: '50', sms: '100', validity: '48 ساعة', offertype: 'A88337' },
+      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: '7 أيام', offertype: 'A88336' },
+      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: '30 يوم', offertype: 'A3823' },
+      { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: '30 يوم', offertype: 'A88335' },
+      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', minutes: '1100', sms: '600', validity: '30 يوم', offertype: 'A88441' },
     ]
   },
   {
@@ -191,7 +191,7 @@ const POSTPAID_CATEGORIES = [
     offers: [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: 'شهر', offertype: 'A5533821' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: 'يوم', offertype: 'A4825' },
-      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A4990003' },
+      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', minutes: '50', sms: '100', validity: '48 ساعة', offertype: 'A4990003' },
       { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع يوم', offertype: 'A88339' },
       { offerId: 'sms_800', offerName: 'مزايا فورجي 800 رسالة', price: 1000, sms: '800', validity: 'شهر', offertype: 'A41338' },
       { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', minutes: '450', sms: '450', validity: 'شهر', offertype: 'A4823' },
@@ -446,10 +446,14 @@ export default function YemenMobilePage() {
     }
   }, [toast]);
 
-  const handlePhoneChange = (val: string) => {
+  const handlePhoneChange = (val: string, element: HTMLInputElement) => {
     const cleaned = val.replace(/\D/g, '').slice(0, 9);
     setPhone(cleaned);
     if (cleaned.length === 9) {
+        element.blur();
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(50);
+        }
         if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
             handleSearch(cleaned);
         } else {
@@ -480,7 +484,9 @@ export default function YemenMobilePage() {
             if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
             if (selectedNumber.startsWith('07')) selectedNumber = selectedNumber.substring(1);
             
-            handlePhoneChange(selectedNumber);
+            const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
+            if (inputElement) handlePhoneChange(selectedNumber, inputElement);
+            else setPhone(selectedNumber.slice(0, 9));
         }
     } catch (err) {
         console.error("Contacts selection failed:", err);
@@ -694,7 +700,7 @@ export default function YemenMobilePage() {
                     type="tel"
                     placeholder="77xxxxxxx"
                     value={phone}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    onChange={(e) => handlePhoneChange(e.target.value, e.target)}
                     className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#B32C4C] transition-all pr-12 pl-12"
                 />
                 <button 

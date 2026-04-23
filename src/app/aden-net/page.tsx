@@ -125,11 +125,19 @@ export default function AdenNetPage() {
         }
     }, [showSuccess]);
 
-    const handlePhoneChange = (val: string) => {
+    const handlePhoneChange = (val: string, element: HTMLInputElement) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
-        if (cleaned.length === 9 && !cleaned.startsWith('79')) {
-            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم عدن نت يجب أن يبدأ بـ 79' });
+        
+        if (cleaned.length === 9) {
+            element.blur();
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            if (!cleaned.startsWith('79')) {
+                toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم عدن نت يجب أن يبدأ بـ 79' });
+            }
         }
     };
 
@@ -155,7 +163,9 @@ export default function AdenNetPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('079')) selectedNumber = selectedNumber.substring(1);
                 
-                handlePhoneChange(selectedNumber.slice(0, 9));
+                const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
+                if (inputElement) handlePhoneChange(selectedNumber.slice(0, 9), inputElement);
+                else setPhone(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -231,7 +241,7 @@ export default function AdenNetPage() {
     if (showSuccess && lastTxDetails) {
         return (
             <div className="flex flex-col h-full">
-                <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" preload="auto" />
+                <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
@@ -312,7 +322,7 @@ export default function AdenNetPage() {
                             type="tel"
                             placeholder="79xxxxxxx"
                             value={phone}
-                            onChange={(e) => handlePhoneChange(e.target.value)}
+                            onChange={(e) => handlePhoneChange(e.target.value, e.target)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#1FB8C0] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -380,3 +390,4 @@ export default function AdenNetPage() {
         </div>
     );
 }
+

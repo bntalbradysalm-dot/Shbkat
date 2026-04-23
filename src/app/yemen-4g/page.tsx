@@ -366,7 +366,7 @@ export default function Yemen4GPage() {
     if (showSuccess && lastTxDetails) {
         return (
             <div className="flex flex-col h-full">
-                <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
+                <audio ref={audioRef} src="/sdad.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
@@ -386,7 +386,7 @@ export default function Yemen4GPage() {
                                     <span className="font-mono font-black text-[#106BA2]">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -526,7 +526,7 @@ export default function Yemen4GPage() {
                                             onChange={(e) => setAmount(e.target.value)} 
                                             className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-[#106BA2] placeholder:text-[#106BA2]/10 focus-visible:ring-[#106BA2]" 
                                         />
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#106BA2]/30 font-black text-sm">ر.ي</div>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#106BA2]/40 font-black text-sm">ر.ي</div>
                                     </div>
                                     <Button 
                                         className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#106BA2]/20 text-white" 

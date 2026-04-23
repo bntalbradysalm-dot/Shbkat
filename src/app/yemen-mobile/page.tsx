@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SimpleHeader } from '@/components/layout/simple-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,20 +10,12 @@ import {
   Wallet, 
   CheckCircle, 
   Loader2, 
-  RefreshCw, 
-  Smile, 
-  Frown, 
-  Zap, 
-  ShieldCheck, 
-  Database, 
   Globe,
   Mail,
   Phone as PhoneIcon,
   Clock,
-  AlertCircle,
   Hash,
   Calendar,
-  Smartphone,
   Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,18 +40,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 import { ProcessingOverlay } from '@/components/layout/processing-overlay';
 import Image from 'next/image';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export const dynamic = 'force-dynamic';
 
 type BillingInfo = {
     balance: number;
     customer_type: string;
-    resultDesc?: string;
     isLoan: boolean;
     loanAmount?: number;
 };
@@ -79,7 +69,6 @@ type Offer = {
     minutes?: string;
     validity?: string;
     offertype: string; 
-    id?: string; 
 };
 
 const YEMEN_MOBILE_PRIMARY = '#B32C4C';
@@ -109,79 +98,20 @@ const PREPAID_CATEGORIES = [
     offers: [
       { offerId: 'super_4g', offerName: 'سوبر فورجي', price: 2000, data: '3GB', sms: '250', minutes: '250', validity: '30 يوم', offertype: 'A5533822' },
       { offerId: '4g_24h', offerName: 'مزايا فورجي 24 ساعة', price: 300, data: '512MB', sms: '30', minutes: '20', validity: '24 ساعة', offertype: 'A4826' },
-      { offerId: '4g_48h', offerName: 'مزايا فورجي 48 ساعة', price: 600, data: '1GB', sms: '100', minutes: '50', validity: '48 ساعة', offertype: 'A88337' },
-      { offerId: '4g_weekly', offerName: 'مزايا فورجي الاسبوعية', price: 1500, data: '2GB', sms: '300', minutes: '200', validity: '7 أيام', offertype: 'A88336' },
-      { offerId: 'm_tawfeer', offerName: 'مزايا توفير الشهرية', price: 2400, data: '4GB', sms: '450', minutes: '450', validity: '30 يوم', offertype: 'A3823' },
       { offerId: '4g_monthly', offerName: 'مزايا فورجي الشهرية', price: 2500, data: '4GB', sms: '350', minutes: '300', validity: '30 يوم', offertype: 'A88335' },
-      { offerId: 'm_max_4g', offerName: 'مزايا ماكس فورجي', price: 4000, data: '4GB', sms: '600', minutes: '1100', validity: '30 يوم', offertype: 'A88441' },
-    ]
-  },
-  {
-    id: '4g_net',
-    title: 'باقات نت فورجي',
-    badge: '4G',
-    offers: [
-      { offerId: 'net_4g_4gb', offerName: 'نت فورجي 4 قيقا', price: 2000, data: '4GB', validity: '30 يوم', offertype: 'A4821' },
-      { offerId: 'net_tawfeer_weekly', offerName: 'نت توفير الاسبوعية', price: 1125, data: '3GB', validity: '7 أيام', offertype: 'A3435' },
-      { offerId: 'net_tawfeer_monthly', offerName: 'نت توفير الشهرية', price: 2250, data: '6GB', validity: '30 يوم', offertype: 'A3436' },
-      { offerId: 'net_tawfeer_5gb', offerName: 'نت توفير 5 قيقا', price: 2300, data: '5GB', validity: '30 يوم', offertype: 'A3825' },
-    ]
-  },
-  {
-    id: 'monthly_net',
-    title: 'باقات الانترنت الشهرية',
-    badge: 'Net',
-    offers: [
-      { offerId: 'net_150mb', offerName: 'نت ثري جي 150 ميقا', price: 500, data: '150 ميجا', validity: 'شهر', offertype: 'A69329' },
-      { offerId: 'net_300mb', offerName: 'نت ثري جي 300 ميقا', price: 900, data: '300 ميجا', validity: 'شهر', offertype: 'A69330' },
-      { offerId: 'net_700mb', offerName: 'نت ثري جي 700 ميقا', price: 1800, data: '700 ميجا', validity: 'شهر', offertype: 'A69338' },
-      { offerId: 'net_1500mb', offerName: 'نت ثري جي 1500 ميقا', price: 3300, data: '1500 ميجا', validity: 'شهر', offertype: 'A69345' },
-    ]
-  },
-  {
-    id: 'volte',
-    title: 'باقات فولتي',
-    badge: 'VoLTE',
-    offers: [
-      { offerId: 'volte_1d', offerName: 'مزايا فورجي يوم فولتي', price: 300, data: '512MB', minutes: '20', sms: '30', validity: 'يوم', offertype: 'A4826' },
-      { offerId: 'volte_2d', offerName: 'مزايا فورجي يومين فولتي', price: 600, data: '1GB', minutes: '50', sms: '100', validity: 'يومين', offertype: 'A4990004' },
-      { offerId: 'volte_7d', offerName: 'مزايا فورجي الاسبوعية فولتي', price: 1500, data: '2GB', minutes: '200', sms: '300', validity: 'اسبوع', offertype: 'A4990005' },
-      { offerId: 'volte_30d', offerName: 'مزايا فورجي الشهرية فولتي', price: 2500, data: '4GB', minutes: '300', sms: '350', validity: 'شهر', offertype: 'A4990006' },
-      { offerId: 'volte_call', offerName: 'باقة فولتي اتصال الشهرية', price: 1000, minutes: '500', sms: '200', validity: 'شهر', offertype: 'A33000' },
-      { offerId: 'volte_save', offerName: 'باقة فولتي توفير الشهرية', price: 1300, data: '1GB', minutes: '450', sms: '150', validity: 'شهر', offertype: 'A32000' },
-    ]
-  }
-];
-
-const POSTPAID_CATEGORIES = [
-  {
-    id: 'hadiya',
-    title: 'باقات هدايا فوترة',
-    badge: 'Post',
-    offers: [
-      { offerId: 'h_monthly', offerName: 'هدايا الشهرية', price: 1500, data: '400MB', sms: '100', minutes: '400', validity: 'شهر', offertype: 'A68329' },
-      { offerId: 'h_weekly', offerName: 'هدايا الاسبوعية', price: 600, data: '250MB', sms: '250', minutes: '50', validity: 'اسبوع', offertype: 'A44330' },
-      { offerId: 'h_tawfeer', offerName: 'هدايا توفير', price: 250, data: '120MB', sms: '10', minutes: '70', validity: '4 ايام', offertype: 'A66328' },
-      { offerId: 'h_max', offerName: 'هدايا ماكس الشهرية', price: 3000, data: '1GB', sms: '300', minutes: '1000', validity: 'شهر', offertype: 'A76328' },
     ]
   }
 ];
 
 const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void }) => (
     <div 
-      className="bg-[#fad9b2] rounded-3xl p-5 shadow-sm relative border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
+      className="bg-[#fad9b2] rounded-3xl p-5 shadow-sm border border-[#B32C4C]/10 mb-3 text-center cursor-pointer hover:bg-[#B32C4C]/5 transition-all active:scale-[0.98] group"
       onClick={onClick}
     >
-      <div className="flex justify-center mb-3">
-          <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md">
-              <Image src="https://i.postimg.cc/tTXzYWY3/1200x630wa.jpg" alt="Yemen Mobile" fill className="object-cover" />
-          </div>
-      </div>
-      <h4 className="text-sm font-black text-[#B32C4C] mb-1 group-hover:text-[#B32C4C]/80 transition-colors">{offer.offerName}</h4>
+      <h4 className="text-sm font-black text-[#B32C4C] mb-1">{offer.offerName}</h4>
       <div className="flex items-baseline justify-center mb-4">
         <span className="text-2xl font-black text-foreground">{offer.price.toLocaleString('en-US')}</span>
       </div>
-      
       <div className="grid grid-cols-4 gap-2 pt-3 mt-2 border-t border-[#B32C4C]/10 text-center">
         <div className="space-y-1.5"><Globe className="w-5 h-5 mx-auto text-[#B32C4C]" /><p className="text-[11px] font-black text-foreground truncate">{offer.data || '-'}</p></div>
         <div className="space-y-1.5"><Mail className="w-5 h-5 mx-auto text-[#B32C4C]" /><p className="text-[11px] font-black text-foreground truncate">{offer.sms || '-'}</p></div>
@@ -199,7 +129,6 @@ export default function YemenMobilePage() {
 
   const [phone, setPhone] = useState('');
   const [activeTab, setActiveTab] = useState("balance");
-  const [lineTypeTab, setLineTypeTab] = useState('prepaid');
   const [isSearching, setIsSearching] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [activeOffers, setActiveOffers] = useState<ActiveOffer[]>([]);
@@ -249,8 +178,6 @@ export default function YemenMobilePage() {
 
       if (queryRes.ok && (qResult.resultCode === "0" || qResult.resultCode === 0)) {
           const isPostpaid = JSON.stringify(qResult).toLowerCase().includes('فوترة');
-          setLineTypeTab(isPostpaid ? 'postpaid' : 'prepaid');
-          
           const isLoan = sResult.status === "1" || sResult.status === 1;
           const loanAmt = isLoan ? parseFloat(sResult.loan_amount || "0") : 0;
 
@@ -281,12 +208,21 @@ export default function YemenMobilePage() {
     }
   };
 
-  const handlePhoneChange = (val: string) => {
+  const handlePhoneChange = (val: string, element: HTMLInputElement) => {
     const cleaned = val.replace(/\D/g, '').slice(0, 9);
     setPhone(cleaned);
+    
     if (cleaned.length === 9) {
-        if (cleaned.startsWith('77') || cleaned.startsWith('78')) handleSearch(cleaned);
-        else toast({ variant: 'destructive', title: 'خطأ', description: 'يجب أن يبدأ بـ 77 أو 78' });
+        element.blur();
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+
+        if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
+            handleSearch(cleaned);
+        } else {
+            toast({ variant: 'destructive', title: 'خطأ', description: 'يجب أن يبدأ بـ 77 أو 78' });
+        }
     }
   };
 
@@ -360,8 +296,8 @@ export default function YemenMobilePage() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#B32C4C]/5">
             <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">رقم الجوال</Label>
             <div className="relative">
-                <Input type="tel" placeholder="77xxxxxxx" value={phone} onChange={(e) => handlePhoneChange(e.target.value)} className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#B32C4C] pr-12 pl-12" />
-                <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-[#B32C4C] hover:bg-[#B32C4C]/10 rounded-xl"><Users className="h-5 w-5" /></button>
+                <Input type="tel" placeholder="77xxxxxxx" value={phone} onChange={(e) => handlePhoneChange(e.target.value, e.target)} className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#B32C4C] pr-12 pl-12" />
+                <button onClick={() => document.querySelector('input[type="tel"]')?.dispatchEvent(new Event('focus'))} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-[#B32C4C] hover:bg-[#B32C4C]/10 rounded-xl"><Users className="h-5 w-5" /></button>
                 {isSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-[#B32C4C]" />}
             </div>
         </div>
@@ -406,7 +342,7 @@ export default function YemenMobilePage() {
                         </div>
 
                         <Accordion type="single" collapsible className="w-full space-y-2">
-                            {(lineTypeTab === 'prepaid' ? PREPAID_CATEGORIES : POSTPAID_CATEGORIES).map((cat) => (
+                            {PREPAID_CATEGORIES.map((cat) => (
                                 <AccordionItem key={cat.id} value={cat.id} className="border-none">
                                     <AccordionTrigger className="px-4 py-4 rounded-2xl text-white hover:no-underline shadow-md" style={{ backgroundColor: '#B32C4C' }}>
                                         <div className="flex items-center gap-3 flex-1"><Badge className="bg-white text-[#B32C4C]">{cat.badge}</Badge><span className="text-sm font-black mr-4 text-right">{cat.title}</span></div>
@@ -449,8 +385,7 @@ export default function YemenMobilePage() {
                   <div className="py-4 text-right text-sm space-y-3">
                       <p className="text-center text-lg font-black text-[#B32C4C] mb-2">{selectedOffer?.offerName}</p>
                       <div className="flex justify-between border-b py-2 border-dashed"><span>سعر الباقة:</span><span className="font-bold">{selectedOffer?.price.toLocaleString()} ر.ي</span></div>
-                      {billingInfo?.isLoan && <div className="flex justify-between border-b py-2 border-dashed text-red-600 font-bold"><span>سداد سلفة:</span><span>{billingInfo.loanAmount} ر.ي</span></div>}
-                      <div className="flex justify-between bg-muted/50 p-3 rounded-xl font-black text-lg"><span>الإجمالي:</span><span className="text-[#B32C4C]">{((selectedOffer?.price || 0) + (billingInfo?.isLoan ? billingInfo.loanAmount || 0 : 0)).toLocaleString()} ريال</span></div>
+                      <div className="flex justify-between bg-muted/50 p-3 rounded-xl font-black text-lg"><span>الإجمالي:</span><span className="text-[#B32C4C]">{selectedOffer?.price.toLocaleString()} ريال</span></div>
                   </div>
               </AlertDialogHeader>
               <AlertDialogFooter className="grid grid-cols-2 gap-3 mt-6 sm:space-x-0">
@@ -480,3 +415,4 @@ export default function YemenMobilePage() {
     </div>
   );
 }
+

@@ -144,17 +144,15 @@ export default function LandlinePage() {
         }
     }, [showSuccess]);
 
-    useEffect(() => {
-        if (phone.length >= 7 && !phone.startsWith('0')) {
-            setQueryResult(null);
-        }
-    }, [phone]);
-
-    const handlePhoneChange = (val: string) => {
-        const cleaned = val.replace(/\D/g, '').slice(0, 9);
+    const handlePhoneChange = (val: string, element: HTMLInputElement) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 8);
         setPhone(cleaned);
-        if (cleaned.length >= 7 && !cleaned.startsWith('0')) {
-            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'الرقم الأرضي يجب أن يبدأ بـ 0' });
+
+        if (cleaned.length === 8) {
+            element.blur();
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
         }
     };
 
@@ -249,7 +247,10 @@ export default function LandlinePage() {
             if (contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
                 let num = contacts[0].tel[0].replace(/\D/g, '').slice(-8);
                 if (!num.startsWith('0')) num = '0' + num;
-                handlePhoneChange(num);
+                
+                const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
+                if (inputElement) handlePhoneChange(num, inputElement);
+                else setPhone(num);
             }
         } catch (err) { console.error(err); }
     };
@@ -340,11 +341,24 @@ export default function LandlinePage() {
                             type="tel"
                             placeholder="0xxxxxxx"
                             value={phone}
-                            onChange={(e) => handlePhoneChange(e.target.value)}
+                            onChange={(e) => handlePhoneChange(e.target.value, e.target)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 transition-all pr-12 pl-12"
                         />
                         <button onClick={handleContactPick} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-colors" style={{ color: currentTheme.primary }}><Users className="h-5 w-5" /></button>
                     </div>
+                    {phone.length >= 7 && phone.startsWith('0') && (
+                        <div className="animate-in fade-in zoom-in duration-300">
+                            <Button 
+                                className="w-full h-11 rounded-2xl font-bold mt-4 shadow-sm text-white" 
+                                onClick={handleSearch}
+                                disabled={isSearching}
+                                style={{ backgroundColor: currentTheme.primary }}
+                            >
+                                {isSearching ? <Loader2 className="animate-spin h-4 w-4 ml-2" /> : <Search className="h-4 w-4 ml-2" />}
+                                استعلام
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {phone.length >= 7 && phone.startsWith('0') && (
@@ -447,13 +461,13 @@ export default function LandlinePage() {
 
             {showSuccess && lastTxDetails && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in-0">
-                    <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" autoPlay />
+                    <audio ref={audioRef} src="/ashar.mp3" autoPlay />
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center"><CheckCircle className="h-16 w-16 text-white animate-bounce" /></div>
                         <CardContent className="p-8 space-y-6">
                             <div><h2 className="text-2xl font-black text-green-600">تم السداد بنجاح</h2><p className="text-sm text-muted-foreground mt-1">تم تنفيذ طلب السداد بنجاح</p></div>
                             <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">
-                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.transid}</span></div>
+                                <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><HashIcon className="w-3.5 h-3.5" /> رقم العملية:</span><span className="font-mono font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.transid}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><PhoneIcon className="w-3.5 h-3.5" /> رقم الهاتف:</span><span className="font-mono font-bold">{lastTxDetails.phone}</span></div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2"><span className="text-muted-foreground flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> المبلغ المخصوم:</span><span className="font-black" style={{ color: currentTheme.primary }}>{lastTxDetails.amount.toLocaleString()} ريال</span></div>
                                 <div className="flex justify-between items-center pt-1"><span className="text-muted-foreground flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> التاريخ:</span><span className="text-[10px] font-bold">{format(new Date(), 'Pp', { locale: ar })}</span></div>
@@ -467,3 +481,4 @@ export default function LandlinePage() {
         </div>
     );
 }
+

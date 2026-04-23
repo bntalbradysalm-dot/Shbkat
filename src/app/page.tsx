@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,6 @@ export default function LoginPage() {
       <div className="flex flex-col h-full bg-mesh-gradient text-white overflow-y-auto no-scrollbar">
         <div className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-sm mx-auto py-12">
           
-          {/* Logo Section */}
           <div className="mb-8 text-center animate-in fade-in zoom-in duration-700">
             <div className="relative w-28 h-28 mx-auto mb-4">
                 <div className="absolute inset-0 bg-white/20 rounded-[40px] blur-2xl animate-pulse" />
@@ -105,7 +105,7 @@ export default function LoginPage() {
                   value={phoneNumber}
                   onChange={e => setPhoneNumber(e.target.value)}
                 />
-                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-white/60 group-focus-within:text-white transition-colors" />
+                <Phone className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-white transition-colors" />
               </div>
             </div>
 
@@ -120,7 +120,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
-                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-white/60 group-focus-within:text-white transition-colors" />
+                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-white transition-colors" />
                 <button 
                   type="button" 
                   onClick={() => setIsPasswordVisible(!isPasswordVisible)} 
@@ -163,7 +163,3 @@ const Loader2 = ({ className }: { className?: string }) => (
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
 );
-
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(' ');
-}

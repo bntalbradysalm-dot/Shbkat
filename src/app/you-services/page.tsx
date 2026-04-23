@@ -151,7 +151,7 @@ const PackageItemCard = ({ offer, onClick }: { offer: Offer, onClick: () => void
 const FastOfferCard = ({ offer, onClick }: { offer: FastOffer, onClick: () => void }) => (
     <div 
       className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-[#FECC4F]/10 mb-3 cursor-pointer hover:bg-[#FECC4F]/5 transition-all active:scale-[0.98] group flex items-center justify-between"
-      onClick={onClick}
+      onClick={offer && onClick}
     >
       <div className="flex items-center gap-4 text-right">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-[#FECC4F]/20 bg-white shrink-0">
@@ -521,10 +521,12 @@ export default function YouServicesPage() {
             </div>
 
             <Toaster />
+            <audio ref={audioRef} src="/sdad.mp3" preload="auto" />
 
             <AlertDialog open={isConfirmingBalance} onOpenChange={setIsConfirmingBalance}>
                 <AlertDialogContent className="rounded-[32px]">
-                    <AlertDialogHeader><AlertDialogTitle className="text-center font-black text-[#4A3B00]">تأكيد سداد رصيد</AlertDialogTitle>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-center font-black text-[#4A3B00]">تأكيد سداد رصيد</AlertDialogTitle>
                         <div className="space-y-3 pt-4 text-right text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">رقم الهاتف:</span><span className="font-bold">{phone}</span></div>
                             <div className="flex justify-between items-center py-2 border-b border-dashed"><span className="text-muted-foreground">نوع الخط:</span><span className="font-bold">{lineType === 'prepaid' ? 'دفع مسبق' : 'فوترة'}</span></div>
@@ -576,4 +578,3 @@ export default function YouServicesPage() {
         </div>
     );
 }
-

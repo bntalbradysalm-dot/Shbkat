@@ -158,7 +158,7 @@ export default function AlwadiPage() {
   if (showSuccess) {
     return (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-0 zoom-in-95 duration-500">
-        <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
+        <audio ref={audioRef} src="/kert.mp3" preload="auto" />
         
         <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
             <div className="bg-green-500 p-8 flex justify-center">
@@ -169,7 +169,7 @@ export default function AlwadiPage() {
             <CardContent className="p-8 space-y-6">
                 <div>
                     <h2 className="text-2xl font-black text-green-600">تم تجديد كرتك بنجاح</h2>
-                    <p className="text-sm text-muted-foreground mt-1">بانتظار تأكيد الإدارة</p>
+                    <p className="text-sm text-muted-foreground mt-1">تمت العملية بنجاح</p>
                 </div>
 
                 <div className="w-full space-y-3 text-sm bg-muted/50 p-5 rounded-[24px] text-right border-2 border-dashed border-primary/10">

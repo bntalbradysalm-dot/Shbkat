@@ -241,7 +241,7 @@ export default function AdenNetPage() {
     if (showSuccess && lastTxDetails) {
         return (
             <div className="flex flex-col h-full">
-                <audio ref={audioRef} src="/ashar.mp3" preload="auto" />
+                <audio ref={audioRef} src="/sdad.mp3" preload="auto" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-w-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
@@ -390,4 +390,3 @@ export default function AdenNetPage() {
         </div>
     );
 }
-

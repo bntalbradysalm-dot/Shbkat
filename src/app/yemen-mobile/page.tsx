@@ -307,7 +307,6 @@ export default function YemenMobilePage() {
   const { user } = useUser();
 
   const [phone, setPhone] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("balance");
   const [lineTypeTab, setLineTypeTab] = useState('prepaid');
   const [isSearching, setIsSearching] = useState(false);
@@ -448,19 +447,16 @@ export default function YemenMobilePage() {
   }, [toast]);
 
   const handlePhoneChange = (val: string) => {
-   if (cleaned.length === 9) {
-  inputRef.current?.blur(); // 🔥 هذا اللي يقفل الكيبورد
-
-  if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
-    handleSearch(cleaned);
-  } else {
-    toast({
-      variant: 'destructive',
-      title: 'رقم غير صحيح',
-      description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78'
-    });
-  }
-}
+    const cleaned = val.replace(/\D/g, '').slice(0, 9);
+    setPhone(cleaned);
+    if (cleaned.length === 9) {
+        if (cleaned.startsWith('77') || cleaned.startsWith('78')) {
+            handleSearch(cleaned);
+        } else {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن موبايل يجب أن يبدأ بـ 77 أو 78' });
+        }
+    }
+  };
 
   const handleContactPick = async () => {
     if (!('contacts' in navigator && 'ContactsManager' in window)) {
@@ -695,7 +691,6 @@ export default function YemenMobilePage() {
             </div>
             <div className="relative">
                 <Input
-                  ref={inputRef}
                     type="tel"
                     placeholder="77xxxxxxx"
                     value={phone}

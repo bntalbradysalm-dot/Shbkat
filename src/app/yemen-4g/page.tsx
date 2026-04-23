@@ -142,11 +142,21 @@ export default function Yemen4GPage() {
         }
     }, [showSuccess]);
 
-    const handlePhoneChange = (val: string) => {
+    const handlePhoneChange = (val: string, element: HTMLInputElement) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
-        if (cleaned.length === 9 && !cleaned.startsWith('10')) {
-            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
+        
+        if (cleaned.length === 9) {
+            // Blur input to hide keyboard
+            element.blur();
+            // Vibration feedback
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            if (!cleaned.startsWith('10')) {
+                toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
+            }
         }
     };
 
@@ -217,7 +227,9 @@ export default function Yemen4GPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('010')) selectedNumber = selectedNumber.substring(1);
                 
-                handlePhoneChange(selectedNumber.slice(0, 9));
+                const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
+                if (inputElement) handlePhoneChange(selectedNumber.slice(0, 9), inputElement);
+                else setPhone(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -315,7 +327,7 @@ export default function Yemen4GPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    action: 'bill', 
+                    action: 'billoffer', 
                     service: 'yem4g', 
                     amount: basePrice,
                     type: '1',
@@ -438,7 +450,7 @@ export default function Yemen4GPage() {
                             type="tel"
                             placeholder="10xxxxxxx"
                             value={phone}
-                            onChange={(e) => handlePhoneChange(e.target.value)}
+                            onChange={(e) => handlePhoneChange(e.target.value, e.target)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#106BA2] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -457,7 +469,7 @@ export default function Yemen4GPage() {
                                 disabled={isSearching}
                                 style={{ backgroundColor: YEMEN_4G_PRIMARY }}
                             >
-                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
+                                {isSearching ? <Loader2 className="animate-spin h-4 w-4 ml-2" /> : <Search className="h-4 w-4 ml-2" />}
                                 استعلام
                             </Button>
                         </div>

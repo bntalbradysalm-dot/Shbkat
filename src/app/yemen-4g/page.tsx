@@ -142,21 +142,11 @@ export default function Yemen4GPage() {
         }
     }, [showSuccess]);
 
-    const handlePhoneChange = (val: string, element: HTMLInputElement) => {
+    const handlePhoneChange = (val: string) => {
         const cleaned = val.replace(/\D/g, '').slice(0, 9);
         setPhone(cleaned);
-        
-        if (cleaned.length === 9) {
-            // Blur input to hide keyboard
-            element.blur();
-            // Vibration feedback
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-
-            if (!cleaned.startsWith('10')) {
-                toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
-            }
+        if (cleaned.length === 9 && !cleaned.startsWith('10')) {
+            toast({ variant: 'destructive', title: 'رقم غير صحيح', description: 'رقم يمن فورجي يجب أن يبدأ بـ 10' });
         }
     };
 
@@ -227,9 +217,7 @@ export default function Yemen4GPage() {
                 if (selectedNumber.startsWith('00967')) selectedNumber = selectedNumber.substring(5);
                 if (selectedNumber.startsWith('010')) selectedNumber = selectedNumber.substring(1);
                 
-                const inputElement = document.querySelector('input[type="tel"]') as HTMLInputElement;
-                if (inputElement) handlePhoneChange(selectedNumber.slice(0, 9), inputElement);
-                else setPhone(selectedNumber.slice(0, 9));
+                handlePhoneChange(selectedNumber.slice(0, 9));
             }
         } catch (err) {
             console.error("Contacts selection failed:", err);
@@ -327,7 +315,7 @@ export default function Yemen4GPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     mobile: phone, 
-                    action: 'billoffer', 
+                    action: 'bill', 
                     service: 'yem4g', 
                     amount: basePrice,
                     type: '1',
@@ -366,7 +354,7 @@ export default function Yemen4GPage() {
     if (showSuccess && lastTxDetails) {
         return (
             <div className="flex flex-col h-full">
-                <audio ref={audioRef} src="/sdad.mp3" preload="auto" />
+                <audio autoPlay src="https://cdn.pixabay.com/audio/2022/10/13/audio_a141b2c45e.mp3" />
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in-0 p-4">
                     <Card className="w-full max-sm text-center shadow-2xl rounded-[40px] overflow-hidden border-none bg-card">
                         <div className="bg-green-500 p-8 flex justify-center">
@@ -386,7 +374,7 @@ export default function Yemen4GPage() {
                                     <span className="font-mono font-black text-[#106BA2]">{lastTxDetails.transid}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
+                                    <span className="text-muted-foreground flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> رقم الهاتف:</span>
                                     <span className="font-mono font-bold tracking-widest">{lastTxDetails.phone}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-muted pb-2">
@@ -450,7 +438,7 @@ export default function Yemen4GPage() {
                             type="tel"
                             placeholder="10xxxxxxx"
                             value={phone}
-                            onChange={(e) => handlePhoneChange(e.target.value, e.target)}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="text-center font-bold text-lg h-12 rounded-2xl border-none bg-muted/20 focus-visible:ring-[#106BA2] transition-all pr-12 pl-12"
                         />
                         <button 
@@ -469,7 +457,7 @@ export default function Yemen4GPage() {
                                 disabled={isSearching}
                                 style={{ backgroundColor: YEMEN_4G_PRIMARY }}
                             >
-                                {isSearching ? <Loader2 className="animate-spin h-4 w-4 ml-2" /> : <Search className="h-4 w-4 ml-2" />}
+                                {isSearching ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Search className="ml-2 h-4 w-4" />}
                                 استعلام
                             </Button>
                         </div>
@@ -526,7 +514,7 @@ export default function Yemen4GPage() {
                                             onChange={(e) => setAmount(e.target.value)} 
                                             className="text-center font-black text-3xl h-16 rounded-2xl bg-muted/20 border-none text-[#106BA2] placeholder:text-[#106BA2]/10 focus-visible:ring-[#106BA2]" 
                                         />
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#106BA2]/40 font-black text-sm">ر.ي</div>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#106BA2]/30 font-black text-sm">ر.ي</div>
                                     </div>
                                     <Button 
                                         className="w-full h-14 rounded-2xl text-lg font-black mt-8 shadow-lg shadow-[#106BA2]/20 text-white" 
